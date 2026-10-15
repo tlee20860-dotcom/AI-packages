@@ -3,6 +3,7 @@
 最後更新：2026-10-15
 Version: 2026101501
 Batch: System-v1.0
+Writer: A20261015-001#045
 用途：跨領域（Web App / Excel VBA / 腳本 / 文案）通用之 AI 交付與行為規範
 
 ---
@@ -29,4 +30,6 @@ Batch: System-v1.0
 /* ═══ EOF ═══
 F: docs/C-02-rules.md
 V: 2026101501
+B: System-v1.0
+W: A20261015-001#045
 ═══ */

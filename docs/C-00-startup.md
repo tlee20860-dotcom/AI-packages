@@ -3,7 +3,8 @@
 最後更新：2026-10-15
 Version: 2026101501
 Batch: System-v1.0
-用途：提供專案 GitHub 網址，即可啟動全自動駕駛模式
+Writer: A20261015-001#045
+用途：新對話提供 GitHub 連結，即刻啟動全自動駕駛模式
 
 ---
 
@@ -49,4 +50,6 @@ Batch: System-v1.0
 /* ═══ EOF ═══
 F: docs/C-00-startup.md
 V: 2026101501
+B: System-v1.0
+W: A20261015-001#045
 ═══ */
