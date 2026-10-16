@@ -1,12 +1,13 @@
 # 專案包：web-app-family
 
-> 生成時間：2026-10-16 17:41:45 UTC
-> 構建編號：#0062
+> 生成時間：2026-10-16 23:44:27 UTC
+> 構建編號：#0063
+> 領域：W
 
 ## 📌 使用方式
 
-本檔案為「web-app-family」專案的完整上下文包。
-AI 已讀取專案層核心包（02-CORE-PROJECT.md），本包包含專案文件與程式碼。
+本檔案為「web-app-family」專案的完整上下文包（含專案文件、程式碼、領域技能包）。
+請搭配 02-CORE-PROJECT.md 一起上傳。
 
 ---
 
@@ -32587,6 +32588,665 @@ async function _networkFirst(request) {
 ```
 
 <!-- === FILE END: ./sw.js === -->
+
+---
+
+# 📚 領域技能包（W）
+
+# W 技能包
+
+> 生成時間：2026-10-16 23:44:27 UTC
+> 構建編號：#0063
+
+
+<!-- === FILE START: docs/skills/W/W-00-startup.md === -->
+
+## 📄 docs/skills/W/W-00-startup.md
+
+```
+# W-00 領域啟動卡（Web App）
+
+最後更新：B34-4
+Version: 1791903760
+Batch: B34-4
+Writer: A20261013-004#169
+用途：Web App 領域的啟動卡（工具鏈 / 慣例 / 載入方式）
+
+---
+
+## 一、領域定位
+
+| 項目 | 內容 |
+|---|---|
+| 領域名稱 | Web App |
+| 領域前綴 | W |
+| 適用範圍 | 純 HTML / CSS / JS 前端 + Serverless 後端 |
+| 本領域代表專案 | 家庭 webapp（v2.Family） |
+
+---
+
+## 二、技能包清單
+
+| # | 檔案 | 職責 |
+|---|---|---|
+| 0 | W-00-startup.md（本檔） | 領域啟動卡 |
+| 1 | W-01-firebase.md | Firebase RTDB 結構原則 |
+| 2 | W-02-functions.md | Cloudflare Pages Functions 規則 |
+| 3 | W-03-esmodule.md | 純前端 ES Module 架構 |
+| 4 | W-04-pwa.md | PWA + Service Worker |
+| 5 | W-05-schema.md | Web App 頁面 Schema |
+
+---
+
+## 三、工具鏈
+
+| 層 | 技術 |
+|---|---|
+| 前端 | 純 HTML + CSS + ES Module JS（無框架） |
+| 後端 | Cloudflare Pages Functions |
+| 資料庫 | Firebase RTDB |
+| 認證 | Firebase Auth |
+| 部署 | Cloudflare Pages |
+| 版控 | GitHub |
+
+---
+
+## 四、通用慣例
+
+| # | 慣例 |
+|---|---|
+| 1 | 檔案結構：三層架構（資料 / 引擎 / 呈現） |
+| 2 | SSOT 極大化 |
+| 3 | 宣告式 > 命令式 |
+| 4 | 檔案 ≤ 800 行 |
+| 5 | 每個 .js / .html / .css / .md 結尾加 EOF |
+| 6 | 無框架，不引入 React / Vue |
+
+---
+
+## 五、領域常見任務
+
+| 任務 | 引用 |
+|---|---|
+| 新增頁面 | W-03 + W-05 |
+| 改資料結構 | W-01 |
+| 改 Functions | W-02 |
+| 改 PWA | W-04 |
+| 改 Schema | W-05 |
+
+---
+
+## 六、領域常見錯誤
+
+| # | 錯誤 | 正確 |
+|---|---|---|
+| 1 | 用 process.env（CF Pages 不支援） | handler 參數 { env } |
+| 2 | 移除既有 export（依賴模組崩潰） | 用 export let 保留 |
+| 3 | 動態值用快照 | 內部讀 AppState |
+| 4 | 動態注入未清空 | 先 textContent = '' |
+| 5 | 全站結構改動未完整掃描 | 改前完整掃描 |
+
+---
+
+## 七、未來擴充提示
+
+若需要新增 Web App 技術（如 WebSocket / Web Worker），新增 `W-06-xxx.md`。
+
+---
+
+## 八、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| Firebase RTDB | W-01-firebase.md |
+| CF Pages Functions | W-02-functions.md |
+| ES Module | W-03-esmodule.md |
+| PWA + SW | W-04-pwa.md |
+| Page Schema | W-05-schema.md |
+| 通用大腦 | C-00-startup.md ~ C-10-handoff-mechanism.md |
+
+---
+
+/* ═══ EOF ═══
+F: W-00-startup.md
+V: 1791903760
+B: B34-4
+W: A20261013-004#169
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-00-startup.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-01-firebase.md === -->
+
+## 📄 docs/skills/W/W-01-firebase.md
+
+```
+# W-01 Firebase RTDB 結構原則（Web App 通用）
+
+最後更新：B34-3
+Version: 1791899500
+Batch: B34-3
+Writer: A20261013-004#065
+用途：Firebase RTDB 通用結構原則（跨專案）
+
+---
+
+## 一、樹狀結構原則
+
+| # | 原則 |
+|---|---|
+| 1 | 根節點分層（platform / families / 其他） |
+| 2 | 家庭為獨立單位（families/{familyId}/） |
+| 3 | 子節點按功能分類（members / expenses / ...） |
+| 4 | 避免深層嵌套（≤ 6 層） |
+
+---
+
+## 二、路徑命名
+
+| 規則 | 說明 |
+|---|---|
+| 小寫 + 底線 | expense_categories |
+| 複數 | members / banks |
+| 無縮寫 | expense_categories（非 exp_cat） |
+| ID 用 push key | Firebase 自動生成 |
+
+---
+
+## 三、扁平化
+
+| 概念 | 做法 |
+|---|---|
+| 1 對多 | 用路徑分隔，不用陣列 |
+| 多對多 | 用索引節點 |
+| 大資料 | 用子節點（避免單節點過大） |
+
+---
+
+## 四、索引節點
+
+| 索引 | 用途 |
+|---|---|
+| platform/uid_index/{uid} | uid → familyId |
+| platform/email_index/{account} | account → { uid, familyId } |
+
+**原則**：索引只存對應關係，不存實體資料。
+
+---
+
+## 五、實時訂閱
+
+| 模式 | 用途 |
+|---|---|
+| listen* | 持續訂閱（資料變更自動推送） |
+| get*Once | 一次性讀取 |
+
+**選擇原則**：
+
+| 情境 | 用 |
+|---|---|
+| 頁面需即時更新 | listen |
+| 一次性檢查 | once |
+| 跨頁共用 | listen + registry 快取 |
+
+---
+
+## 六、讀寫分離
+
+| 原則 | 說明 |
+|---|---|
+| 讀取 | normalize 舊資料 |
+| 寫入 | 寫新格式 |
+| 刪除 | 保留節點（軟刪除） |
+
+---
+
+## 七、限制
+
+| 節點 | 建議上限 |
+|---|---|
+| 單筆列表 | ≤ 1000 筆 |
+| 巢狀深度 | ≤ 6 層 |
+| 單節點大小 | < 10 MB |
+
+**超過時**：拆子節點或加索引。
+
+---
+
+## 八、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| 本專案資料結構 | P-09-data.md |
+| 本專案 API | P-08-api.md |
+
+---
+
+/* ═══ EOF ═══
+F: docs/W-01-firebase.md
+V: 1791899500
+B: B34-3
+W: A20261013-004#065
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-01-firebase.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-02-functions.md === -->
+
+## 📄 docs/skills/W/W-02-functions.md
+
+```
+# W-02 Cloudflare Pages Functions 規則（Web App 通用）
+
+最後更新：B34-3
+Version: 1791899560
+Batch：B34-3
+Writer: A20261013-004#065
+用途：CF Pages Functions 通用規則（跨專案）
+
+---
+
+## 一、檔案結構
+
+| 規則 | 說明 |
+|---|---|
+| 底線前綴 | _config.js / _helpers.js / _admin.js |
+| Catch-all | [[path]].js 統一分派 |
+| 禁止獨立 xxx.js | 用底線前綴 |
+| 禁止 shim re-export | CF 不支援跨檔 re-export |
+
+---
+
+## 二、環境變數
+
+| 項目 | 說明 |
+|---|---|
+| 錯誤 | process.env.DB_TARGET |
+| 正確 | handler 參數 { env } → env.DB_TARGET |
+| 傳遞 | 每個 onRequest* 開頭呼叫 initConfig(env) |
+| 生效條件 | 設定後必須重新部署 |
+
+---
+
+## 三、initConfig 模式
+
+| 步驟 | 動作 |
+|---|---|
+| 1 | onRequest 開頭呼叫 initConfig(context.env) |
+| 2 | _config.js 用 export let 保留舊引用 |
+| 3 | 其他模組 import 該 let（live binding） |
+| 4 | initConfig 更新 let 值 → 所有引用同步更新 |
+
+**禁止**：直接 export const（無法更新）。
+
+---
+
+## 四、路由規則
+
+| 路徑 | 處理 |
+|---|---|
+| 靜態檔案 | 所有連結帶 .html |
+| API | /api/* 由 [[path]].js 分派 |
+| 根路徑 | _redirects 不要對 / 加規則 |
+
+---
+
+## 五、常見錯誤
+
+| # | 錯誤 | 正確 |
+|---|---|---|
+| 1 | 每個 URL 對應獨立實體檔 | 用 Catch-all + 底線前綴 |
+| 2 | 用 shim re-export | 直接用底線檔 |
+| 3 | 忘記 initConfig | 每個 onRequest 開頭必呼叫 |
+| 4 | 移除既有 export | 用 export let 保留 |
+| 5 | 設定後未重新部署 | 必須重部署才生效 |
+
+---
+
+## 六、Response 格式
+
+| 欄位 | 值 |
+|---|---|
+| ok | true / false |
+| error | ERROR_CODE（失敗時） |
+| message | 錯誤訊息（失敗時） |
+
+**ERROR_CODE 對照**：見 P-08-api.md §三。
+
+---
+
+## 七、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| 本專案 API 契約 | P-08-api.md |
+| 本專案事故（P29） | P-10-incident.md §五 |
+| Firebase 結構 | W-01-firebase.md |
+
+---
+
+/* ═══ EOF ═══
+F: docs/W-02-functions.md
+V: 1791899560
+B: B34-3
+W: A20261013-004#065
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-02-functions.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-03-esmodule.md === -->
+
+## 📄 docs/skills/W/W-03-esmodule.md
+
+```
+# W-03 純前端 ES Module 架構（Web App 通用）
+
+最後更新：B34-3
+Version: 1791899620
+Batch: B34-3
+Writer: A20261013-004#065
+用途：純 HTML + ES Module 架構通用原則
+
+---
+
+## 一、三層架構
+
+| 層 | 職責 | 目錄 |
+|---|---|---|
+| 資料層 | Firebase RTDB | — |
+| 引擎層 | page-engine / data-engine / render-engine | js/engines/ |
+| 呈現層 | block / UI 元件 / DOM | js/blocks, js/ui |
+
+**資料流**：
+
+> Firebase RTDB → data-engine → page-engine → derived → block → DOM
+
+---
+
+## 二、核心架構原則
+
+| 原則 | 說明 |
+|---|---|
+| SSOT 極大化 | 任何知識只存在一處 |
+| 宣告式 > 命令式 | 頁面只描述「要什麼」 |
+| 舊資料 100% 相容 | 讀取時 normalize |
+| 操作邏輯不變 | 只改實作方式 |
+| 無補丁 | 能宣告就不手寫 |
+
+---
+
+## 三、5 大 Registry
+
+| Registry | 職責 |
+|---|---|
+| status-registry | 狀態系統 |
+| entity-registry | 名稱解析 |
+| label-registry | 顯示文字 |
+| column-registry | 表格欄位 |
+| constants | 全站常數 |
+
+**附加**：page-metadata-registry
+
+---
+
+## 四、3 大引擎
+
+| 引擎 | 職責 |
+|---|---|
+| page-engine | 解讀 Schema、生命週期、onDataChange |
+| data-engine | Firebase 訂閱 + 衍生 |
+| render-engine | 掛載 UI 區塊 |
+
+---
+
+## 五、5 大 Block
+
+| Block | 職責 |
+|---|---|
+| stats-block | 統計卡 |
+| list-block | 列表 |
+| filter-block | 篩選列 |
+| detail-block | 明細展開 |
+| form-block | 表單 Modal |
+
+---
+
+## 六、Page Schema（見 W-05）
+
+---
+
+## 七、檔案規則
+
+| 規則 | 說明 |
+|---|---|
+| 檔案 ≤ 800 行 | 超過拆檔 |
+| 每檔獨立 | 不合併 |
+| EOF 必加 | F/V/B/W |
+
+---
+
+## 八、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| Page Schema | W-05-schema.md |
+| PWA + SW | W-04-pwa.md |
+| 本專案架構 | P-01-index.md |
+
+---
+
+/* ═══ EOF ═══
+F: docs/W-03-esmodule.md
+V: 1791899620
+B: B34-3
+W: A20261013-004#065
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-03-esmodule.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-04-pwa.md === -->
+
+## 📄 docs/skills/W/W-04-pwa.md
+
+```
+# W-04 PWA + Service Worker 規則（Web App 通用）
+
+最後更新：B34-3
+Version: 1791899680
+Batch: B34-3
+Writer: A20261013-004#065
+用途：PWA + SW 通用規則
+
+---
+
+## 一、Service Worker 策略
+
+| 策略 | 用途 |
+|---|---|
+| network-first | 開發階段（保新鮮） |
+| cache-first | 正式階段（保速度） |
+| stale-while-revalidate | 折衷 |
+
+**本專案選擇**：network-first（ADR-011）。
+
+---
+
+## 二、靜態資源
+
+| 項目 | 說明 |
+|---|---|
+| STATIC_ASSETS | 清單集中一處 |
+| 版本 | SW_VERSION 統一 |
+| 更新 | 改版本號觸發更新 |
+
+---
+
+## 三、版本管理
+
+| 項目 | 規則 |
+|---|---|
+| SW_VERSION | 全站統一 |
+| STATIC_ASSETS | 新增檔案必加入 |
+| 部署後 | 使用者訪問 2 次才生效（network-first） |
+
+---
+
+## 四、常見錯誤
+
+| # | 錯誤 | 正確 |
+|---|---|---|
+| 1 | SW_VERSION 各檔不一致 | 統一 |
+| 2 | 新增檔案未加 STATIC_ASSETS | 必加 |
+| 3 | 忘記更新版本 | 每次部署更新 |
+
+---
+
+## 五、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| 本專案 SW | sw.js / manifest.json |
+| 事故日誌 | P-10-incident.md |
+
+---
+
+/* ═══ EOF ═══
+F: docs/W-04-pwa.md
+V: 1791899680
+B: B34-3
+W: A20261013-004#065
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-04-pwa.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-05-schema.md === -->
+
+## 📄 docs/skills/W/W-05-schema.md
+
+```
+# W-05 Web App 頁面 Schema（Web App 通用）
+
+最後更新：B34-3
+Version: 1791899740
+Batch: B34-3
+Writer: A20261013-004#065
+用途：Page Schema 通用規範
+
+---
+
+## 一、Schema 欄位
+
+| 欄位 | 類型 | 說明 |
+|---|---|---|
+| title | string | 頁面標題 |
+| data | object | Firebase 訂閱配置 |
+| state | object | 響應式狀態初始值 |
+| derived | object | 衍生資料計算 |
+| blocks | array | UI 區塊 |
+| onYearMonthChange | function | 年月變更 hook（可選） |
+| customMount | function | 逃生艙（可選） |
+
+---
+
+## 二、data 配置
+
+| 欄位 | 說明 |
+|---|---|
+| type | list / object / value / raw |
+| path | 相對路徑（含 {key} / {__all__}） |
+| transform | 資料轉換（可選） |
+| params | 佔位符對應（可選） |
+
+---
+
+## 三、derived 配置
+
+| 欄位 | 說明 |
+|---|---|
+| deps | 依賴的 data / state key 陣列 |
+| compute | (ctx) => value 計算函式 |
+
+---
+
+## 四、blocks 常用類型
+
+| type | 必要欄位 |
+|---|---|
+| stats | container, cards |
+| list | container, rows, columns |
+| filter | container, fields, bind |
+
+---
+
+## 五、ctx 提供
+
+| 方法 | 用途 |
+|---|---|
+| ctx.onDataChange(fn) | 訂閱資料變更 |
+| ctx.setState(path, val) | 設 state |
+| ctx.invalidate(key) | 觸發重算 |
+
+---
+
+## 六、customMount 回傳
+
+| 欄位 | 說明 |
+|---|---|
+| destroy | 清理函式 |
+
+---
+
+## 七、HTML 結構
+
+| 元素 | 說明 |
+|---|---|
+| head | 4 個 CSS |
+| body | app-shell > sidebar-root + main-area |
+| main-area | navbar-root + content |
+| content | page-header + 各 block container |
+| scripts | lucide + modulepreload + type="module" |
+
+---
+
+## 八、常見錯誤
+
+| # | 錯誤 | 正確 |
+|---|---|---|
+| 1 | derived 對 undefined 崩潰 | 加檢查 |
+| 2 | customMount 未回傳 destroy | 必回傳 |
+| 3 | 動態值用快照 | 內部讀 AppState |
+| 4 | 動態注入未清空 | 先 textContent = '' |
+
+---
+
+## 九、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| ES Module 架構 | W-03-esmodule.md |
+| 本專案 Schema 實作 | js/pages/*.js |
+
+---
+
+/* ═══ EOF ═══
+F: docs/W-05-schema.md
+V: 1791899740
+B: B34-3
+W: A20261013-004#065
+═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-05-schema.md === -->
 
 
 /* ═══ EOF ═══ */
