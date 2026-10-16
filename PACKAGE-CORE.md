@@ -1,6 +1,6 @@
 # AI 協作 - 通用規則包
 
-> 生成時間：2026-10-16 08:19:54 UTC
+> 生成時間：2026-10-16 08:30:13 UTC
 
 ---
 
@@ -155,10 +155,12 @@ Q6：新倉庫初始內容（A. 只有 README / B. README + .gitignore / C. READ
 
 ## 📚 核心訓練規則
 
----
+
+<!-- === FILE START: docs/common/C-00-startup.md === -->
 
 ## 📄 docs/common/C-00-startup.md
 
+```
 # 🚨 啟動檢查（最高優先）
 
 > **在你讀取本檔案的第一秒，請立刻執行以下動作：**
@@ -511,11 +513,16 @@ V: 1791903520
 B: B34-4
 W: A20261013-004#166
 ═══ */
+```
 
----
+<!-- === FILE END: docs/common/C-00-startup.md === -->
+
+
+<!-- === FILE START: docs/common/C-01-profile.md === -->
 
 ## 📄 docs/common/C-01-profile.md
 
+```
 # C-01 使用者畫像
 
 最後更新：B34-4
@@ -681,10 +688,16 @@ V: 1791904120
 B: B34-4
 W: A20261013-004#176
 ═══ */
----
+```
+
+<!-- === FILE END: docs/common/C-01-profile.md === -->
+
+
+<!-- === FILE START: docs/common/C-02-rules.md === -->
 
 ## 📄 docs/common/C-02-rules.md
 
+```
 # C-02 通用規則（跨專案）
 
 最後更新：B34-4
@@ -1358,11 +1371,16 @@ V: 1791907900
 B: B34-4
 W: A20261016-001
 ═══ */
+```
 
----
+<!-- === FILE END: docs/common/C-02-rules.md === -->
+
+
+<!-- === FILE START: docs/common/C-04-delivery.md === -->
 
 ## 📄 docs/common/C-04-delivery.md
 
+```
 # C-04 交付格式
 
 最後更新：B34-4
@@ -1708,11 +1726,16 @@ V: 1791907500
 B: B34-4
 W: A20261016-001
 ═══ */
+```
 
----
+<!-- === FILE END: docs/common/C-04-delivery.md === -->
+
+
+<!-- === FILE START: docs/records/R-01-writers.md === -->
 
 ## 📄 docs/records/R-01-writers.md
 
+```
 # R-01 AI 編寫者名單 + 專案索引
 
 最後更新：B35-0
@@ -1971,10 +1994,20 @@ V: 1792108800
 B: B35-0
 W: A20261016-001#001
 ═══ */
+```
+
+<!-- === FILE END: docs/records/R-01-writers.md === -->
+
 ---
 
 ## 📋 專案清單（PROJECT-LIST.md）
 
+
+<!-- === FILE START: docs/records/PROJECT-LIST.md === -->
+
+## 📄 docs/records/PROJECT-LIST.md
+
+```
 # 專案清單
 
 最後更新：A20261016-001
@@ -2036,3 +2069,7 @@ V: 1791906800
 B: B34-4
 W: A20261016-001
 ═══ */
+```
+
+<!-- === FILE END: docs/records/PROJECT-LIST.md === -->
+

@@ -1,11 +1,13 @@
 # Web App 技能包（W-*）
 
-> 生成時間：2026-10-16 08:19:54 UTC
+> 生成時間：2026-10-16 08:30:13 UTC
 
----
+
+<!-- === FILE START: docs/skills/W/W-00-startup.md === -->
 
 ## 📄 docs/skills/W/W-00-startup.md
 
+```
 # W-00 領域啟動卡（Web App）
 
 最後更新：B34-4
@@ -115,10 +117,16 @@ V: 1791903760
 B: B34-4
 W: A20261013-004#169
 ═══ */
----
+```
+
+<!-- === FILE END: docs/skills/W/W-00-startup.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-01-firebase.md === -->
 
 ## 📄 docs/skills/W/W-01-firebase.md
 
+```
 # W-01 Firebase RTDB 結構原則（Web App 通用）
 
 最後更新：B34-3
@@ -226,10 +234,16 @@ V: 1791899500
 B: B34-3
 W: A20261013-004#065
 ═══ */
----
+```
+
+<!-- === FILE END: docs/skills/W/W-01-firebase.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-02-functions.md === -->
 
 ## 📄 docs/skills/W/W-02-functions.md
 
+```
 # W-02 Cloudflare Pages Functions 規則（Web App 通用）
 
 最後更新：B34-3
@@ -325,10 +339,16 @@ V: 1791899560
 B: B34-3
 W: A20261013-004#065
 ═══ */
----
+```
+
+<!-- === FILE END: docs/skills/W/W-02-functions.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-03-esmodule.md === -->
 
 ## 📄 docs/skills/W/W-03-esmodule.md
 
+```
 # W-03 純前端 ES Module 架構（Web App 通用）
 
 最後更新：B34-3
@@ -431,10 +451,16 @@ V: 1791899620
 B: B34-3
 W: A20261013-004#065
 ═══ */
----
+```
+
+<!-- === FILE END: docs/skills/W/W-03-esmodule.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-04-pwa.md === -->
 
 ## 📄 docs/skills/W/W-04-pwa.md
 
+```
 # W-04 PWA + Service Worker 規則（Web App 通用）
 
 最後更新：B34-3
@@ -502,10 +528,16 @@ V: 1791899680
 B: B34-3
 W: A20261013-004#065
 ═══ */
----
+```
+
+<!-- === FILE END: docs/skills/W/W-04-pwa.md === -->
+
+
+<!-- === FILE START: docs/skills/W/W-05-schema.md === -->
 
 ## 📄 docs/skills/W/W-05-schema.md
 
+```
 # W-05 Web App 頁面 Schema（Web App 通用）
 
 最後更新：B34-3
@@ -616,3 +648,7 @@ V: 1791899740
 B: B34-3
 W: A20261013-004#065
 ═══ */
+```
+
+<!-- === FILE END: docs/skills/W/W-05-schema.md === -->
+
