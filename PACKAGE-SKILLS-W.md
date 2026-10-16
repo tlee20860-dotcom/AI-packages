@@ -1,6 +1,6 @@
 # Web App 技能包（W-*）
 
-> 生成時間：2026-10-16 09:16:35 UTC
+> 生成時間：2026-10-16 09:18:04 UTC
 
 
 <!-- === FILE START: docs/skills/W/W-00-startup.md === -->
