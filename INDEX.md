@@ -1,7 +1,7 @@
 # 專案索引（AI 專用倉庫地圖）
 
 > ⚠️ 本檔由 GitHub Actions 自動生成。
-> 生成時間：2026-10-16 02:38:44 UTC
+> 生成時間：2026-10-16 07:57:05 UTC
 
 ## 🚨 AI 啟動與自主提取指示（最高優先）
 
@@ -38,24 +38,10 @@
 - docs/skills/W/W-05-schema.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/skills/W/W-05-schema.md
 
 ### 📂 機械記錄
+- docs/records/PROJECT-LIST.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/records/PROJECT-LIST.md
 - docs/records/R-01-writers.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/records/R-01-writers.md
 
 ### 📂 家庭 webapp 專案
-- docs/projects/family-fin/P-01-index.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-01-index.md
-- docs/projects/family-fin/P-02-progress.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-02-progress.md
-- docs/projects/family-fin/P-03-manifest.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-03-manifest.md
-- docs/projects/family-fin/P-04-decisions.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-04-decisions.md
-- docs/projects/family-fin/P-05-sop.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-05-sop.md
-- docs/projects/family-fin/P-06-pagemap.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-06-pagemap.md
-- docs/projects/family-fin/P-07-uispec.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-07-uispec.md
-- docs/projects/family-fin/P-08-api.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-08-api.md
-- docs/projects/family-fin/P-09-data.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-09-data.md
-- docs/projects/family-fin/P-10-incident.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-10-incident.md
-- docs/projects/family-fin/P-12-conclusion.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-12-conclusion.md
-- docs/projects/family-fin/P-13-handoff.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-13-handoff.md
-- docs/projects/family-fin/P-14-decisions.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-14-decisions.md
-- docs/projects/family-fin/P-15-reorg-plan.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-15-reorg-plan.md
-- docs/projects/family-fin/P-99-errors-map.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/projects/family-fin/P-99-errors-map.md
 
 ---
 ## 📋 R-01 當前內容
@@ -322,7 +308,7 @@ W: A20261016-001#001
 ## 🗺️ v2.Family 程式碼地圖
 # v2.Family 程式碼地圖
 
-> 生成時間：2026-10-16 02:38:44 UTC
+> 生成時間：2026-10-16 07:57:05 UTC
 > 本檔由 GitHub Actions 自動生成。
 
 ## 檔案清單
