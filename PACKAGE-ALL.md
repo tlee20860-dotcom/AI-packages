@@ -1,6 +1,6 @@
 # 家庭 webapp 專案 - 完整共享包
 
-> 生成時間：2026-10-16 01:38:17 UTC
+> 生成時間：2026-10-16 02:38:44 UTC
 > ⚠️ 本檔由 GitHub Actions 自動生成，包含訓練規則、專案文件、程式碼。
 
 ---
@@ -17974,12 +17974,15 @@ export { SUPERADMIN_DOMAIN, SUPERADMIN_EMAIL };
 ## 📄 js/core/db.js
 
 ```
-// db.js — Firebase RTDB 讀寫封裝（v103.0.36）
+// db.js — Firebase RTDB 讀寫封裝（v103.0.37）
+// v103.0.37（B35-1）：
+//   ✅ getFundSnapshotListOnce 每筆附 _rawPath（實際儲存路徑）
+//   ✅ removeFundSnapshot 支援 rawPath 參數（修舊格式刪除失效）
 // v103.0.36（B33-1）：
-//   ✅ 基金快照改為以「估值日（YYYY-MM-DD）」為 key，支援同月多筆
+//   ✅ 基金快照改為以「估值日（YYYY-MM-DD）」為 key
 //   ✅ 新增 getFundSnapshotListOnce() 回傳統一列表
 //   ✅ 保留舊資料兼容（舊 snapshots/{year}/{month} 讀取時自動轉換）
-//   ✅ 移除 saveFundSnapshot 中的 contribution / cumulativeCost（成本改由保單邏輯控制）
+//   ✅ 移除 saveFundSnapshot 中的 contribution / cumulativeCost
 // ============================================
 import { db } from '../config/firebase-config.js';
 import { AppState } from './state.js';
@@ -18731,14 +18734,22 @@ export async function updateFund(id, p) {
 }
 export async function removeFund(id) { await remove(familyRef(`funds/${id}`)); }
 
-/* ============ 基金快照（v103.0.36：以估值日為 key） ============ */
+/* ============ 基金快照（v103.0.37：附 _rawPath） ============ */
 
 /** 訂閱某基金的所有快照（回傳 {dateKey: {shares, nav, ...}}） */
 export function listenFundSnapshots(fundId, cb, err) {
   return listen(`funds/${fundId}/snapshots`, (snap) => cb(snap.val() || {}), err);
 }
 
-/** 取得某基金的所有快照，回傳按日期排序的列表（兼容舊資料） */
+/**
+ * 取得某基金的所有快照，回傳按日期排序的列表
+ * 每筆附 `_rawPath`（實際儲存路徑），供刪除時精確定位
+ *
+ * 相容兩種格式：
+ *   新：{ 'YYYY-MM-DD': {...} }        → _rawPath = 'YYYY-MM-DD'
+ *   舊：{ 'YYYY': { 'MM': {...} } }   → _rawPath = 'YYYY/MM'
+ *   舊：{ 'YYYY': { 'MM': { 'DD': {...} } } } → _rawPath = 'YYYY/MM/DD'
+ */
 export async function getFundSnapshotListOnce(fundId) {
   const snap = await get(familyRef(`funds/${fundId}/snapshots`));
   const val = snap.val() || {};
@@ -18746,18 +18757,28 @@ export async function getFundSnapshotListOnce(fundId) {
   Object.entries(val).forEach(([key, v]) => {
     if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
       /* 新格式：YYYY-MM-DD */
-      list.push({ dateKey: key, ...v });
+      list.push({ dateKey: key, _rawPath: key, ...v });
     } else if (/^\d{4}$/.test(key) && v && typeof v === 'object') {
       /* 舊格式：{year: {month: {...}}} */
       Object.entries(v).forEach(([month, snap2]) => {
         if (snap2 && typeof snap2 === 'object' && snap2.shares === undefined) {
+          /* {year: {month: {day: {...}}}} */
           Object.entries(snap2).forEach(([day, snap3]) => {
             if (snap3 && typeof snap3 === 'object') {
-              list.push({ dateKey: `${key}-${month}-${String(day).padStart(2, '0')}`, ...snap3 });
+              list.push({
+                dateKey: `${key}-${month}-${String(day).padStart(2, '0')}`,
+                _rawPath: `${key}/${month}/${day}`,
+                ...snap3,
+              });
             }
           });
         } else if (snap2 && typeof snap2 === 'object') {
-          list.push({ dateKey: `${key}-${month}-01`, ...snap2 });
+          /* {year: {month: {...}}} */
+          list.push({
+            dateKey: `${key}-${month}-01`,
+            _rawPath: `${key}/${month}`,
+            ...snap2,
+          });
         }
       });
     }
@@ -18781,10 +18802,19 @@ export async function saveFundSnapshot(fundId, dateKey, data) {
   });
 }
 
-/** 刪除某一筆快照 */
-export async function removeFundSnapshot(fundId, dateKey) {
+/**
+ * 刪除某一筆快照
+ * v103.0.37：加第 3 參數 rawPath（實際儲存路徑），支援舊格式刪除
+ * @param {string} fundId
+ * @param {string} dateKey - 顯示用日期（YYYY-MM-DD）
+ * @param {string} [rawPath] - 實際儲存路徑（由 getFundSnapshotListOnce 附帶）
+ * @returns {Promise<boolean>}
+ */
+export async function removeFundSnapshot(fundId, dateKey, rawPath) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) throw new Error('dateKey 必須是 YYYY-MM-DD 格式');
-  await remove(familyRef(`funds/${fundId}/snapshots/${dateKey}`));
+  const path = rawPath || dateKey;
+  await remove(familyRef(`funds/${fundId}/snapshots/${path}`));
+  return true;
 }
 
 /* ============ 跨來源改狀態 ============ */
@@ -18819,9 +18849,9 @@ export async function saveSidebarOrder(order) {
 /* ═══════════════════════════════════════════
    END OF FILE
    File: js/core/db.js
-   Version: v103.0.36
-   Batch: B33-1
-   Writer: A20261013-003#021
+   Version: 1792203600
+   Batch: B35-1
+   Writer: A20261016-001#003
    ═══════════════════════════════════════════ */```
 
 ---
@@ -26547,7 +26577,12 @@ function _buildStats(rows, year) {
 ## 📄 js/pages/portfolio.js
 
 ```
-// portfolio.js — 基金投資表（v103.0.33）
+// ============================================
+// portfolio.js — 基金投資表（v103.0.34）
+// ============================================
+// v103.0.34（B35-2）：
+//   ✅ 修：歷史快照刪除失效（舊格式）— 傳 _rawPath
+//   ✅ 新增：導入快照按鈕（貼 JSON / 上傳檔案）
 // v103.0.33（B33-1）：
 //   ✅ 快照改為以估值日（YYYY-MM-DD）為 key
 //   ✅ 卡片顯示最新一筆快照（單位數 / 價格 USD / 總值 USD / 保單價值 HKD）
@@ -26570,6 +26605,7 @@ import { calcFundCostEstimate } from '../lib/insurance.js';
 
 const SNAP_MODAL_ID = 'fund-snapshot-modal';
 const HISTORY_MODAL_ID = 'fund-history-modal';
+const IMPORT_MODAL_ID = 'fund-import-snapshot-modal';
 const DEFAULT_FX = 7.8;
 
 export default {
@@ -26599,6 +26635,21 @@ export default {
 
   customMount: (ctx) => {
     let _controls = null;
+    let _importHandler = null;
+
+    const headerEl = document.getElementById('page-header-actions');
+    if (headerEl) {
+      headerEl.innerHTML = `
+        <button type="button" class="btn btn-magenta" id="portfolio-import-btn">
+          <i data-lucide="upload"></i> 導入快照
+        </button>
+      `;
+      _importHandler = () => {
+        _openImportSnapshotModal(ctx.data.funds || [], render);
+      };
+      document.getElementById('portfolio-import-btn')?.addEventListener('click', _importHandler);
+      if (window.lucide) window.lucide.createIcons();
+    }
 
     const render = () => {
       _paintInsurance(ctx);
@@ -26692,6 +26743,11 @@ export default {
         insRoot?.removeEventListener('click', cardClickHandler);
         stdRoot?.removeEventListener('click', cardClickHandler);
         document.removeEventListener('click', snapshotHandler);
+        if (_importHandler && headerEl) {
+          document.getElementById('portfolio-import-btn')?.removeEventListener('click', _importHandler);
+          headerEl.innerHTML = '';
+          _importHandler = null;
+        }
       },
     };
   },
@@ -26955,6 +27011,7 @@ async function _openHistoryModal(fundId, fundName, onDone) {
     : snaps.map((s) => {
         const usd = (Number(s.shares) || 0) * (Number(s.nav) || 0);
         const hkd = usd * DEFAULT_FX;
+        /* ✅ v103.0.34：附帶 _rawPath，供刪除精確定位 */
         return `
           <tr>
             <td><input type="checkbox" class="hist-cb" data-date="${esc(s.dateKey)}"></td>
@@ -26963,7 +27020,7 @@ async function _openHistoryModal(fundId, fundName, onDone) {
             <td>USD ${s.nav}</td>
             <td>USD ${usd.toFixed(2)}</td>
             <td>HKD ${hkd.toFixed(2)}</td>
-            <td><button type="button" class="btn btn-xs btn-danger" data-del-date="${esc(s.dateKey)}">刪除</button></td>
+            <td><button type="button" class="btn btn-xs btn-danger" data-del-date="${esc(s.dateKey)}" data-del-raw="${esc(s._rawPath)}">刪除</button></td>
           </tr>
         `;
       }).join('');
@@ -27021,11 +27078,15 @@ async function _openHistoryModal(fundId, fundName, onDone) {
   tbody?.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-del-date]');
     if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
     const dateKey = btn.dataset.delDate;
+    const rawPath = btn.dataset.delRaw;
     const ok = await openConfirm(`確定要刪除 ${dateKey} 的快照嗎？`, { title: '刪除快照', okText: '刪除', okClass: 'btn-danger' });
     if (!ok) return;
     try {
-      await removeFundSnapshot(fundId, dateKey);
+      /* ✅ v103.0.34：傳 rawPath 修舊格式刪除失效 */
+      await removeFundSnapshot(fundId, dateKey, rawPath);
       showToast('✅ 已刪除快照', 'success');
       _closeHistory();
       if (typeof onDone === 'function') onDone();
@@ -27075,6 +27136,178 @@ function _closeHistory() {
 }
 
 /* ============================================
+   🆕 v103.0.34：導入基金快照 Modal
+   ============================================ */
+async function _openImportSnapshotModal(funds, onDone) {
+  document.getElementById(IMPORT_MODAL_ID)?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = IMPORT_MODAL_ID;
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto;">
+      <h2 class="modal-title">導入基金快照</h2>
+
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">目標基金</label>
+        <select class="select" id="${IMPORT_MODAL_ID}-fund" style="width:100%;">
+          <option value="">— 請選擇基金 —</option>
+          ${funds.map((f) => `<option value="${esc(f.id)}">${esc(f.name || '（未命名）')}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">上傳 JSON 檔案（可選）</label>
+        <input type="file" id="${IMPORT_MODAL_ID}-file" accept=".json,application/json" class="input" style="width:100%;">
+      </div>
+
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">或直接貼上 JSON</label>
+        <textarea class="input" id="${IMPORT_MODAL_ID}-text" rows="8"
+          placeholder='[{"dateKey":"2024-01-15","shares":100.5,"nav":12.34}, ...]'
+          style="width:100%;font-family:var(--font-mono);font-size:12px;resize:vertical;"></textarea>
+      </div>
+
+      <div id="${IMPORT_MODAL_ID}-status" style="font-size:12px; margin-bottom:12px; min-height:20px;"></div>
+
+      <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-ghost" data-action="cancel">取消</button>
+        <button type="button" class="btn btn-primary" data-action="import"><i data-lucide="upload" style="width:14px;height:14px;"></i> 開始導入</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay || e.target.closest('[data-action="cancel"]')) {
+      closeModal(IMPORT_MODAL_ID);
+      overlay.remove();
+    }
+  });
+
+  const fundSel = document.getElementById(`${IMPORT_MODAL_ID}-fund`);
+  const fileInput = document.getElementById(`${IMPORT_MODAL_ID}-file`);
+  const textArea = document.getElementById(`${IMPORT_MODAL_ID}-text`);
+  const statusEl = document.getElementById(`${IMPORT_MODAL_ID}-status`);
+  const importBtn = overlay.querySelector('[data-action="import"]');
+
+  fileInput?.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      textArea.value = text;
+    } catch (err) {
+      showToast('讀取檔案失敗：' + err.message, 'error');
+    }
+  });
+
+  importBtn?.addEventListener('click', async () => {
+    const fundId = fundSel.value;
+    if (!fundId) { showToast('請選擇基金', 'warning'); return; }
+    const text = (textArea.value || '').trim();
+    if (!text) { showToast('請貼上 JSON 或上傳檔案', 'warning'); return; }
+
+    let parsed;
+    try {
+      parsed = _parseSnapshotsJson(text);
+    } catch (err) {
+      statusEl.innerHTML = `<span style="color:var(--neon-red);">❌ ${esc(err.message)}</span>`;
+      return;
+    }
+
+    const { valid, errors } = parsed;
+    if (valid.length === 0) {
+      statusEl.innerHTML = `<span style="color:var(--neon-red);">❌ 無有效資料</span>`;
+      return;
+    }
+
+    importBtn.disabled = true;
+    statusEl.innerHTML = `導入中…（0 / ${valid.length}）`;
+
+    let ok = 0, fail = 0;
+    const failDetails = [];
+    for (const snap of valid) {
+      try {
+        await saveFundSnapshot(fundId, snap.dateKey, { shares: snap.shares, nav: snap.nav });
+        ok++;
+      } catch (err) {
+        fail++;
+        failDetails.push(`${snap.dateKey}：${err.message}`);
+      }
+      statusEl.innerHTML = `導入中…（${ok + fail} / ${valid.length}）`;
+    }
+
+    importBtn.disabled = false;
+
+    const lines = [
+      `<div style="color:${fail === 0 ? 'var(--neon-emerald)' : 'var(--neon-orange)'}; font-weight:700;">`,
+      `✅ 成功 ${ok} 筆${fail > 0 ? ` / ❌ 失敗 ${fail} 筆` : ''}`,
+      `</div>`,
+    ];
+    if (errors.length > 0) {
+      lines.push(`<div style="margin-top:6px; color:var(--text-muted); font-size:11px;">格式錯誤 ${errors.length} 筆：</div>`);
+      lines.push(`<div style="margin-top:4px; font-size:11px; color:var(--text-muted);">${errors.slice(0, 5).map(esc).join('<br>')}${errors.length > 5 ? `<br>…還有 ${errors.length - 5} 筆` : ''}</div>`);
+    }
+    if (failDetails.length > 0) {
+      lines.push(`<div style="margin-top:6px; color:var(--text-muted); font-size:11px;">失敗明細：</div>`);
+      lines.push(`<div style="margin-top:4px; font-size:11px; color:var(--text-muted);">${failDetails.slice(0, 5).map(esc).join('<br>')}${failDetails.length > 5 ? `<br>…還有 ${failDetails.length - 5} 筆` : ''}</div>`);
+    }
+    statusEl.innerHTML = lines.join('');
+
+    if (ok > 0) {
+      showToast(`✅ 導入完成：成功 ${ok} 筆`, 'success');
+      if (typeof onDone === 'function') onDone();
+    }
+  });
+
+  openModal(IMPORT_MODAL_ID);
+  if (window.lucide) window.lucide.createIcons();
+}
+
+/* ============================================
+   🆕 v103.0.34：解析快照 JSON
+   -------------------------------------------------
+   接受兩種格式：
+     A. 純陣列：[{dateKey, shares, nav}, ...]
+     B. 包裹：{ snapshots: [...] }
+   回傳：{ valid: [...], errors: [...] }
+   ============================================ */
+function _parseSnapshotsJson(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error('JSON 格式錯誤：' + e.message);
+  }
+
+  let arr;
+  if (Array.isArray(data)) arr = data;
+  else if (data && Array.isArray(data.snapshots)) arr = data.snapshots;
+  else throw new Error('格式錯誤：需為陣列或 { snapshots: [...] }');
+
+  const valid = [];
+  const errors = [];
+
+  arr.forEach((item, i) => {
+    const idx = i + 1;
+    if (!item || typeof item !== 'object') { errors.push(`第 ${idx} 筆：非物件`); return; }
+    const { dateKey, shares, nav } = item;
+    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey))) {
+      errors.push(`第 ${idx} 筆：日期格式錯誤（需 YYYY-MM-DD）`);
+      return;
+    }
+    const s = Number(shares);
+    const n = Number(nav);
+    if (isNaN(s) || s < 0) { errors.push(`第 ${idx} 筆：shares 無效`); return; }
+    if (isNaN(n) || n < 0) { errors.push(`第 ${idx} 筆：nav 無效`); return; }
+    valid.push({ dateKey: String(dateKey), shares: s, nav: n });
+  });
+
+  return { valid, errors };
+}
+
+/* ============================================
    Stats（邏輯不動）
    ============================================ */
 function _buildStats(funds, policies) {
@@ -27116,9 +27349,9 @@ function _buildStats(funds, policies) {
 /* ═══════════════════════════════════════════
    END OF FILE
    File: js/pages/portfolio.js
-   Version: v103.0.33
-   Batch: B33-1
-   Writer: A20261013-003#022
+   Version: 1792207200
+   Batch: B35-2
+   Writer: A20261016-001#005
    ═══════════════════════════════════════════ */```
 
 ---
@@ -33362,9 +33595,11 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ```
 // ============================================
-// sw.js — Service Worker（v103.0.31）
+// sw.js — Service Worker（v103.0.32）
 // 位置：sw.js
 // ============================================
+// v103.0.32（B35-3）：
+//   ✅ CACHE_NAME 升版 v155 → v156（配合 portfolio 快照修正 + 導入功能）
 // v103.0.31（B35-0）：
 //   ✅ CACHE_NAME 升版 v154 → v155（配合 input-center 入口調整）
 // v103.0.30（B34-4）：
@@ -33374,7 +33609,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 //   ✅ 加 yearrange-card.js；移除 4 個 database-*.js
 // ============================================
 
-const CACHE_NAME = 'family-fin-v155';
+const CACHE_NAME = 'family-fin-v156';
 
 const STATIC_ASSETS = [
   './css/theme.css',
@@ -33478,7 +33713,7 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  console.log('[SW] install (v103.0.31, cache=' + CACHE_NAME + ')');
+  console.log('[SW] install (v103.0.32, cache=' + CACHE_NAME + ')');
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       Promise.all(
@@ -33557,9 +33792,9 @@ async function _networkFirst(request) {
 /* ═══════════════════════════════════════════
    END OF FILE
    File: sw.js
-   Version: 1792200000
-   Batch: B35-0
-   Writer: A20261016-001#002
+   Version: 1792210800
+   Batch: B35-3
+   Writer: A20261016-001#006
    ═══════════════════════════════════════════ */```
 
 
