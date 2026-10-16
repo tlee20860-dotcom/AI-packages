@@ -1,7 +1,7 @@
 # 專案索引（AI 專用倉庫地圖）
 
 > ⚠️ 本檔由 GitHub Actions 自動生成。
-> 生成時間：2026-10-16 07:57:05 UTC
+> 生成時間：2026-10-16 07:57:33 UTC
 
 ## 🚨 AI 啟動與自主提取指示（最高優先）
 
@@ -40,6 +40,7 @@
 ### 📂 機械記錄
 - docs/records/PROJECT-LIST.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/records/PROJECT-LIST.md
 - docs/records/R-01-writers.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/records/R-01-writers.md
+- docs/records/REPOS.md -> https://raw.githubusercontent.com/tlee20860-dotcom/AI-training-files/main/docs/records/REPOS.md
 
 ### 📂 家庭 webapp 專案
 
@@ -308,7 +309,7 @@ W: A20261016-001#001
 ## 🗺️ v2.Family 程式碼地圖
 # v2.Family 程式碼地圖
 
-> 生成時間：2026-10-16 07:57:05 UTC
+> 生成時間：2026-10-16 07:57:33 UTC
 > 本檔由 GitHub Actions 自動生成。
 
 ## 檔案清單
