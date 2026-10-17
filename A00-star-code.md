@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#144
+> 構建編號：#145
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
@@ -241,7 +241,7 @@ Writer: refactor-final（未編號）
 F: AI-General/docs/common/C-00-startup.md
 V: 1792252800
 B: B34-5
-W: ai-system-20261017-005#001
+W: ai-system-20261017-005#010
 ═══ */
 ```
 
@@ -682,7 +682,7 @@ Writer: refactor-final（未編號）
 F: AI-General/docs/common/C-02-rules.md
 V: 1792252800
 B: B34-5
-W: ai-system-20261017-004#120
+W: ai-system-20261017-005#010
 ═══ */
 ```
 
@@ -1089,7 +1089,7 @@ AI 說「請描述問題」。
 F: AI-General/docs/common/C-03-flow.md
 V: 1792252800
 B: B34-5
-W: ai-system-20261017-004#120
+W: ai-system-20261017-005#010
 ═══ */
 ```
 
@@ -1500,7 +1500,7 @@ Writer: refactor-final（未編號）
 F: AI-General/docs/common/C-04-output.md
 V: 1792252800
 B: B34-5
-W: ai-system-20261017-004#120
+W: ai-system-20261017-005#010
 ═══ */
 ```
 
@@ -1887,7 +1887,7 @@ Writer: refactor-final（未編號）
 F: AI-General/docs/common/C-05-engine.md
 V: 1792252800
 B: B34-5
-W: ai-system-20261017-004#120
+W: ai-system-20261017-005#010
 ═══ */
 ```
 
