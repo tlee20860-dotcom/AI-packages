@@ -136,12 +136,12 @@ W: ai-system-20261017-005#084
 ## 二、檔案清單
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/PROGRESS.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-03-flow.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-02-rules.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-04-output.md|1792262000|B34-5|ai-system-20261017-005#082
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792258800|B34-5|ai-system-20261017-005#074
 AI-General|docs/common/C-05-engine.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-00-startup.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-05-learning/general.md|1792226400|B34-5|ai-system-20261017-004#032
@@ -174,9 +174,9 @@ AI-General|docs/skills/W/W-01-firebase.md|1791899500|B34-3|A20261013-004#065
 # SYSTEM-CONCLUSION（體系層滾動結論）
 
 最後更新：ai-system-20261017-005
-Version: 1792256400
+Version: 1792263000
 Batch: B34-5
-Writer: ai-system-20261017-005#011
+Writer: ai-system-20261017-005#084
 用途：體系層滾動式累積結論（議題 + 設計 + 決策）
 
 ---
@@ -224,6 +224,7 @@ Writer: ai-system-20261017-005#011
 | 37 | C-00 自動推斷專案 | ✅ |
 | 38 | Patch 腳本與正則替換 | ✅ |
 | 39 | 體系重構收尾與驗證 | ✅ |
+| 40 | 雙 AI 路由與熱更新 | ✅ |
 
 ---
 
@@ -312,6 +313,7 @@ Writer: ai-system-20261017-005#011
 | **D-170** | **建立 S/R/F/K 矩陣標準** | S-List（事前）、R-List（行為鐵律）、F-List（交付格式）、K-List（事後校驗），形成完整防呆閉環。 |
 | **D-171** | **A00（大腦）與 S00（狀態）分離** | 大腦包（A00-star-code）專注規則與機制；狀態包（S00-ai-system）專注進度與交接，降低 AI 讀取負擔。 |
 | **D-172** | **人類作為中介路由（Human-in-the-loop）** | 專案 AI 若需體系層（C-*）修改或確認，必須輸出「【轉交體系】」標籤。使用者作為唯一路由，負責複製貼上。專案 AI 亦可接收最新 A00 進行熱更新。 |
+| **D-173** | **轉交指令的 Code Block 規範** | 凡是「轉交指令」（如【轉交體系】或【轉交專案】），內容**必須**用 Markdown Code Block 包裹，防止手機複製時格式跑版。一般對話則嚴禁濫用 Code Block。 |
 
 ---
 
@@ -328,9 +330,9 @@ Writer: ai-system-20261017-005#011
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792258800
+V: 1792263000
 B: B34-5
-W: ai-system-20261017-005#074
+W: ai-system-20261017-005#084
 ═══ */
 ```
 
