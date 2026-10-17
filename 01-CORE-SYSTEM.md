@@ -1,7 +1,7 @@
 # AI 協作 - 體系層核心包
 
-> 生成時間：2026-10-17 11:15:33 UTC
-> 構建編號：#0093
+> 生成時間：2026-10-17 11:15:53 UTC
+> 構建編號：#0094
 
 ---
 
@@ -374,9 +374,9 @@ W: ai-system-20261016-003#127
 # C-02 行為法則與決策（Law & Decisions）
 
 最後更新：ai-system-20261017-004
-Version: 1792233000
+Version: 1792242000
 Batch: B34-5
-Writer: ai-system-20261017-004#078
+Writer: ai-system-20261017-004#090
 用途：定義 AI 行為鐵律（R-List）與決策互動原則。
 
 ---
@@ -411,17 +411,23 @@ Writer: ai-system-20261017-004#078
 | 4 | 可否加參數（向後相容）解決？ | 舊呼叫不動 |
 | 5 | 現有架構是否已提供切入點？ | 用現有 |
 
-### 1.2 提問與溝通規則
+### 1.2 提問與主動提案規則
 | 項目 | 規則 |
 |---|---|
 | 選項標示 | 使用 A / B / C（★ 標示建議選項）。 |
-| 選項解釋 | 每題選項下方必加「> 人話解釋：...」。 |
-| 正反並列 | 提出方案必須同時列出優缺點，禁止只報喜。 |
+| 人話解釋 | 每題選項下方必加「> 人話解釋：...」。 |
+| 正反並列 | 提出方案必須同時列出優缺點，**禁止只報喜**。 |
+| 發現漏洞 | 主動指出並提供更好方案。 |
 
 ---
 
-## 二、禁止事項
+## 二、防呆與禁止事項
 
+### 2.1 兩層三反引號口訣
+- **外面（對話交付）**：要三反引號（一鍵複製）。
+- **裡面（md 檔案內）**：不要三反引號（改引用塊 > 或表格，防渲染錯誤）。
+
+### 2.2 禁止事項
 | 禁止 | 說明 |
 |---|---|
 | 未經確認直接改檔 | 必先提方案（R-001）。 |
@@ -435,7 +441,7 @@ Writer: ai-system-20261017-004#078
 ## 三、關聯檔案
 | 主題 | 檔案 |
 |---|---|
-| 啟動與路由 | `C-01-identity.md` |
+| 啟動與路由 | `C-00-startup.md` |
 | 執行流程 | `C-03-flow.md` |
 | 輸出與檢查 | `C-04-output.md` |
 | 系統引擎 | `C-05-engine.md` |
@@ -444,9 +450,9 @@ Writer: ai-system-20261017-004#078
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-02-rules.md
-V: 1792233000
+V: 1792242000
 B: B34-5
-W: ai-system-20261017-004#078
+W: ai-system-20261017-004#090
 ═══ */
 ```
 
@@ -1664,7 +1670,7 @@ W: ai-system-20261017-004#023
 
 > ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 11:15:32 UTC
+最後更新：2026-10-17 11:15:51 UTC
 
 ---
 
@@ -1680,11 +1686,11 @@ W: ai-system-20261017-004#023
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | common/C-02-rules.md | 1792242000 | B34-5 | ai-system-20261017-004#090 |
 | AI-General | common/C-00-startup.md | 1792242000 | B34-5 | ai-system-20261017-004#090 |
 | AI-General | common/C-04-output.md | 1792236600 | B34-5 | ai-system-20261017-004#081 |
-| AI-General | records/STATE-INDEX.md | 1792234942 | B34-5 | ai-system-20261017-004#028 |
+| AI-General | records/STATE-INDEX.md | 1792235733 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-03-flow.md | 1792234200 | B34-5 | ai-system-20261017-004#079 |
-| AI-General | common/C-02-rules.md | 1792233000 | B34-5 | ai-system-20261017-004#078 |
 | AI-General | common/C-05-learning/general.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792225200 | B34-5 | ai-system-20261017-004#029 |
 | AI-General | .github/workflows/setup-structure.yml | 1792224000 | B34-5 | ai-system-20261017-004#028 |
@@ -1752,7 +1758,7 @@ W: ai-system-20261017-004#023
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792235733
+V: 1792235753
 B: B34-5
 W: ai-system-20261017-004#028
 ═══ */
