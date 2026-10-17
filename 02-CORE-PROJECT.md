@@ -1,7 +1,7 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 05:58:44 UTC
-> 構建編號：#0074
+> 生成時間：2026-10-17 06:00:09 UTC
+> 構建編號：#0075
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
 > 專案包已內含該領域技能包，本包不需再單獨傳技能包。
 
@@ -721,10 +721,10 @@ W: ai-system-20261016-003#127
 ```
 # C-04 交付格式
 
-最後更新：ai-system-20261016-003
-Version: 1791953600
+最後更新：ai-system-20261017-004
+Version: 1792220400
 Batch: B34-5
-Writer: ai-system-20261016-003#236
+Writer: ai-system-20261017-004#023
 用途：跨專案通用交付規範
 
 ---
@@ -961,6 +961,7 @@ Writer: ai-system-20261016-003#236
 | 18 | 未標所屬專案 | 必標 |
 | 19 | 交付不完整（以 Token 為理由偷懶） | 必完整（C-02 §零） |
 | 20 | 路徑未用 code block | 路徑一律 code block（L-024） |
+| 21 | 未執行兩階段確認 | 必先問「確認完整」 |
 
 ---
 
@@ -1025,6 +1026,7 @@ Writer: ai-system-20261016-003#236
 | 13. 單行索引已附 | ✅ |
 | 14. 檔案狀態總表已附 | ✅ |
 | 15. Token 狀態已顯示 | ✅ |
+| 16. 已執行兩階段確認（先問「確認完整」） | ✅ |
 
 ---
 
@@ -1065,15 +1067,31 @@ C-09 滾動式結論的格式**與本檔（C-04 交付格式）完全一致**。
 | 滾動式結論 | C-09-rolling-mechanism.md |
 | 交接快照 | C-10-handoff-mechanism.md |
 | 共同語言表 | C-11-terms.md |
-| AI 編寫者名單 | R-01-writers.md |
+| 機械記錄 | STATE-INDEX.md |
+
+---
+
+## 十六、兩階段確認機制（D-162）
+
+**核心**：交付檔案後，必須經過「確認完整 → 提示貼上 → 等待已更新」三道手續，禁止跳步。
+
+| 階段 | AI 動作 | 等待使用者回覆 |
+|---|---|---|
+| 第一階段 | 輸出完整檔案內容，並問「**請確認：內容是否完整？**」 | 使用者回覆「**確認完整**」 |
+| 第二階段 | 提示「請貼到 {路徑}，完成後回覆『已更新』」 | 使用者回覆「**已更新**」 |
+| 第三階段 | 標記檔案為 ✅，繼續後續流程 | — |
+
+**禁止**：
+1. 在第一階段直接叫使用者貼上。
+2. 在使用者未回「已更新」前，進入下一個檔案的交付。
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-04-delivery.md
-V: 1791953600
+V: 1792220400
 B: B34-5
-W: ai-system-20261016-003#236
+W: ai-system-20261017-004#023
 ═══ */
 ```
 
@@ -1441,7 +1459,7 @@ W: ai-system-20261016-003#134
 
 > ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
 
-最後更新：2026-10-17 05:58:42 UTC
+最後更新：2026-10-17 06:00:07 UTC
 
 ---
 
@@ -1457,14 +1475,14 @@ W: ai-system-20261016-003#134
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
 | AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
-| AI-General | records/STATE-INDEX.md | 1792216642 | B34-5 | ai-system-20261017-004#019 |
+| AI-General | records/STATE-INDEX.md | 1792216724 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
 | AI-General | records/SYSTEM-HANDOFF.md | 1791956000 | B34-5 | ai-system-20261016-003#248 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1791956000 | B34-5 | ai-system-20261016-003#248 |
-| AI-General | common/C-04-delivery.md | 1791953600 | B34-5 | ai-system-20261016-003#236 |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
 | AI-General | common/C-06-token-log.md | 1791943800 | B34-5 | ai-system-20261016-003#154 |
 | AI-General | common/C-07-summary.md | 1791942600 | B34-5 | ai-system-20261016-003#150 |
@@ -1532,7 +1550,7 @@ W: ai-system-20261016-003#134
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792216724
+V: 1792216808
 B: B34-5
 W: ai-system-20261017-004#019
 ═══ */
