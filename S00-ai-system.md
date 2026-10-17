@@ -9,9 +9,9 @@
 # 任務進度追蹤
 
 最後更新：ai-system-20261017-005
-Version: 1792256400
+Version: 1792263000
 Batch: B34-5
-Writer: ai-system-20261017-005#011
+Writer: ai-system-20261017-005#084
 用途：追蹤體系層任務的步驟進度（跨對話持續）
 
 ---
@@ -36,20 +36,20 @@ Writer: ai-system-20261017-005#011
 | 當前階段 | 全部完成 |
 | 完成度 | 3/3 |
 
-### 任務三：體系重構雙軌切換
+### 任務三：體系全面重構與雙 AI 路由建置
 
 | 欄位 | 值 |
 |---|---|
-| 任務名稱 | 體系全面重構（v10a 雙軌 → v10b 切換） |
+| 任務名稱 | 體系全面重構（v10a 雙軌 → v10b 切換 → 終極防呆） |
 | 開始時間 | 2026-10-17 |
 | 當前階段 | 全部完成 |
-| 完成度 | 9/9 |
+| 完成度 | 11/11 |
 
 ---
 
 ## 二、步驟清單
 
-### 任務三：體系重構雙軌切換
+### 任務三：體系重構與雙 AI 路由建置
 
 | # | 步驟 | 狀態 | 完成時間 | 備註 |
 |---|---|---|---|---|
@@ -62,6 +62,8 @@ Writer: ai-system-20261017-005#011
 | 7 | 交付 SYSTEM-HANDOFF.md | ✅ | 2026-10-17 | 更新進度 |
 | 8 | 交付 P-01-index.md (專案層) | ✅ | 2026-10-17 | 加 YAML frontmatter |
 | 9 | 交付 setup-structure.yml (v10b) | ✅ | 2026-10-17 | 執行 Step 1 刪除舊檔 |
+| 10 | 重構 Patch 腳本與 Workflow | ✅ | 2026-10-17 | 建立 .py，解決權限與迴圈 |
+| 11 | 建立雙 AI 路由與熱更新 | ✅ | 2026-10-17 | 寫入 C-00、C-02、D-172/173 |
 
 ---
 
@@ -110,9 +112,9 @@ Writer: ai-system-20261017-005#011
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792256400
+V: 1792263000
 B: B34-5
-W: ai-system-20261017-005#011
+W: ai-system-20261017-005#084
 ═══ */
 ```
 
@@ -134,12 +136,12 @@ W: ai-system-20261017-005#011
 ## 二、檔案清單
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+AI-General|docs/records/PROGRESS.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-03-flow.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-02-rules.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-04-output.md|1792262000|B34-5|ai-system-20261017-005#082
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792258800|B34-5|ai-system-20261017-005#074
-AI-General|docs/records/PROGRESS.md|1792256400|B34-5|ai-system-20261017-005#011
 AI-General|docs/common/C-05-engine.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-00-startup.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-05-learning/general.md|1792226400|B34-5|ai-system-20261017-004#032
