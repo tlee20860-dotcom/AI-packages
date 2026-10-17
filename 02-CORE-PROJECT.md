@@ -1,7 +1,7 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 10:42:04 UTC
-> 構建編號：#0088
+> 生成時間：2026-10-17 10:44:53 UTC
+> 構建編號：#0089
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
 
 ---
@@ -840,7 +840,7 @@ W: ai-system-20261017-004#023
 
 > ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 10:42:02 UTC
+最後更新：2026-10-17 10:44:51 UTC
 
 ---
 
@@ -856,11 +856,11 @@ W: ai-system-20261017-004#023
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | common/C-03-guide.md | 1792234200 | B34-5 | ai-system-20261017-004#079 |
+| AI-General | records/STATE-INDEX.md | 1792233723 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-02-rules.md | 1792233000 | B34-5 | ai-system-20261017-004#078 |
-| AI-General | records/STATE-INDEX.md | 1792232086 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-00-startup.md | 1792230600 | B34-5 | ai-system-20261017-004#067 |
 | AI-General | common/C-05-learning/general.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
-| AI-General | common/C-03-guide.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792225200 | B34-5 | ai-system-20261017-004#029 |
 | AI-General | .github/workflows/setup-structure.yml | 1792224000 | B34-5 | ai-system-20261017-004#028 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-01-index.md | 1792222800 | B34-5 | ai-system-20261017-004#027 |
@@ -927,7 +927,7 @@ W: ai-system-20261017-004#023
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792233723
+V: 1792233893
 B: B34-5
 W: ai-system-20261017-004#028
 ═══ */
