@@ -1,7 +1,7 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 06:02:09 UTC
-> 構建編號：#0078
+> 生成時間：2026-10-17 06:02:32 UTC
+> 構建編號：#0079
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
 > 專案包已內含該領域技能包，本包不需再單獨傳技能包。
 
@@ -1463,7 +1463,7 @@ W: ai-system-20261016-003#134
 
 > ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
 
-最後更新：2026-10-17 06:02:07 UTC
+最後更新：2026-10-17 06:02:31 UTC
 
 ---
 
@@ -1481,11 +1481,12 @@ W: ai-system-20261016-003#134
 |---|---|---|---|---|
 | AI-General | records/SYSTEM-HANDOFF.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
+| AI-General | records/PROGRESS.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | common/C-11-terms.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | records/STATE-INDEX.md | 1792216896 | B34-5 | ai-system-20261017-004#019 |
+| AI-General | records/STATE-INDEX.md | 1792216928 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
@@ -1500,7 +1501,6 @@ W: ai-system-20261016-003#134
 | AI-General | common/C-05-learning/general.md | 1791927000 | B34-5 | ai-system-20261016-003#121 |
 | AI-General | common/C-05-learning/system.md | 1791922200 | B34-5 | ai-system-20261016-003#111 |
 | AI-General | records/PROJECT-LIST.md | 1791918000 | B34-5 | ai-system-20261016-003#096 |
-| AI-General | records/PROGRESS.md | 1791914000 | B34-5 | ai-system-20261016-003#022 |
 | AI-General | records/REPOS.md | 1791906860 | B34-4 | A20261016-001 |
 | AI-General | .github/workflows/setup-migration.yml | 1791906700 | B34-4 | A20261016-001 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-06-pagemap.md | 1791904480 | B34-4 | A20261013-004#183 |
@@ -1554,7 +1554,7 @@ W: ai-system-20261016-003#134
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792216928
+V: 1792216952
 B: B34-5
 W: ai-system-20261017-004#019
 ═══ */

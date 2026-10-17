@@ -1,7 +1,7 @@
 # AI 協作 - 體系層核心包
 
-> 生成時間：2026-10-17 06:02:09 UTC
-> 構建編號：#0078
+> 生成時間：2026-10-17 06:02:32 UTC
+> 構建編號：#0079
 
 ---
 
@@ -3471,7 +3471,7 @@ W: ai-system-20261016-003#134
 
 > ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
 
-最後更新：2026-10-17 06:02:07 UTC
+最後更新：2026-10-17 06:02:31 UTC
 
 ---
 
@@ -3489,11 +3489,12 @@ W: ai-system-20261016-003#134
 |---|---|---|---|---|
 | AI-General | records/SYSTEM-HANDOFF.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
+| AI-General | records/PROGRESS.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | common/C-11-terms.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | records/STATE-INDEX.md | 1792216896 | B34-5 | ai-system-20261017-004#019 |
+| AI-General | records/STATE-INDEX.md | 1792216928 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
@@ -3508,7 +3509,6 @@ W: ai-system-20261016-003#134
 | AI-General | common/C-05-learning/general.md | 1791927000 | B34-5 | ai-system-20261016-003#121 |
 | AI-General | common/C-05-learning/system.md | 1791922200 | B34-5 | ai-system-20261016-003#111 |
 | AI-General | records/PROJECT-LIST.md | 1791918000 | B34-5 | ai-system-20261016-003#096 |
-| AI-General | records/PROGRESS.md | 1791914000 | B34-5 | ai-system-20261016-003#022 |
 | AI-General | records/REPOS.md | 1791906860 | B34-4 | A20261016-001 |
 | AI-General | .github/workflows/setup-migration.yml | 1791906700 | B34-4 | A20261016-001 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-06-pagemap.md | 1791904480 | B34-4 | A20261013-004#183 |
@@ -3562,7 +3562,7 @@ W: ai-system-20261016-003#134
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792216928
+V: 1792216952
 B: B34-5
 W: ai-system-20261017-004#019
 ═══ */
@@ -4119,10 +4119,10 @@ W: ai-system-20261017-004#024
 ```
 # 任務進度追蹤
 
-最後更新：ai-system-20261016-003
-Version: 1791914000
+最後更新：ai-system-20261017-004
+Version: 1792221600
 Batch: B34-5
-Writer: ai-system-20261016-003#022
+Writer: ai-system-20261017-004#024
 用途：追蹤體系層任務的步驟進度（跨對話持續）
 
 ---
@@ -4147,34 +4147,32 @@ Writer: ai-system-20261016-003#022
 | 當前階段 | 全部完成 |
 | 完成度 | 3/3 |
 
+### 任務三：體系重構雙軌切換（本對話）
+
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 體系全面重構（v10a 雙軌 → v10b 切換） |
+| 開始時間 | 2026-10-17 |
+| 當前階段 | 源檔更新中 |
+| 完成度 | 7/9 |
+
 ---
 
 ## 二、步驟清單
 
-### 任務一：四倉架構建置與共享包機制
+### 任務三：體系重構雙軌切換
 
 | # | 步驟 | 狀態 | 完成時間 | 備註 |
 |---|---|---|---|---|
-| 1 | 建立 AI-General 倉庫 | ✅ | 2026-10-16 | — |
-| 2 | 交付 MIGRATION.md | ✅ | 2026-10-16 | #013 |
-| 3 | 交付 setup-migration.yml | ✅ | 2026-10-16 | #020 |
-| 4 | 交付 MIGRATION-GUIDE.md | ✅ | 2026-10-16 | #016 |
-| 5 | 執行 phase-1（複製） | ✅ | 2026-10-16 | — |
-| 6 | 執行 phase-2（刪除源頭） | ✅ | 2026-10-16 | — |
-| 7 | 刪除 external/ 目錄 | ✅ | 2026-10-16 | — |
-| 8 | 建立 .gitignore | ✅ | 2026-10-16 | — |
-| 9 | 第一波交付（自動化） | ✅ | 2026-10-16 | PROJECT-LIST、setup-structure、notify×2 |
-| 10 | 第二波交付（規則） | ✅ | 2026-10-16 | C-02、C-04、C-11、C-03 |
-| 11 | 第三波交付（進度表） | ✅ | 2026-10-16 | PROGRESS.md、C-02 §二十 |
-| 12 | 第四波交付（新編號格式） | ✅ | 2026-10-16 | PROJECT-LIST、C-02、C-04、C-11、R-01、setup-structure |
-
-### 任務二：B34-5 防呆強化
-
-| # | 步驟 | 狀態 | 完成時間 | 備註 |
-|---|---|---|---|---|
-| 13 | C-00 §3.4 防呆條款 | ✅ | 2026-10-16 | ai-system-20261016-003#012 |
-| 14 | setup-structure.yml 步驟 1 防呆 | ✅ | 2026-10-16 | ai-system-20261016-003#016 |
-| 15 | R-01 §四備註 + §五同步 | ✅ | 2026-10-16 | ai-system-20261016-003#019 |
+| 1 | 交付 setup-structure.yml (v10a) | ✅ | 2026-10-17 | Action 綠燈 |
+| 2 | 交付 C-00-startup.md | ✅ | 2026-10-17 | 移除 R-01 / PROJECT-LIST |
+| 3 | 交付 C-02-rules.md | ✅ | 2026-10-17 | 加入 §六點六、D-161/162 |
+| 4 | 交付 C-04-delivery.md | ✅ | 2026-10-17 | 加入兩階段確認 |
+| 5 | 交付 C-11-terms.md | ✅ | 2026-10-17 | 新增詞彙 |
+| 6 | 交付 SYSTEM-CONCLUSION.md | ✏️ | 2026-10-17 | 新增 D-161~D-166 |
+| 7 | 交付 SYSTEM-HANDOFF.md | ✏️ | 2026-10-17 | 更新進度 |
+| 8 | 交付 P-01-index.md (專案層) | ⏳ | — | 加 YAML frontmatter |
+| 9 | 交付 setup-structure.yml (v10b) | ⏳ | — | 執行 Step 1 刪除舊檔 |
 
 ---
 
@@ -4223,9 +4221,9 @@ Writer: ai-system-20261016-003#022
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1791914000
+V: 1792221600
 B: B34-5
-W: ai-system-20261016-003#022
+W: ai-system-20261017-004#024
 ═══ */
 ```
 
