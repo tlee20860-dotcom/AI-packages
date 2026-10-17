@@ -1,7 +1,7 @@
 # AI 協作 - 體系層核心包
 
-> 生成時間：2026-10-17 06:01:37 UTC
-> 構建編號：#0077
+> 生成時間：2026-10-17 06:02:09 UTC
+> 構建編號：#0078
 
 ---
 
@@ -3471,7 +3471,7 @@ W: ai-system-20261016-003#134
 
 > ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
 
-最後更新：2026-10-17 06:01:35 UTC
+最後更新：2026-10-17 06:02:07 UTC
 
 ---
 
@@ -3487,15 +3487,15 @@ W: ai-system-20261016-003#134
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | records/SYSTEM-HANDOFF.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | common/C-11-terms.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | records/STATE-INDEX.md | 1792216830 | B34-5 | ai-system-20261017-004#019 |
+| AI-General | records/STATE-INDEX.md | 1792216896 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
-| AI-General | records/SYSTEM-HANDOFF.md | 1791956000 | B34-5 | ai-system-20261016-003#248 |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
 | AI-General | common/C-06-token-log.md | 1791943800 | B34-5 | ai-system-20261016-003#154 |
 | AI-General | common/C-07-summary.md | 1791942600 | B34-5 | ai-system-20261016-003#150 |
@@ -3562,7 +3562,7 @@ W: ai-system-20261016-003#134
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792216896
+V: 1792216928
 B: B34-5
 W: ai-system-20261017-004#019
 ═══ */
@@ -3861,10 +3861,10 @@ W: ai-system-20261016-003#111
 ```
 # SYSTEM-HANDOFF（體系層交接快照）
 
-最後更新：ai-system-20261016-003
-Version: 1791956000
+最後更新：ai-system-20261017-004
+Version: 1792221600
 Batch: B34-5
-Writer: ai-system-20261016-003#248
+Writer: ai-system-20261017-004#024
 上限：80 行
 用途：體系層對話交接快照
 
@@ -3874,10 +3874,10 @@ Writer: ai-system-20261016-003#248
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261016-003 |
-| 本次範圍 | 共享包機制優化、體系全面自動化藍圖設計、防呆機制補強 |
-| 累計回覆 | 約 248 條 |
-| 狀態 | 藍圖完成，待執行重構 |
+| 對話編號 | ai-system-20261017-004 |
+| 本次範圍 | 體系重構雙軌切換（v10a 上線、源檔更新、v10b 待執行） |
+| 累計回覆 | 約 24 條 |
+| 狀態 | 雙軌並存中（v10a 已綠燈，v10b 未執行） |
 
 ---
 
@@ -3886,12 +3886,11 @@ Writer: ai-system-20261016-003#248
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. 全面精簡：C-* 合併去水、P-* 合併為 7 檔。
-2. 全面自動化：廢除手動 R-01、PROJECT-LIST，改由 Action 生成 `STATE-INDEX.md`。
-3. SSOT 集中：各專案資訊改寫於 `P-01-index.md` 的 YAML frontmatter。
-4. 新增專案防呆：AI 必須先索取「Repo 完整名稱」，未取得不進下一步。
-5. 防呆補強：新增交付前「強制自檢勾選表」與「兩階段確認機制」。
-6. Action 順序 B：由 AI 產腳本，Action 執行「先刪舊、再改名」避免衝突。
+1. **雙軌重構**：先上線 v10a（新舊並存），再更新源檔（C-00~C-11），最後執行 v10b（廢除舊檔）。
+2. **Action 穩定性**：解決 `set -e` 陷阱，所有迴圈與空檔案判斷加 `|| true` 防護。
+3. **P-01 加 YAML**：各專案 P-01 頂部需加 `name/code/domain/package_no/repo`，供 Action 掃描。
+4. **專案清單**：改由 `setup-structure.yml` 的 `PROJECT_REPOS` 提供。
+5. **兩階段確認**：寫入 C-04，強制 AI 交付後先問「確認完整」。
 
 ---
 
@@ -3899,7 +3898,7 @@ Writer: ai-system-20261016-003#248
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-148 ~ D-160（廢 R-01、P-01 改 YAML、Action 統管、兩階段確認等）。
+**本次新增決策**：D-161 ~ D-166（源檔分檔、兩階段確認、廢除 R-01/PROJECT-LIST、P-01 YAML、PROJECT_REPOS）。
 
 ---
 
@@ -3907,10 +3906,10 @@ Writer: ai-system-20261016-003#248
 
 | # | 優先確認 |
 |---|---|
-| 1 | 是否已讀取使用者貼上的「體系重組藍圖」？ |
-| 2 | 是否已列出「內容去向對照表」與「不可刪清單」給使用者確認？ |
-| 3 | 是否確認 C-02 合併後的行數未超過 800 行？ |
-| 4 | 是否已啟用「兩階段確認機制」（交付後先問完整，再提示貼上）？ |
+| 1 | v10a 是否已成功上線（Action 綠燈）？ |
+| 2 | C-00、C-02、C-04、C-11、SYSTEM-*、PROGRESS 是否已全部更新？ |
+| 3 | WEB-APP-Family 的 P-01 是否已加 YAML frontmatter？ |
+| 4 | 是否已執行 v10b 切換版（刪除 R-01 / PROJECT-LIST）？ |
 
 ---
 
@@ -3918,14 +3917,8 @@ Writer: ai-system-20261016-003#248
 
 | # | 項目 |
 |---|---|
-| 1 | 廢除 R-01、PROJECT-LIST（內容分散至 C-02、P-01、Action） |
-| 2 | 更新 P-01（加 YAML frontmatter） |
-| 3 | 精簡 C-02（合併 C-03、C-06、C-07、C-09、C-10，去水） |
-| 4 | 精簡 P-04（合併 P-05~P-10、P-14、P-15 為專案百科） |
-| 5 | 修改 setup-structure.yml（移除舊掃描，改生成 STATE-INDEX） |
-| 6 | 加入 Action 引用校驗機制與行數暴減警告 |
-| 7 | 更新 C-00 新增專案流程（先要 repo） |
-| 8 | 更新 C-04（加入強制自檢勾選表、兩階段確認） |
+| 1 | 更新 P-01（加 YAML frontmatter） |
+| 2 | 執行 v10b（移除 R-01/PROJECT-LIST 讀取、生成，加入 Step 1 刪除邏輯） |
 
 ---
 
@@ -3933,18 +3926,18 @@ Writer: ai-system-20261016-003#248
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 開新對話，上傳 01-CORE-SYSTEM.md |
-| 2 | 貼上 #247 的啟動指令（體系重構藍圖） |
-| 3 | 執行「體系全面重構」，完成後舊系統正式退役 |
+| 1 | 完成批次 5（P-01 YAML） |
+| 2 | 執行 v10b 切換版（正式廢除舊檔） |
+| 3 | 驗證共享包內容是否只剩 STATE-INDEX |
 
 ---
 
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1791956000
+V: 1792221600
 B: B34-5
-W: ai-system-20261016-003#248
+W: ai-system-20261017-004#024
 ═══ */
 ```
 
