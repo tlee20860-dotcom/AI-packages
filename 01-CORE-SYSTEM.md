@@ -1,7 +1,7 @@
 # AI 協作 - 體系層核心包
 
-> 生成時間：2026-10-17 10:44:53 UTC
-> 構建編號：#0089
+> 生成時間：2026-10-17 10:59:40 UTC
+> 構建編號：#0090
 
 ---
 
@@ -1764,7 +1764,7 @@ W: ai-system-20261017-004#023
 
 > ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 10:44:51 UTC
+最後更新：2026-10-17 10:59:38 UTC
 
 ---
 
@@ -1781,7 +1781,8 @@ W: ai-system-20261017-004#023
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
 | AI-General | common/C-03-guide.md | 1792234200 | B34-5 | ai-system-20261017-004#079 |
-| AI-General | records/STATE-INDEX.md | 1792233723 | B34-5 | ai-system-20261017-004#028 |
+| AI-General | common/C-03-flow.md | 1792234200 | B34-5 | ai-system-20261017-004#079 |
+| AI-General | records/STATE-INDEX.md | 1792233893 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-02-rules.md | 1792233000 | B34-5 | ai-system-20261017-004#078 |
 | AI-General | common/C-00-startup.md | 1792230600 | B34-5 | ai-system-20261017-004#067 |
 | AI-General | common/C-05-learning/general.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
@@ -1851,7 +1852,7 @@ W: ai-system-20261017-004#023
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792233893
+V: 1792234779
 B: B34-5
 W: ai-system-20261017-004#028
 ═══ */
