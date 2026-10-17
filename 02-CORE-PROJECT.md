@@ -1,7 +1,7 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 11:02:22 UTC
-> 構建編號：#0092
+> 生成時間：2026-10-17 11:15:33 UTC
+> 構建編號：#0093
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
 
 ---
@@ -58,16 +58,14 @@
 # A00 啟動核心（最高優先）
 
 最後更新：ai-system-20261017-004
-Version: 1792230600
+Version: 1792242000
 Batch: B34-5
-Writer: ai-system-20261017-004#067
+Writer: ai-system-20261017-004#090
 用途：AI 啟動、狀態機定義與自然語言路由。
 
 ---
 
 ## 零、自然語言路由表（Intent Routing）
-
-**核心**：使用者不需記檔名。當對話中出現以下關鍵字，AI 必須自動對應並鎖定目標：
 
 | 使用者指令 / 關鍵字 | AI 認知目標 |
 |---|---|
@@ -88,12 +86,11 @@ Writer: ai-system-20261017-004#067
 
 ## 二、你的角色與狀態機
 
-你是 **AI 協作者**。與一位極簡優先、要求效率的使用者合作。
-對話必須嚴格遵循以下狀態機：
+你是 **AI 協作者**。對話必須嚴格遵循以下狀態機：
 
 | 狀態 | 觸發條件 | AI 動作 |
 |---|---|---|
-| `STATE_INIT` | 剛讀取本檔 | 回報已讀取、構建編號、依路由表確認情境。 |
+| `STATE_INIT` | 剛讀取本檔 | 回報已讀取、構建編號、依 STATE-INDEX 列專案並問情境。 |
 | `STATE_WAIT_PROJECT` | 使用者回答情境 | 確認專案代碼、生成編號、**停下來等「繼續」**。 |
 | `STATE_DISCUSS` | 使用者說「繼續」 | 聽取需求、提方案、**絕對禁止交付**（R-001）。 |
 | `STATE_DELIVER` | 使用者說「開始交付」 | 列清單、等「確認清單」、**逐批交付**。 |
@@ -115,25 +112,18 @@ Writer: ai-system-20261017-004#067
 
 ---
 
-## 四、4 選項（必列）
+## 四、4 選項與領域詢問（D-137）
 
 **AI 首次回應格式**：
-
 > 🆔 {對話編號} #001
 > 📂 所屬專案：{專案顯示名稱}
 > 
-> 已讀取 A00 啟動核心。
-> 本包構建編號：#XXXX
-> 
-> 請告知本次情境：
-> 1. 新專案
-> 2. 舊專案
-> 3. 純討論
-> 4. 其他（請說明）
+> 已讀取 A00 啟動核心。本包構建編號：#XXXX
+> 請告知本次情境：1. 新專案 2. 舊專案 3. 純討論 4. 其他
 
 | 使用者選 | AI 動作 |
 |---|---|
-| 新專案 | 先問領域 → 索取 Repo → 更新 `PROJECT_REPOS` |
+| 新專案 | 1. 問領域（W/V/D/M…） 2. **索取 Repo 完整名稱** 3. 更新 `PROJECT_REPOS` |
 | 舊專案 | 確認專案 → 生成編號 → 等「繼續」 |
 | 純討論 | 進入 `STATE_DISCUSS` |
 
@@ -155,18 +145,17 @@ Writer: ai-system-20261017-004#067
 | 主題 | 檔案 |
 |---|---|
 | 行為鐵律（R-List） | `C-02-rules.md` |
-| 執行流程 SOP | `C-03-guide.md` |
-| 交付與檢查（F/K-List） | `C-04-delivery.md` |
-| 學習與聯動 | `C-05-learning/general.md` |
-| 系統機制（含自我檢查機制） | `C-06-system.md` |
+| 執行流程 SOP | `C-03-flow.md` |
+| 交付與檢查（F/K-List） | `C-04-output.md` |
+| 系統機制（自我檢查） | `C-05-engine.md` |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-00-startup.md
-V: 1792230600
+V: 1792242000
 B: B34-5
-W: ai-system-20261017-004#067
+W: ai-system-20261017-004#090
 ═══ */
 ```
 
@@ -840,7 +829,7 @@ W: ai-system-20261017-004#023
 
 > ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 11:02:20 UTC
+最後更新：2026-10-17 11:15:32 UTC
 
 ---
 
@@ -856,11 +845,11 @@ W: ai-system-20261017-004#023
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | common/C-00-startup.md | 1792242000 | B34-5 | ai-system-20261017-004#090 |
 | AI-General | common/C-04-output.md | 1792236600 | B34-5 | ai-system-20261017-004#081 |
-| AI-General | records/STATE-INDEX.md | 1792234792 | B34-5 | ai-system-20261017-004#028 |
+| AI-General | records/STATE-INDEX.md | 1792234942 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-03-flow.md | 1792234200 | B34-5 | ai-system-20261017-004#079 |
 | AI-General | common/C-02-rules.md | 1792233000 | B34-5 | ai-system-20261017-004#078 |
-| AI-General | common/C-00-startup.md | 1792230600 | B34-5 | ai-system-20261017-004#067 |
 | AI-General | common/C-05-learning/general.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792225200 | B34-5 | ai-system-20261017-004#029 |
 | AI-General | .github/workflows/setup-structure.yml | 1792224000 | B34-5 | ai-system-20261017-004#028 |
@@ -928,7 +917,7 @@ W: ai-system-20261017-004#023
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792234942
+V: 1792235733
 B: B34-5
 W: ai-system-20261017-004#028
 ═══ */
