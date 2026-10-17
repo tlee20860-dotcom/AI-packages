@@ -1,7 +1,7 @@
 # AI 協作 - 體系層核心包
 
-> 生成時間：2026-10-17 06:54:15 UTC
-> 構建編號：#0082
+> 生成時間：2026-10-17 07:00:57 UTC
+> 構建編號：#0083
 
 ---
 
@@ -1464,10 +1464,10 @@ W: ai-system-20261017-004#022
 ```
 # C-03 流程指南
 
-最後更新：ai-system-20261016-003
-Version: 1791946200
+最後更新：ai-system-20261017-004
+Version: 1792226400
 Batch: B34-5
-Writer: ai-system-20261016-003#159
+Writer: ai-system-20261017-004#032
 用途：AI 執行流程 + 決策樹
 
 ---
@@ -1509,7 +1509,8 @@ Writer: ai-system-20261016-003#159
 | 3b | 新領域 → AI 主動建議建 `{X}-*` 6 檔 |
 | 4 | 使用者確認 → 產出 6 檔草稿 |
 | 5 | 依回饋迭代 |
-| 6 | **產出該專案 `notify.yml`** |
+| 6 | **索取「新建的 Repo 完整名稱」** |
+| 7 | 更新 `setup-structure.yml` 的 `PROJECT_REPOS` |
 
 ### 1.2 使用者選「舊專案」
 
@@ -1575,7 +1576,8 @@ AI 說「請描述問題」。
 |---|---|
 | 1 | SYSTEM-HANDOFF（上次進度） |
 | 2 | SYSTEM-CONCLUSION §一、§三（議題 + 決策索引） |
-| 3 | 若需舊決策細節 → 主動索取 99-CONCLUSION-ARCHIVE.md |
+| 3 | STATE-INDEX §一（專案清單）、§二（檔案清單） |
+| 4 | 若需舊決策細節 → 主動索取 99-CONCLUSION-ARCHIVE.md |
 
 ---
 
@@ -1600,7 +1602,7 @@ AI 說「請描述問題」。
 | 層級 | 檔案 | 讀取時機 |
 |---|---|---|
 | L1 必讀 | C-00 ~ C-11 | 每次對話 |
-| L2 概覽 | P-01 ~ P-04 / SYSTEM-* | 啟動時 |
+| L2 概覽 | P-01 ~ P-04 / STATE-INDEX | 啟動時 |
 | L3 細節 | P-05 ~ P-98、W-* | 按需（AI 判斷） |
 | 特殊 | P-99-errors-map | 交付前必讀 |
 | 按需索取 | 99-CONCLUSION-ARCHIVE.md、C-05 其他分檔 | AI 主動提示 |
@@ -1614,7 +1616,7 @@ AI 說「請描述問題」。
 | 步驟 | 誰 | 動作 |
 |---|---|---|
 | 1 | 你 | 上傳 01-CORE-SYSTEM.md |
-| 2 | AI | 讀取 + 回報構建編號 + 列所有專案 |
+| 2 | AI | 讀取 + 回報構建編號 + 依 STATE-INDEX 列專案 |
 | 3 | 你 | 說要哪個專案 |
 | 4 | AI | 生成編號 + 提示議題 + 列 4 選項 |
 | 5 | 你 | 選情境 |
@@ -1687,7 +1689,6 @@ AI 說「請描述問題」。
 | 5 | 交付完整檔 |
 
 **機制說明**：C-09-rolling-mechanism.md
-**內容載體**：體系層 → SYSTEM-CONCLUSION.md；專案層 → P-12-conclusion.md
 
 ---
 
@@ -1707,7 +1708,6 @@ AI 說「請描述問題」。
 | 8 | 交付完整檔（≤ 80 行） |
 
 **機制說明**：C-10-handoff-mechanism.md
-**內容載體**：體系層 → SYSTEM-HANDOFF.md；專案層 → P-13-handoff.md
 
 ---
 
@@ -1737,9 +1737,7 @@ AI 說「請描述問題」。
 | 3b | 新領域 → 主動建議建 `{X}-*` 6 檔 |
 | 4 | 使用者確認 → 產出 6 檔草稿 |
 | 5 | 依使用者回饋迭代 |
-| 6 | 產出 notify.yml |
-
-**6 檔模板**：見 C-00 §十一。
+| 6 | 索取 Repo 並更新 `PROJECT_REPOS` |
 
 ---
 
@@ -1749,105 +1747,9 @@ AI 說「請描述問題」。
 
 | 情境 | AI 動作 |
 |---|---|
-| 使用者上傳 01-CORE-SYSTEM.md | 讀取 → 回報構建編號 → 列出所有專案 → 問哪個 → 生成編號 → 提示議題 → 列 4 選項 |
+| 使用者上傳 01-CORE-SYSTEM.md | 讀取 → 回報構建編號 → 依 STATE-INDEX 列專案 → 問哪個 → 生成編號 → 提示議題 → 列 4 選項 |
 | 使用者上傳 02-CORE-PROJECT.md + 90-{專案}.md | 讀取 → 回報構建編號 → 生成編號 → 提示議題 → 列 4 選項 |
 | 需要舊決策全文 | 主動提示上傳 99-CONCLUSION-ARCHIVE.md |
-
-**共享包產生**：由 GitHub Actions 產出（見 §十二）。
-
----
-
-## 七之六、新增專案流程（Q1~Q6）
-
-**觸發**：使用者說「新增專案」。
-
-### 第一步：AI 一次列出 Q1~Q6（含人話說明）
-
-> 請提供以下資訊，我會逐一處理：
-
-**Q1：專案英文名稱？**
-
-> 這會成為目錄名稱與倉庫名稱，只能用英文小寫與連字號。
-
-- A. 自訂（請直接輸入英文名稱）
-  > 人話：你自己取名，例如「vba-accounting」。
-
-- B. 由 AI 根據顯示名稱自動生成（推薦）
-  > 人話：你只要在 Q2 給中文名，AI 幫你翻成英文。
-
-**Q2：專案顯示名稱？**
-
-> 這是你在對話中看到的中文名稱。
-
-- A. 自訂（請直接輸入中文名稱）
-  > 人話：你自己取中文名，例如「VBA 會計系統」。
-
-- B. 由 AI 根據英文名稱自動生成
-  > 人話：如果 Q1 已取英文名，AI 幫你翻成中文。
-
-**Q3：專案領域？**
-
-> 領域決定這個專案使用哪套技能包。
-
-- A. W（Web App）
-  > 人話：網頁應用。
-
-- B. V（VBA / 桌面自動化）
-  > 人話：Excel VBA、Office 自動化腳本。
-
-- C. D（資料分析 / 腳本）
-  > 人話：Python 資料分析、自動化腳本。
-
-- D. M（文案 / 內容創作）
-  > 人話：寫文案、SEO 文章、社群內容。
-
-- E. 其他（請說明）
-  > 人話：以上都不是，請你告訴我這個專案屬於什麼類型。
-
-**Q4：倉庫可見性？**
-
-- A. Public（公開）
-  > 人話：任何人都能看到。
-
-- B. Private（私有，推薦）
-  > 人話：只有你能看到。
-
-**Q5：是否由 Actions 自動建立倉庫？**
-
-- A. 是（推薦）
-  > 人話：更新專案清單，Actions 就自動建好倉庫。
-
-- B. 否
-  > 人話：你自己去 GitHub 建立倉庫。
-
-**Q6：新倉庫的初始內容？**
-
-- A. 只有 README.md
-  > 人話：最精簡。
-
-- B. README.md + .gitignore（推薦）
-  > 人話：說明檔 + 忽略規則。
-
-- C. README.md + .gitignore + 基本目錄結構
-  > 人話：再加上 js/、css/ 等基本目錄。
-
-### 第二步：等使用者回答
-
-### 第三步：報告準備新增的專案，等使用者確認
-
-### 第四步：吐出完整 PROJECT-LIST.md
-
-### 第五步：提示使用者貼到 `docs/records/PROJECT-LIST.md`
-
-### 第六步：AI 產出對應的 `notify.yml`（提示使用者貼到新 repo）
-
-### 第七步：Actions 自動執行
-
-| # | 動作 |
-|---|---|
-| 1 | 建立新倉庫（依 Q4、Q5、Q6） |
-| 2 | 建立 `docs/projects/{新專案}/` 與 `P-00-{name}.md` |
-| 3 | 生成共享包（含新專案） |
 
 ---
 
@@ -1911,6 +1813,7 @@ AI 說「請描述問題」。
 | 提問規則 | C-02 §二之一 |
 | 5 問自檢 | C-02 §四 |
 | 先看檔案再交付 | C-02 §四之一 |
+| 檔案結構穩定性原則 | C-02 §六點六（D-161） |
 | 禁止事項 | C-02 §五 |
 | 檔案規則 | C-02 §六 |
 | md 寫作規則 | C-02 §六點五 |
@@ -1923,13 +1826,15 @@ AI 說「請描述問題」。
 | 交付與確認機制 | C-02 §十九 |
 | 先收集後交付 | C-02 §19.1 |
 | 整合交付 | C-02 §19.2 |
-| AI 提示上傳 | C-02 §19.9 |
+| 兩階段確認 | C-02 §19.9（D-162） |
+| AI 提示上傳 | C-02 §19.8 |
 | 任務進度追蹤 | C-02 §二十 |
 | CF Pages env | C-02 §十二 → W-02 |
 | 交付格式 | C-04 §一 |
 | Base version | C-04 §一點五 |
 | EOF 格式 | C-04 §三 |
 | 交付前自我檢查 | C-04 §十二 |
+| 兩階段確認 | C-04 §十六 |
 
 ---
 
@@ -1961,7 +1866,7 @@ AI 說「請描述問題」。
 |---|---|
 | C-00 | §十 |
 | C-03 | §十二 |
-| PROJECT-LIST.md | 包編號對照 |
+| `setup-structure.yml` | 頂部 `PROJECT_REPOS` |
 
 ---
 
@@ -1979,17 +1884,17 @@ AI 說「請描述問題」。
 | 滾動結論機制 | C-09-rolling-mechanism.md |
 | 交接快照機制 | C-10-handoff-mechanism.md |
 | 共同語言表 | C-11-terms.md |
-| AI 名單 + Repo 清單 | R-01-writers.md |
 | 體系層結論 | SYSTEM-CONCLUSION.md |
 | 體系層交接 | SYSTEM-HANDOFF.md |
+| 機械記錄 | STATE-INDEX.md |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-03-guide.md
-V: 1791946200
+V: 1792226400
 B: B34-5
-W: ai-system-20261016-003#159
+W: ai-system-20261017-004#032
 ═══ */
 ```
 
@@ -3207,7 +3112,7 @@ W: ai-system-20261017-004#023
 
 > ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 06:54:13 UTC
+最後更新：2026-10-17 07:00:56 UTC
 
 ---
 
@@ -3223,6 +3128,7 @@ W: ai-system-20261017-004#023
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | common/C-03-guide.md | 1792226400 | B34-5 | ai-system-20261017-004#032 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792225200 | B34-5 | ai-system-20261017-004#029 |
 | AI-General | .github/workflows/setup-structure.yml | 1792224000 | B34-5 | ai-system-20261017-004#028 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-01-index.md | 1792222800 | B34-5 | ai-system-20261017-004#027 |
@@ -3230,10 +3136,9 @@ W: ai-system-20261017-004#023
 | AI-General | records/PROGRESS.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | common/C-11-terms.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
-| AI-General | records/STATE-INDEX.md | 1792219854 | B34-5 | ai-system-20261017-004#028 |
+| AI-General | records/STATE-INDEX.md | 1792220054 | B34-5 | ai-system-20261017-004#028 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
 | AI-General | common/C-06-token-log.md | 1791943800 | B34-5 | ai-system-20261016-003#154 |
 | AI-General | common/C-07-summary.md | 1791942600 | B34-5 | ai-system-20261016-003#150 |
 | AI-General | common/C-10-handoff-mechanism.md | 1791942000 | B34-5 | ai-system-20261016-003#148 |
@@ -3295,7 +3200,7 @@ W: ai-system-20261017-004#023
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792220054
+V: 1792220457
 B: B34-5
 W: ai-system-20261017-004#028
 ═══ */
