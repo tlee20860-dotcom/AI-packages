@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#162
+> 構建編號：#163
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
