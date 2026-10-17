@@ -142,6 +142,7 @@ AI-General|docs/common/C-04-output.md|1792252800|B34-5|ai-system-20261017-005#01
 AI-General|docs/common/C-03-flow.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-02-rules.md|1792252800|B34-5|ai-system-20261017-005#010
 AI-General|docs/common/C-00-startup.md|1792252800|B34-5|ai-system-20261017-005#010
+AI-General|.github/PATCH.md|1792252800|B34-5|ai-system-20261017-005#064
 AI-General|docs/common/C-05-learning/general.md|1792226400|B34-5|ai-system-20261017-004#032
 AI-General|docs/common/C-05-learning/system.md|1791922200|B34-5|ai-system-20261016-003#111
 AI-General|docs/skills/W/W-00-startup.md|1791903760|B34-4|A20261013-004#169
@@ -309,6 +310,7 @@ Writer: ai-system-20261017-005#011
 | D-166 | 專案清單由 yml 頂部 PROJECT_REPOS 提供 | 新增專案時，由使用者提供 Repo，AI 負責更新。 |
 | **D-170** | **建立 S/R/F/K 矩陣標準** | S-List（事前）、R-List（行為鐵律）、F-List（交付格式）、K-List（事後校驗），形成完整防呆閉環。 |
 | **D-171** | **A00（大腦）與 S00（狀態）分離** | 大腦包（A00-star-code）專注規則與機制；狀態包（S00-ai-system）專注進度與交接，降低 AI 讀取負擔。 |
+| **D-172** | **人類作為中介路由（Human-in-the-loop）** | 專案 AI 若需體系層（C-*）修改或確認，必須輸出「【轉交體系】」標籤。使用者作為唯一路由，負責複製貼上。專案 AI 亦可接收最新 A00 進行熱更新。 |
 
 ---
 
