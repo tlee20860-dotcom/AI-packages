@@ -1,7 +1,7 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 06:02:32 UTC
-> 構建編號：#0079
+> 生成時間：2026-10-17 06:46:36 UTC
+> 構建編號：#0080
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
 > 專案包已內含該領域技能包，本包不需再單獨傳技能包。
 
@@ -1463,7 +1463,7 @@ W: ai-system-20261016-003#134
 
 > ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
 
-最後更新：2026-10-17 06:02:31 UTC
+最後更新：2026-10-17 06:46:34 UTC
 
 ---
 
@@ -1471,7 +1471,7 @@ W: ai-system-20261016-003#134
 
 | 專案顯示名稱 | code | domain | package_no | repo |
 |---|---|---|---|---|
-| web-app-family | web-app-family | - | - | - |
+| 家庭 webapp | webapp | W | 90 | tlee20860-dotcom/WEB-APP-Family |
 
 ---
 
@@ -1479,6 +1479,7 @@ W: ai-system-20261016-003#134
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| web-app-family | external/web-app-family/docs/projects/web-app-family/P-01-index.md | 1792222800 | B34-5 | ai-system-20261017-004#027 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/PROGRESS.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
@@ -1486,7 +1487,7 @@ W: ai-system-20261016-003#134
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | records/STATE-INDEX.md | 1792216928 | B34-5 | ai-system-20261017-004#019 |
+| AI-General | records/STATE-INDEX.md | 1792216952 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
@@ -1509,7 +1510,6 @@ W: ai-system-20261016-003#134
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-99-errors-map.md | 1791904240 | B34-4 | A20261013-004#178 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-04-decisions.md | 1791904180 | B34-4 | A20261013-004#177 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-14-decisions.md | 1791904000 | B34-4 | A20261013-004#174 |
-| web-app-family | external/web-app-family/docs/projects/web-app-family/P-01-index.md | 1791903940 | B34-4 | A20261013-004#172 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-02-progress.md | 1791903880 | B34-4 | A20261013-004#171 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-03-manifest.md | 1791903820 | B34-4 | A20261013-004#170 |
 | AI-General | skills/W/W-00-startup.md | 1791903760 | B34-4 | A20261013-004#169 |
@@ -1554,7 +1554,7 @@ W: ai-system-20261016-003#134
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792216952
+V: 1792219596
 B: B34-5
 W: ai-system-20261017-004#019
 ═══ */
