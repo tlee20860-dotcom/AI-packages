@@ -136,9 +136,9 @@ W: ai-system-20261017-005#084
 ## 二、檔案清單
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792282000|B34-6|ai-system-20261018-006#007
 AI-General|docs/common/C-00-startup.md|1792282000|B34-6|ai-system-20261018-006#007
 AI-General|docs/common/C-05-learning/system.md|1792263500|B34-5|ai-system-20261017-005#085
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/PROGRESS.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-03-flow.md|1792262500|B34-5|ai-system-20261017-005#083
@@ -173,10 +173,10 @@ AI-General|docs/skills/W/W-01-firebase.md|1791899500|B34-3|A20261013-004#065
 ```
 # SYSTEM-CONCLUSION（體系層滾動結論）
 
-最後更新：ai-system-20261017-005
-Version: 1792263000
-Batch: B34-5
-Writer: ai-system-20261017-005#084
+最後更新：ai-system-20261018-006
+Version: 1792282000
+Batch: B34-6
+Writer: ai-system-20261018-006#007
 用途：體系層滾動式累積結論（議題 + 設計 + 決策）
 
 ---
@@ -225,6 +225,7 @@ Writer: ai-system-20261017-005#084
 | 38 | Patch 腳本與正則替換 | ✅ |
 | 39 | 體系重構收尾與驗證 | ✅ |
 | 40 | 雙 AI 路由與熱更新 | ✅ |
+| 41 | 體系包直通修正 | ✅ |
 
 ---
 
@@ -314,6 +315,7 @@ Writer: ai-system-20261017-005#084
 | **D-171** | **A00（大腦）與 S00（狀態）分離** | 大腦包（A00-star-code）專注規則與機制；狀態包（S00-ai-system）專注進度與交接，降低 AI 讀取負擔。 |
 | **D-172** | **人類作為中介路由（Human-in-the-loop）** | 專案 AI 若需體系層（C-*）修改或確認，必須輸出「【轉交體系】」標籤。使用者作為唯一路由，負責複製貼上。專案 AI 亦可接收最新 A00 進行熱更新。 |
 | **D-173** | **轉交指令的 Code Block 規範** | 凡是「轉交指令」（如【轉交體系】或【轉交專案】），內容**必須**用 Markdown Code Block 包裹，防止手機複製時格式跑版。一般對話則嚴禁濫用 Code Block。 |
+| **D-174** | **體系包直通** | 若使用者上傳 A00 + S00 且明確表示要進行體系修正，AI 直接生成體系對話編號，不列專案清單、不列 4 選項，直接進入 STATE_DISCUSS。 |
 
 ---
 
@@ -330,9 +332,9 @@ Writer: ai-system-20261017-005#084
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792263000
-B: B34-5
-W: ai-system-20261017-005#084
+V: 1792282000
+B: B34-6
+W: ai-system-20261018-006#007
 ═══ */
 ```
 
