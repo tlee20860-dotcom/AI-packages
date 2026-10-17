@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#161
+> 構建編號：#162
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
@@ -685,9 +685,9 @@ Writer: refactor-final（未編號）
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-02-rules.md
-V: 1792252800
+V: 1792258200
 B: B34-5
-W: ai-system-20261017-005#010
+W: ai-system-20261017-005#072
 ═══ */
 ```
 
@@ -1515,9 +1515,9 @@ Writer: refactor-final（未編號）
 
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-04-output.md
-V: 1792257200
+V: 1792258200
 B: B34-5
-W: ai-system-20261017-005#066
+W: ai-system-20261017-005#072
 ═══ */
 ```
 
