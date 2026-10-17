@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#118
+> 構建編號：#119
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
@@ -8,7 +8,7 @@
 ## 📄 docs/common/C-00-startup.md
 
 ```
-# A00 啟動核心（最高優先）
+# A00 啟動核心（測試 Patch 成功！）
 
 最後更新：refactor-final
 Version: 1792252800
