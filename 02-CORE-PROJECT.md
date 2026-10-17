@@ -1,9 +1,8 @@
 # AI 協作 - 專案層核心包
 
-> 生成時間：2026-10-17 06:46:36 UTC
-> 構建編號：#0080
+> 生成時間：2026-10-17 06:50:55 UTC
+> 構建編號：#0081
 > 使用方式：搭配專案包（如 90-web-app-family.md）一起上傳。
-> 專案包已內含該領域技能包，本包不需再單獨傳技能包。
 
 ---
 
@@ -19,68 +18,34 @@
 
 ### 🔹 步驟 0：讀取規則並回報
 
-請先讀取本包內的以下檔案：C-00、C-01、C-04、STATE-INDEX、R-01、PROJECT-LIST。
-
-（v10b 切換後：移除 R-01、PROJECT-LIST）
+請先讀取本包內的以下檔案：C-00、C-01、C-04、STATE-INDEX。
 
 讀完後，請回報以下四件事：
 1. 「已讀取專案層核心包」
-2. 回報本包「構建編號」與「生成時間」，並問我是否為最新。
-3. 用 3~5 條列點，摘要 C-01 中「使用者的核心偏好」
-4. 提示我上傳對應的專案包（如 90-web-app-family.md）
+2. 回報本包「構建編號」與「生成時間」。
+3. 摘要 C-01 中「使用者的核心偏好」
+4. 提示我上傳對應的專案包
 
-回報完畢後停下來，等待我回覆「確認」。
+### 🔹 步驟 1：詢問專案
 
-### 🔹 步驟 1：詢問本次對話所屬專案
+從 STATE-INDEX §一 列出專案，問我屬於哪個。從 §二 計算新編號。停下來等「繼續」。
 
-等我說「確認」後，從 STATE-INDEX §一 或 PROJECT-LIST.md 列出所有專案，並問我：「本次對話屬於哪個專案？」
+### 🔹 步驟 2：報告編號已記錄
 
-⚠️ 防呆（C-00 §3.4）：在確認本次對話所屬專案之前，禁止生成任何對話編號。
+報告：「🆔 編號已記錄，Action 下次執行自動寫入 STATE-INDEX」。停下來等「繼續」。
 
-等我回答後：
-1. 從 STATE-INDEX §一 或 PROJECT-LIST.md 讀取該專案的 code。
-2. 從 R-01 §四（v10b 後改 STATE-INDEX §二）找出該專案最新序號，+1 生成新編號。
-3. 編號格式：{code}-{YYYYMMDD}-{專案內序號3位}。
-4. 輸出：「🆔 {對話編號}」。
-5. 停下來，等待我回覆「繼續」。
+### 🔹 步驟 3：請求專案包
 
-### 🔹 步驟 2：R-01 更新確認（v10a 雙軌；v10b 改為「報告編號已記錄」）
+等我說「繼續」後，若未上傳專案包，提示我上傳。
 
-等我說「繼續」後：
-1. 報告：「我準備更新 R-01 §四，加入新編號 {對話編號}、所屬專案、當前時間。請問是否可以生成更新後的完整 R-01？」
-2. 停下來，等待我回覆「確認」。
-3. 收到確認後，才輸出完整的、更新後的 R-01-writers.md 內容。
-4. 提示我：「請將以上內容複製，貼到 docs/records/R-01-writers.md，完成後回覆『已更新』」。
-5. 停下來，等待我回覆「已更新」。
+### 🔹 步驟 4：先收集後交付
 
-### 🔹 步驟 3：請求對應的專案包
-
-等我說「已更新」後，若尚未上傳專案包，說「請上傳對應編號的專案包（如 90-web-app-family.md）以繼續」。
-
-### 🔹 步驟 4：先收集後交付（核心規則）
-
-收到專案包後，當我提出需求時：
-1. 自動從共享包中找出相關檔案，禁止詢問「要讀取哪些檔案」。
-2. 先向我報告：「我分析了以下檔案：XXX。我建議的修改方案是：YYY。請問是否同意此方案？」
-3. 收到「確認」後，**只記錄修改點到「檔案狀態總表」，不立即交付**。
-4. 持續討論，直到我說「開始交付」，才整合所有修改點，列完整清單。
-5. 等我說「確認清單」，才逐批交付。每個檔案只交付一次（見 C-02 §19）。
+自動找檔案。先報告方案等確認。確認後只記錄，不交付。等「開始交付」列清單。等「確認清單」才交付。
 
 ---
 
-## ⛔ 禁止事項（違反視為任務失敗）
-
-1. 禁止使用簡體中文回覆。
-2. 禁止在未經我確認前，直接輸出任何檔案內容或修改方案。
-3. 禁止跳過步驟 0，直接進入步驟 1。
-4. 禁止在步驟 1 之前，自行假設專案。
-5. 禁止一次輸出超過 2000 字的方案，請分段並等待我確認。
-6. 禁止未標示「所屬專案」。
-7. 禁止以 Token 為理由，交付不完整的檔案。
-8. 禁止在未說「開始交付」前，提前交付任何檔案。
-9. 禁止同一個檔案重複交付。
-
----
+## ⛔ 禁止事項
+1. 禁簡體。2. 禁未確認交付。3. 禁跳過步驟。4. 禁假設專案。5. 禁>2000字。6. 禁未標專案。7. 禁交付不完整。8. 禁提前交付。9. 禁重複交付。
 
 ## 📚 核心訓練規則
 
@@ -1196,264 +1161,6 @@ W: ai-system-20261017-004#023
 <!-- === FILE END: docs/common/C-11-terms.md === -->
 
 
-<!-- === FILE START: docs/records/R-01-writers.md === -->
-
-## 📄 docs/records/R-01-writers.md
-
-```
-# R-01 AI 編寫者名單 + 專案索引
-
-最後更新：ai-system-20261016-003
-Version: 1791934800
-Batch: B34-5
-Writer: ai-system-20261016-003#134
-用途：追蹤專案 / 對話 / 編寫者 / 檔案歸屬 / Repo
-
----
-
-## 一、編號規則
-
-### 1.1 對話編號
-
-格式：`{專案代碼}-{YYYYMMDD}-{專案內序號3位}`
-
-| 範例 | 說明 |
-|---|---|
-| webapp-20261016-001 | 家庭 webapp 的第 1 個對話 |
-| ai-system-20261016-001 | AI 對話系統的第 1 個對話 |
-
-**專案代碼**：由 PROJECT-LIST.md 的 `code` 欄位決定。
-**專案內序號**：從 `001` 開始，跨日期累計，各專案獨立。
-
-### 1.2 回覆序號
-
-格式：`#{序號}`（如 `#001`）
-
-### 1.3 Writer 欄位格式
-
-`{對話編號}#{回覆序號}`
-
----
-
-## 二、生成流程
-
-| 情境 | 動作 |
-|---|---|
-| 有本名單 | 取該專案最新序號 + 1 |
-| 無本名單 | 自建第一筆並交付本檔 |
-
-**⚠️ 防呆（見 C-00 §3.4）**：確認專案前，禁止生成任何編號。
-
----
-
-## 三、專案清單
-
-### 家庭 webapp（webapp）
-
-| 欄位 | 值 |
-|---|---|
-| 專案名稱 | 家庭 webapp |
-| 專案代碼 | webapp |
-| 領域 | W（Web App） |
-| 起始日期 | 2026-10-13 |
-| 程式碼 repo | tlee20860-dotcom/WEB-APP-Family |
-| 包編號 | 90 |
-| P-* 檔案位置 | WEB-APP-Family/docs/projects/web-app-family/ |
-
-### AI 對話系統（ai-system）
-
-| 欄位 | 值 |
-|---|---|
-| 專案名稱 | AI 對話系統 |
-| 專案代碼 | ai-system |
-| 領域 | system |
-| 起始日期 | 2026-10-16 |
-| 程式碼 repo | tlee20860-dotcom/AI-General |
-| 包編號 | （不適用，體系層無專案包） |
-| P-* 檔案位置 | 體系層（無 P-*，只有 C-*、W-*、R-*） |
-
----
-
-## 三之一、Repo 清單
-
-**用途**：AI 提到 repo 時，一律使用實際名稱（見 C-02 §十三之一）。
-
-| Repo | 用途 | URL | 狀態 |
-|---|---|---|---|
-| AI-General | AI 對話系統（體系層） | github.com/tlee20860-dotcom/AI-General | ✅ 現役 |
-| **AI-packages** | 共享包（Actions 生成） | github.com/tlee20860-dotcom/AI-packages | ✅ 現役（原 AI-training-build） |
-| WEB-APP-Family | 家庭 webapp 程式碼 | github.com/tlee20860-dotcom/WEB-APP-Family | ✅ 現役 |
-| AI-training-files | 舊訓練 repo | github.com/tlee20860-dotcom/AI-training-files | ⚠️ 已停用掃描（保留不刪） |
-
----
-
-## 四、編寫者清單
-
-| # | 對話編號 | 所屬專案 | 建立時間 | 累計回覆 |
-|---|---|---|---|---|
-| 1 | ai-system-20261016-001 | AI 對話系統 | 2026-10-16 | 66 |
-| 2 | ai-system-20261016-002 | AI 對話系統 | 2026-10-16 | 10 |
-| 3 | ai-system-20261016-003 | AI 對話系統 | 2026-10-16 | 約 134 |
-
-**說明**：
-
-- 舊編號（A20261013-001 ~ A20261016-001）已廢止，改用新格式。
-- 專案內序號從 `001` 開始，跨日期累計。
-
-**⚠️ 待處理（新對話 004）**：
-
-- 新對話 004 應為 **`webapp-20261016-001`（家庭 webapp 第 1 個對話）**。
-- 若它曾自報 `ai-system-20261016-004`，**該編號作廢**（見 C-00 §3.4 防呆條款）。
-
----
-
-## 五、檔案歸屬（現役）
-
-### AI-General/docs/common/（L1 AI 通用）
-
-| 檔案 | Version | Writer |
-|---|---|---|
-| C-00-startup.md | 1791931200 | ai-system-20261016-003 |
-| C-01-profile.md | 1791930000 | ai-system-20261016-003 |
-| C-02-rules.md | 1791928000 | ai-system-20261016-003 |
-| C-03-guide.md | 1791907700 | ai-system-20261016-001 |
-| C-04-delivery.md | 1791921000 | ai-system-20261016-003 |
-| C-05-learning/general.md | 1791927000 | ai-system-20261016-003 |
-| C-05-learning/system.md | 1791922200 | ai-system-20261016-003 |
-| C-05-learning/w.md | 1791922200 | ai-system-20261016-003 |
-| C-06-token-log.md | 待更新 | 舊版 |
-| C-07-summary.md | 待更新 | 舊版 |
-| C-09-rolling-mechanism.md | 待更新 | 舊版 |
-| C-10-handoff-mechanism.md | 待更新 | 舊版 |
-| C-11-terms.md | 1791932400 | ai-system-20261016-003 |
-
-### AI-General/docs/skills/W/（L2 Web App 通用）
-
-| 檔案 | Version | Writer |
-|---|---|---|
-| W-00-startup.md | 1791903760 | 舊版 |
-| W-01-firebase.md | 1791899500 | 舊版 |
-| W-02-functions.md | 1791899560 | 舊版 |
-| W-03-esmodule.md | 1791899620 | 舊版 |
-| W-04-pwa.md | 1791899680 | 舊版 |
-| W-05-schema.md | 1791899740 | 舊版 |
-
-### AI-General/docs/records/（L4 機械記錄）
-
-| 檔案 | Version | Writer |
-|---|---|---|
-| R-01-writers.md | 1791934800 | ai-system-20261016-003 |
-| PROJECT-LIST.md | 1791918000 | ai-system-20261016-003 |
-| PROGRESS.md | 1791914000 | ai-system-20261016-003 |
-| SYSTEM-CONCLUSION.md | 1791933000 | ai-system-20261016-003 |
-| SYSTEM-HANDOFF.md | 1791933600 | ai-system-20261016-003 |
-| FILE-INDEX.md | （Actions 生成） | — |
-| HISTORY-INDEX.md | （Actions 生成） | — |
-
-### AI-General/.github/workflows/
-
-| 檔案 | Version | Writer |
-|---|---|---|
-| setup-structure.yml | 1791925800 | ai-system-20261016-003 |
-| setup-migration.yml | 1791906700 | ai-system-20261016-001 |
-| append_file.sh | 1791908100 | ai-system-20261016-001 |
-
-### AI-General 根目錄
-
-| 檔案 | Version | Writer |
-|---|---|---|
-| MIGRATION.md | 1791906500 | ai-system-20261016-001 |
-| MIGRATION-GUIDE.md | 1791906620 | ai-system-20261016-001 |
-
----
-
-## 六、歷史歸屬（已被取代）
-
-| 檔案 | 舊版本 | 舊 Writer | 新版本 | 新 Writer | 取代時間 |
-|---|---|---|---|---|---|
-| C-01-profile.md | 1791910300 | ai-system-20261016-002 | 1791930000 | ai-system-20261016-003 | 2026-10-16 |
-| C-02-rules.md | 1791910300 | ai-system-20261016-002 | 1791928000 | ai-system-20261016-003 | 2026-10-16 |
-| C-04-delivery.md | 1791908500 | ai-system-20261016-001 | 1791921000 | ai-system-20261016-003 | 2026-10-16 |
-| C-11-terms.md | 1791908600 | ai-system-20261016-001 | 1791932400 | ai-system-20261016-003 | 2026-10-16 |
-| C-00-startup.md | 1791913200 | ai-system-20261016-003 | 1791931200 | ai-system-20261016-003 | 2026-10-16 |
-| setup-structure.yml | 1791908100 | ai-system-20261016-001 | 1791925800 | ai-system-20261016-003 | 2026-10-16 |
-| PROJECT-LIST.md | 1791908200 | ai-system-20261016-001 | 1791918000 | ai-system-20261016-003 | 2026-10-16 |
-| R-01-writers.md | 1791916000 | ai-system-20261016-003 | 1791934800 | ai-system-20261016-003 | 2026-10-16 |
-| C-05-learning.md | 1791914000 | ai-system-20261016-003 | 已廢除 | ai-system-20261016-003 | 2026-10-16 |
-| REPOS.md | （Actions 生成，從未入庫） | — | 已廢除 | ai-system-20261016-003 | 2026-10-16 |
-
----
-
-## 七、使用方式
-
-### AI 生成編號流程
-
-| 步驟 | 動作 |
-|---|---|
-| 1 | 使用者選擇專案 |
-| 2 | 讀 PROJECT-LIST.md 取該專案 `code` |
-| 3 | 讀本檔 §四 找該專案最新序號，+1 |
-| 4 | 生成編號 |
-| 5 | 每次回覆標：🆔 {編號} #{序號} |
-
-**⚠️ 防呆（見 C-00 §3.4）**：確認專案前，禁止生成任何編號。
-
-### 每次回覆開頭格式
-
-> 🆔 {對話編號} #{回覆序號}
-> 📂 所屬專案：{專案顯示名稱}（第 {N} 個對話）
-
-### Repo 識別流程
-
-| 步驟 | 動作 |
-|---|---|
-| 1 | 讀本檔 §三之一 |
-| 2 | 找對應 repo |
-| 3 | 用實際名稱（不用代稱） |
-
----
-
-## 八、維護規則
-
-| 時機 | 動作 |
-|---|---|
-| 每次交付 | AI 更新 §五（現役） |
-| 舊版被取代 | AI 移入 §六（歷史） |
-| 新專案成立 | AI 更新 §三 |
-| 新 Repo 成立 | AI 更新 §三之一 |
-| 新對話建立 | AI 更新 §四 |
-| 批次結束 | AI 輸出完整檔 |
-
-**舊紀錄不刪除**：保留審計軌跡。
-
----
-
-## 九、關聯檔案
-
-| 主題 | 檔案 |
-|---|---|
-| 啟動卡 | C-00-startup.md |
-| 通用規則 | C-02-rules.md |
-| 交付格式 | C-04-delivery.md |
-| 共同語言表 | C-11-terms.md |
-| 專案清單 | PROJECT-LIST.md |
-| 任務進度 | PROGRESS.md |
-| 體系層結論 | SYSTEM-CONCLUSION.md |
-| 體系層交接 | SYSTEM-HANDOFF.md |
-
----
-
-/* ═══ EOF ═══
-F: AI-General/docs/records/R-01-writers.md
-V: 1791934800
-B: B34-5
-W: ai-system-20261016-003#134
-═══ */
-```
-
-<!-- === FILE END: docs/records/R-01-writers.md === -->
-
-
 <!-- === FILE START: docs/records/STATE-INDEX.md === -->
 
 ## 📄 docs/records/STATE-INDEX.md
@@ -1461,9 +1168,9 @@ W: ai-system-20261016-003#134
 ```
 # STATE-INDEX（體系狀態索引）
 
-> ⚠️ 本檔由 GitHub Actions 自動生成（掃描各 P-01 YAML + 所有檔案 EOF），請勿手動編輯。
+> ⚠️ 本檔由 GitHub Actions 自動生成，請勿手動編輯。
 
-最後更新：2026-10-17 06:46:34 UTC
+最後更新：2026-10-17 06:50:53 UTC
 
 ---
 
@@ -1479,17 +1186,16 @@ W: ai-system-20261016-003#134
 
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+| AI-General | .github/workflows/setup-structure.yml | 1792224000 | B34-5 | ai-system-20261017-004#028 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-01-index.md | 1792222800 | B34-5 | ai-system-20261017-004#027 |
 | AI-General | records/SYSTEM-HANDOFF.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/SYSTEM-CONCLUSION.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | records/PROGRESS.md | 1792221600 | B34-5 | ai-system-20261017-004#024 |
 | AI-General | common/C-11-terms.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
 | AI-General | common/C-04-delivery.md | 1792220400 | B34-5 | ai-system-20261017-004#023 |
+| AI-General | records/STATE-INDEX.md | 1792219596 | B34-5 | ai-system-20261017-004#019 |
 | AI-General | common/C-02-rules.md | 1792219200 | B34-5 | ai-system-20261017-004#022 |
 | AI-General | common/C-00-startup.md | 1792218000 | B34-5 | ai-system-20261017-004#020 |
-| AI-General | records/STATE-INDEX.md | 1792216952 | B34-5 | ai-system-20261017-004#019 |
-| AI-General | .github/workflows/setup-structure.yml | 1792216800 | B34-5 | ai-system-20261017-004#019 |
-| AI-General | records/FILE-INDEX.md | 1792203866 | B34-5 | ai-system-20261016-003#auto |
 | AI-General | common/C-03-guide.md | 1791946200 | B34-5 | ai-system-20261016-003#159 |
 | AI-General | common/C-06-token-log.md | 1791943800 | B34-5 | ai-system-20261016-003#154 |
 | AI-General | common/C-07-summary.md | 1791942600 | B34-5 | ai-system-20261016-003#150 |
@@ -1497,11 +1203,9 @@ W: ai-system-20261016-003#134
 | AI-General | common/C-09-rolling-mechanism.md | 1791941400 | B34-5 | ai-system-20261016-003#147 |
 | AI-General | .github/workflows/cleanup-files.yml | 1791938400 | B34-5 | ai-system-20261016-003#139 |
 | web-app-family | external/web-app-family/.github/workflows/notify.yml | 1791936000 | B34-5 | ai-system-20261016-003#135 |
-| AI-General | records/R-01-writers.md | 1791934800 | B34-5 | ai-system-20261016-003#134 |
 | AI-General | common/C-01-profile.md | 1791930000 | B34-5 | ai-system-20261016-003#127 |
 | AI-General | common/C-05-learning/general.md | 1791927000 | B34-5 | ai-system-20261016-003#121 |
 | AI-General | common/C-05-learning/system.md | 1791922200 | B34-5 | ai-system-20261016-003#111 |
-| AI-General | records/PROJECT-LIST.md | 1791918000 | B34-5 | ai-system-20261016-003#096 |
 | AI-General | records/REPOS.md | 1791906860 | B34-4 | A20261016-001 |
 | AI-General | .github/workflows/setup-migration.yml | 1791906700 | B34-4 | A20261016-001 |
 | web-app-family | external/web-app-family/docs/projects/web-app-family/P-06-pagemap.md | 1791904480 | B34-4 | A20261013-004#183 |
@@ -1547,16 +1251,16 @@ W: ai-system-20261016-003#134
 
 | 檔案 | 廢除時間 | 內容去向 |
 |---|---|---|
-| R-01-writers.md | （v10b 執行） | 內容分散至 C-02、P-01 YAML、STATE-INDEX（D-148） |
-| PROJECT-LIST.md | （v10b 執行） | 內容分散至 C-00、P-01 YAML、STATE-INDEX（D-148） |
-| FILE-INDEX.md | 2026-10-17（v10a） | 由 STATE-INDEX 取代 |
-| HISTORY-INDEX.md | 2026-10-17（v10a） | 由 STATE-INDEX 取代 |
+| R-01-writers.md | 2026-10-17 | 內容分散至 C-02、P-01 YAML、STATE-INDEX（D-148） |
+| PROJECT-LIST.md | 2026-10-17 | 內容分散至 C-00、P-01 YAML、STATE-INDEX（D-148） |
+| FILE-INDEX.md | 2026-10-17 | 由 STATE-INDEX 取代 |
+| HISTORY-INDEX.md | 2026-10-17 | 由 STATE-INDEX 取代 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792219596
+V: 1792219854
 B: B34-5
-W: ai-system-20261017-004#019
+W: ai-system-20261017-004#028
 ═══ */
 ```
 
@@ -1749,122 +1453,4 @@ W: ai-system-20261016-003#121
 ```
 
 <!-- === FILE END: docs/common/C-05-learning/general.md === -->
-
----
-
-## 📋 專案清單（PROJECT-LIST.md，v10b 將移除）
-
-
-<!-- === FILE START: docs/records/PROJECT-LIST.md === -->
-
-## 📄 docs/records/PROJECT-LIST.md
-
-```
-# 專案清單
-
-最後更新：ai-system-20261016-003
-Version: 1791918000
-Batch: B34-5
-Writer: ai-system-20261016-003#096
-用途：記錄所有專案的名稱、領域、倉庫、專案包檔名、包編號
-
----
-
-## 專案一
-
-name: web-app-family
-display: 家庭 webapp
-code: webapp
-domain: W
-repo: tlee20860-dotcom/WEB-APP-Family
-repo_visibility: public
-package_no: 90
-package: PACKAGE-web-app-family.md
-handoff: docs/projects/web-app-family/P-13-handoff.md
-auto_create: false
-init_content: none
-
----
-
-## 專案二（體系層）
-
-name: ai-system
-display: AI 對話系統
-code: ai-system
-domain: system
-repo: tlee20860-dotcom/AI-General
-repo_visibility: public
-package_no: （不適用）
-package: （無，體系層不生成專案包）
-handoff: （無）
-auto_create: false
-init_content: none
-
----
-
-## 新增專案規則
-
-新增專案時，請在下方新增一個區塊，格式如上。
-
-欄位說明：
-
-| 欄位 | 說明 |
-|---|---|
-| name | 專案英文名（目錄名與倉庫名） |
-| display | 專案顯示名稱（中文） |
-| code | 專案代碼（用於對話編號前綴，英文小寫） |
-| domain | 領域（W / V / D / M / system / 其他） |
-| repo | 倉庫完整名稱 |
-| repo_visibility | public 或 private |
-| package_no | 共享包編號（十位數 = 類別，見下方對照） |
-| package | 專案包檔名 |
-| handoff | 專案交接檔案路徑 |
-| auto_create | 是否由 Actions 自動建立倉庫 |
-| init_content | 新倉庫初始內容 |
-
----
-
-## 包編號對照
-
-**十位數 = 類別，個位數 = 同類序號。**
-
-| 編號 | 檔案 | 類別 | 生成方式 |
-|---|---|---|---|
-| 01 | 01-CORE-SYSTEM.md | 體系核心 | setup-structure.yml 寫死 |
-| 02 | 02-CORE-PROJECT.md | 專案核心 | setup-structure.yml 寫死 |
-| 10 | 10-SKILLS-W.md | Web App 技能 | setup-structure.yml 寫死 |
-| 20 | 20-SKILLS-V.md | VBA 技能（未來） | 未來新增 |
-| 30 | 30-SKILLS-D.md | 資料分析技能（未來） | 未來新增 |
-| 90 | 90-web-app-family.md | 家庭 webapp | 本清單 |
-| 91+ | 未來新增專案 | 依序 | 本清單 |
-| 99 | 99-CONCLUSION-ARCHIVE.md | 體系舊決策（罕用） | setup-structure.yml 寫死 |
-
-**編號分配規則**：
-
-| 類別 | 範圍 | 說明 |
-|---|---|---|
-| 體系核心包 | 01~09 | 固定，不變 |
-| 領域技能包 | 10~89 | 每領域一組（10、20、30…） |
-| 專案包 | 90~98 | 各專案依序 |
-| 罕用包 | 99 | 固定 |
-
----
-
-## 歷史記錄
-
-| 專案 | 移除時間 | 原因 |
-|---|---|---|
-| ai-training（訓練 AI） | 2026-10-16 | 與體系層重複，內容已遷移至 AI-General |
-
----
-
-/* ═══ EOF ═══
-F: AI-General/docs/records/PROJECT-LIST.md
-V: 1791918000
-B: B34-5
-W: ai-system-20261016-003#096
-═══ */
-```
-
-<!-- === FILE END: docs/records/PROJECT-LIST.md === -->
 
