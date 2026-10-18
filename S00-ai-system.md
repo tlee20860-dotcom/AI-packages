@@ -8,10 +8,10 @@
 ```
 # 任務進度追蹤
 
-最後更新：ai-system-20261017-005
-Version: 1792263000
-Batch: B34-5
-Writer: ai-system-20261017-005#084
+最後更新：ai-system-20261018-006
+Version: 1792287000
+Batch: B34-6
+Writer: ai-system-20261018-006#047
 用途：追蹤體系層任務的步驟進度（跨對話持續）
 
 ---
@@ -45,6 +45,15 @@ Writer: ai-system-20261017-005#084
 | 當前階段 | 全部完成 |
 | 完成度 | 11/11 |
 
+### 任務四：中央廚房與模式庫重構
+
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 修復 Action 變數、Patch 腳本、實作依賴注入與模式庫 |
+| 開始時間 | 2026-10-18 |
+| 當前階段 | 全部完成 |
+| 完成度 | 5/5 |
+
 ---
 
 ## 二、步驟清單
@@ -64,6 +73,16 @@ Writer: ai-system-20261017-005#084
 | 9 | 交付 setup-structure.yml (v10b) | ✅ | 2026-10-17 | 執行 Step 1 刪除舊檔 |
 | 10 | 重構 Patch 腳本與 Workflow | ✅ | 2026-10-17 | 建立 .py，解決權限與迴圈 |
 | 11 | 建立雙 AI 路由與熱更新 | ✅ | 2026-10-17 | 寫入 C-00、C-02、D-172/173 |
+
+### 任務四：中央廚房與模式庫重構
+
+| # | 步驟 | 狀態 | 完成時間 | 備註 |
+|---|---|---|---|---|
+| 1 | 修復 setup-structure.yml 變數錯位 | ✅ | 2026-10-18 | 補齊 repo 變數 |
+| 2 | 重寫 apply_patch.py | ✅ | 2026-10-18 | 解決換行符與格式判定 |
+| 3 | 實作依賴注入 (中央廚房) | ✅ | 2026-10-18 | 新增 03-INFRA.md，專案只留呼叫器 |
+| 4 | 新增設計模式庫 (C-06) | ✅ | 2026-10-18 | 提架構前必看，加入 S-005 |
+| 5 | 更新啟動機制與規則 | ✅ | 2026-10-18 | C-00 新增 On-demand 載入說明 |
 
 ---
 
@@ -112,9 +131,9 @@ Writer: ai-system-20261017-005#084
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792263000
-B: B34-5
-W: ai-system-20261017-005#084
+V: 1792287000
+B: B34-6
+W: ai-system-20261018-006#047
 ═══ */
 ```
 
@@ -137,11 +156,11 @@ W: ai-system-20261017-005#084
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792287000|B34-6|ai-system-20261018-006#047
+AI-General|docs/records/PROGRESS.md|1792287000|B34-6|ai-system-20261018-006#047
 AI-General|docs/common/C-06-patterns.md|1792285000|B34-6|ai-system-20261018-006#040
 AI-General|docs/common/C-02-rules.md|1792285000|B34-6|ai-system-20261018-006#044
 AI-General|docs/common/C-00-startup.md|1792285000|B34-6|ai-system-20261018-006#040
 AI-General|docs/common/C-05-learning/system.md|1792263500|B34-5|ai-system-20261017-005#085
-AI-General|docs/records/PROGRESS.md|1792263000|B34-5|ai-system-20261017-005#084
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-03-flow.md|1792262500|B34-5|ai-system-20261017-005#083
 AI-General|docs/common/C-04-output.md|1792262000|B34-5|ai-system-20261017-005#082
