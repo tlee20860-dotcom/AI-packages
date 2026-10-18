@@ -141,12 +141,6 @@ jobs:
             git pull --rebase origin main && 
             git push
           )
-
-# ═══ EOF ═══
-# F: AI-General/.github/workflows/apply-patch.yml
-# V: 1792321000
-# W: ai-system-20261018-008#112
-# ═══ EOF ═══
 ```
 
 <!-- === FILE END: .github/workflows/apply-patch.yml === -->
