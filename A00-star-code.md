@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#226
+> 構建編號：#227
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
@@ -260,7 +260,7 @@ Writer: ai-system-20261018-006#040
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-00-startup.md
 V: 1792285000
-B: B34-6
+B(歷史): B34-6
 W: ai-system-20261018-006#040
 ═══ */
 ```
@@ -676,7 +676,7 @@ Writer: ai-system-20261018-006#050
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-02-rules.md
 V: 1792289000
-B: B34-6
+B(歷史): B34-6
 W: ai-system-20261018-006#050
 ═══ */
 ```
@@ -1968,7 +1968,7 @@ Writer: ai-system-20261018-006#040
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-06-patterns.md
 V: 1792285000
-B: B34-6
+B(歷史): B34-6
 W: ai-system-20261018-006#040
 ═══ */
 ```
@@ -2050,7 +2050,7 @@ Writer: ai-system-20261018-006#048
 /* ═══ EOF ═══
 F: AI-General/docs/common/C-11-terms.md
 V: 1792288000
-B: B34-6
+B(歷史): B34-6
 W: ai-system-20261018-006#048
 ═══ */
 ```
