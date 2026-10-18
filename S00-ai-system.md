@@ -172,6 +172,7 @@ W: ai-system-20261018-007#069
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/records/PROGRESS.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/common/C-03-flow.md|1792296800|ai-system-20261018-007#067
@@ -182,7 +183,6 @@ AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006
 AI-General|docs/common/C-02-rules.md|1792289000|ai-system-20261018-006#050
 AI-General|docs/common/C-11-terms.md|1792288000|ai-system-20261018-006#048
 AI-General|docs/common/C-00-startup.md|1792285000|ai-system-20261018-006#040
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|ai-system-20261017-005#083
 AI-General|docs/common/C-05-learning/general.md|1792226400|ai-system-20261017-004#032
 AI-General|docs/skills/W/W-00-startup.md|1791903760|A20261013-004#169
 AI-General|docs/skills/W/W-05-schema.md|1791899740|A20261013-004#065
@@ -301,10 +301,9 @@ W: ai-system-20261018-007#069
 ```
 # SYSTEM-HANDOFF（體系層交接快照）
 
-最後更新：ai-system-20261017-005
-Version: 1792262500
-Batch: B34-5
-Writer: ai-system-20261017-005#083
+最後更新：ai-system-20261018-007
+Version: 1792297000
+Writer: ai-system-20261018-007#069
 上限：80 行
 用途：體系層對話交接快照
 
@@ -314,10 +313,10 @@ Writer: ai-system-20261017-005#083
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261017-005 |
-| 本次範圍 | A00 體系重構收尾、建立雙 AI 路由、熱更新與轉移 SOP |
-| 累計回覆 | 83 條 |
-| 狀態 | 體系機制全面完備，可交接 |
+| 對話編號 | ai-system-20261018-007 |
+| 本次範圍 | 廢除批次號、修正 setup 腳本、跨倉庫 EOF 遷移 |
+| 累計回覆 | 69 條 |
+| 狀態 | 機制已完善，成功修復預設權限問題 |
 
 ---
 
@@ -326,10 +325,9 @@ Writer: ai-system-20261017-005#083
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **雙 AI 協作**：專案 AI 遇到體系問題必須標示 `【轉交體系】`，並用 Code Block 包裹。
-2. **熱更新判定**：對話中途上傳 A00（含無字），自動觸發規則更新，絕不重置狀態。
-3. **精準 Patch**：寫入 F-007 鐵律，禁止盲猜表格，嚴格要求 EOF 同步。
-4. **收尾 SOP**：寫入「終極收尾更新總表」與「三階段轉移對話流程」。
+1. **廢除批次號**：全面改用 epoch，舊檔 `B:` 由遷移腳本改為 `B(歷史):`。
+2. **權限突破**：確認 `GITHUB_TOKEN` 無法修改 workflows，改用 `CROSS_REPO_PAT` 解決。
+3. **修復 setup 腳本**：修正 Step 6 的 `-d` bug 與未包含自身的問題。
 
 ---
 
@@ -337,7 +335,7 @@ Writer: ai-system-20261017-005#083
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-170 ~ D-173。
+**本次新增決策**：D-178 ~ D-181。
 
 ---
 
@@ -345,9 +343,9 @@ Writer: ai-system-20261017-005#083
 
 | # | 優先確認 |
 |---|---|
-| 1 | `C-04` 裡面的 `F-007` 是否只剩下唯一一組（沒有重複疊加）？ |
-| 2 | `.github/PATCH.md` 是否已重置為預設提示字？ |
-| 3 | 下一次修改是否已準備好遵守 F-007 鐵律（極簡、無空行）？ |
+| 1 | `migrate_eof.py` 是否已經在 Actions 以 `apply` 模式成功執行過？ |
+| 2 | webapp 對話是否已完成熱更新（讀取新 A00）？ |
+| 3 | webapp 是否還有 `setup-structure.yml` Step 5 的轉交需求？ |
 
 ---
 
@@ -355,11 +353,9 @@ Writer: ai-system-20261017-005#083
 
 ### 5.1 跨層待辦提醒（專案層）
 
-> ⚠️ 本區塊僅作宏觀指路，不寫具體細節。
-
 | 專案 | 來源對話編號 | 未完成事項提醒 | 建議動作 |
 |---|---|---|---|
-| web-app-family | webapp-20261017-001 | 90 包過大（1.1MB），需盤點 P-* | 開啟專案對話處理 |
+| web-app-family | webapp-20261017-001 | 已發送暫停指令，等待熱更新。 | 確認是否需轉交 Step 5。 |
 
 ---
 
@@ -368,16 +364,15 @@ Writer: ai-system-20261017-005#083
 | 順序 | 動作 |
 |---|---|
 | 1 | 下載最新的 `A00` 與 `S00`。 |
-| 2 | 若進行專案層對話，請上傳 `A00` + 對應 `90` 包，讓專案 AI 接手專案任務。 |
-| 3 | 享受極速 Patch 與無縫交接的體系。 |
+| 2 | 將新 `A00` 熱更新給 webapp 對話。 |
+| 3 | 若 webapp 有 Step 5 需求，由體系層接手修改 `setup-structure.yml`。 |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792262500
-B(歷史): B34-5
-W: ai-system-20261017-005#083
+V: 1792297000
+W: ai-system-20261018-007#069
 ═══ */
 ```
 
