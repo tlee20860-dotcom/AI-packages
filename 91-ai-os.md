@@ -1,6 +1,6 @@
 # 專案包：ai-os
 
-# AI-OS 輕量版引導系統（V: 1792339172）
+# AI-OS 輕量版引導系統（V: 1792339335）
 
 
 <!-- === FILE START: external/ai-os/E-00-newbie.md === -->

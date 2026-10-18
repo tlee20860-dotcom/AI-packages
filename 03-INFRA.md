@@ -180,7 +180,7 @@ jobs:
 
 ```
 # ============================================
-# setup-structure.yml — 四倉架構 + 動態共享包（v12.0）
+# setup-structure.yml — 四倉架構 + 動態共享包（v12.1）
 # ============================================
 
 name: Build Shared Packages and Deploy
@@ -197,7 +197,7 @@ on:
       - '**/*.svg'
       - '**/*.ico'
   repository_dispatch:
-    types: [web-app-family-updated]
+    types: [web-app-family-updated, ai-os-updated]
   workflow_dispatch:
 
 concurrency:
@@ -363,7 +363,7 @@ jobs:
               fi
             fi
 
-            if [ -d "$path" ]; then
+            if [ -d "$path" ] && [ "$name" != "ai-os" ]; then
               (
                 cd "$path" || exit 0
                 find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" \) -not -path "./.git/*" -not -path "./docs/*" -not -path "./.github/*" | sort > /tmp/code_files.txt || true
@@ -463,9 +463,9 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-General/.github/workflows/setup-structure.yml
-# V: 1792316000
+# V: 1792317000
 # B(歷史): B34-6
-# W: ai-system-20261018-008#095
+# W: ai-system-20261018-008#097
 # ═══ EOF ═══
 ```
 
