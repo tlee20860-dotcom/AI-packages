@@ -8,10 +8,9 @@
 ```
 # 任務進度追蹤
 
-最後更新：ai-system-20261018-006
-Version: 1792287000
-Batch: B34-6
-Writer: ai-system-20261018-006#047
+最後更新：ai-system-20261018-007
+Version: 1792297000
+Writer: ai-system-20261018-007#069
 用途：追蹤體系層任務的步驟進度（跨對話持續）
 
 ---
@@ -54,6 +53,15 @@ Writer: ai-system-20261018-006#047
 | 當前階段 | 全部完成 |
 | 完成度 | 5/5 |
 
+### 任務五：廢除批次號與自動化遷移
+
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 廢除批次號、修正 setup 腳本、跨倉庫 EOF 遷移 |
+| 開始時間 | 2026-10-18 |
+| 當前階段 | 全部完成 |
+| 完成度 | 5/5 |
+
 ---
 
 ## 二、步驟清單
@@ -83,6 +91,16 @@ Writer: ai-system-20261018-006#047
 | 3 | 實作依賴注入 (中央廚房) | ✅ | 2026-10-18 | 新增 03-INFRA.md，專案只留呼叫器 |
 | 4 | 新增設計模式庫 (C-06) | ✅ | 2026-10-18 | 提架構前必看，加入 S-005 |
 | 5 | 更新啟動機制與規則 | ✅ | 2026-10-18 | C-00 新增 On-demand 載入說明 |
+
+### 任務五：廢除批次號與自動化遷移
+
+| # | 步驟 | 狀態 | 完成時間 | 備註 |
+|---|---|---|---|---|
+| 1 | 更新 C-04、C-03、C-05 | ✅ | 2026-10-18 | 移除批次號，改用 epoch |
+| 2 | 修正 setup-structure.yml | ✅ | 2026-10-18 | 移除 B 欄、修正 -d bug、加入自打包 |
+| 3 | 建立 migrate_eof.py 與 workflow | ✅ | 2026-10-18 | 實作 report/apply 雙模式 |
+| 4 | 更新 C-06 模式庫 | ✅ | 2026-10-18 | 加入 §五：跨倉庫安全批量遷移 |
+| 5 | 修正 C-03 舊制啟動包名稱 | ✅ | 2026-10-18 | 改為 A00 + S00 |
 
 ---
 
@@ -131,9 +149,8 @@ Writer: ai-system-20261018-006#047
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792287000
-B(歷史): B34-6
-W: ai-system-20261018-006#047
+V: 1792297000
+W: ai-system-20261018-007#069
 ═══ */
 ```
 
@@ -155,6 +172,7 @@ W: ai-system-20261018-006#047
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/PROGRESS.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/common/C-03-flow.md|1792296800|ai-system-20261018-007#067
 AI-General|docs/common/C-06-patterns.md|1792296000|ai-system-20261018-007#063
 AI-General|docs/common/C-05-engine.md|1792293000|ai-system-20261018-007#029
@@ -163,7 +181,6 @@ AI-General|docs/records/SYSTEM-CONCLUSION.md|1792289500|ai-system-20261018-006#0
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
 AI-General|docs/common/C-02-rules.md|1792289000|ai-system-20261018-006#050
 AI-General|docs/common/C-11-terms.md|1792288000|ai-system-20261018-006#048
-AI-General|docs/records/PROGRESS.md|1792287000|ai-system-20261018-006#047
 AI-General|docs/common/C-00-startup.md|1792285000|ai-system-20261018-006#040
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792262500|ai-system-20261017-005#083
 AI-General|docs/common/C-05-learning/general.md|1792226400|ai-system-20261017-004#032
