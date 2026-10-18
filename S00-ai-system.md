@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-18 21:42:26 (HKT)
+> 生成時間：2026-10-18 21:42:53 (HKT)
 
 
 <!-- === FILE START: docs/records/PROGRESS.md === -->
@@ -177,6 +177,7 @@ W: ai-system-20261018-007#109
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/common/C-05-engine.md|1792305600|ai-system-20261018-008#039
 AI-General|docs/common/C-00-startup.md|1792305500|ai-system-20261018-008#038
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792301500|ai-system-20261018-007#109
@@ -184,7 +185,6 @@ AI-General|docs/records/PROGRESS.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-02-rules.md|1792300500|ai-system-20261018-007#104
-AI-General|docs/common/C-05-engine.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-04-output.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-03-flow.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
