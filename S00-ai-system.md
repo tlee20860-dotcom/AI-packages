@@ -175,6 +175,7 @@ W: ai-system-20261018-007#109
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/records/PROGRESS.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
@@ -183,7 +184,6 @@ AI-General|docs/common/C-05-engine.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-04-output.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-03-flow.md|1792300000|ai-system-20261018-007#102
 AI-General|.github/PATCH.md|1792299500|ai-system-20261018-007#098
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
 AI-General|docs/common/C-02-rules.md|1792289000|ai-system-20261018-006#050
 AI-General|docs/common/C-00-startup.md|1792285000|ai-system-20261018-006#040
@@ -412,8 +412,8 @@ W: ai-system-20261018-007#109
 # SYSTEM-HANDOFF（體系層交接快照）
 
 最後更新：ai-system-20261018-007
-Version: 1792297000
-Writer: ai-system-20261018-007#069
+Version: 1792301500
+Writer: ai-system-20261018-007#109
 上限：80 行
 用途：體系層對話交接快照
 
@@ -424,9 +424,9 @@ Writer: ai-system-20261018-007#069
 | 欄位 | 值 |
 |---|---|
 | 對話編號 | ai-system-20261018-007 |
-| 本次範圍 | 廢除批次號、修正 setup 腳本、跨倉庫 EOF 遷移 |
-| 累計回覆 | 69 條 |
-| 狀態 | 機制已完善，成功修復預設權限問題 |
+| 本次範圍 | 廢除批次號、R-011 升級、防連發、完善交接 SOP |
+| 累計回覆 | 109 條 |
+| 狀態 | 體系機制全面完備，可交接 |
 
 ---
 
@@ -435,9 +435,12 @@ Writer: ai-system-20261018-007#069
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **廢除批次號**：全面改用 epoch，舊檔 `B:` 由遷移腳本改為 `B(歷史):`。
-2. **權限突破**：確認 `GITHUB_TOKEN` 無法修改 workflows，改用 `CROSS_REPO_PAT` 解決。
-3. **修復 setup 腳本**：修正 Step 6 的 `-d` bug 與未包含自身的問題。
+1. **廢除批次號**：全面改用 epoch，舊檔由遷移腳本改為 `B(歷史):`。
+2. **權限突破**：改用 `CROSS_REPO_PAT` 解決無法修改 workflow 的問題。
+3. **R-011 升級**：整合 6 處散落引用，升級為「檔案取得鐵律」。
+4. **完善交接 SOP**：C-03 §7.2 規定必須開新對話並提供交接詞。
+5. **全局一致性掃描**：交接前必須掃描舊名詞（已清除 C-00/C-11 舊啟動包名）。
+6. **排版與防呆**：加入手機友善格式、30 輪大腦重整、F-008 結構完整性。
 
 ---
 
@@ -445,7 +448,7 @@ Writer: ai-system-20261018-007#069
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-178 ~ D-181。
+**本次新增決策**：D-178 ~ D-184。
 
 ---
 
@@ -481,8 +484,8 @@ Writer: ai-system-20261018-007#069
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792297000
-W: ai-system-20261018-007#069
+V: 1792301500
+W: ai-system-20261018-007#109
 ═══ */
 ```
 
