@@ -175,6 +175,7 @@ W: ai-system-20261018-007#109
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/records/PROGRESS.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
@@ -182,7 +183,6 @@ AI-General|docs/common/C-05-engine.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-04-output.md|1792300000|ai-system-20261018-007#102
 AI-General|docs/common/C-03-flow.md|1792300000|ai-system-20261018-007#102
 AI-General|.github/PATCH.md|1792299500|ai-system-20261018-007#098
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792297200|ai-system-20261018-007#070
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
 AI-General|docs/common/C-02-rules.md|1792289000|ai-system-20261018-006#050
@@ -216,8 +216,8 @@ AI-General|docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
 # SYSTEM-CONCLUSION（體系層滾動結論）
 
 最後更新：ai-system-20261018-007
-Version: 1792297200
-Writer: ai-system-20261018-007#070
+Version: 1792301500
+Writer: ai-system-20261018-007#109
 用途：體系層滾動式累積結論（議題 + 設計 + 決策）
 
 ---
@@ -273,6 +273,7 @@ Writer: ai-system-20261018-007#070
 | 45 | 拆分 C-02 與 C-11 (SSOT) | ✅ |
 | 46 | 廢除批次號 (B) 與自動化遷移 | ✅ |
 | 47 | 跨倉庫安全批量遷移與權限突破 | ✅ |
+| 48 | 完善轉移對話 SOP 與全局掃描 | ✅ |
 
 ---
 
@@ -376,6 +377,9 @@ Writer: ai-system-20261018-007#070
 | **D-179** | **舊檔 EOF 遷移策略** | 舊檔的 `B: xxx` 統一由 `migrate_eof.py` 遷移為 `B(歷史): xxx`，保留資料。 |
 | **D-180** | **跨倉庫安全遷移模式** | 建立 `migrate-eof.yml`，支援 `report` 與 `apply` 雙模式，並使用 `CROSS_REPO_PAT` 突破預設權限限制。 |
 | **D-181** | **setup-structure.yml 自打包** | 修正 Step 6 專案層 `-d` 判定 bug，並將 `setup-structure.yml` 自身加入 03-INFRA 產出中。 |
+| **D-182** | **手機友善通用格式** | 提問與選項全面採用「Q1 + 選項 + 💡解釋」格式，禁止使用寬表格防跑版。 |
+| **D-183** | **30 輪大腦重整與 Token 阻斷** | 廢除 20/50 機制，改為 30 輪強制重讀 C-00/C-02；Token 僅供顯示，禁止影響 AI 邏輯。 |
+| **D-184** | **結構完整性檢查 (F-008)** | 交付完整檔時必須盤點章節，禁止為省 Token 刪減段落。 |
 
 ---
 
@@ -392,8 +396,8 @@ Writer: ai-system-20261018-007#070
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792297200
-W: ai-system-20261018-007#070
+V: 1792301500
+W: ai-system-20261018-007#109
 ═══ */
 ```
 
