@@ -9,8 +9,8 @@
 # 任務進度追蹤
 
 最後更新：ai-system-20261018-007
-Version: 1792297000
-Writer: ai-system-20261018-007#069
+Version: 1792301500
+Writer: ai-system-20261018-007#109
 用途：追蹤體系層任務的步驟進度（跨對話持續）
 
 ---
@@ -60,7 +60,7 @@ Writer: ai-system-20261018-007#069
 | 任務名稱 | 廢除批次號、修正 setup 腳本、跨倉庫 EOF 遷移 |
 | 開始時間 | 2026-10-18 |
 | 當前階段 | 全部完成 |
-| 完成度 | 5/5 |
+| 完成度 | 8/8 |
 
 ---
 
@@ -101,6 +101,9 @@ Writer: ai-system-20261018-007#069
 | 3 | 建立 migrate_eof.py 與 workflow | ✅ | 2026-10-18 | 實作 report/apply 雙模式 |
 | 4 | 更新 C-06 模式庫 | ✅ | 2026-10-18 | 加入 §五：跨倉庫安全批量遷移 |
 | 5 | 修正 C-03 舊制啟動包名稱 | ✅ | 2026-10-18 | 改為 A00 + S00 |
+| 6 | 升級 R-011 檔案取得鐵律 | ✅ | 2026-10-18 | 整合散落規則，禁止叫使用者查看 |
+| 7 | Action 防連發優化 | ✅ | 2026-10-18 | 加入 cancel-in-progress: true |
+| 8 | 完善轉移對話 SOP 與全局掃描 | ✅ | 2026-10-18 | C-03 §7.2 加入強制開新對話與殘留掃描 |
 
 ---
 
@@ -149,8 +152,8 @@ Writer: ai-system-20261018-007#069
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792297000
-W: ai-system-20261018-007#069
+V: 1792301500
+W: ai-system-20261018-007#109
 ═══ */
 ```
 
@@ -172,6 +175,7 @@ W: ai-system-20261018-007#069
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/PROGRESS.md|1792301500|ai-system-20261018-007#109
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-05-engine.md|1792300000|ai-system-20261018-007#102
@@ -180,7 +184,6 @@ AI-General|docs/common/C-03-flow.md|1792300000|ai-system-20261018-007#102
 AI-General|.github/PATCH.md|1792299500|ai-system-20261018-007#098
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792297200|ai-system-20261018-007#070
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792297000|ai-system-20261018-007#069
-AI-General|docs/records/PROGRESS.md|1792297000|ai-system-20261018-007#069
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
 AI-General|docs/common/C-02-rules.md|1792289000|ai-system-20261018-006#050
 AI-General|docs/common/C-00-startup.md|1792285000|ai-system-20261018-006#040
