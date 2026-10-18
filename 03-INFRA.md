@@ -133,3 +133,32 @@ print("[RESET] PATCH.md reset")
 
 ### 📄 檔案：apply-patch.yml (體系觸發器)
 
+
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```
+name: Apply Patch
+on:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Patch Script
+        run: python3 .github/scripts/apply_patch.py
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "chore: apply patch" && git push)
+```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
