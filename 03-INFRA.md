@@ -180,7 +180,7 @@ jobs:
 
 ```
 # ============================================
-# setup-structure.yml — 四倉架構 + 動態共享包（v11.8）
+# setup-structure.yml — 四倉架構 + 動態共享包（v11.9）
 # ============================================
 
 name: Build Shared Packages and Deploy
@@ -424,9 +424,9 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-General/.github/workflows/setup-structure.yml
-# V: 1792293000
+# V: 1792301000
 # B(歷史): B34-6
-# W: ai-system-20261018-007#030
+# W: ai-system-20261018-007#106
 # ═══ EOF ═══
 ```
 
