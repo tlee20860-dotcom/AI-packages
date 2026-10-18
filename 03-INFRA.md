@@ -207,6 +207,7 @@ concurrency:
 env:
   PROJECT_REPOS: |
     web-app-family|external/web-app-family|tlee20860-dotcom/WEB-APP-Family|90|PACKAGE-web-app-family.md|W|家庭 webapp
+    ai-os|external/ai-os|tlee20860-dotcom/AI-OS|91|PACKAGE-ai-os.md|E|AI-OS 輕量版
 
 jobs:
   build:
@@ -343,14 +344,23 @@ jobs:
             echo "# 專案包：${name}" > "$OUTPUT"
             echo "" >> "$OUTPUT"
             
-            proj_docs_dir="$path/docs/projects/${name}"
-            if [ -d "$proj_docs_dir" ]; then
-              # 使用 P-* 白名單前綴匹配，避免收錄無關檔案（含 P-98）
-              for prefix in P-01 P-02 P-05 P-06 P-07 P-08 P-09 P-12 P-13 P-98 P-99; do
-                for f in ${proj_docs_dir}/${prefix}-*.md; do
-                  if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
-                done
+            # 若為 AI-OS 專案，直接讀取根目錄的 E-*.md，並加入標題
+            if [ "$name" = "ai-os" ]; then
+              echo "# AI-OS 輕量版引導系統（V: $(date +%s)）" >> "$OUTPUT"
+              echo "" >> "$OUTPUT"
+              for f in "$path"/E-*.md; do
+                if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
               done
+            else
+              proj_docs_dir="$path/docs/projects/${name}"
+              if [ -d "$proj_docs_dir" ]; then
+                # 使用 P-* 白名單前綴匹配，避免收錄無關檔案（含 P-98）
+                for prefix in P-01 P-02 P-05 P-06 P-07 P-08 P-09 P-12 P-13 P-98 P-99; do
+                  for f in ${proj_docs_dir}/${prefix}-*.md; do
+                    if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+                  done
+                done
+              fi
             fi
 
             if [ -d "$path" ]; then
@@ -453,9 +463,9 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-General/.github/workflows/setup-structure.yml
-# V: 1792306000
+# V: 1792316000
 # B(歷史): B34-6
-# W: ai-system-20261018-008#042
+# W: ai-system-20261018-008#095
 # ═══ EOF ═══
 ```
 
@@ -560,6 +570,105 @@ jobs:
 # V: 1791936000
 # B: B34-5
 # W: ai-system-20261016-003#135
+# ═══ EOF ═══
+```
+
+<!-- === FILE END: .github/workflows/notify.yml === -->
+
+
+
+## 🏢 專案層：tlee20860-dotcom/AI-OS (ai-os) 的呼叫器
+
+### 📄 檔案：.github/workflows/apply-patch.yml
+
+
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-General/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/apply-patch.yml
+# V: 1792315000
+# W: ai-system-20261018-008#091
+# ═══ EOF ═══
+```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
+
+### 📄 檔案：.github/workflows/notify.yml
+
+
+<!-- === FILE START: .github/workflows/notify.yml === -->
+
+## 📄 .github/workflows/notify.yml
+
+```
+# ============================================
+# notify.yml — 手動通知 AI-General 重新打包
+# ============================================
+
+name: Manual Notify AI-General
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-General build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-General/dispatches \
+            -d '{"event_type":"ai-os-updated"}'
+          echo "已通知 AI-General 重新建置 91-ai-os.md"
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/notify.yml
+# V: 1792316000
+# W: ai-system-20261018-008#092
 # ═══ EOF ═══
 ```
 
