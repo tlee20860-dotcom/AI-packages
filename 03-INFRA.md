@@ -145,12 +145,13 @@ on:
     paths:
       - '.github/PATCH.md'
 
+permissions:
+  contents: write
+  workflows: write
+
 jobs:
   apply:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      workflows: write
     steps:
       - uses: actions/checkout@v4
       - name: Run Patch Script
@@ -164,8 +165,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-General/.github/workflows/apply-patch.yml
-# V: 1792293600
-# W: ai-system-20261018-007#051
+# V: 1792294000
+# W: ai-system-20261018-007#053
 # ═══ EOF ═══
 ```
 
