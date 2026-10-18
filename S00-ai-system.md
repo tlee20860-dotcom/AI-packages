@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-19 02:04:42 (HKT)
+> 生成時間：2026-10-19 02:06:26 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -286,6 +286,7 @@ W: ai-system-20261018-008#132
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/common/C-02-rules.md|1792338300|ai-system-20261019-009#051
 AI-General|docs/common/C-04-output.md|1792337400|ai-system-20261019-009#050
 AI-General|docs/common/C-00-startup.md|1792332000|ai-system-20261019-009#037
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792325000|ai-system-20261018-008#132
@@ -293,7 +294,6 @@ AI-General|docs/records/SYSTEM-CONCLUSION.md|1792325000|ai-system-20261018-008#1
 AI-General|docs/records/PROGRESS.md|1792325000|ai-system-20261018-008#132
 AI-General|docs/common/C-05-engine.md|1792324000|ai-system-20261018-008#127
 AI-General|docs/common/C-03-flow.md|1792324000|ai-system-20261018-008#127
-AI-General|docs/common/C-02-rules.md|1792324000|ai-system-20261018-008#127
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
