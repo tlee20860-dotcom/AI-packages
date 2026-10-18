@@ -1,6 +1,6 @@
 # AI 協作 - 核心大腦包
 
-> 構建編號：#201
+> 構建編號：#202
 
 
 <!-- === FILE START: docs/common/C-00-startup.md === -->
@@ -278,7 +278,7 @@ W: ai-system-20261018-006#040
 最後更新：ai-system-20261018-006
 Version: 1792285000
 Batch: B34-6
-Writer: ai-system-20261018-006#041
+Writer: ai-system-20261018-006#044
 用途：S-List、R-List、核心決策、四層架構、禁止事項、術語、階段總結、滾動結論、規則速查。
 
 ---
@@ -723,7 +723,7 @@ Writer: ai-system-20261018-006#041
 F: AI-General/docs/common/C-02-rules.md
 V: 1792285000
 B: B34-6
-W: ai-system-20261018-006#041
+W: ai-system-20261018-006#044
 ═══ */
 ```
 
