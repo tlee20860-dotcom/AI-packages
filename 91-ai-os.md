@@ -1,6 +1,6 @@
-# 專案包：ai-os
+# AI-OS 輕量版引導系統
 
-# AI-OS 輕量版引導系統（V: 1792339335）
+> 生成時間：2026-10-19 00:10:00 (HKT)
 
 
 <!-- === FILE START: external/ai-os/E-00-newbie.md === -->
