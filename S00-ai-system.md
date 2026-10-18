@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-19 00:44:36 (HKT)
+> 生成時間：2026-10-19 00:44:54 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -18,8 +18,8 @@
 # SYSTEM-HANDOFF（體系層交接快照）
 
 最後更新：ai-system-20261018-008
-Version: 1792311000
-Writer: ai-system-20261018-008#077
+Version: 1792325000
+Writer: ai-system-20261018-008#132
 上限：80 行
 用途：體系層對話交接快照
 
@@ -30,8 +30,8 @@ Writer: ai-system-20261018-008#077
 | 欄位 | 值 |
 |---|---|
 | 對話編號 | ai-system-20261018-008 |
-| 本次範圍 | 跨平台測試、體系升級、AI-OS 專案建置 |
-| 累計回覆 | 77 條 |
+| 本次範圍 | 跨平台驗證、Action 修復、AI-OS 建置 |
+| 累計回覆 | 132 條 |
 | 狀態 | 體系升級完畢，可交接 |
 
 ---
@@ -41,10 +41,9 @@ Writer: ai-system-20261018-008#077
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **跨平台驗證**：實測 Gemini 可完美執行 A00+S00，確立體系可移植性。
-2. **交接防呆**：S00 頂部加入攔截器，強制 AI 讀取 A00。
-3. **Token 自適應**：C-05 改為詢問平台並動態調用公式。
-4. **AI-OS 專案**：成功建置 E-00（系統規格）與 E-01（引擎協議），適用於新人引導。
+1. **Action 基礎設施修復**：解決 `apply-patch.yml` 的 git push 衝突，以及 `.py` 腳本內容錯置問題。
+2. **防呆機制升級**：新增 `R-011`（禁半套程式碼）、`R-012`（對話結束主權）、`L2-List`（強制勾選表）。
+3. **AI-OS 建置與打包**：`E-00` 與 `E-01` 已交付，並成功寫入矩陣產出 `91-ai-os.md`。
 
 ---
 
@@ -52,7 +51,7 @@ Writer: ai-system-20261018-008#077
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-185 ~ D-189。
+**本次新增決策**：D-190 ~ D-192。
 
 ---
 
@@ -60,8 +59,8 @@ Writer: ai-system-20261018-008#077
 
 | # | 優先確認 |
 |---|---|
-| 1 | 體系包（A00, S00, C-00, C-05, yml）是否已全部更新並推送到 GitHub？ |
-| 2 | AI-OS 倉庫的 E-00 與 E-01 是否已建立並貼上？ |
+| 1 | 體系包（A00, S00）是否已重新生成並包含最新交接詞？ |
+| 2 | `91-ai-os.md` 是否已確認排版正確（含 HKT 時間）？ |
 | 3 | webapp 對話是否已解決 Step 5 轉交需求？ |
 
 ---
@@ -81,15 +80,15 @@ Writer: ai-system-20261018-008#077
 | 順序 | 動作 |
 |---|---|
 | 1 | 下載最新的 A00 與 S00。 |
-| 2 | 前往 `AI-OS` 專案，繼續擴充 E-02（多領域擴充機制）或 E-03（自訂防護）。 |
+| 2 | 前往 `AI-OS` 專案，繼續擴充 E-02（多領域擴充機制）。 |
 | 3 | 若 webapp 有回應，接手處理剩餘對接。 |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792311000
-W: ai-system-20261018-008#077
+V: 1792325000
+W: ai-system-20261018-008#132
 ═══ */
 ```
 
@@ -287,13 +286,13 @@ W: ai-system-20261018-008#132
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792325000|ai-system-20261018-008#132
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792325000|ai-system-20261018-008#132
 AI-General|docs/records/PROGRESS.md|1792325000|ai-system-20261018-008#132
 AI-General|docs/common/C-05-engine.md|1792324000|ai-system-20261018-008#127
 AI-General|docs/common/C-04-output.md|1792324000|ai-system-20261018-008#127
 AI-General|docs/common/C-03-flow.md|1792324000|ai-system-20261018-008#127
 AI-General|docs/common/C-02-rules.md|1792324000|ai-system-20261018-008#127
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792311000|ai-system-20261018-008#077
 AI-General|docs/common/C-00-startup.md|1792305500|ai-system-20261018-008#038
 AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
 AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
