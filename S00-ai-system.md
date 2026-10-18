@@ -155,8 +155,8 @@ W: ai-system-20261018-006#047
 ## 二、檔案清單
 | Repo | 檔案 | Version | Batch | Writer |
 |---|---|---|---|---|
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792289500|B34-6|ai-system-20261018-006#051
 AI-General|docs/common/C-02-rules.md|1792289000|B34-6|ai-system-20261018-006#050
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792287000|B34-6|ai-system-20261018-006#047
 AI-General|docs/records/PROGRESS.md|1792287000|B34-6|ai-system-20261018-006#047
 AI-General|docs/common/C-06-patterns.md|1792285000|B34-6|ai-system-20261018-006#040
 AI-General|docs/common/C-00-startup.md|1792285000|B34-6|ai-system-20261018-006#040
@@ -194,9 +194,9 @@ AI-General|docs/skills/W/W-01-firebase.md|1791899500|B34-3|A20261013-004#065
 # SYSTEM-CONCLUSION（體系層滾動結論）
 
 最後更新：ai-system-20261018-006
-Version: 1792287000
+Version: 1792289500
 Batch: B34-6
-Writer: ai-system-20261018-006#047
+Writer: ai-system-20261018-006#051
 用途：體系層滾動式累積結論（議題 + 設計 + 決策）
 
 ---
@@ -249,6 +249,7 @@ Writer: ai-system-20261018-006#047
 | 42 | 修復 Action 變數錯位與 Patch 腳本 | ✅ |
 | 43 | Infra 中央廚房重構 (03-INFRA.md) | ✅ |
 | 44 | 新增設計模式庫 (C-06) | ✅ |
+| 45 | 拆分 C-02 與 C-11 (SSOT) | ✅ |
 
 ---
 
@@ -347,6 +348,7 @@ Writer: ai-system-20261018-006#047
 | **D-174** | **體系包直通** | 若使用者上傳 A00 + S00 且明確表示要進行體系修正，AI 直接生成體系對話編號，不列專案清單、不列 4 選項，直接進入 STATE_DISCUSS。 |
 | **D-175** | **中央廚房（依賴注入）** | 自動化腳本統一由 AI-General 管理（SSOT），專案端只保留呼叫器，共享包產出單一 `03-INFRA.md` 供對比。 |
 | **D-176** | **設計模式庫 (C-06)** | 建立 `C-06-patterns.md`，並在 S-List 加入 S-005。涉及架構設計、新專案時，必先查閱此庫。 |
+| **D-177** | **C-02 與 C-11 拆分 (SSOT)** | 共同語言表獨立於 `C-11-terms.md`，`C-02-rules.md` 僅保留行為法則，不重複收錄詞彙。 |
 
 ---
 
@@ -363,9 +365,9 @@ Writer: ai-system-20261018-006#047
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792287000
+V: 1792289500
 B: B34-6
-W: ai-system-20261018-006#047
+W: ai-system-20261018-006#051
 ═══ */
 ```
 
