@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:18:01 (HKT)
+> 生成時間：2026-10-19 22:22:00 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v14.2)
-# 用途：加入除錯列印，檢查 workflows 是否存在
+# setup-structure.yml — 動態共享包打包腳本 (v14.3)
+# 用途：改用 git clone 抓取體系倉庫，確保檔案不遺漏
 # ============================================
 
 name: Build Shared Packages
@@ -259,19 +259,13 @@ jobs:
           
           jq -c '.projects' config/repos.json > /tmp/projects.json
 
-      - name: Checkout ai-kernel
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.KERNEL_REPO }}
-          token: ${{ secrets.CROSS_REPO_PAT }}
-          path: ai-kernel
+      - name: Checkout ai-kernel (git clone)
+        run: |
+          git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" ai-kernel
 
-      - name: Checkout AI-General
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.GENERAL_REPO }}
-          token: ${{ secrets.CROSS_REPO_PAT }}
-          path: AI-General
+      - name: Checkout AI-General (git clone)
+        run: |
+          git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General
 
       - name: Checkout AI-packages
         uses: actions/checkout@v4
@@ -504,24 +498,6 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
-          # === 除錯開始 ===
-          echo "=================================================="
-          echo "=== 除錯：檢查 AI-kernel 的 .github 目錄 ==="
-          if [ -d "ai-kernel/.github" ]; then
-            ls -laR ai-kernel/.github/
-          else
-            echo "找不到 ai-kernel/.github 資料夾！"
-          fi
-          
-          echo "=== 除錯：檢查 AI-General 的 .github 目錄 ==="
-          if [ -d "AI-General/.github" ]; then
-            ls -laR AI-General/.github/
-          else
-            echo "找不到 AI-General/.github 資料夾！"
-          fi
-          echo "=================================================="
-          # === 除錯結束 ===
-
           if [ -d "ai-kernel/.github/workflows" ]; then
             echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
@@ -599,8 +575,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792398000
-# W: ai-system-20261019-010#180
+# V: 1792399000
+# W: ai-system-20261019-010#185
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
