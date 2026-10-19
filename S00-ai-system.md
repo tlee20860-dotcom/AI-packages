@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-19 17:03:35 (HKT)
+> 生成時間：2026-10-19 17:36:53 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -89,11 +89,9 @@ Writer: ai-system-20261019-010#045
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
 V: 1792345800
 W: ai-system-20261019-010#045
-═══ */
-```
+═══ */```
 
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
-
 
 <!-- === FILE START: AI-General/docs/records/PROGRESS.md === -->
 
@@ -183,11 +181,9 @@ Writer: ai-system-20261019-010#045
 F: AI-General/docs/records/PROGRESS.md
 V: 1792345800
 W: ai-system-20261019-010#045
-═══ */
-```
+═══ */```
 
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
-
 
 <!-- === FILE START: AI-General/docs/records/STATE-INDEX.md === -->
 
@@ -215,21 +211,12 @@ AI-General|AI-General/docs/records/SYSTEM-HANDOFF.md|1792345800|ai-system-202610
 AI-General|AI-General/docs/records/SYSTEM-CONCLUSION.md|1792345800|ai-system-20261019-010#045
 AI-General|AI-General/docs/records/PROGRESS.md|1792345800|ai-system-20261019-010#045
 ai-kernel|docs/u-profile/U-00-profile.md|1792341600|ai-system-20261019-010#022
-AI-General|AI-General/docs/common/C-02-rules.md|1792338300|ai-system-20261019-009#051
-AI-General|AI-General/docs/common/C-04-output.md|1792337400|ai-system-20261019-009#050
-AI-General|AI-General/docs/common/C-03-flow.md|1792332900|ai-system-20261019-009#038
-AI-General|AI-General/docs/common/C-00-startup.md|1792332000|ai-system-20261019-009#037
-AI-General|AI-General/docs/common/C-05-engine.md|1792324000|ai-system-20261018-008#127
-AI-General|AI-General/docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
-AI-General|AI-General/docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
-AI-General|AI-General/docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
-AI-General|AI-General/docs/common/C-05-learning/general.md|1792226400|ai-system-20261017-004#032
-AI-General|AI-General/docs/skills/W/W-00-startup.md|1791903760|A20261013-004#169
-AI-General|AI-General/docs/skills/W/W-05-schema.md|1791899740|A20261013-004#065
-AI-General|AI-General/docs/skills/W/W-04-pwa.md|1791899680|A20261013-004#065
-AI-General|AI-General/docs/skills/W/W-03-esmodule.md|1791899620|A20261013-004#065
-AI-General|AI-General/docs/skills/W/W-02-functions.md|1791899560|A20261013-004#065
-AI-General|AI-General/docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
+ai-kernel|docs/skills/W/W-00-startup.md|1791903760|A20261013-004#169
+ai-kernel|docs/skills/W/W-05-schema.md|1791899740|A20261013-004#065
+ai-kernel|docs/skills/W/W-04-pwa.md|1791899680|A20261013-004#065
+ai-kernel|docs/skills/W/W-03-esmodule.md|1791899620|A20261013-004#065
+ai-kernel|docs/skills/W/W-02-functions.md|1791899560|A20261013-004#065
+ai-kernel|docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
 
 ## 三、歷史歸屬
 | 檔案 | 舊版本 | 舊 Writer | 新版本 | 新 Writer | 取代時間 |
@@ -242,7 +229,6 @@ AI-General|AI-General/docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#06
 ```
 
 <!-- === FILE END: AI-General/docs/records/STATE-INDEX.md === -->
-
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
@@ -400,8 +386,6 @@ AI 是引導者，一次只要求一個上傳項；缺包主動索取。實測�
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
 V: 1792345800
 W: ai-system-20261019-010#045
-═══ */
-```
+═══ */```
 
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
-

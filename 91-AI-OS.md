@@ -89,17 +89,14 @@
 F: AI-OS/E-00-newbie.md
 V: 1792308000
 W: ai-system-20261018-008#066
-═══ */
-```
+═══ */```
 
 <!-- === FILE END: external/AI-OS/E-00-newbie.md === -->
-
 
 <!-- === FILE START: external/AI-OS/E-01-engine.md === -->
 
 ## 📄 external/AI-OS/E-01-engine.md
 
-`````
 # AI-OS 引擎與防護協議（E-01）
 
 > ⚠️ 給 AI 的系統指令：本模組為 AI-OS 的內部引擎，用於解決對話過長、指令衝突與格式錯誤。你必須嚴格遵守以下觸發條件。
@@ -142,10 +139,7 @@ F: AI-OS/E-01-engine.md
 V: 1792313000
 W: ai-system-20261018-008#085
 ═══ */
-`````
-
 <!-- === FILE END: external/AI-OS/E-01-engine.md === -->
-
 
 <!-- === FILE START: external/AI-OS/E-02-domains.md === -->
 
@@ -266,8 +260,6 @@ W: ai-system-20261018-008#085
 F: AI-OS/E-02-domains.md
 V: 1792326720
 W: ai-system-20261019-009#005
-═══ */
-```
+═══ */```
 
 <!-- === FILE END: external/AI-OS/E-02-domains.md === -->
-
