@@ -209,8 +209,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v13.4)
-# 用途：讀取 repos.json，自動打包 A/R/U/W/S 及專案包 (不含索引生成)
+# setup-structure.yml — 動態共享包打包腳本 (v13.6)
+# 用途：讀取 repos.json，自動打包並更新 STATE-INDEX
 # ============================================
 
 name: Build Shared Packages
@@ -292,6 +292,46 @@ jobs:
         run: |
           find build-repo -maxdepth 1 -name "*.md" -type f -delete
           echo "舊共享包已清空。"
+
+      - name: "Step 1.5: 生成 STATE-INDEX.md"
+        run: |
+          OUTPUT="AI-General/docs/records/STATE-INDEX.md"
+          mkdir -p "AI-General/docs/records"
+          TMP_TABLE="/tmp/state-index-files.txt"
+          > "$TMP_TABLE"
+          
+          for REPO_DIR in "AI-General" "ai-kernel"; do
+            if [ -d "$REPO_DIR/docs" ]; then
+              find "$REPO_DIR/docs" -type f -name "*.md" -not -path "*/.git/*" | while read -r f; do
+                V=$(tail -n 15 "$f" | grep -oE '^V: *[0-9]+' | head -1 | sed 's/^V: *//' || true)
+                if [ -z "$V" ]; then continue; fi
+                W=$(tail -n 15 "$f" | grep -oE '^W: *[^ ]+' | head -1 | sed 's/^W: *//' || true)
+                
+                REPO_NAME="AI-General"
+                CLEAN_F=${f#AI-General/}
+                if [[ "$f" == ai-kernel/* ]]; then 
+                  REPO_NAME="ai-kernel"
+                  CLEAN_F=${f#ai-kernel/}
+                fi
+                
+                echo "$REPO_NAME|$CLEAN_F|$V|$W" >> "$TMP_TABLE"
+              done
+            fi
+          done || true
+
+          {
+            echo "# STATE-INDEX"
+            echo ""
+            echo "## 一、專案總覽"
+            echo "| 專案顯示名稱 | code | domain | package_no | repo |"
+            echo "|---|---|---|---|---|"
+            jq -r '.[] | "| \(.display // "-") | \(.code // "-") | \(.domain) | \(.pkg_no) | \(.repo) |"' /tmp/projects.json
+            echo ""
+            echo "## 二、檔案清單"
+            echo "| Repo | 檔案 | Version | Writer |"
+            echo "|---|---|---|---|"
+            if [ -s "$TMP_TABLE" ]; then sort -t'|' -k3 -nr "$TMP_TABLE" | head -50; fi
+          } > "$OUTPUT"
 
       - name: "Step 2: 生成 A 包 (A00.md)"
         run: |
@@ -422,46 +462,80 @@ jobs:
           echo "## 🏢 體系層：AI-infra（唯一腳本）" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           
-          if [ -f ".github/scripts/apply_patch.py" ]; then 
-            echo "### 📄 檔案：apply_patch.py" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/scripts/apply_patch.py" "$OUTPUT" || true
+          for py in apply_patch.py validate_delivery.py; do
+            if [ -f ".github/scripts/$py" ]; then 
+              echo "### 📄 檔案：$py" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh ".github/scripts/$py" "$OUTPUT" || true
+              echo "" >> "$OUTPUT"
+            fi
+          done
+
+          # 移除 update-index.yml，只抓取目前實際存在的 yml
+          for wf in setup-structure.yml sync-repos.yml migrate.yml append_file.sh; do
+            if [ -f ".github/workflows/$wf" ]; then 
+              echo "### 📄 檔案：$wf (infra)" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh ".github/workflows/$wf" "$OUTPUT" || true
+              echo "" >> "$OUTPUT"
+            fi
+          done
+
+          if [ -f "config/repos.json" ]; then 
+            echo "### 📄 檔案：config/repos.json (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh "config/repos.json" "$OUTPUT" || true
+            echo "" >> "$OUTPUT"
           fi
 
-          if [ -f ".github/scripts/validate_delivery.py" ]; then 
+          if [ -f ".gitignore" ]; then 
+            echo "### 📄 檔案：.gitignore (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".gitignore" "$OUTPUT" || true
             echo "" >> "$OUTPUT"
-            echo "### 📄 檔案：validate_delivery.py" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/scripts/validate_delivery.py" "$OUTPUT" || true
-          fi
-          
-          if [ -f ".github/workflows/setup-structure.yml" ]; then 
-            echo "" >> "$OUTPUT"
-            echo "### 📄 檔案：setup-structure.yml (infra)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/workflows/setup-structure.yml" "$OUTPUT" || true
           fi
 
-          if [ -f ".github/workflows/sync-repos.yml" ]; then 
+          # 收集 ai-kernel 的呼叫器與配置
+          if [ -d "ai-kernel/.github/workflows" ]; then
+            echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
-            echo "### 📄 檔案：sync-repos.yml (infra)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/workflows/sync-repos.yml" "$OUTPUT" || true
+            (
+              cd ai-kernel || exit 0
+              find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+                echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
+                echo "" >> "../../$OUTPUT"
+                bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
+                echo "" >> "../../$OUTPUT"
+              done
+            ) || true
+          fi
+          if [ -f "ai-kernel/.gitignore" ]; then 
+            echo "### 📄 檔案：.gitignore (ai-kernel)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh "ai-kernel/.gitignore" "$OUTPUT" || true
+            echo "" >> "$OUTPUT"
           fi
 
-          if [ -f ".github/workflows/migrate.yml" ]; then 
+          # 收集 AI-General 的呼叫器與配置
+          if [ -d "AI-General/.github/workflows" ]; then
+            echo "## 🏢 體系層：AI-General 的呼叫器" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
-            echo "### 📄 檔案：migrate.yml (infra)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/workflows/migrate.yml" "$OUTPUT" || true
+            (
+              cd AI-General || exit 0
+              find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+                echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
+                echo "" >> "../../$OUTPUT"
+                bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
+                echo "" >> "../../$OUTPUT"
+              done
+            ) || true
+          fi
+          if [ -f "AI-General/.gitignore" ]; then 
+            echo "### 📄 檔案：.gitignore (AI-General)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh "AI-General/.gitignore" "$OUTPUT" || true
+            echo "" >> "$OUTPUT"
           fi
 
-          if [ -f ".github/workflows/append_file.sh" ]; then 
-            echo "" >> "$OUTPUT"
-            echo "### 📄 檔案：append_file.sh (infra)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".github/workflows/append_file.sh" "$OUTPUT" || true
-          fi
-
+          # 收集專案的呼叫器與配置
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             if [ -d "external/${SAFE_NAME}/.github/workflows" ]; then
-              echo "" >> "$OUTPUT"
               echo "## 🏢 專案層：${REPO} 的呼叫器" >> "$OUTPUT"
               echo "" >> "$OUTPUT"
               (
@@ -474,11 +548,24 @@ jobs:
                 done
               ) || true
             fi
+            if [ -f "external/${SAFE_NAME}/.gitignore" ]; then 
+              echo "### 📄 檔案：.gitignore (${SAFE_NAME})" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh "external/${SAFE_NAME}/.gitignore" "$OUTPUT" || true
+              echo "" >> "$OUTPUT"
+            fi
           done
 
       - name: "Step 9: 上傳共享包"
         run: |
-          cd build-repo
+          # 提交 STATE-INDEX 到 AI-General
+          cd AI-General
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/records/STATE-INDEX.md
+          git diff --cached --quiet || (git commit -m "chore: auto-update STATE-INDEX [skip ci]" && git push)
+
+          # 提交共享包到 AI-packages
+          cd ../build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -486,8 +573,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792382000
-# W: ai-system-20261019-010#140
+# V: 1792384000
+# W: ai-system-20261019-010#148
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -754,6 +841,132 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 
 <!-- === FILE END: .github/workflows/append_file.sh === -->
 
+### 📄 檔案：config/repos.json (infra)
+
+<!-- === FILE START: config/repos.json === -->
+
+## 📄 config/repos.json
+
+```json
+{
+  "kernel": "tlee20860-dotcom/AI-kernel",
+  "general": "tlee20860-dotcom/AI-General",
+  "packages": "tlee20860-dotcom/AI-packages",
+  "projects": [
+    {
+      "repo": "tlee20860-dotcom/AI-OS",
+      "domain": "E",
+      "code": "ai-os",
+      "display": "AI-OS 系統",
+      "pkg_no": "91"
+    },
+    {
+      "repo": "tlee20860-dotcom/AI-WEB-APP-Family",
+      "domain": "W",
+      "code": "webapp",
+      "display": "家庭 webapp",
+      "pkg_no": "90"
+    }
+  ]
+}
+```
+
+<!-- === FILE END: config/repos.json === -->
+
+### 📄 檔案：.gitignore (infra)
+
+<!-- === FILE START: .gitignore === -->
+
+## 📄 .gitignore
+
+```gitignore
+# ============================================
+# 系統與編輯器暫存檔
+# ============================================
+.DS_Store
+Thumbs.db
+*.swp
+
+# ============================================
+# 本地環境變數與金鑰（絕對不可上傳）
+# ============================================
+.env
+.env.local
+
+# ============================================
+# Node.js / Python 依賴包
+# ============================================
+node_modules/
+__pycache__/
+*.pyc
+
+# ============================================
+# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
+# ============================================
+external/
+build-repo/
+tmp/```
+
+<!-- === FILE END: .gitignore === -->
+
+## 🏢 體系層：AI-kernel 的呼叫器
+
+### 📄 檔案：.gitignore (ai-kernel)
+
+<!-- === FILE START: ai-kernel/.gitignore === -->
+
+## 📄 ai-kernel/.gitignore
+
+```gitignore
+# ============================================
+# 系統與編輯器暫存檔
+# ============================================
+.DS_Store
+Thumbs.db
+*.swp
+
+# ============================================
+# 本地環境變數與金鑰（絕對不可上傳）
+# ============================================
+.env
+.env.local
+
+# ============================================
+# Node.js / Python 依賴包
+# ============================================
+node_modules/
+__pycache__/
+*.pyc
+
+# ============================================
+# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
+# ============================================
+external/
+build-repo/
+tmp/```
+
+<!-- === FILE END: ai-kernel/.gitignore === -->
+
+## 🏢 體系層：AI-General 的呼叫器
+
+### 📄 檔案：.gitignore (AI-General)
+
+<!-- === FILE START: AI-General/.gitignore === -->
+
+## 📄 AI-General/.gitignore
+
+```gitignore
+# 忽略 Actions 臨時 checkout 目錄
+external/
+build-repo/
+
+# 忽略系統檔案
+.DS_Store
+*.log
+```
+
+<!-- === FILE END: AI-General/.gitignore === -->
+
 ## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
 
 ### 📄 檔案：.github/workflows/apply-patch.yml
@@ -848,7 +1061,6 @@ jobs:
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/notify.yml === -->
-
 
 ## 🏢 專案層：tlee20860-dotcom/AI-WEB-APP-Family 的呼叫器
 
@@ -952,4 +1164,40 @@ jobs:
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/notify.yml === -->
+
+### 📄 檔案：.gitignore (AI-WEB-APP-Family)
+
+<!-- === FILE START: external/AI-WEB-APP-Family/.gitignore === -->
+
+## 📄 external/AI-WEB-APP-Family/.gitignore
+
+```gitignore
+# ============================================
+# 系統與編輯器暫存檔
+# ============================================
+.DS_Store
+Thumbs.db
+*.swp
+
+# ============================================
+# 本地環境變數與金鑰（絕對不可上傳）
+# ============================================
+.env
+.env.local
+
+# ============================================
+# Node.js / Python 依賴包
+# ============================================
+node_modules/
+__pycache__/
+*.pyc
+
+# ============================================
+# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
+# ============================================
+external/
+build-repo/
+tmp/```
+
+<!-- === FILE END: external/AI-WEB-APP-Family/.gitignore === -->
 
