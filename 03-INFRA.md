@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v13.3)
+# setup-structure.yml — 動態共享包打包腳本 (v13.4)
 # 用途：讀取 repos.json，自動打包 A/R/U/W/S 及專案包 (不含索引生成)
 # ============================================
 
@@ -225,6 +225,11 @@ on:
       - '.github/workflows/setup-structure.yml'
       - '.github/scripts/**'
       - 'config/repos.json'
+
+# 防止多個 Action 同時執行導致 Git 衝突
+concurrency:
+  group: build-packages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -481,8 +486,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792381000
-# W: ai-system-20261019-010#139
+# V: 1792382000
+# W: ai-system-20261019-010#140
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -502,6 +507,10 @@ on:
     - cron: '0 0 * * *'
   repository_dispatch:
     types: [sync-repos]
+  push:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/sync-repos.yml'
 
 jobs:
   sync:
@@ -531,7 +540,6 @@ jobs:
           for REPO in $REPOS; do
             echo "Checking $REPO..."
             
-            # 先抓 main，抓不到再抓 master
             META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/main/meta.json")
             if ! echo "$META" | grep -q "pkg_no"; then
               META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/master/meta.json")
@@ -588,7 +596,13 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
             https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'```
+            -d '{"event_type":"project-updated"}'
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/sync-repos.yml
+# V: 1792381000
+# W: ai-system-20261019-010#139
+# ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/sync-repos.yml === -->
 
