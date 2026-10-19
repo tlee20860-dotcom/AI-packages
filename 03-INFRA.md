@@ -276,31 +276,32 @@ jobs:
 
 ```
 # ============================================
-# notify.yml — 手動通知 AI-General 重新打包
+# notify.yml — 專案變更時通知 AI-infra
 # ============================================
-
-name: Manual Notify AI-General
+name: Notify AI-infra
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main, master]
+  workflow_dispatch: # 保留手動觸發功能
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger AI-General build
+      - name: Trigger AI-infra build
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-General/dispatches \
-            -d '{"event_type":"ai-os-updated"}'
-          echo "已通知 AI-General 重新建置 91-ai-os.md"
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"
 
 # ═══ EOF ═══
 # F: AI-OS/.github/workflows/notify.yml
-# V: 1792316000
-# W: ai-system-20261018-008#092
+# V: 1792357000
+# W: ai-system-20261019-010#085
 # ═══ EOF ═══
 ```
 
