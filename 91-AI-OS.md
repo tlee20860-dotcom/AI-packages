@@ -1,6 +1,22 @@
 # 專案包：AI-OS
 
 
+## meta.json
+
+<!-- === FILE START: external/AI-OS/meta.json === -->
+
+## 📄 external/AI-OS/meta.json
+
+```
+{
+  "domain": "E",
+  "pkg_no": "91",
+  "code": "ai-os",
+  "display": "AI-OS 系統"
+}```
+
+<!-- === FILE END: external/AI-OS/meta.json === -->
+
 <!-- === FILE START: external/AI-OS/E-00-newbie.md === -->
 
 ## 📄 external/AI-OS/E-00-newbie.md

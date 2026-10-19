@@ -105,6 +105,100 @@ print("[RESET] PATCH.md reset")```
 
 <!-- === FILE END: .github/scripts/apply_patch.py === -->
 
+### 📄 檔案：validate_delivery.py
+
+<!-- === FILE START: .github/scripts/validate_delivery.py === -->
+
+## 📄 .github/scripts/validate_delivery.py
+
+#!/usr/bin/env python3
+"""交付驗證腳本（機器可驗的規則）"""
+
+import os
+import re
+import sys
+
+MODE = os.environ.get("VALIDATE_MODE", "report").strip().lower()
+CHANGED = os.environ.get("CHANGED_FILES", "").strip()
+
+def iter_targets():
+    if CHANGED:
+        for line in CHANGED.splitlines():
+            path = line.strip()
+            if path and path.endswith(".md") and os.path.exists(path):
+                yield path
+        return
+    for root, _dirs, files in os.walk("docs"):
+        for name in files:
+            if name.endswith(".md"):
+                yield os.path.join(root, name)
+
+def check_eof(content):
+    tail = content[-800:]
+    m = re.search(r"F:\s*(\S+)\s*\nV:\s*(\d+)\s*\nW:\s*(\S+)", tail)
+    if not m:
+        return "EOF 缺 F/V/W 三行"
+    _f, v, _w = m.groups()
+    if len(v) != 10:
+        return f"V 不是 10 位 Unix epoch（{v}）"
+    return None
+
+def check_inner_backticks(path, content):
+    if not path.endswith(".md"):
+        return None
+    if "```" in content:
+        return "md 內含三反引號（F-004）"
+    return None
+
+def check_head(content):
+    for line in content.splitlines()[:5]:
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("#"):
+            return None
+        return f"檔案開頭不是 # 標題（首行為：{s[:40]}）"
+    return "檔案為空或前 5 行皆空白"
+
+def validate(path, content):
+    problems = []
+    for label, fn in (
+        ("EOF", lambda c: check_eof(c)),
+        ("內層反引號", lambda c: check_inner_backticks(path, c)),
+        ("開頭標題", lambda c: check_head(c)),
+    ):
+        if label == "內層反引號" and not path.endswith(".md"):
+            continue
+        err = fn(content)
+        if err:
+            problems.append(err)
+    return problems
+
+def main():
+    total = 0
+    bad = 0
+    for path in iter_targets():
+        total += 1
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                content = fh.read()
+        except Exception as exc:
+            print(f"[ERROR] {path}: 讀取失敗（{exc}）")
+            bad += 1
+            continue
+        for msg in validate(path, content):
+            print(f"[ERROR] {path}: {msg}")
+            bad += 1
+
+    print(f"[SUMMARY] 檢查 {total} 檔，問題 {bad} 項（模式：{MODE}）")
+    if bad and MODE == "strict":
+        sys.exit(1)
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+<!-- === FILE END: .github/scripts/validate_delivery.py === -->
+
 ### 📄 檔案：setup-structure.yml (infra)
 
 <!-- === FILE START: .github/workflows/setup-structure.yml === -->
@@ -133,6 +227,8 @@ jobs:
     steps:
       - name: Checkout AI-infra
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CROSS_REPO_PAT }}
 
       - name: Read Repos Config
         id: config
@@ -272,6 +368,12 @@ jobs:
               done
             fi
             
+            if [ -f "external/${SAFE_NAME}/meta.json" ]; then
+              echo "" >> "$OUTPUT"
+              echo "## meta.json" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh "external/${SAFE_NAME}/meta.json" "$OUTPUT" || true
+            fi
+
             if [ "$SAFE_NAME" == "AI-OS" ]; then
               for f in external/AI-OS/E-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
@@ -311,11 +413,35 @@ jobs:
             echo "### 📄 檔案：apply_patch.py" >> "$OUTPUT"
             bash .github/workflows/append_file.sh ".github/scripts/apply_patch.py" "$OUTPUT" || true
           fi
+
+          if [ -f ".github/scripts/validate_delivery.py" ]; then 
+            echo "" >> "$OUTPUT"
+            echo "### 📄 檔案：validate_delivery.py" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/scripts/validate_delivery.py" "$OUTPUT" || true
+          fi
           
           if [ -f ".github/workflows/setup-structure.yml" ]; then 
             echo "" >> "$OUTPUT"
             echo "### 📄 檔案：setup-structure.yml (infra)" >> "$OUTPUT"
             bash .github/workflows/append_file.sh ".github/workflows/setup-structure.yml" "$OUTPUT" || true
+          fi
+
+          if [ -f ".github/workflows/sync-repos.yml" ]; then 
+            echo "" >> "$OUTPUT"
+            echo "### 📄 檔案：sync-repos.yml (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/workflows/sync-repos.yml" "$OUTPUT" || true
+          fi
+
+          if [ -f ".github/workflows/migrate.yml" ]; then 
+            echo "" >> "$OUTPUT"
+            echo "### 📄 檔案：migrate.yml (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/workflows/migrate.yml" "$OUTPUT" || true
+          fi
+
+          if [ -f ".github/workflows/append_file.sh" ]; then 
+            echo "" >> "$OUTPUT"
+            echo "### 📄 檔案：append_file.sh (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/workflows/append_file.sh" "$OUTPUT" || true
           fi
 
           jq -c '.[]' /tmp/projects.json | while read -r row; do
@@ -343,9 +469,252 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || (git commit -m "chore: auto-build packages [skip ci]" && git push)```
+          git diff --cached --quiet || (git commit -m "chore: auto-build packages [skip ci]" && git push)
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/setup-structure.yml
+# V: 1792380000
+# W: ai-system-20261019-011#003
+# ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
+
+### 📄 檔案：sync-repos.yml (infra)
+
+<!-- === FILE START: .github/workflows/sync-repos.yml === -->
+
+## 📄 .github/workflows/sync-repos.yml
+
+```
+name: Sync Repos List
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+  repository_dispatch:
+    types: [sync-repos]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout AI-infra
+        uses: actions/checkout@v4
+
+      - name: Generate repos.json
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          mkdir -p config
+          
+          echo '{' > config/repos.json
+          echo '  "kernel": "tlee20860-dotcom/AI-kernel",' >> config/repos.json
+          echo '  "general": "tlee20860-dotcom/AI-General",' >> config/repos.json
+          echo '  "packages": "tlee20860-dotcom/AI-packages",' >> config/repos.json
+          echo '  "projects": [' >> config/repos.json
+
+          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages") | .owner.login + "/" + .name')
+
+          FIRST=true
+          for REPO in $REPOS; do
+            echo "Checking $REPO..."
+            
+            # 先抓 main，抓不到再抓 master
+            META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/main/meta.json")
+            if ! echo "$META" | grep -q "pkg_no"; then
+              META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/master/meta.json")
+            fi
+            
+            if echo "$META" | grep -q "pkg_no"; then
+              DOMAIN=$(echo "$META" | jq -r '.domain')
+              PKG_NO=$(echo "$META" | jq -r '.pkg_no')
+              CODE=$(echo "$META" | jq -r '.code // "-"')
+              DISPLAY=$(echo "$META" | jq -r '.display // "-"')
+            else
+              echo "  [WARN] $REPO 缺少有效的 meta.json，跳過。"
+              continue
+            fi
+
+            if [ "$FIRST" = true ]; then
+              FIRST=false
+            else
+              echo ',' >> config/repos.json
+            fi
+            
+            echo "    {" >> config/repos.json
+            echo "      \"repo\": \"$REPO\"," >> config/repos.json
+            echo "      \"domain\": \"$DOMAIN\"," >> config/repos.json
+            echo "      \"code\": \"$CODE\"," >> config/repos.json
+            echo "      \"display\": \"$DISPLAY\"," >> config/repos.json
+            echo "      \"pkg_no\": \"$PKG_NO\"" >> config/repos.json
+            echo -n "    }" >> config/repos.json
+          done
+
+          echo '' >> config/repos.json
+          echo '  ]' >> config/repos.json
+          echo '}' >> config/repos.json
+
+      - name: Commit repos.json
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/repos.json
+          if git diff --cached --quiet; then
+            echo "No changes to config/repos.json"
+            echo "CHANGED=false" >> $GITHUB_ENV
+          else
+            git commit -m "chore: auto-sync repos.json [skip ci]"
+            git push
+            echo "CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Trigger Build Packages
+        if: env.CHANGED == 'true'
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'```
+
+<!-- === FILE END: .github/workflows/sync-repos.yml === -->
+
+### 📄 檔案：migrate.yml (infra)
+
+<!-- === FILE START: .github/workflows/migrate.yml === -->
+
+## 📄 .github/workflows/migrate.yml
+
+```
+# ============================================
+# migrate.yml — 一次性遷移腳本
+# 用途：將 AI-General 的 W 包搬到 ai-kernel，並清理舊檔案
+# ============================================
+
+name: Migrate W-Package and Cleanup
+
+on:
+  workflow_dispatch: # 僅允許手動觸發
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout AI-General
+        uses: actions/checkout@v4
+        with:
+          repository: tlee20860-dotcom/AI-General
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: AI-General
+
+      - name: Checkout ai-kernel
+        uses: actions/checkout@v4
+        with:
+          repository: tlee20860-dotcom/AI-kernel
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: ai-kernel
+
+      - name: Move W-Package to ai-kernel
+        run: |
+          echo "=== 搬移 W 技能包至 AI-kernel ==="
+          mkdir -p ai-kernel/docs/skills/W
+          
+          if [ -d "AI-General/docs/skills/W" ]; then
+            cp -r AI-General/docs/skills/W/* ai-kernel/docs/skills/W/ || true
+            echo "[OK] W 技能包已複製。"
+          else
+            echo "[WARNING] 在 AI-General 找不到 docs/skills/W，跳過複製。"
+          fi
+
+          cd ai-kernel
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/skills/W/
+          
+          if git diff --cached --quiet; then
+            echo "ai-kernel 無變更，不需 commit。"
+          else
+            git commit -m "chore: migrate W-package from AI-General [skip ci]"
+            git push
+            echo "[OK] ai-kernel 已更新並 push。"
+          fi
+
+      - name: Cleanup AI-General
+        run: |
+          echo "=== 清理 AI-General 舊檔案 ==="
+          cd AI-General
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git rm -r --ignore-unmatch docs/common/ || true
+          git rm -r --ignore-unmatch docs/skills/ || true
+          
+          if git diff --cached --quiet; then
+            echo "AI-General 無變更，不需 commit。"
+          else
+            git commit -m "chore: cleanup old docs [skip ci]"
+            git push
+            echo "[OK] AI-General 已清理並 push。"
+          fi
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/migrate.yml
+# V: 1792359000
+# W: ai-system-20261019-010#095
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/migrate.yml === -->
+
+### 📄 檔案：append_file.sh (infra)
+
+<!-- === FILE START: .github/workflows/append_file.sh === -->
+
+## 📄 .github/workflows/append_file.sh
+
+#!/bin/bash
+# append_file.sh - 用於將源檔案合併到共享包中
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <source_file> <target_file>"
+    exit 1
+fi
+
+SOURCE=$1
+TARGET=$2
+
+if [ ! -f "$SOURCE" ]; then
+    echo "[WARN] Source file not found: $SOURCE"
+    exit 0
+fi
+
+# 寫入標記與檔名
+echo "" >> "$TARGET"
+echo "<!-- === FILE START: $SOURCE === -->" >> "$TARGET"
+echo "" >> "$TARGET"
+echo "## 📄 $SOURCE" >> "$TARGET"
+echo "" >> "$TARGET"
+
+# 寫入檔案內容（防呆：如果內部有三反引號，跳過包裹，避免 Markdown 渲染破裂）
+if grep -q '```' "$SOURCE"; then
+    cat "$SOURCE" >> "$TARGET"
+else
+    echo '```' >> "$TARGET"
+    cat "$SOURCE" >> "$TARGET"
+    echo '```' >> "$TARGET"
+fi
+
+# 寫入結束標記
+echo "" >> "$TARGET"
+echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
+<!-- === FILE END: .github/workflows/append_file.sh === -->
 
 ## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
 

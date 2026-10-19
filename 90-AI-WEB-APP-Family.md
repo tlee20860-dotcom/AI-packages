@@ -1,6 +1,22 @@
 # 專案包：AI-WEB-APP-Family
 
 
+## meta.json
+
+<!-- === FILE START: external/AI-WEB-APP-Family/meta.json === -->
+
+## 📄 external/AI-WEB-APP-Family/meta.json
+
+```
+{
+  "domain": "W",
+  "pkg_no": "90",
+  "code": "webapp",
+  "display": "家庭 webapp"
+}```
+
+<!-- === FILE END: external/AI-WEB-APP-Family/meta.json === -->
+
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
 總檔數：109
