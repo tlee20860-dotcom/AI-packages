@@ -1,32 +1,548 @@
 # 基礎設施總包 (INFRA)
 
-> ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。AI 必須對比版本，並確認當前對話所屬 Repo 進行修改。
+> ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
-## 🏢 體系層：AI-General（唯一腳本）
+## 🏢 體系層：AI-infra（唯一腳本）
 
 ### 📄 檔案：apply_patch.py
 
+<!-- === FILE START: .github/scripts/apply_patch.py === -->
 
-### 📄 檔案：apply-patch.yml (體系觸發器)
+## 📄 .github/scripts/apply_patch.py
 
+```
+import sys
+import os
+import re
 
-### 📄 檔案：setup-structure.yml (打包腳本自身)
+patch_file = ".github/PATCH.md"
 
+if not os.path.exists(patch_file):
+    print("PATCH.md not found")
+    sys.exit(0)
 
-## 🏢 專案層：tlee20860-dotcom/WEB-APP-Family (web-app-family) 的呼叫器
+with open(patch_file, "r", encoding="utf-8") as f:
+    text = f.read()
+
+text = text.replace('\r\n', '\n')
+
+if not re.search(r"## (?:FILE|修改目標|修改目标):", text):
+    print("PATCH.md is empty or invalid format. Exiting safely.")
+    sys.exit(0)
+
+pattern = re.compile(r"## (?:FILE|修改目標|修改目标):\s*`?([^`\n]+)`?\n(.*?)(?=## (?:FILE|修改目標|修改目标):|\Z)", re.S)
+matches = pattern.findall(text)
+
+planned = []
+errors = []
+
+for rel_path, content_block in matches:
+    rel_path = rel_path.strip()
+    if not os.path.exists(rel_path):
+        errors.append(f"{rel_path}: File not found")
+        continue
+        
+    with open(rel_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    content = content.replace('\r\n', '\n')
+    new_content = content
+    
+    pairs = re.findall(r"<<<<<<< (OLD|REGEX|REPLACE_ALL)\s*\n(.*?)\n=======\s*\n(.*?)\n>>>>>>> NEW", content_block, re.S)
+    if not pairs:
+        errors.append(f"{rel_path}: No OLD/REGEX/REPLACE_ALL pairs found")
+        continue
+        
+    for mode, old, new in pairs:
+        if mode == "REGEX":
+            new_content, count = re.subn(old, new, new_content, count=1)
+            if count == 1:
+                print(f"[OK] {rel_path}: Regex replaced 1 instance")
+            elif count == 0:
+                if re.search(new, new_content):
+                    print(f"[SKIP] {rel_path}: Already applied")
+                else:
+                    errors.append(f"{rel_path}: Regex OLD not found, NEW not present")
+        elif mode == "REPLACE_ALL":
+            count = new_content.count(old)
+            if count > 0:
+                new_content = new_content.replace(old, new)
+                print(f"[OK] {rel_path}: Replaced ALL {count} instances")
+            elif count == 0:
+                if new in new_content:
+                    print(f"[SKIP] {rel_path}: Already applied")
+                else:
+                    errors.append(f"{rel_path}: REPLACE_ALL OLD not found, NEW not present")
+        else:
+            count = new_content.count(old)
+            if count == 1:
+                new_content = new_content.replace(old, new, 1)
+                print(f"[OK] {rel_path}: Replaced 1 instance")
+            elif count == 0:
+                if new in new_content:
+                    print(f"[SKIP] {rel_path}: Already applied")
+                else:
+                    errors.append(f"{rel_path}: OLD not found, NEW not present")
+            else:
+                errors.append(f"{rel_path}: OLD found {count} times (not unique)")
+            
+    if new_content != content:
+        planned.append((rel_path, new_content))
+
+if errors:
+    for e in errors:
+        print(f"[ERROR] {e}")
+    sys.exit(1)
+
+for rel_path, new_content in planned:
+    with open(rel_path, "w", encoding="utf-8", newline='\n') as f:
+        f.write(new_content)
+    print(f"[WRITE] {rel_path}")
+
+with open(patch_file, "w", encoding="utf-8") as f:
+    f.write("# 請在此貼上新的替換指令\n")
+print("[RESET] PATCH.md reset")```
+
+<!-- === FILE END: .github/scripts/apply_patch.py === -->
+
+### 📄 檔案：setup-structure.yml (infra)
+
+<!-- === FILE START: .github/workflows/setup-structure.yml === -->
+
+## 📄 .github/workflows/setup-structure.yml
+
+```
+# ============================================
+# setup-structure.yml — 動態共享包打包腳本 (v13.2)
+# 用途：讀取 repos.json，自動打包 A/R/U/W/S 及專案包 (不含索引生成)
+# ============================================
+
+name: Build Shared Packages
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [project-updated]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout AI-infra
+        uses: actions/checkout@v4
+
+      - name: Read Repos Config
+        id: config
+        run: |
+          echo "Reading repos.json..."
+          cat config/repos.json
+          
+          KERNEL=$(jq -r '.kernel' config/repos.json)
+          GENERAL=$(jq -r '.general' config/repos.json)
+          PACKAGES=$(jq -r '.packages' config/repos.json)
+          
+          echo "KERNEL_REPO=$KERNEL" >> $GITHUB_ENV
+          echo "GENERAL_REPO=$GENERAL" >> $GITHUB_ENV
+          echo "PACKAGES_REPO=$PACKAGES" >> $GITHUB_ENV
+          
+          jq -c '.projects' config/repos.json > /tmp/projects.json
+
+      - name: Checkout ai-kernel
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.KERNEL_REPO }}
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: ai-kernel
+
+      - name: Checkout AI-General
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GENERAL_REPO }}
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: AI-General
+
+      - name: Checkout AI-packages
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.PACKAGES_REPO }}
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: build-repo
+
+      - name: Checkout project repos
+        run: |
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/$REPO.git" "external/$SAFE_NAME" 2>/dev/null || echo "clone fail: $REPO"
+          done
+
+      - name: "Step 1: 清理舊共享包 (清道夫)"
+        run: |
+          find build-repo -maxdepth 1 -name "*.md" -type f -delete
+          echo "舊共享包已清空。"
+
+      - name: "Step 2: 生成 A 包 (A00.md)"
+        run: |
+          OUTPUT="build-repo/A00.md"
+          echo "# A 包：啟動引導與角色定義" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          if [ -f "ai-kernel/docs/a-guide/A-00-guide.md" ]; then 
+            bash .github/workflows/append_file.sh "ai-kernel/docs/a-guide/A-00-guide.md" "$OUTPUT" || true
+          fi
+
+      - name: "Step 3: 生成 R 包 (R00.md)"
+        run: |
+          OUTPUT="build-repo/R00.md"
+          echo "# R 包：規則總覽" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          
+          for f in R-00-rules R-03-terms R-02-patterns R-04-learning R-01-mapping; do
+            FILE_PATH="ai-kernel/docs/r-rules/${f}.md"
+            if [ -f "$FILE_PATH" ]; then 
+              bash .github/workflows/append_file.sh "$FILE_PATH" "$OUTPUT" || true
+            fi
+          done
+
+      - name: "Step 4: 生成 U 包 (U00.md)"
+        run: |
+          OUTPUT="build-repo/U00.md"
+          echo "# U 包：使用者通用描述" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          if [ -f "ai-kernel/docs/u-profile/U-00-profile.md" ]; then 
+            bash .github/workflows/append_file.sh "ai-kernel/docs/u-profile/U-00-profile.md" "$OUTPUT" || true
+          fi
+
+      - name: "Step 5: 生成 W 包 (W00.md)（若存在）"
+        run: |
+          OUTPUT="build-repo/W00.md"
+          if [ -d "ai-kernel/docs/skills/W" ]; then
+            echo "# W 包：Web App 領域技能" > "$OUTPUT"
+            echo "" >> "$OUTPUT"
+            for f in ai-kernel/docs/skills/W/W-0*.md; do
+              if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+            done
+          fi
+
+      - name: "Step 6: 生成 S00 包 (S00-ai-system.md)"
+        run: |
+          OUTPUT="build-repo/S00-ai-system.md"
+          echo "# AI 對話系統 - 體系狀態包" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          
+          echo "---" >> "$OUTPUT"
+          echo "⚠️ **【給 AI 的強制前置檢查】**" >> "$OUTPUT"
+          echo "請立刻確認：你是否已經讀取 \`A00.md\`（啟動包）？" >> "$OUTPUT"
+          echo "1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取 \`A00.md\`，載入引導協議與防呆規則。" >> "$OUTPUT"
+          echo "2. 如果「是」，請依據 \`A00.md\` 輸出載入確認。" >> "$OUTPUT"
+          echo "---" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+
+          for f in AI-General/docs/records/SYSTEM-HANDOFF.md AI-General/docs/records/PROGRESS.md AI-General/docs/records/STATE-INDEX.md AI-General/docs/records/SYSTEM-CONCLUSION.md; do
+            if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+          done
+
+      - name: "Step 7: 生成專案包 (動態)"
+        run: |
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            PKG_NO=$(echo "$row" | jq -r '.pkg_no')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            OUTPUT="build-repo/${PKG_NO}-${SAFE_NAME}.md"
+            
+            echo "# 專案包：${SAFE_NAME}" > "$OUTPUT"
+            echo "" >> "$OUTPUT"
+            
+            proj_docs_dir="external/${SAFE_NAME}/docs/projects/${SAFE_NAME}"
+            if [ -d "$proj_docs_dir" ]; then
+              for prefix in P-01 P-02 P-05 P-06 P-07 P-08 P-09 P-12 P-13 P-98 P-99; do
+                for f in ${proj_docs_dir}/${prefix}-*.md; do
+                  if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+                done
+              done
+            fi
+            
+            if [ "$SAFE_NAME" == "AI-OS" ]; then
+              for f in external/AI-OS/E-*.md; do
+                if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+              done
+            fi
+
+            if [ -d "external/${SAFE_NAME}" ]; then
+              (
+                cd "external/${SAFE_NAME}" || exit 0
+                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" \) -not -path "./.git/*" -not -path "./docs/*" -not -path "./.github/*" | sort > /tmp/code_files.txt || true
+                if [ -s /tmp/code_files.txt ]; then
+                  {
+                    echo ""
+                    echo "## 程式碼檔案樹（僅列路徑，不讀內容）"
+                    echo ""
+                    echo "總檔數：$(wc -l < /tmp/code_files.txt)"
+                    echo ""
+                    sed 's|^\./||' /tmp/code_files.txt
+                  } >> "../../$OUTPUT"
+                fi
+              ) || true
+            fi
+          done
+
+      - name: "Step 8: 生成基礎設施總包 (03-INFRA.md)"
+        run: |
+          OUTPUT="build-repo/03-INFRA.md"
+          echo "# 基礎設施總包 (INFRA)" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+
+          echo "## 🏢 體系層：AI-infra（唯一腳本）" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          
+          if [ -f ".github/scripts/apply_patch.py" ]; then 
+            echo "### 📄 檔案：apply_patch.py" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/scripts/apply_patch.py" "$OUTPUT" || true
+          fi
+          
+          if [ -f ".github/workflows/setup-structure.yml" ]; then 
+            echo "" >> "$OUTPUT"
+            echo "### 📄 檔案：setup-structure.yml (infra)" >> "$OUTPUT"
+            bash .github/workflows/append_file.sh ".github/workflows/setup-structure.yml" "$OUTPUT" || true
+          fi
+
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            if [ -d "external/${SAFE_NAME}/.github/workflows" ]; then
+              echo "" >> "$OUTPUT"
+              echo "## 🏢 專案層：${REPO} 的呼叫器" >> "$OUTPUT"
+              echo "" >> "$OUTPUT"
+              (
+                cd "external/${SAFE_NAME}" || exit 0
+                find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+                  echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
+                  echo "" >> "../../$OUTPUT"
+                  bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
+                  echo "" >> "../../$OUTPUT"
+                done
+              ) || true
+            fi
+          done
+
+      - name: "Step 9: 上傳共享包"
+        run: |
+          cd build-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "chore: auto-build packages [skip ci]" && git push)```
+
+<!-- === FILE END: .github/workflows/setup-structure.yml === -->
+
+## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
 
 ### 📄 檔案：.github/workflows/apply-patch.yml
 
 
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
 ### 📄 檔案：.github/workflows/notify.yml
 
 
+<!-- === FILE START: .github/workflows/notify.yml === -->
 
-## 🏢 專案層：tlee20860-dotcom/AI-OS (ai-os) 的呼叫器
+## 📄 .github/workflows/notify.yml
+
+```
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: # 保留手動觸發功能
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/notify.yml
+# V: 1792357000
+# W: ai-system-20261019-010#085
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/notify.yml === -->
+
+
+## 🏢 專案層：tlee20860-dotcom/AI-WEB-APP-Family 的呼叫器
 
 ### 📄 檔案：.github/workflows/apply-patch.yml
 
 
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
 ### 📄 檔案：.github/workflows/notify.yml
 
+
+<!-- === FILE START: .github/workflows/notify.yml === -->
+
+## 📄 .github/workflows/notify.yml
+
+```
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+      - '**/*.ico'
+      - '.gitignore'
+      - 'LICENSE'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"
+
+# ═══ EOF ═══
+# F: AI-WEB-APP-Family/.github/workflows/notify.yml
+# V: 1792357000
+# W: ai-system-20261019-010#085
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/notify.yml === -->
 
