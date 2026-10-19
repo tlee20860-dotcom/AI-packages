@@ -512,6 +512,11 @@ on:
     paths:
       - '.github/workflows/sync-repos.yml'
 
+# 防止多個同步 Action 同時執行
+concurrency:
+  group: sync-repos
+  cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -600,8 +605,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/sync-repos.yml
-# V: 1792381000
-# W: ai-system-20261019-010#139
+# V: 1792382000
+# W: ai-system-20261019-010#140
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/sync-repos.yml === -->
