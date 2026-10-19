@@ -1,12 +1,12 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-19 14:20:37 (HKT)
+> 生成時間：2026-10-19 14:26:37 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
-請立刻確認：你是否已經讀取 `A00-star-code.md`（大腦包）？
-1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取 `A00`，載入狀態機與防呆規則。
-2. 如果「是」，請依據 `A00 §一` 輸出「交接確認摘要」。
+請立刻確認：你是否已經讀取 `A-00-guide.md`（啟動包）？
+1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取 `A-00-guide.md`，載入引導協議與防呆規則。
+2. 如果「是」，請依據 `A-00-guide.md` 輸出載入確認。
 ---
 
 
@@ -204,24 +204,28 @@ W: ai-system-20261019-010#045
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792345800|ai-system-20261019-010#045
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792345800|ai-system-20261019-010#045
-AI-General|docs/records/PROGRESS.md|1792345800|ai-system-20261019-010#045
-AI-General|docs/common/C-02-rules.md|1792338300|ai-system-20261019-009#051
-AI-General|docs/common/C-04-output.md|1792337400|ai-system-20261019-009#050
-AI-General|docs/common/C-03-flow.md|1792332900|ai-system-20261019-009#038
-AI-General|docs/common/C-00-startup.md|1792332000|ai-system-20261019-009#037
-AI-General|docs/common/C-05-engine.md|1792324000|ai-system-20261018-008#127
-AI-General|docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
-AI-General|docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
-AI-General|docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
-AI-General|docs/common/C-05-learning/general.md|1792226400|ai-system-20261017-004#032
-AI-General|docs/skills/W/W-00-startup.md|1791903760|A20261013-004#169
-AI-General|docs/skills/W/W-05-schema.md|1791899740|A20261013-004#065
-AI-General|docs/skills/W/W-04-pwa.md|1791899680|A20261013-004#065
-AI-General|docs/skills/W/W-03-esmodule.md|1791899620|A20261013-004#065
-AI-General|docs/skills/W/W-02-functions.md|1791899560|A20261013-004#065
-AI-General|docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
+AI-General|./docs/records/SYSTEM-HANDOFF.md|1792345800|ai-system-20261019-010#045
+AI-General|./docs/records/SYSTEM-CONCLUSION.md|1792345800|ai-system-20261019-010#045
+AI-General|./docs/records/PROGRESS.md|1792345800|ai-system-20261019-010#045
+ai-kernel|docs/u-profile/U-00-profile.md|1792341600|ai-system-20261019-010#022
+ai-kernel|docs/r-rules/R-01-mapping.md|1792341600|ai-system-20261019-010#022
+ai-kernel|docs/r-rules/R-00-rules.md|1792341600|ai-system-20261019-010#022
+ai-kernel|docs/a-guide/A-00-guide.md|1792341600|ai-system-20261019-010#022
+AI-General|./docs/common/C-02-rules.md|1792338300|ai-system-20261019-009#051
+AI-General|./docs/common/C-04-output.md|1792337400|ai-system-20261019-009#050
+AI-General|./docs/common/C-03-flow.md|1792332900|ai-system-20261019-009#038
+AI-General|./docs/common/C-00-startup.md|1792332000|ai-system-20261019-009#037
+AI-General|./docs/common/C-05-engine.md|1792324000|ai-system-20261018-008#127
+AI-General|./docs/common/C-11-terms.md|1792301000|ai-system-20261018-007#106
+AI-General|./docs/common/C-06-patterns.md|1792301000|ai-system-20261018-007#106
+AI-General|./docs/common/C-05-learning/system.md|1792289500|ai-system-20261018-006#051
+AI-General|./docs/common/C-05-learning/general.md|1792226400|ai-system-20261017-004#032
+AI-General|./docs/skills/W/W-00-startup.md|1791903760|A20261013-004#169
+AI-General|./docs/skills/W/W-05-schema.md|1791899740|A20261013-004#065
+AI-General|./docs/skills/W/W-04-pwa.md|1791899680|A20261013-004#065
+AI-General|./docs/skills/W/W-03-esmodule.md|1791899620|A20261013-004#065
+AI-General|./docs/skills/W/W-02-functions.md|1791899560|A20261013-004#065
+AI-General|./docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
 
 ## 三、歷史歸屬
 | 檔案 | 舊版本 | 舊 Writer | 新版本 | 新 Writer | 取代時間 |
