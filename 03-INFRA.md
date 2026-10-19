@@ -10,7 +10,7 @@
 
 ## 📄 .github/scripts/apply_patch.py
 
-```
+```py
 import sys
 import os
 import re
@@ -111,6 +111,7 @@ print("[RESET] PATCH.md reset")```
 
 ## 📄 .github/scripts/validate_delivery.py
 
+```py
 #!/usr/bin/env python3
 """交付驗證腳本（機器可驗的規則）"""
 
@@ -196,7 +197,8 @@ def main():
     sys.exit(0)
 
 if __name__ == "__main__":
-    main()
+    main()```
+
 <!-- === FILE END: .github/scripts/validate_delivery.py === -->
 
 ### 📄 檔案：setup-structure.yml (infra)
@@ -205,9 +207,9 @@ if __name__ == "__main__":
 
 ## 📄 .github/workflows/setup-structure.yml
 
-```
+```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v13.2)
+# setup-structure.yml — 動態共享包打包腳本 (v13.3)
 # 用途：讀取 repos.json，自動打包 A/R/U/W/S 及專案包 (不含索引生成)
 # ============================================
 
@@ -217,6 +219,12 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types: [project-updated]
+  push:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/setup-structure.yml'
+      - '.github/scripts/**'
+      - 'config/repos.json'
 
 jobs:
   build:
@@ -473,8 +481,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792380000
-# W: ai-system-20261019-011#003
+# V: 1792381000
+# W: ai-system-20261019-010#139
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -485,7 +493,7 @@ jobs:
 
 ## 📄 .github/workflows/sync-repos.yml
 
-```
+```yml
 name: Sync Repos List
 
 on:
@@ -590,7 +598,7 @@ jobs:
 
 ## 📄 .github/workflows/migrate.yml
 
-```
+```yml
 # ============================================
 # migrate.yml — 一次性遷移腳本
 # 用途：將 AI-General 的 W 包搬到 ai-kernel，並清理舊檔案
@@ -679,6 +687,7 @@ jobs:
 
 ## 📄 .github/workflows/append_file.sh
 
+```sh
 #!/bin/bash
 # append_file.sh - 用於將源檔案合併到共享包中
 
@@ -702,18 +711,28 @@ echo "" >> "$TARGET"
 echo "## 📄 $SOURCE" >> "$TARGET"
 echo "" >> "$TARGET"
 
-# 寫入檔案內容（防呆：如果內部有三反引號，跳過包裹，避免 Markdown 渲染破裂）
-if grep -q '```' "$SOURCE"; then
+# 取得副檔名
+EXT="${SOURCE##*.}"
+
+# 寫入檔案內容（防呆：如果是 .md 檔且內部有三反引號，跳過包裹；其他副檔名一律強制包裹）
+if [ "$EXT" = "md" ] && grep -q '\`\`\`' "$SOURCE"; then
     cat "$SOURCE" >> "$TARGET"
 else
-    echo '```' >> "$TARGET"
+    echo "\`\`\`$EXT" >> "$TARGET"
     cat "$SOURCE" >> "$TARGET"
-    echo '```' >> "$TARGET"
+    echo "\`\`\`" >> "$TARGET"
 fi
 
 # 寫入結束標記
 echo "" >> "$TARGET"
 echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/append_file.sh
+# V: 1792383600
+# W: ai-system-20261019-011#004
+# ═══ EOF ═══```
+
 <!-- === FILE END: .github/workflows/append_file.sh === -->
 
 ## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
@@ -725,7 +744,7 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 
 ## 📄 .github/workflows/apply-patch.yml
 
-```
+```yml
 name: Apply Patch (Project)
 on:
   workflow_dispatch:
@@ -779,7 +798,7 @@ jobs:
 
 ## 📄 .github/workflows/notify.yml
 
-```
+```yml
 # ============================================
 # notify.yml — 專案變更時通知 AI-infra
 # ============================================
@@ -821,7 +840,7 @@ jobs:
 
 ## 📄 .github/workflows/apply-patch.yml
 
-```
+```yml
 name: Apply Patch (Project)
 on:
   workflow_dispatch:
@@ -875,7 +894,7 @@ jobs:
 
 ## 📄 .github/workflows/notify.yml
 
-```
+```yml
 # ============================================
 # notify.yml — 專案變更時通知 AI-infra
 # ============================================

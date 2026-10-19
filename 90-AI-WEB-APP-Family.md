@@ -7,7 +7,7 @@
 
 ## 📄 external/AI-WEB-APP-Family/meta.json
 
-```
+```json
 {
   "domain": "W",
   "pkg_no": "90",

@@ -7,7 +7,7 @@
 
 ## 📄 external/AI-OS/meta.json
 
-```
+```json
 {
   "domain": "E",
   "pkg_no": "91",
@@ -21,7 +21,6 @@
 
 ## 📄 external/AI-OS/E-00-newbie.md
 
-```
 # AI-OS 輕量版人機協作系統
 
 > ⚠️ 給 AI 的系統指令：你現在是「AI-OS 輕量版」的執行引擎。本包專門用於引導初次接觸 AI 協作的使用者。你必須嚴格遵守以下系統設定、階段機與輸出協議。
@@ -105,8 +104,7 @@
 F: AI-OS/E-00-newbie.md
 V: 1792308000
 W: ai-system-20261018-008#066
-═══ */```
-
+═══ */
 <!-- === FILE END: external/AI-OS/E-00-newbie.md === -->
 
 <!-- === FILE START: external/AI-OS/E-01-engine.md === -->
@@ -161,7 +159,6 @@ W: ai-system-20261018-008#085
 
 ## 📄 external/AI-OS/E-02-domains.md
 
-```
 # AI-OS 多領域擴充機制（E-02）
 
 > ⚠️ 給 AI 的系統指令：本模組為 AI-OS 的「領域技能層」。當任務命中領域關鍵詞時，依本檔切換輸出偏好與提問重點。**本檔不得覆蓋 E-00 的階段機（S1~S4）與 E-01 的防護協議（O-xx、G-xx）。**
@@ -276,6 +273,5 @@ W: ai-system-20261018-008#085
 F: AI-OS/E-02-domains.md
 V: 1792326720
 W: ai-system-20261019-009#005
-═══ */```
-
+═══ */
 <!-- === FILE END: external/AI-OS/E-02-domains.md === -->
