@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:32:57 (HKT)
+> 生成時間：2026-10-19 22:36:00 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v14.3)
-# 用途：改用 git clone 抓取體系倉庫，確保檔案不遺漏
+# setup-structure.yml — 動態共享包打包腳本 (v14.6)
+# 用途：無差別抓取 workflow 目錄下所有檔案
 # ============================================
 
 name: Build Shared Packages
@@ -259,13 +259,15 @@ jobs:
           
           jq -c '.projects' config/repos.json > /tmp/projects.json
 
-      - name: Checkout ai-kernel (git clone)
+      - name: Checkout ai-kernel (git clone main)
         run: |
-          git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" ai-kernel
+          git clone --depth 1 -b main "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" ai-kernel || \
+          git clone --depth 1 -b master "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" ai-kernel
 
-      - name: Checkout AI-General (git clone)
+      - name: Checkout AI-General (git clone main)
         run: |
-          git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General
+          git clone --depth 1 -b main "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General || \
+          git clone --depth 1 -b master "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General
 
       - name: Checkout AI-packages
         uses: actions/checkout@v4
@@ -279,7 +281,8 @@ jobs:
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
-            git clone --depth 1 "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/$REPO.git" "external/$SAFE_NAME" 2>/dev/null || echo "clone fail: $REPO"
+            git clone --depth 1 -b main "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/$REPO.git" "external/$SAFE_NAME" 2>/dev/null || \
+            git clone --depth 1 -b master "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/$REPO.git" "external/$SAFE_NAME" 2>/dev/null || echo "clone fail: $REPO"
           done
 
       - name: "Step 1: 清理舊共享包 (清道夫)"
@@ -503,7 +506,8 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd ai-kernel || exit 0
-              find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
+              # 暴力抓取所有檔案，不限制副檔名
+              find .github/workflows -type f | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
                 bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -522,7 +526,8 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd AI-General || exit 0
-              find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
+              # 暴力抓取所有檔案，不限制副檔名
+              find .github/workflows -type f | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
                 bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -544,7 +549,7 @@ jobs:
               echo "" >> "$OUTPUT"
               (
                 cd "external/${SAFE_NAME}" || exit 0
-                find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
+                find .github/workflows -type f | sort | while read -r file; do 
                   echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                   echo "" >> "../../$OUTPUT"
                   bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -575,8 +580,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792399000
-# W: ai-system-20261019-010#185
+# V: 1792403000
+# W: ai-system-20261019-010#190
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
