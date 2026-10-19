@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:05:57 (HKT)
+> 生成時間：2026-10-19 22:09:05 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v14.0)
+# setup-structure.yml — 動態共享包打包腳本 (v14.1)
 # 用途：動態打包所有包，拔除寫死專案名，動態判斷領域
 # ============================================
 
@@ -303,7 +303,6 @@ jobs:
           for REPO_DIR in "AI-General" "ai-kernel"; do
             if [ -d "$REPO_DIR/docs" ]; then
               find "$REPO_DIR/docs" -type f -name "*.md" -not -path "*/.git/*" | while read -r f; do
-                # 移除 ^ 邊界，允許 V: 前面有空白
                 V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
                 if [ -z "$V" ]; then continue; fi
                 W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
@@ -511,7 +510,8 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd ai-kernel || exit 0
-              find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+              # 支援 .yml 與 .yaml
+              find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
                 bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -530,7 +530,7 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd AI-General || exit 0
-              find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+              find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
                 bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -552,7 +552,7 @@ jobs:
               echo "" >> "$OUTPUT"
               (
                 cd "external/${SAFE_NAME}" || exit 0
-                find .github/workflows -type f -name "*.yml" | sort | while read -r file; do 
+                find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
                   echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                   echo "" >> "../../$OUTPUT"
                   bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
@@ -583,8 +583,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792396000
-# W: ai-system-20261019-010#174
+# V: 1792397000
+# W: ai-system-20261019-010#176
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
