@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:36:00 (HKT)
+> 生成時間：2026-10-19 22:42:32 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v14.6)
-# 用途：無差別抓取 workflow 目錄下所有檔案
+# setup-structure.yml — 動態共享包打包腳本 (v15.0)
+# 用途：修正路徑錯誤，無差別暴力抓取 workflows
 # ============================================
 
 name: Build Shared Packages
@@ -506,14 +506,16 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd ai-kernel || exit 0
-              # 暴力抓取所有檔案，不限制副檔名
+              # 暴力抓取所有檔案
               find .github/workflows -type f | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
-                bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
+                bash "../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
                 echo "" >> "../../$OUTPUT"
               done
             ) || true
+          else
+            echo "> ⚠️ 找不到 `ai-kernel/.github/workflows` 資料夾，無法打包。" >> "$OUTPUT"
           fi
           if [ -f "ai-kernel/.gitignore" ]; then 
             echo "### 📄 檔案：.gitignore (ai-kernel)" >> "$OUTPUT"
@@ -526,14 +528,15 @@ jobs:
             echo "" >> "$OUTPUT"
             (
               cd AI-General || exit 0
-              # 暴力抓取所有檔案，不限制副檔名
               find .github/workflows -type f | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
-                bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
+                bash "../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
                 echo "" >> "../../$OUTPUT"
               done
             ) || true
+          else
+            echo "> ⚠️ 找不到 `AI-General/.github/workflows` 資料夾，無法打包。" >> "$OUTPUT"
           fi
           if [ -f "AI-General/.gitignore" ]; then 
             echo "### 📄 檔案：.gitignore (AI-General)" >> "$OUTPUT"
@@ -580,8 +583,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792403000
-# W: ai-system-20261019-010#190
+# V: 1792404000
+# W: ai-system-20261019-010#191
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
