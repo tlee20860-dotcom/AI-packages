@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 23:21:37 (HKT)
+> 生成時間：2026-10-19 23:57:14 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v15.4)
-# 用途：強制建立目錄並安全下載 workflow 檔案
+# setup-structure.yml — 動態共享包打包腳本 (v16.0)
+# 用途：合併 sync-repos 與打包邏輯，徹底消除觸發衝突
 # ============================================
 
 name: Build Shared Packages
@@ -225,7 +225,6 @@ on:
     paths:
       - '.github/workflows/setup-structure.yml'
       - '.github/scripts/**'
-      - 'config/repos.json'
 
 concurrency:
   group: build-packages
@@ -243,23 +242,65 @@ jobs:
         with:
           token: ${{ secrets.CROSS_REPO_PAT }}
 
+      - name: "Step 0: 同步 Repos 名單 (Sync Repos List)"
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          mkdir -p config
+          
+          echo '[' > /tmp/projects_array.json
+          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages") | .owner.login + "/" + .name')
+          
+          FIRST=true
+          for REPO in $REPOS; do
+            META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/main/meta.json")
+            if ! echo "$META" | grep -q "pkg_no"; then
+              META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/master/meta.json")
+            fi
+            
+            if echo "$META" | grep -q "pkg_no"; then
+              DOMAIN=$(echo "$META" | jq -r '.domain')
+              PKG_NO=$(echo "$META" | jq -r '.pkg_no')
+              CODE=$(echo "$META" | jq -r '.code // "-"')
+              DISPLAY=$(echo "$META" | jq -r '.display // "-"')
+            else
+              continue
+            fi
+
+            if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> /tmp/projects_array.json; fi
+            echo "    {\"repo\": \"$REPO\", \"domain\": \"$DOMAIN\", \"code\": \"$CODE\", \"display\": \"$DISPLAY\", \"pkg_no\": \"$PKG_NO\"}" >> /tmp/projects_array.json
+          done
+          echo '' >> /tmp/projects_array.json
+          echo ']' >> /tmp/projects_array.json
+
+          # 使用 jq 進行排序（按 pkg_no）
+          echo '{' > config/repos.json
+          echo '  "kernel": "tlee20860-dotcom/AI-kernel",' >> config/repos.json
+          echo '  "general": "tlee20860-dotcom/AI-General",' >> config/repos.json
+          echo '  "packages": "tlee20860-dotcom/AI-packages",' >> config/repos.json
+          echo -n '  "projects": ' >> config/repos.json
+          jq 'sort_by(.pkg_no)' /tmp/projects_array.json >> config/repos.json
+          echo '}' >> config/repos.json
+          
+          # 提交 repos.json 至倉庫備份
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/repos.json
+          git diff --cached --quiet || (git commit -m "chore: auto-sync repos.json [skip ci]" && git push)
+
       - name: Read Repos Config
         id: config
         run: |
-          echo "Reading repos.json..."
           cat config/repos.json
-          
           KERNEL=$(jq -r '.kernel' config/repos.json)
           GENERAL=$(jq -r '.general' config/repos.json)
           PACKAGES=$(jq -r '.packages' config/repos.json)
-          
           echo "KERNEL_REPO=$KERNEL" >> $GITHUB_ENV
           echo "GENERAL_REPO=$GENERAL" >> $GITHUB_ENV
           echo "PACKAGES_REPO=$PACKAGES" >> $GITHUB_ENV
-          
           jq -c '.projects' config/repos.json > /tmp/projects.json
 
-      - name: Checkout ai-kernel (git clone main)
+      - name: Checkout AI-kernel (git clone main)
         run: |
           git clone --depth 1 -b main "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" AI-kernel || \
           git clone --depth 1 -b master "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.KERNEL_REPO }}.git" AI-kernel
@@ -481,7 +522,7 @@ jobs:
             fi
           done
 
-          for wf in setup-structure.yml sync-repos.yml migrate.yml append_file.sh; do
+          for wf in setup-structure.yml migrate.yml append_file.sh; do
             if [ -f ".github/workflows/$wf" ]; then 
               echo "### 📄 檔案：$wf (infra)" >> "$OUTPUT"
               bash .github/workflows/append_file.sh ".github/workflows/$wf" "$OUTPUT" || true
@@ -513,7 +554,7 @@ jobs:
             bash .github/workflows/append_file.sh "AI-kernel/.github/workflows/apply-patch.yml" "$OUTPUT" || true
             echo "" >> "$OUTPUT"
           else
-            echo "> ⚠️ 找不到 `AI-kernel/.github/workflows/apply-patch.yml`" >> "$OUTPUT"
+            echo "> ⚠️ 找不到 \`AI-kernel/.github/workflows/apply-patch.yml\`" >> "$OUTPUT"
           fi
 
           curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.KERNEL_REPO }}/main/.github/workflows/notify.yml" -o "AI-kernel/.github/workflows/notify.yml" || true
@@ -523,7 +564,7 @@ jobs:
             bash .github/workflows/append_file.sh "AI-kernel/.github/workflows/notify.yml" "$OUTPUT" || true
             echo "" >> "$OUTPUT"
           else
-            echo "> ⚠️ 找不到 `AI-kernel/.github/workflows/notify.yml`" >> "$OUTPUT"
+            echo "> ⚠️ 找不到 \`AI-kernel/.github/workflows/notify.yml\`" >> "$OUTPUT"
           fi
           
           if [ -f "AI-kernel/.gitignore" ]; then 
@@ -544,7 +585,7 @@ jobs:
             bash .github/workflows/append_file.sh "AI-General/.github/workflows/apply-patch.yml" "$OUTPUT" || true
             echo "" >> "$OUTPUT"
           else
-            echo "> ⚠️ 找不到 `AI-General/.github/workflows/apply-patch.yml`" >> "$OUTPUT"
+            echo "> ⚠️ 找不到 \`AI-General/.github/workflows/apply-patch.yml\`" >> "$OUTPUT"
           fi
 
           curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.GENERAL_REPO }}/main/.github/workflows/notify.yml" -o "AI-General/.github/workflows/notify.yml" || true
@@ -554,7 +595,7 @@ jobs:
             bash .github/workflows/append_file.sh "AI-General/.github/workflows/notify.yml" "$OUTPUT" || true
             echo "" >> "$OUTPUT"
           else
-            echo "> ⚠️ 找不到 `AI-General/.github/workflows/notify.yml`" >> "$OUTPUT"
+            echo "> ⚠️ 找不到 \`AI-General/.github/workflows/notify.yml\`" >> "$OUTPUT"
           fi
 
           if [ -f "AI-General/.gitignore" ]; then 
@@ -602,130 +643,11 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792409000
-# W: ai-system-20261019-010#197
+# V: 1792413000
+# W: ai-system-20261019-010#210
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
-
-### 📄 檔案：sync-repos.yml (infra)
-
-<!-- === FILE START: .github/workflows/sync-repos.yml === -->
-
-## 📄 .github/workflows/sync-repos.yml
-
-```yml
-name: Sync Repos List
-
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
-  repository_dispatch:
-    types: [sync-repos]
-  push:
-    branches: [main, master]
-    paths:
-      - '.github/workflows/sync-repos.yml'
-
-# 防止多個同步 Action 同時執行
-concurrency:
-  group: sync-repos
-  cancel-in-progress: true
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout AI-infra
-        uses: actions/checkout@v4
-
-      - name: Generate repos.json
-        env:
-          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
-        run: |
-          mkdir -p config
-          
-          echo '{' > config/repos.json
-          echo '  "kernel": "tlee20860-dotcom/AI-kernel",' >> config/repos.json
-          echo '  "general": "tlee20860-dotcom/AI-General",' >> config/repos.json
-          echo '  "packages": "tlee20860-dotcom/AI-packages",' >> config/repos.json
-          echo '  "projects": [' >> config/repos.json
-
-          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages") | .owner.login + "/" + .name')
-
-          FIRST=true
-          for REPO in $REPOS; do
-            echo "Checking $REPO..."
-            
-            META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/main/meta.json")
-            if ! echo "$META" | grep -q "pkg_no"; then
-              META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$REPO/master/meta.json")
-            fi
-            
-            if echo "$META" | grep -q "pkg_no"; then
-              DOMAIN=$(echo "$META" | jq -r '.domain')
-              PKG_NO=$(echo "$META" | jq -r '.pkg_no')
-              CODE=$(echo "$META" | jq -r '.code // "-"')
-              DISPLAY=$(echo "$META" | jq -r '.display // "-"')
-            else
-              echo "  [WARN] $REPO 缺少有效的 meta.json，跳過。"
-              continue
-            fi
-
-            if [ "$FIRST" = true ]; then
-              FIRST=false
-            else
-              echo ',' >> config/repos.json
-            fi
-            
-            echo "    {" >> config/repos.json
-            echo "      \"repo\": \"$REPO\"," >> config/repos.json
-            echo "      \"domain\": \"$DOMAIN\"," >> config/repos.json
-            echo "      \"code\": \"$CODE\"," >> config/repos.json
-            echo "      \"display\": \"$DISPLAY\"," >> config/repos.json
-            echo "      \"pkg_no\": \"$PKG_NO\"" >> config/repos.json
-            echo -n "    }" >> config/repos.json
-          done
-
-          echo '' >> config/repos.json
-          echo '  ]' >> config/repos.json
-          echo '}' >> config/repos.json
-
-      - name: Commit repos.json
-        id: commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add config/repos.json
-          if git diff --cached --quiet; then
-            echo "No changes to config/repos.json"
-            echo "CHANGED=false" >> $GITHUB_ENV
-          else
-            git commit -m "chore: auto-sync repos.json [skip ci]"
-            git push
-            echo "CHANGED=true" >> $GITHUB_ENV
-          fi
-
-      - name: Trigger Build Packages
-        if: env.CHANGED == 'true'
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-
-# ═══ EOF ═══
-# F: AI-infra/.github/workflows/sync-repos.yml
-# V: 1792382000
-# W: ai-system-20261019-010#140
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/sync-repos.yml === -->
 
 ### 📄 檔案：migrate.yml (infra)
 
@@ -882,21 +804,21 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
   "general": "tlee20860-dotcom/AI-General",
   "packages": "tlee20860-dotcom/AI-packages",
   "projects": [
-    {
-      "repo": "tlee20860-dotcom/AI-OS",
-      "domain": "E",
-      "code": "ai-os",
-      "display": "AI-OS 系統",
-      "pkg_no": "91"
-    },
-    {
-      "repo": "tlee20860-dotcom/AI-WEB-APP-Family",
-      "domain": "W",
-      "code": "webapp",
-      "display": "家庭 webapp",
-      "pkg_no": "90"
-    }
-  ]
+  {
+    "repo": "tlee20860-dotcom/AI-WEB-APP-Family",
+    "domain": "W",
+    "code": "webapp",
+    "display": "家庭 webapp",
+    "pkg_no": "90"
+  },
+  {
+    "repo": "tlee20860-dotcom/AI-OS",
+    "domain": "E",
+    "code": "ai-os",
+    "display": "AI-OS 系統",
+    "pkg_no": "91"
+  }
+]
 }
 ```
 
@@ -1182,101 +1104,6 @@ build-repo/
 
 <!-- === FILE END: AI-General/.gitignore === -->
 
-## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: .github/workflows/apply-patch.yml === -->
-
-## 📄 .github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (Project)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-OS/.github/workflows/apply-patch.yml
-# V: 1792358000
-# W: ai-system-20261019-010#088
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: .github/workflows/notify.yml === -->
-
-## 📄 .github/workflows/notify.yml
-
-```yml
-# ============================================
-# notify.yml — 專案變更時通知 AI-infra
-# ============================================
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-  workflow_dispatch: # 保留手動觸發功能
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"
-
-# ═══ EOF ═══
-# F: AI-OS/.github/workflows/notify.yml
-# V: 1792357000
-# W: ai-system-20261019-010#085
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/notify.yml === -->
-
 ## 🏢 專案層：tlee20860-dotcom/AI-WEB-APP-Family 的呼叫器
 
 ### 📄 檔案：.github/workflows/apply-patch.yml
@@ -1415,4 +1242,99 @@ build-repo/
 tmp/```
 
 <!-- === FILE END: external/AI-WEB-APP-Family/.gitignore === -->
+
+## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
+
+### 📄 檔案：.github/workflows/apply-patch.yml
+
+
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```yml
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
+### 📄 檔案：.github/workflows/notify.yml
+
+
+<!-- === FILE START: .github/workflows/notify.yml === -->
+
+## 📄 .github/workflows/notify.yml
+
+```yml
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: # 保留手動觸發功能
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"
+
+# ═══ EOF ═══
+# F: AI-OS/.github/workflows/notify.yml
+# V: 1792357000
+# W: ai-system-20261019-010#085
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/notify.yml === -->
 
