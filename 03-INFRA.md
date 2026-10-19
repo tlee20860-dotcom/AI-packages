@@ -249,7 +249,7 @@ jobs:
 
       - name: Download central script
         run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-General/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
 
       - name: Run Patch
         run: python3 /tmp/apply_patch.py
@@ -265,8 +265,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-OS/.github/workflows/apply-patch.yml
-# V: 1792315000
-# W: ai-system-20261018-008#091
+# V: 1792358000
+# W: ai-system-20261019-010#088
 # ═══ EOF ═══
 ```
 
