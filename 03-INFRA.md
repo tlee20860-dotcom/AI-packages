@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-20 00:02:43 (HKT)
+> 生成時間：2026-10-20 00:04:40 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v16.0)
-# 用途：合併 sync-repos 與打包邏輯，徹底消除觸發衝突
+# setup-structure.yml — 動態共享包打包腳本 (v16.1)
+# 用途：移除 concurrency 解決 GitHub 排隊死鎖
 # ============================================
 
 name: Build Shared Packages
@@ -226,9 +226,10 @@ on:
       - '.github/workflows/setup-structure.yml'
       - '.github/scripts/**'
 
-concurrency:
-  group: build-packages
-  cancel-in-progress: true
+# ⚠️ 已移除 concurrency 防止排隊死鎖
+# concurrency:
+#   group: build-packages
+#   cancel-in-progress: true
 
 jobs:
   build:
@@ -643,8 +644,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792413000
-# W: ai-system-20261019-010#210
+# V: 1792414000
+# W: ai-system-20261019-010#215
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
