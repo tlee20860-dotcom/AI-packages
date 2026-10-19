@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:09:05 (HKT)
+> 生成時間：2026-10-19 22:11:25 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v14.1)
-# 用途：動態打包所有包，拔除寫死專案名，動態判斷領域
+# setup-structure.yml — 動態共享包打包腳本 (v14.2)
+# 用途：加入除錯列印，檢查 workflows 是否存在
 # ============================================
 
 name: Build Shared Packages
@@ -440,7 +440,6 @@ jobs:
               bash .github/workflows/append_file.sh "external/${SAFE_NAME}/meta.json" "$OUTPUT" || true
             fi
 
-            # 動態判斷領域：只要是 E 領域（如 AI-OS），就抓 E-*.md
             if [ "$DOMAIN" == "E" ]; then
               for f in external/${SAFE_NAME}/E-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
@@ -505,12 +504,29 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
+          # === 除錯開始 ===
+          echo "=================================================="
+          echo "=== 除錯：檢查 AI-kernel 的 .github 目錄 ==="
+          if [ -d "ai-kernel/.github" ]; then
+            ls -laR ai-kernel/.github/
+          else
+            echo "找不到 ai-kernel/.github 資料夾！"
+          fi
+          
+          echo "=== 除錯：檢查 AI-General 的 .github 目錄 ==="
+          if [ -d "AI-General/.github" ]; then
+            ls -laR AI-General/.github/
+          else
+            echo "找不到 AI-General/.github 資料夾！"
+          fi
+          echo "=================================================="
+          # === 除錯結束 ===
+
           if [ -d "ai-kernel/.github/workflows" ]; then
             echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
             (
               cd ai-kernel || exit 0
-              # 支援 .yml 與 .yaml
               find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
@@ -583,8 +599,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792397000
-# W: ai-system-20261019-010#176
+# V: 1792398000
+# W: ai-system-20261019-010#180
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
