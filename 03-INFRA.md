@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 21:50:02 (HKT)
+> 生成時間：2026-10-19 21:57:36 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v13.9)
-# 用途：讀取 repos.json，自動打包並更新 STATE-INDEX (全面補齊 HKT 時間戳)
+# setup-structure.yml — 動態共享包打包腳本 (v14.0)
+# 用途：動態打包所有包，拔除寫死專案名，動態判斷領域
 # ============================================
 
 name: Build Shared Packages
@@ -227,7 +227,6 @@ on:
       - '.github/scripts/**'
       - 'config/repos.json'
 
-# 防止多個 Action 同時執行導致 Git 衝突
 concurrency:
   group: build-packages
   cancel-in-progress: true
@@ -304,9 +303,10 @@ jobs:
           for REPO_DIR in "AI-General" "ai-kernel"; do
             if [ -d "$REPO_DIR/docs" ]; then
               find "$REPO_DIR/docs" -type f -name "*.md" -not -path "*/.git/*" | while read -r f; do
-                V=$(tail -n 15 "$f" | grep -oE '^V: *[0-9]+' | head -1 | sed 's/^V: *//' || true)
+                # 移除 ^ 邊界，允許 V: 前面有空白
+                V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
                 if [ -z "$V" ]; then continue; fi
-                W=$(tail -n 15 "$f" | grep -oE '^W: *[^ ]+' | head -1 | sed 's/^W: *//' || true)
+                W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
                 
                 REPO_NAME="AI-General"
                 CLEAN_F=${f#AI-General/}
@@ -412,11 +412,12 @@ jobs:
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
-      - name: "Step 7: 生成專案包 (動態)"
+      - name: "Step 7: 生成專案包 (動態領域判斷)"
         run: |
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             PKG_NO=$(echo "$row" | jq -r '.pkg_no')
+            DOMAIN=$(echo "$row" | jq -r '.domain')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             OUTPUT="build-repo/${PKG_NO}-${SAFE_NAME}.md"
             
@@ -440,8 +441,9 @@ jobs:
               bash .github/workflows/append_file.sh "external/${SAFE_NAME}/meta.json" "$OUTPUT" || true
             fi
 
-            if [ "$SAFE_NAME" == "AI-OS" ]; then
-              for f in external/AI-OS/E-*.md; do
+            # 動態判斷領域：只要是 E 領域（如 AI-OS），就抓 E-*.md
+            if [ "$DOMAIN" == "E" ]; then
+              for f in external/${SAFE_NAME}/E-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
               done
             fi
@@ -567,14 +569,12 @@ jobs:
 
       - name: "Step 9: 上傳共享包"
         run: |
-          # 提交 STATE-INDEX 到 AI-General
           cd AI-General
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/records/STATE-INDEX.md
           git diff --cached --quiet || (git commit -m "chore: auto-update STATE-INDEX [skip ci]" && git push)
 
-          # 提交共享包到 AI-packages
           cd ../build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -583,8 +583,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792394000
-# W: ai-system-20261019-010#171
+# V: 1792396000
+# W: ai-system-20261019-010#174
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
