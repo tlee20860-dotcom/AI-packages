@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 21:38:51 (HKT)
+> 生成時間：2026-10-19 21:50:02 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v13.8)
+# setup-structure.yml — 動態共享包打包腳本 (v13.9)
 # 用途：讀取 repos.json，自動打包並更新 STATE-INDEX (全面補齊 HKT 時間戳)
 # ============================================
 
@@ -322,6 +322,8 @@ jobs:
 
           {
             echo "# STATE-INDEX"
+            echo ""
+            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
             echo ""
             echo "## 一、專案總覽"
             echo "| 專案顯示名稱 | code | domain | package_no | repo |"
@@ -581,8 +583,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792390000
-# W: ai-system-20261019-010#165
+# V: 1792394000
+# W: ai-system-20261019-010#171
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
