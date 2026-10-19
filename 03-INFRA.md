@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-19 22:43:41 (HKT)
+> 生成時間：2026-10-19 22:49:02 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v15.0)
-# 用途：修正路徑錯誤，無差別暴力抓取 workflows
+# setup-structure.yml — 動態共享包打包腳本 (v15.1)
+# 用途：加入 git ls-tree 與 gitignore 檢查
 # ============================================
 
 name: Build Shared Packages
@@ -501,12 +501,25 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
+          # === 除錯開始 ===
+          echo "=================================================="
+          echo "=== 除錯：AI-kernel 的 .gitignore ==="
+          cat ai-kernel/.gitignore || echo "無 .gitignore"
+          echo "=== 除錯：AI-kernel 的 Git 追蹤清單 (ls-tree) ==="
+          (cd ai-kernel && git ls-tree -r HEAD --name-only | grep ".github" || echo "Git 庫裡沒有 .github 目錄！")
+          
+          echo "=== 除錯：AI-General 的 .gitignore ==="
+          cat AI-General/.gitignore || echo "無 .gitignore"
+          echo "=== 除錯：AI-General 的 Git 追蹤清單 (ls-tree) ==="
+          (cd AI-General && git ls-tree -r HEAD --name-only | grep ".github" || echo "Git 庫裡沒有 .github 目錄！")
+          echo "=================================================="
+          # === 除錯結束 ===
+
           if [ -d "ai-kernel/.github/workflows" ]; then
             echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
             (
               cd ai-kernel || exit 0
-              # 暴力抓取所有檔案
               find .github/workflows -type f | sort | while read -r file; do 
                 echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
                 echo "" >> "../../$OUTPUT"
@@ -583,8 +596,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792404000
-# W: ai-system-20261019-010#191
+# V: 1792405000
+# W: ai-system-20261019-010#193
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
