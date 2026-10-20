@@ -1,0 +1,688 @@
+# 92 包：AI 控制台原始碼
+
+> 生成時間：2026-10-20 14:20:55 (HKT)
+
+
+<!-- === FILE START: index.html === -->
+
+## 📄 index.html
+
+```html
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 控制台 - 管理中心</title>
+    
+    <!-- PWA 設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; }
+
+        h1 { font-size: 1.5rem; margin-bottom: 5px; text-align: center; color: var(--text); }
+        .subtitle { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+        }
+
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+        input[type="password"], input[type="text"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px; }
+        .btn-small { width: auto; padding: 8px 12px; font-size: 0.85rem; border-radius: 6px; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f1f5f9;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--text-muted); flex-shrink: 0; }
+        .status-dot.running { background-color: #f59e0b; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: var(--success); }
+        .status-dot.failure { background-color: var(--danger); }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+
+        .file-list { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+        }
+        .file-header { display: flex; justify-content: space-between; align-items: center; }
+        .file-name { font-weight: bold; color: var(--primary); font-size: 1rem; }
+        .file-time { font-size: 0.8rem; color: var(--text-muted); }
+        .file-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .file-actions button { flex: 1; margin-top: 0; padding: 8px; font-size: 0.85rem; }
+
+        .token-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+        }
+        .token-item:last-child { border-bottom: none; }
+        .token-info { display: flex; flex-direction: column; }
+        .token-name { font-weight: bold; font-size: 0.95rem; }
+        .token-type { font-size: 0.75rem; color: var(--text-muted); }
+    </style>
+    
+    <script>
+        const OWNER = 'tlee20860-dotcom';
+        const INFRA_REPO = 'AI-infra';
+        const PACKAGES_REPO = 'AI-packages';
+        const WORKFLOW_ID = 'setup-structure.yml';
+
+        let pollInterval = null;
+        let currentToken = '';
+        let tokenList = [];
+
+        // 初始化
+        window.onload = () => {
+            loadTokens();
+            checkBuildStatus();
+            fetchFiles();
+
+            // 註冊 Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            }
+        };
+
+        // === Token 管理 (LocalStorage) ===
+        function loadTokens() {
+            const stored = localStorage.getItem('gh_token_list');
+            if (stored) {
+                try {
+                    tokenList = JSON.parse(stored);
+                    if (tokenList.length > 0) {
+                        const active = tokenList.find(t => t.isActive);
+                        if (active) currentToken = active.token;
+                        else currentToken = tokenList[0].token;
+                    }
+                } catch (e) {
+                    console.error("解析 Token 失敗", e);
+                }
+            }
+            renderTokens();
+        }
+
+        function saveTokensToLocal() {
+            localStorage.setItem('gh_token_list', JSON.stringify(tokenList));
+        }
+
+        function addToken() {
+            const name = document.getElementById('new-token-name').value.trim();
+            const type = document.getElementById('new-token-type').value;
+            const tokenStr = document.getElementById('new-token-value').value.trim();
+
+            if (!name || !tokenStr) return alert('請填寫名稱與 Token');
+
+            const newToken = {
+                id: Date.now().toString(),
+                name: name,
+                type: type,
+                token: tokenStr,
+                isActive: tokenList.length === 0
+            };
+
+            tokenList.push(newToken);
+            saveTokensToLocal();
+            if (newToken.isActive) currentToken = newToken.token;
+            
+            document.getElementById('new-token-name').value = '';
+            document.getElementById('new-token-value').value = '';
+            renderTokens();
+        }
+
+        function deleteToken(id) {
+            if (!confirm('確定要刪除這組 Token 嗎？')) return;
+            const tokenToDelete = tokenList.find(t => t.id === id);
+            tokenList = tokenList.filter(t => t.id !== id);
+            
+            if (tokenToDelete && tokenToDelete.isActive && tokenList.length > 0) {
+                tokenList[0].isActive = true;
+                currentToken = tokenList[0].token;
+            } else if (tokenList.length === 0) {
+                currentToken = '';
+            }
+            
+            saveTokensToLocal();
+            renderTokens();
+        }
+
+        function setActive(id) {
+            tokenList.forEach(t => {
+                t.isActive = (t.id === id);
+                if (t.isActive) currentToken = t.token;
+            });
+            saveTokensToLocal();
+            renderTokens();
+        }
+
+        function copyToken(tokenStr) {
+            navigator.clipboard.writeText(tokenStr).then(() => {
+                alert('已複製 Token');
+            });
+        }
+
+        function renderTokens() {
+            const listEl = document.getElementById('token-list');
+            if (tokenList.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding: 10px;">目前沒有 Token，請於上方新增</div>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            tokenList.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'token-item';
+                
+                const masked = t.token.substring(0, 4) + '****' + t.token.substring(t.token.length - 4);
+                
+                item.innerHTML = `
+                    <div class="token-info">
+                        <span class="token-name">${t.name} ${t.isActive ? '✅' : ''}</span>
+                        <span class="token-type">${t.type} (${masked})</span>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        ${!t.isActive && t.type === 'GitHub' ? `<button class="btn-primary btn-small" onclick="setActive('${t.id}')" style="padding:6px 10px; font-size:0.75rem;">啟用</button>` : ''}
+                        <button class="btn-outline btn-small" onclick="copyToken('${t.token}')" style="padding:6px 10px; font-size:0.75rem; margin-top:0;">複製</button>
+                        <button class="btn-danger btn-small" onclick="deleteToken('${t.id}')" style="padding:6px 10px; font-size:0.75rem;">刪除</button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        // === GitHub API 封裝 ===
+        async function githubAPI(url, options = {}) {
+            if (!currentToken) throw new Error("未啟用 GitHub Token");
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json',
+                'Authorization': `token ${currentToken}`,
+                ...options.headers
+            };
+            const res = await fetch(`https://api.github.com${url}`, { ...options, headers });
+            if (!res.ok) {
+                let errMsg = `API 錯誤: ${res.status}`;
+                try {
+                    const errData = await res.json();
+                    if (errData.message) errMsg += ` - ${errData.message}`;
+                } catch(e) {}
+                if (res.status === 401) throw new Error('Token 無效或過期');
+                if (res.status === 404) throw new Error('找不到資源，請確認 Repo 名稱或權限');
+                throw new Error(errMsg);
+            }
+            return res.status === 204 ? null : await res.json();
+        }
+
+        // === 打包功能 ===
+        async function triggerBuild() {
+            const btn = document.getElementById('btn-trigger');
+            btn.disabled = true;
+            updateStatus('build-status', 'running', '正在發送打包指令...');
+
+            try {
+                await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: 'main' })
+                });
+                
+                updateStatus('build-status', 'running', '指令已發送，等待回應...');
+                if (pollInterval) clearInterval(pollInterval);
+                setTimeout(checkBuildStatus, 3000);
+                pollInterval = setInterval(checkBuildStatus, 10000);
+            } catch (error) {
+                updateStatus('build-status', 'failure', error.message);
+                btn.disabled = false;
+            }
+        }
+
+        async function checkBuildStatus() {
+            try {
+                const data = await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`);
+                if (data.workflow_runs && data.workflow_runs.length > 0) {
+                    const run = data.workflow_runs[0];
+                    const createdAt = new Date(run.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+                    
+                    if (run.status === 'in_progress' || run.status === 'queued') {
+                        updateStatus('build-status', 'running', `打包進行中... (始於 ${createdAt})`);
+                    } else if (run.conclusion === 'success') {
+                        updateStatus('build-status', 'success', `上次打包成功 (${createdAt})`);
+                        document.getElementById('btn-trigger').disabled = false;
+                        if (pollInterval) { clearInterval(pollInterval); fetchFiles(); }
+                    } else {
+                        updateStatus('build-status', 'failure', `上次打包失敗 (${createdAt})`);
+                        document.getElementById('btn-trigger').disabled = false;
+                        if (pollInterval) clearInterval(pollInterval);
+                    }
+                } else {
+                    updateStatus('build-status', '', '尚無打包紀錄');
+                    document.getElementById('btn-trigger').disabled = false;
+                }
+            } catch (error) {
+                updateStatus('build-status', 'failure', error.message);
+                document.getElementById('btn-trigger').disabled = false;
+            }
+        }
+
+        // === 遠端 Patch 部署 ===
+        async function deployPatch() {
+            const btn = document.getElementById('btn-deploy-patch');
+            const targetRepo = document.getElementById('patch-repo').value.trim();
+            const branch = document.getElementById('patch-branch').value.trim() || 'main';
+            const patchContent = document.getElementById('patch-content').value;
+
+            if (!targetRepo || !targetRepo.includes('/')) return alert('請輸入正確目標 Repo (owner/repo)');
+            if (!patchContent) return alert('請貼上 Patch 內容');
+
+            btn.disabled = true;
+            updateStatus('patch-status', 'running', '正在取得檔案 SHA...');
+
+            try {
+                let sha = null;
+                try {
+                    const fileData = await githubAPI(`/repos/${targetRepo}/contents/.github/PATCH.md?ref=${branch}`);
+                    sha = fileData.sha;
+                } catch (e) {
+                    if (!e.message.includes('404') && !e.message.includes('找不到')) throw e;
+                }
+
+                updateStatus('patch-status', 'running', '正在寫入 PATCH.md...');
+                const contentBase64 = btoa(unescape(encodeURIComponent(patchContent)));
+                const putBody = { message: 'chore: apply patch via AI Console', content: contentBase64, branch: branch };
+                if (sha) putBody.sha = sha;
+
+                await githubAPI(`/repos/${targetRepo}/contents/.github/PATCH.md`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(putBody)
+                });
+
+                updateStatus('patch-status', 'success', 'PATCH.md 已寫入，Action 已觸發');
+                document.getElementById('patch-content').value = '';
+                btn.disabled = false;
+            } catch (error) {
+                updateStatus('patch-status', 'failure', error.message);
+                btn.disabled = false;
+            }
+        }
+
+        // === Pages 部署 ===
+        async function triggerPagesDeploy() {
+            const btn = document.getElementById('btn-deploy-pages');
+            const targetRepo = document.getElementById('pages-repo').value.trim();
+            const branch = document.getElementById('pages-branch').value.trim() || 'main';
+
+            if (!targetRepo || !targetRepo.includes('/')) return alert('請輸入正確目標 Repo');
+
+            btn.disabled = true;
+            updateStatus('pages-status', 'running', '正在發送 Pages 部署指令...');
+
+            try {
+                await githubAPI(`/repos/${targetRepo}/actions/workflows/pages.yml/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: branch })
+                });
+                updateStatus('pages-status', 'success', '指令已發送，請至 Actions 查看進度');
+                setTimeout(() => { btn.disabled = false; }, 3000);
+            } catch (error) {
+                updateStatus('pages-status', 'failure', error.message);
+                btn.disabled = false;
+            }
+        }
+
+        function updateStatus(prefix, status, msg) {
+            const dot = document.getElementById(`${prefix}-dot`);
+            const text = document.getElementById(`${prefix}-text`);
+            if(dot) dot.className = `status-dot ${status}`;
+            if(text) text.textContent = msg;
+        }
+
+        // === 共享包下載 / 複製 / 分享 ===
+        let currentFilesData = []; 
+
+        async function fetchFiles() {
+            const listEl = document.getElementById('file-list');
+            listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.9rem;">載入中...</div>';
+
+            try {
+                const data = await githubAPI(`/repos/${OWNER}/${PACKAGES_REPO}/contents/`);
+                const mdFiles = data.filter(f => f.name.endsWith('.md')).sort((a, b) => a.name.localeCompare(b.name));
+                
+                if (mdFiles.length === 0) {
+                    listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted);">找不到任何 .md 檔案</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                currentFilesData = []; 
+
+                for (const file of mdFiles) {
+                    let content = '';
+                    try {
+                        const res = await fetch(file.download_url);
+                        if(res.ok) content = await res.text();
+                    } catch(e) {}
+                    
+                    currentFilesData.push({ name: file.name, content: content });
+
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.innerHTML = `
+                        <div class="file-header">
+                            <span class="file-name">${file.name}</span>
+                            <span class="file-time">大小: ${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-primary btn-small" onclick="downloadFile('${file.download_url}', '${file.name}')">⬇️ 下載</button>
+                            <button class="btn-success btn-small" onclick="copyFileContent('${file.name}')">📋 複製</button>
+                            <button class="btn-outline btn-small" onclick="shareFile('${file.name}')">📤 分享</button>
+                        </div>
+                    `;
+                    listEl.appendChild(item);
+                }
+            } catch (error) {
+                listEl.innerHTML = `<div style="text-align:center; color:var(--danger); font-size:0.9rem;">載入失敗: ${error.message}</div>`;
+            }
+        }
+
+        function downloadFile(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function copyFileContent(name) {
+            const file = currentFilesData.find(f => f.name === name);
+            if (!file || !file.content) return alert('讀取內容失敗');
+            
+            navigator.clipboard.writeText(file.content).then(() => {
+                alert(`已複製 ${name} 內容`);
+            }).catch(err => {
+                alert('複製失敗，請確認瀏覽器支援。');
+            });
+        }
+
+        function shareFile(name) {
+            const file = currentFilesData.find(f => f.name === name);
+            if (!file || !file.content) return alert('讀取內容失敗');
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: name,
+                    text: file.content
+                }).catch(console.error);
+            } else {
+                alert('你的瀏覽器不支援原生分享功能，請使用「複製」按鈕。');
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 AI 控制台</h1>
+    <div class="subtitle">共享包打包與遠端部署中心</div>
+
+    <!-- 1. 憑證管理中心 -->
+    <div class="card" id="token-section">
+        <div class="card-title">🔑 憑證管理中心</div>
+        <input type="text" id="new-token-name" placeholder="名稱 (如：主要 GitHub)">
+        <select id="new-token-type">
+            <option value="GitHub">GitHub (用於控制台操作)</option>
+            <option value="OpenAI">OpenAI API Key</option>
+            <option value="Gemini">Gemini API Key</option>
+            <option value="Other">其他服務</option>
+        </select>
+        <input type="password" id="new-token-value" placeholder="Token 字串">
+        <button class="btn-primary" onclick="addToken()">➕ 新增 Token</button>
+        
+        <div style="margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;" id="token-list">
+            <!-- Token 列表會插入這裡 -->
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">※ 只有「GitHub」類型的 Token 可以被設為啟用，用於下方控制台功能。</p>
+    </div>
+
+    <!-- 2. 打包控制區 -->
+    <div class="card">
+        <div class="card-title">📦 共享包打包</div>
+        <button class="btn-primary" id="btn-trigger" onclick="triggerBuild()">
+            ▶️ 立即打包
+        </button>
+        <div class="status-box">
+            <div class="status-dot" id="build-status-dot"></div>
+            <div id="build-status-text">等待操作...</div>
+        </div>
+    </div>
+
+    <!-- 3. Patch 部署區 -->
+    <div class="card" id="patch-section">
+        <div class="card-title">🚀 遠端 Patch 部署</div>
+        <input type="text" id="patch-repo" placeholder="目標 Repo (如 tlee20860-dotcom/AI-WEB-APP-Family)" value="tlee20860-dotcom/AI-WEB-APP-Family">
+        <input type="text" id="patch-branch" placeholder="分支 (預設 main)" value="main">
+        <textarea id="patch-content" placeholder="請貼上 Patch 內容 (支援 ## FILE: path 語法)"></textarea>
+        <button class="btn-primary" id="btn-deploy-patch" onclick="deployPatch()">
+            ✏️ 寫入 PATCH.md 並觸發
+        </button>
+        <div class="status-box">
+            <div class="status-dot" id="patch-status-dot"></div>
+            <div id="patch-status-text">等待操作...</div>
+        </div>
+    </div>
+
+    <!-- 4. Pages 部署區 -->
+    <div class="card" id="pages-section">
+        <div class="card-title">🌐 Pages 部署</div>
+        <input type="text" id="pages-repo" placeholder="目標 Repo (如 tlee20860-dotcom/AI-WEB-APP-Family)" value="tlee20860-dotcom/AI-WEB-APP-Family">
+        <input type="text" id="pages-branch" placeholder="分支 (預設 main)" value="main">
+        <button class="btn-primary" id="btn-deploy-pages" onclick="triggerPagesDeploy()">
+            ⚡ 觸發 Pages 部署
+        </button>
+        <div class="status-box">
+            <div class="status-dot" id="pages-status-dot"></div>
+            <div id="pages-status-text">等待操作...</div>
+        </div>
+    </div>
+
+    <!-- 5. 檔案下載區 -->
+    <div class="card" id="files-section">
+        <div class="card-title">📥 共享包獲取</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">從 AI-packages 獲取</span>
+            <button class="btn-outline btn-small" onclick="fetchFiles()">🔄 重新整理</button>
+        </div>
+        <div class="file-list" id="file-list">
+            <!-- 檔案列表會插入這裡 -->
+        </div>
+    </div>
+</div>
+
+</body>
+</html>```
+
+<!-- === FILE END: index.html === -->
+
+<!-- === FILE START: manifest.json === -->
+
+## 📄 manifest.json
+
+```json
+{
+  "name": "AI 控制台",
+  "short_name": "AI 控制台",
+  "description": "共享包打包與遠端部署中心",
+  "start_url": "/AI-infra/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjM2NmYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjUwIj7wn5qAPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjM2NmYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjUwIj7wn5qAPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}```
+
+<!-- === FILE END: manifest.json === -->
+
+<!-- === FILE START: sw.js === -->
+
+## 📄 sw.js
+
+```js
+const CACHE_NAME = 'ai-console-v1';
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+// 安裝 Service Worker 並快取基本檔案
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
+  self.skipWaiting();
+});
+
+// 啟用並清理舊快取
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 攔截請求，優先使用網路，失敗則使用快取
+self.addEventListener('fetch', (event) => {
+  // 只快取 GET 請求，且排除 GitHub API 呼叫
+  if (event.request.method !== 'GET' || event.request.url.includes('api.github.com')) {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // 如果請求成功，複製一份到快取
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => {
+        // 如果網路失敗，從快取讀取
+        return caches.match(event.request);
+      })
+  );
+});```
+
+<!-- === FILE END: sw.js === -->

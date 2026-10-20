@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-20 13:55:31 (HKT)
+> 生成時間：2026-10-20 14:20:54 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -613,6 +613,20 @@ jobs:
               echo "### 📄 檔案：.gitignore (${SAFE_NAME})" >> "$OUTPUT"
               bash .github/workflows/append_file.sh "external/${SAFE_NAME}/.gitignore" "$OUTPUT" || true
               echo "" >> "$OUTPUT"
+            fi
+          done
+
+      - name: "Step 8.5: 生成控制台共享包 (92-Ai-github.md)"
+        run: |
+          OUTPUT="build-repo/92-Ai-github.md"
+          echo "# 92 包：AI 控制台原始碼" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          
+          for f in index.html manifest.json sw.js; do
+            if [ -f "$f" ]; then 
+              bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true
             fi
           done
 
