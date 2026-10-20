@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-20 11:05:24 (HKT)
+> 生成時間：2026-10-20 11:11:39 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -210,26 +210,14 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (v16.1)
-# 用途：移除 concurrency 解決 GitHub 排隊死鎖
+# setup-structure.yml — 動態共享包打包腳本 (手動觸發版)
+# 用途：僅限手動觸發，並加入 pull --rebase 防撞機制
 # ============================================
 
 name: Build Shared Packages
 
 on:
-  workflow_dispatch:
-  repository_dispatch:
-    types: [project-updated]
-  push:
-    branches: [main, master]
-    paths:
-      - '.github/workflows/setup-structure.yml'
-      - '.github/scripts/**'
-
-# ⚠️ 已移除 concurrency 防止排隊死鎖
-# concurrency:
-#   group: build-packages
-#   cancel-in-progress: true
+  workflow_dispatch: # 僅保留手動觸發，避免自動競爭衝突
 
 jobs:
   build:
@@ -634,19 +622,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/records/STATE-INDEX.md
-          git diff --cached --quiet || (git commit -m "chore: auto-update STATE-INDEX [skip ci]" && git push)
+          git diff --cached --quiet || (
+            git commit -m "chore: auto-update STATE-INDEX [skip ci]" && 
+            (git pull --rebase origin main || true) && 
+            git push
+          )
 
           cd ../build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || (git commit -m "chore: auto-build packages [skip ci]" && git push)
-
-# ═══ EOF ═══
-# F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792414000
-# W: ai-system-20261019-010#215
-# ═══ EOF ═══```
+          git diff --cached --quiet || (
+            git commit -m "chore: auto-build packages [skip ci]" && 
+            (git pull --rebase origin main || true) && 
+            git push
+          )```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
 
