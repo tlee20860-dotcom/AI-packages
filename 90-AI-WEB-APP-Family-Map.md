@@ -1,7 +1,6 @@
-# 專案包：AI-WEB-APP-Family
+# 專案地圖包：AI-WEB-APP-Family
 
-> 生成時間：2026-10-20 14:20:54 (HKT)
-
+> 生成時間：2026-10-20 14:48:44 (HKT)
 
 ## meta.json
 
@@ -21,8 +20,11 @@
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
-總檔數：109
+總檔數：129
 
+.github/PATCH.md
+.github/workflows/apply-patch.yml
+.github/workflows/notify.yml
 admin.html
 annual-report.html
 code-list.html
@@ -32,6 +34,21 @@ css/pages/annual-report.css
 css/pages/insurance.css
 css/theme.css
 css/utilities.css
+docs/projects/web-app-family/P-01-index.md
+docs/projects/web-app-family/P-02-progress.md
+docs/projects/web-app-family/P-03-manifest.md
+docs/projects/web-app-family/P-04-decisions.md
+docs/projects/web-app-family/P-05-sop.md
+docs/projects/web-app-family/P-06-pagemap.md
+docs/projects/web-app-family/P-07-uispec.md
+docs/projects/web-app-family/P-08-api.md
+docs/projects/web-app-family/P-09-data.md
+docs/projects/web-app-family/P-10-incident.md
+docs/projects/web-app-family/P-12-conclusion.md
+docs/projects/web-app-family/P-13-handoff.md
+docs/projects/web-app-family/P-14-decisions.md
+docs/projects/web-app-family/P-15-reorg-plan.md
+docs/projects/web-app-family/P-99-errors-map.md
 finance-overview.html
 functions/api/[[path]].js
 functions/api/_admin.js
@@ -126,7 +143,9 @@ js/ui/tab-panel.js
 js/ui/toast.js
 js/ui/view-toggle.js
 login.html
+manifest.json
 member-report.html
+meta.json
 portfolio.html
 register.html
 settings.html
