@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-20 23:47:51 (HKT)
+> 生成時間：2026-10-20 23:48:00 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -177,7 +177,7 @@ W: ai-system-20261020-013#36
 
 # STATE-INDEX
 
-> 生成時間：2026-10-20 23:47:50 (HKT)
+> 生成時間：2026-10-20 23:48:00 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -188,7 +188,7 @@ W: ai-system-20261020-013#36
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792507382|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792511270|github-actions[bot]
 AI-kernel|docs/u-profile/U-00-profile.md|1792468500|ai-system-20261020-013#57
 AI-kernel|docs/r-rules/R-03-terms.md|1792468500|ai-system-20261020-013#57
 AI-kernel|docs/r-rules/R-00-rules.md|1792468500|ai-system-20261020-013#57
@@ -208,7 +208,7 @@ AI-kernel|docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792511270
+V: 1792511280
 W: github-actions[bot]
 ═══ */
 
