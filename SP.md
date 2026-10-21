@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-21 22:41:39 (HKT)
+> 生成時間：2026-10-21 23:25:42 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -25,10 +25,10 @@
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261021-004 |
-| 本次範圍 | W 包重構（W-00~W-07）、專案 WF-* 對齊、自動化腳本升級（支援自動回寫索引） |
-| 累計回覆 | 約 44 條 |
-| 狀態 | 19 檔專案與體系檔案交付完成；Actions 自動化雙向閉環打通 |
+| 對話編號 | ai-system-20261021-005 |
+| 本次範圍 | 專案 WF-* 污染修復、自動化腳本順序修復、身份設定重構（全中文標頭、CCL 沙盒）、廢除 Patch |
+| 累計回覆 | 約 37 條 |
+| 狀態 | 體系四檔已同步，全中文標頭與沙盒機制生效 |
 
 ---
 
@@ -37,10 +37,11 @@
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **W 包現代化**：新增 W-06（通用 SOP）、W-07（通用錯誤），拔除專案字眼。
-2. **WF 紀錄對齊**：P-02/03/12/13 轉型為 WF-*，舊檔降級為 P-04/14/99 技術附錄。
-3. **自動化升級**：`setup-structure.yml` 支援 WF-* 抓取，並自動生成、回寫 `WF-STATE-INDEX.md`。
-4. **腳本除錯**：修復 `find` 找不到目錄崩潰、統一時間戳、修正 W 包 glob 上限。
+1. **修復專案污染**：將誤植於 `webapp` 的體系 WF-* 檔重寫為真實的專案進度（B34-5）。
+2. **修復腳本 Bug**：修正 `setup-structure.yml` 的執行順序，確保打包前先更新索引。
+3. **身份重構**：導入啟動標籤 `[身份: xxx]`、自動識別專案包、5-Core 黃金五要素，並將分身顯示名全中文化。
+4. **沙盒機制**：導入 CCL 動態能力控制（Meta / Fast Dev / Strict Review），解決跨領域切換的認知負載。
+5. **廢除 Patch**：因多次語法錯誤，全面廢除 Patch 交付模式，回歸完整檔。
 
 ---
 
@@ -48,7 +49,7 @@
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-144～D-149。
+**本次新增決策**：D-?（待補正，見交接詞備註）。
 
 ---
 
@@ -57,8 +58,8 @@
 | # | 優先確認 |
 |---|---|
 | 1 | 是否使用最新四檔與 SP |
-| 2 | 專案端 `entity-registry.js` 是否已補齊 code 解析（待專案對話處理） |
-| 3 | 是否已知技術債 K-01（F-005 與 I/A/U/W/SP 內文 Version 矛盾） |
+| 2 | 是否已知 Patch 模式已廢除，全面改為完整檔交付 |
+| 3 | 是否已知全中文五行標頭與自動識別機制已生效 |
 
 ---
 
@@ -66,8 +67,7 @@
 
 | 項目 | 狀態 |
 |---|---|
-| K-01：F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 暫不處理（D-342） |
-| 專案程式碼 `entity-registry.js` 支援 code | 留待專案處理（D-149） |
+| 專案程式碼 `entity-registry.js` 支援 code | 留待專案對話處理（B34-5） |
 | 專案程式碼 END OF FILE 補齊（~44 檔） | 技術債（C-01） |
 
 ---
@@ -76,15 +76,15 @@
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 進入 WebApp 專案對話，處理 `entity-registry.js` 與 B34-5 業務開發 |
-| 2 | 若需處理體系技術債，可開新對話處理 K-01 |
+| 1 | 進入 WebApp 專案對話，上傳 `90-AI-WEB-APP-Family-P.md`。 |
+| 2 | 系統將自動切換至 `Webapp 開發者` 沙盒，處理 `entity-registry.js` 與 B34-5 業務開發。 |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792583001
-W: ai-system-20261021-005#1
+V: 1792589103
+W: ai-system-20261021-005#7
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
@@ -100,35 +100,36 @@ W: ai-system-20261021-005#1
 
 ## 一、當前任務
 
+### 任務十八：體系身份重構與腳本修復（005）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | WF-* 污染修復、腳本順序修復、全中文標頭、沙盒機制 |
+| 開始時間 | 2026-10-21 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
 ### 任務十七：W 包與自動化對齊（004）
 | 欄位 | 值 |
 |---|---|
 | 任務名稱 | W 包升級、WF 紀錄對齊、自動化腳本閉環 |
 | 開始時間 | 2026-10-21 |
-| 當前階段 | 全數完成 |
 | 完成度 | 100% |
-
-### 任務十六：體系 v3 重構
-| 欄位 | 值 |
-|---|---|
-| 任務名稱 | 四檔體系、XP 命名、FSM 形式化、Version SSOT |
-| 開始時間 | 2026-10-21 |
-| 完成度 | 5/6（剩 K-01／K-02 技術債） |
 
 ---
 
 ## 二、步驟清單
 
-### 任務十七：W 包與自動化對齊
+### 任務十八：體系身份重構與腳本修復
 | # | 步驟 | 狀態 | 完成時間 |
 |---|---|---|---|
-| 1 | W 包中性化與新增 W-06/W-07 | ✅ | 2026-10-21 |
-| 2 | 專案 P 檔重構與 WF-* 對齊 | ✅ | 2026-10-21 |
-| 3 | `setup-structure.yml` 支援 WF-* 並自動回寫索引 | ✅ | 2026-10-21 |
-| 4 | R-00 F-007 補齊 REGEX 語法 | ✅ | 2026-10-21 |
+| 1 | 修復專案 WF-* 污染 | ✅ | 2026-10-21 |
+| 2 | 修復 `setup-structure.yml` 索引滯後 | ✅ | 2026-10-21 |
+| 3 | 重構身份設定（啟動標籤、自動識別、5-Core） | ✅ | 2026-10-21 |
+| 4 | 全中文標頭與 CCL 沙盒整合 | ✅ | 2026-10-21 |
+| 5 | 廢除 Patch 模式，回歸完整檔 | ✅ | 2026-10-21 |
 
-### 任務十六：體系 v3 重構（承接）
-*(步驟 1~8 已完成，省略)*
+### 任務十七：W 包與自動化對齊（承接）
+*(步驟 1~4 已完成，省略)*
 
 ---
 
@@ -151,13 +152,14 @@ W: ai-system-20261021-005#1
 |---|---|---|
 | 2026-10-21 | ai-system-20261021-003 | 任務十六（5/6） |
 | 2026-10-21 | ai-system-20261021-004 | 任務十七（100%） |
+| 2026-10-21 | ai-system-20261021-005 | 任務十八（100%） |
 
 ---
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792583002
-W: ai-system-20261021-005#2
+V: 1792589104
+W: ai-system-20261021-005#8
 ═══ */
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
@@ -178,21 +180,20 @@ W: ai-system-20261021-005#2
 | 1~69 | 歷史議題 | ✅ |
 | 70 | Version SSOT 與 Patch 工具缺陷 | ✅ |
 | 71 | W 包重構與專案紀錄 WF 對齊 | ✅ |
+| 72 | 專案 WF-* 污染與索引滯後修復 | ✅ |
+| 73 | 體系身份重構與全中文標頭 | ✅ |
 
 ---
 
 ## 二、設計結論
 
-*(2.1~2.22 保留原樣)*
+*(2.1~2.24 保留原樣)*
 
-### 2.23 體系 v3 重構（003 定案）
-*(原 10 點保留)*
-
-### 2.24 W 包與自動化對齊（004 定案）
-1. **W 包現代化**：擴充至 W-00~W-07（新增通用 SOP 與錯誤），完全拔除專案綁定字眼。
-2. **紀錄分離**：專案紀錄檔對齊 AI-G 命名（WF-*）；決策與錯誤明細降級為 P-04/14/99。
-3. **腳本自治**：`setup-structure.yml` 不只打包，還負責生成並回寫專案的 `WF-STATE-INDEX.md`。
-4. **防撞機制**：專案 `notify.yml` 忽略 `WF-STATE-INDEX.md`，阻斷無限迴圈。
+### 2.25 體系身份重構與沙盒機制（005 定案）
+1. **自動識別**：上傳 `90-` 自動切換 Web，免打指令。
+2. **啟動標籤**：支援 `[身份: xxx]` 進行啟動切換與防呆降載。
+3. **全中文標頭**：R-014 改為五行全中文，顯示身份與(權責)狀態。
+4. **廢除 Patch**：全面回歸完整檔交付，解決部署錯誤。
 
 ---
 
@@ -202,12 +203,11 @@ W: ai-system-20261021-005#2
 
 | 編號 | 決策 | 說明 |
 |---|---|---|
-| D-144 | W 包擴充並中性化 | W-00~W-07；拔除特定專案字眼。 |
-| D-145 | 專案紀錄檔改名 WF-* | 對齊 AI-G；P-02/03/12/13 廢除並轉型。 |
-| D-146 | 體系代管專案索引生成 | `setup-structure.yml` 增加 Step 7.5 與 9。 |
-| D-147 | 腳本防呆 | 加入 `if [ -d "docs/projects" ]` 避免空目錄崩潰。 |
-| D-148 | R-00 F-007 語法補齊 | 納入 REGEX 與 REPLACE_ALL。 |
-| D-149 | `entity-registry.js` code 留待專案 | 屬業務邏輯，由專案對話處理。 |
+| D-? | 修復專案 WF-* 污染 | 依實體檔重寫專案進度。 |
+| D-? | 修復腳本順序 | 將 WF-STATE-INDEX 生成移至打包前。 |
+| D-? | 導入啟動標籤與自動識別 | 解決跨領域認知負載，達成零操作切換。 |
+| D-? | 全中文標頭與 CCL 沙盒 | R-014 全中文化，依沙盒動態調整防呆。 |
+| D-? | 廢除 Patch 交付 | 全面改用完整檔交付。 |
 
 ---
 
@@ -225,8 +225,8 @@ W: ai-system-20261021-005#2
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792583003
-W: ai-system-20261021-005#3
+V: 1792589105
+W: ai-system-20261021-005#9
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
@@ -236,7 +236,7 @@ W: ai-system-20261021-005#3
 
 # STATE-INDEX
 
-> 生成時間：2026-10-21 22:41:38 (HKT)
+> 生成時間：2026-10-21 23:25:41 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -247,15 +247,15 @@ W: ai-system-20261021-005#3
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792593238|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792593698|github-actions[bot]
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792589105|ai-system-20261021-005#9
+AI-General|docs/records/PROGRESS.md|1792589104|ai-system-20261021-005#8
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792589103|ai-system-20261021-005#7
 AI-kernel|docs/u-profile/U-00-profile.md|1792589102|ai-system-20261021-005#6
 AI-kernel|docs/r-rules/R-03-terms.md|1792589101|ai-system-20261021-005#6
 AI-kernel|docs/r-rules/R-00-rules.md|1792589100|ai-system-20261021-005#6
 AI-kernel|docs/a-guide/I-00-identity.md|1792589005|ai-system-20261021-005#5
 AI-kernel|docs/a-guide/A-00-guide.md|1792589004|ai-system-20261021-005#4
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792583003|ai-system-20261021-005#3
-AI-General|docs/records/PROGRESS.md|1792583002|ai-system-20261021-005#2
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792583001|ai-system-20261021-005#1
 AI-kernel|docs/skills/W/W-07-errors.md|1792581008|ai-system-20261021-004#8
 AI-kernel|docs/skills/W/W-06-sop.md|1792581007|ai-system-20261021-004#7
 AI-kernel|docs/skills/W/W-05-schema.md|1792581006|ai-system-20261021-004#6
@@ -269,7 +269,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792593698
+V: 1792596341
 W: github-actions[bot]
 ═══ */
 
