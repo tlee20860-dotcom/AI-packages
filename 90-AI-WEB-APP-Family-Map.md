@@ -1,6 +1,6 @@
 # 專案地圖包：AI-WEB-APP-Family
 
-> 生成時間：2026-10-21 11:54:49 (HKT)
+> 生成時間：2026-10-21 19:21:57 (HKT)
 
 ## meta.json
 
@@ -20,7 +20,7 @@
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
-總檔數：129
+總檔數：134
 
 .github/PATCH.md
 .github/workflows/apply-patch.yml
@@ -37,6 +37,7 @@ css/utilities.css
 docs/projects/web-app-family/P-01-index.md
 docs/projects/web-app-family/P-02-progress.md
 docs/projects/web-app-family/P-03-manifest.md
+docs/projects/web-app-family/P-04-adr-index.md
 docs/projects/web-app-family/P-04-decisions.md
 docs/projects/web-app-family/P-05-sop.md
 docs/projects/web-app-family/P-06-pagemap.md
@@ -49,6 +50,10 @@ docs/projects/web-app-family/P-13-handoff.md
 docs/projects/web-app-family/P-14-decisions.md
 docs/projects/web-app-family/P-15-reorg-plan.md
 docs/projects/web-app-family/P-99-errors-map.md
+docs/projects/web-app-family/WF-CONCLUSION.md
+docs/projects/web-app-family/WF-HANDOFF.md
+docs/projects/web-app-family/WF-PROGRESS.md
+docs/projects/web-app-family/WF-STATE-INDEX.md
 finance-overview.html
 functions/api/[[path]].js
 functions/api/_admin.js

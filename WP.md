@@ -1,6 +1,6 @@
 # W 包：Web App 領域技能
 
-> 生成時間：2026-10-21 11:54:49 (HKT)
+> 生成時間：2026-10-21 19:21:56 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/skills/W/W-00-startup.md === -->
@@ -9,10 +9,9 @@
 
 # W-00 領域啟動卡（Web App）
 
-最後更新：B34-4
-Version: 1791903760
-Batch: B34-4
-Writer: A20261013-004#169
+最後更新：2026-10-21
+Version: 1792581001
+Writer: ai-system-20261021-004#1
 用途：Web App 領域的啟動卡（工具鏈 / 慣例 / 載入方式）
 
 ---
@@ -24,7 +23,7 @@ Writer: A20261013-004#169
 | 領域名稱 | Web App |
 | 領域前綴 | W |
 | 適用範圍 | 純 HTML / CSS / JS 前端 + Serverless 後端 |
-| 本領域代表專案 | 家庭 webapp（v2.Family） |
+| 適用專案 | 所有依循本體系之 Web App 專案 |
 
 ---
 
@@ -37,7 +36,9 @@ Writer: A20261013-004#169
 | 2 | W-02-functions.md | Cloudflare Pages Functions 規則 |
 | 3 | W-03-esmodule.md | 純前端 ES Module 架構 |
 | 4 | W-04-pwa.md | PWA + Service Worker |
-| 5 | W-05-schema.md | Web App 頁面 Schema |
+| 5 | W-05-schema.md | Web App 頁面 Schema 與 UI 規範 |
+| 6 | W-06-sop.md | Web App 通用任務 SOP |
+| 7 | W-07-errors.md | Web App 通用錯誤與防呆 |
 
 ---
 
@@ -71,7 +72,7 @@ Writer: A20261013-004#169
 
 | 任務 | 引用 |
 |---|---|
-| 新增頁面 | W-03 + W-05 |
+| 新增頁面 | W-03 + W-05 + W-06 |
 | 改資料結構 | W-01 |
 | 改 Functions | W-02 |
 | 改 PWA | W-04 |
@@ -93,7 +94,7 @@ Writer: A20261013-004#169
 
 ## 七、未來擴充提示
 
-若需要新增 Web App 技術（如 WebSocket / Web Worker），新增 `W-06-xxx.md`。
+若需要新增 Web App 技術（如 WebSocket / Web Worker），新增 `W-08-xxx.md` 並更新本清單。
 
 ---
 
@@ -101,20 +102,21 @@ Writer: A20261013-004#169
 
 | 主題 | 檔案 |
 |---|---|
+| 體系四檔 | `IP.md`、`AP.md`、`RP.md`、`UP.md` |
 | Firebase RTDB | W-01-firebase.md |
 | CF Pages Functions | W-02-functions.md |
 | ES Module | W-03-esmodule.md |
 | PWA + SW | W-04-pwa.md |
 | Page Schema | W-05-schema.md |
-| 通用大腦 | C-00-startup.md ~ C-10-handoff-mechanism.md |
+| 通用 SOP | W-06-sop.md |
+| 通用錯誤 | W-07-errors.md |
 
 ---
 
 /* ═══ EOF ═══
 F: W-00-startup.md
-V: 1791903760
-B(歷史): B34-4
-W: A20261013-004#169
+V: 1792581001
+W: ai-system-20261021-004#1
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-00-startup.md === -->
 
@@ -124,10 +126,9 @@ W: A20261013-004#169
 
 # W-01 Firebase RTDB 結構原則（Web App 通用）
 
-最後更新：B34-3
-Version: 1791899500
-Batch: B34-3
-Writer: A20261013-004#065
+最後更新：2026-10-21
+Version: 1792581002
+Writer: ai-system-20261021-004#2
 用途：Firebase RTDB 通用結構原則（跨專案）
 
 ---
@@ -218,16 +219,15 @@ Writer: A20261013-004#065
 
 | 主題 | 檔案 |
 |---|---|
-| 本專案資料結構 | P-09-data.md |
-| 本專案 API | P-08-api.md |
+| 本專案資料結構 | 詳見專案包（如 P-09-data.md） |
+| 本專案 API | 詳見專案包（如 P-08-api.md） |
 
 ---
 
 /* ═══ EOF ═══
-F: docs/W-01-firebase.md
-V: 1791899500
-B(歷史): B34-3
-W: A20261013-004#065
+F: W-01-firebase.md
+V: 1792581002
+W: ai-system-20261021-004#2
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-01-firebase.md === -->
 
@@ -237,10 +237,9 @@ W: A20261013-004#065
 
 # W-02 Cloudflare Pages Functions 規則（Web App 通用）
 
-最後更新：B34-3
-Version: 1791899560
-Batch：B34-3
-Writer: A20261013-004#065
+最後更新：2026-10-21
+Version: 1792581003
+Writer: ai-system-20261021-004#3
 用途：CF Pages Functions 通用規則（跨專案）
 
 ---
@@ -302,7 +301,7 @@ Writer: A20261013-004#065
 
 ---
 
-## 六、Response 格式
+## 六、Response 格式與錯誤碼
 
 | 欄位 | 值 |
 |---|---|
@@ -310,7 +309,20 @@ Writer: A20261013-004#065
 | error | ERROR_CODE（失敗時） |
 | message | 錯誤訊息（失敗時） |
 
-**ERROR_CODE 對照**：見 P-08-api.md §三。
+**通用 ERROR_CODE 對照**：
+
+| Code | HTTP | 說明 |
+|---|---|---|
+| UNAUTHORIZED | 401 | 未登入 |
+| FORBIDDEN | 403 | 無權限 |
+| MISSING_FIELDS | 400 | 缺少欄位 |
+| INVALID_BODY | 400 | 無效 body |
+| BAD_REQUEST | 400 | 請求錯誤 |
+| NOT_FOUND | 404 | 找不到 |
+| CONFLICT | 409 | 衝突 |
+| INTERNAL | 500 | 內部錯誤 |
+
+*(註：各專案可依業務需求額外定義專屬錯誤碼，如 NAME_DUPLICATE)*
 
 ---
 
@@ -318,17 +330,16 @@ Writer: A20261013-004#065
 
 | 主題 | 檔案 |
 |---|---|
-| 本專案 API 契約 | P-08-api.md |
-| 本專案事故（P29） | P-10-incident.md §五 |
+| 本專案 API 契約 | 詳見專案包（如 P-08-api.md） |
+| 本專案事故 | 詳見專案包（如 P-10-incident.md） |
 | Firebase 結構 | W-01-firebase.md |
 
 ---
 
 /* ═══ EOF ═══
-F: docs/W-02-functions.md
-V: 1791899560
-B(歷史): B34-3
-W: A20261013-004#065
+F: W-02-functions.md
+V: 1792581003
+W: ai-system-20261021-004#3
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-02-functions.md === -->
 
@@ -338,11 +349,10 @@ W: A20261013-004#065
 
 # W-03 純前端 ES Module 架構（Web App 通用）
 
-最後更新：B34-3
-Version: 1791899620
-Batch: B34-3
-Writer: A20261013-004#065
-用途：純 HTML + ES Module 架構通用原則
+最後更新：2026-10-21
+Version: 1792581004
+Writer: ai-system-20261021-004#4
+用途：純 HTML + ES Module 架構通用原則與目錄配置
 
 ---
 
@@ -418,25 +428,44 @@ Writer: A20261013-004#065
 |---|---|
 | 檔案 ≤ 800 行 | 超過拆檔 |
 | 每檔獨立 | 不合併 |
-| EOF 必加 | F/V/B/W |
+| EOF 必加 | F/V/W 三行 |
 
 ---
 
-## 八、關聯檔案
+## 八、標準目錄配置（通用）
+
+| 目錄 | 建議檔數 | 內容職責 |
+|---|---|---|
+| `js/config` | 5~10 | 常數、環境配置、各類 Registry |
+| `js/core` | 5~10 | 狀態管理 (state)、API 核心、登入驗證、共用工具 |
+| `js/lib` | 10~20 | 通用邏輯（日期處理、格式化、Modal 封裝） |
+| `js/engines` | 3 | page / data / render |
+| `js/blocks` | 5 | stats / list / filter / detail / form |
+| `js/ui` | 5~10 | 獨立 UI 元件（toast, modal, tabs） |
+| `js/layout` | 3 | 外框佈局（navbar, sidebar, app-shell） |
+| `js/entity` | 3~5 | 實體資料的解析、驗證與 Modal |
+| `js/shared` | 5~15 | 跨頁面共用元件（表格、卡片） |
+| `js/pages` | 依頁面數 | 各頁面的 Schema 定義 |
+| `functions/api` | 依 API 數 | CF Pages Functions 後端邏輯 |
+| `css/` | 4~6 | theme / layout / components / utilities |
+| 根目錄 | — | `*.html` 頁面、`sw.js`、`manifest.json` |
+
+---
+
+## 九、關聯檔案
 
 | 主題 | 檔案 |
 |---|---|
 | Page Schema | W-05-schema.md |
 | PWA + SW | W-04-pwa.md |
-| 本專案架構 | P-01-index.md |
+| 本專案架構 | 詳見專案包（如 P-01-index.md） |
 
 ---
 
 /* ═══ EOF ═══
-F: docs/W-03-esmodule.md
-V: 1791899620
-B(歷史): B34-3
-W: A20261013-004#065
+F: W-03-esmodule.md
+V: 1792581004
+W: ai-system-20261021-004#4
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-03-esmodule.md === -->
 
@@ -446,10 +475,9 @@ W: A20261013-004#065
 
 # W-04 PWA + Service Worker 規則（Web App 通用）
 
-最後更新：B34-3
-Version: 1791899680
-Batch: B34-3
-Writer: A20261013-004#065
+最後更新：2026-10-21
+Version: 1792581005
+Writer: ai-system-20261021-004#5
 用途：PWA + SW 通用規則
 
 ---
@@ -462,7 +490,7 @@ Writer: A20261013-004#065
 | cache-first | 正式階段（保速度） |
 | stale-while-revalidate | 折衷 |
 
-**本專案選擇**：network-first（ADR-011）。
+**選擇建議**：依專案需求決定，通常開發期使用 network-first，正式期可切換為 cache-first。
 
 ---
 
@@ -500,16 +528,15 @@ Writer: A20261013-004#065
 
 | 主題 | 檔案 |
 |---|---|
-| 本專案 SW | sw.js / manifest.json |
-| 事故日誌 | P-10-incident.md |
+| 本專案 SW 實作 | 詳見專案包（如 sw.js / manifest.json） |
+| 事故日誌 | 詳見專案包（如 P-10-incident.md） |
 
 ---
 
 /* ═══ EOF ═══
-F: docs/W-04-pwa.md
-V: 1791899680
-B(歷史): B34-3
-W: A20261013-004#065
+F: W-04-pwa.md
+V: 1792581005
+W: ai-system-20261021-004#5
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-04-pwa.md === -->
 
@@ -517,13 +544,12 @@ W: A20261013-004#065
 
 ## 📄 AI-kernel/docs/skills/W/W-05-schema.md
 
-# W-05 Web App 頁面 Schema（Web App 通用）
+# W-05 Web App 頁面 Schema 與 UI 規範（Web App 通用）
 
-最後更新：B34-3
-Version: 1791899740
-Batch: B34-3
-Writer: A20261013-004#065
-用途：Page Schema 通用規範
+最後更新：2026-10-21
+Version: 1792581006
+Writer: ai-system-20261021-004#6
+用途：Page Schema 通用規範 + UI 結構與術語
 
 ---
 
@@ -612,19 +638,222 @@ Writer: A20261013-004#065
 
 ---
 
-## 九、關聯檔案
+## 九、UI 結構與術語（通用）
+
+### 9.1 頁面結構層級
+| 層級 | 術語 | 說明 | 範例 |
+|---|---|---|---|
+| L1 | Page（頁面） | 一個 .html | index.html |
+| L2 | Section（區塊） | 頁面內垂直堆疊的功能區 | page-header / stats |
+| L3 | Row（列） | Section 內水平排列 | toolbar row |
+| L4 | Item（元素） | 最小單位 | button / select |
+
+### 9.2 Section 類型
+| 術語 | 中文 | 用途 | 標準位置 |
+|---|---|---|---|
+| page-banner | 提示橫幅 | 說明文字 | 頁面最上 |
+| page-header | 頁首 | 標題 + 副標題 + 主要操作 | banner 之後 |
+| page-header-actions | 頁首操作區 | 標題行右側 | page-header 內 |
+| stats | 統計卡區 | 數字統計 | header 之後 |
+| page-controls | 控制列 | 篩選 / 切換 / 年月 | stats 之後 |
+| content | 內容區 | 表格 / 卡片 | 最底 |
+| empty-state | 空狀態 | 無資料時顯示 | 內容區內 |
+
+### 9.3 控制列元素
+| 術語 | type | 用途 | 位置 |
+|---|---|---|---|
+| add | add | 新增按鈕 | toolbar 左 |
+| export | export | 匯出按鈕 | page-header 右 / toolbar 右 |
+| viewToggle | viewToggle | 卡片 / 表格切換 | 強制 body |
+| viewSwitcher | viewSwitcher | 檢視切換 | body 全行 |
+| sort | sort | 排序下拉 | 強制 body |
+| year | year | 年份下拉 | body 左側 |
+| month | month | 月份下拉 | body 左側 |
+| filter | filter | 篩選器 | body 全行 |
+| custom | custom | 自訂按鈕 | 依需求 |
+
+### 9.4 頁面標準佈局
+| 順序 | Section | 內容 |
+|---|---|---|
+| 1 | page-banner | banner（若有） |
+| 2 | page-header | 標題 + 副標題 + 主要操作 |
+| 3 | stats | 統計卡 |
+| 4 | page-controls | 新增 / 切換 / 年月 / 篩選 |
+| 5 | content | 表格 / 卡片 |
+
+### 9.5 表頭互動
+- 點欄位標題（首次）：升序。
+- 點欄位標題（第二次）：降序。
+- 點欄位標題（第三次）：清除排序。
+- 點欄位旁的 🔽：開下拉面板進行篩選。
+
+---
+
+## 十、關聯檔案
 
 | 主題 | 檔案 |
 |---|---|
 | ES Module 架構 | W-03-esmodule.md |
-| 本專案 Schema 實作 | js/pages/*.js |
+| 本專案頁面實作 | 詳見專案包（如 P-06 / P-07） |
 
 ---
 
 /* ═══ EOF ═══
-F: docs/W-05-schema.md
-V: 1791899740
-B(歷史): B34-3
-W: A20261013-004#065
+F: W-05-schema.md
+V: 1792581006
+W: ai-system-20261021-004#6
 ═══ */
 <!-- === FILE END: AI-kernel/docs/skills/W/W-05-schema.md === -->
+
+<!-- === FILE START: AI-kernel/docs/skills/W/W-06-sop.md === -->
+
+## 📄 AI-kernel/docs/skills/W/W-06-sop.md
+
+# W-06 Web App 通用任務 SOP
+
+最後更新：2026-10-21
+Version: 1792581007
+Writer: ai-system-20261021-004#7
+用途：Web App 通用任務的標準作業流程
+
+---
+
+## 一、新增頁面
+
+| 步驟 | 動作 |
+|---|---|
+| 1 | 讀 W-03 + W-05 |
+| 2 | 檢查專案架構是否可複用 |
+| 3 | 寫 `js/pages/xxx.js`（Schema） |
+| 4 | 寫 `xxx.html` |
+| 5 | 更新側邊欄導覽設定（如 constants.js） |
+| 6 | 更新 Service Worker 的 STATIC_ASSETS（見 W-04） |
+| 7 | 更新專案對應的頁面區塊規格書 |
+| 8 | 更新專案檔案清單與進度紀錄 |
+
+---
+
+## 二、部署後驗證
+
+| 步驟 | 動作 |
+|---|---|
+| 1 | 訪問主要頁面 |
+| 2 | 檢查 Console 是否有 Error |
+| 3 | 切換連動元件（如年月） → 驗證連動 |
+| 4 | 檢查 API 回應是否正常 |
+| 5 | 手機 / 跨裝置測試 |
+
+**通用驗證清單**：
+- [ ] 登入 / 註冊流程正常
+- [ ] 統計卡有數字
+- [ ] 分頁 / 篩選器可運作
+- [ ] 各 Modal 可正常開啟與關閉
+- [ ] 表格與卡片視圖切換正常
+- [ ] 空狀態顯示正確
+
+---
+
+## 三、緊急回滾
+
+| 步驟 | 動作 |
+|---|---|
+| 1 | 至 GitHub 尋找上一個穩定的 commit |
+| 2 | 執行 Revert 或強制將分支重置到該 commit |
+| 3 | 等待部署平台（如 CF Pages）自動重部署 |
+| 4 | 驗證線上版本是否恢復 |
+| 5 | 分析事故原因後重做 |
+
+**禁止**：手動修改線上檔案、強制 push 覆蓋歷史（除非極端情況）。
+
+---
+
+## 四、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| ES Module 架構 | W-03-esmodule.md |
+| PWA 與 SW | W-04-pwa.md |
+| Page Schema | W-05-schema.md |
+
+---
+
+/* ═══ EOF ═══
+F: W-06-sop.md
+V: 1792581007
+W: ai-system-20261021-004#7
+═══ */
+<!-- === FILE END: AI-kernel/docs/skills/W/W-06-sop.md === -->
+
+<!-- === FILE START: AI-kernel/docs/skills/W/W-07-errors.md === -->
+
+## 📄 AI-kernel/docs/skills/W/W-07-errors.md
+
+# W-07 Web App 通用錯誤與防呆
+
+最後更新：2026-10-21
+Version: 1792581008
+Writer: ai-system-20261021-004#8
+用途：沉澱 Web App 開發過程中的通用錯誤與防範措施
+
+---
+
+## 一、通用開發錯誤（交付前檢查）
+
+| # | 類型 | 防止做法 |
+|---|---|---|
+| 1 | 估算前未掃描實際檔數 | 先全域掃描（grep） |
+| 2 | 「統一」誤解為各檔都改 | 統一 = 邏輯集中一處 |
+| 3 | 未檢查現有 API 複用 | 先找複用機會 |
+| 4 | 未思考集中層強制 | 優先改集中層 |
+| 5 | 動態值用快照 | 內部讀取狀態（AppState） |
+| 6 | 動態注入未清空 | 先執行 `textContent = ''` |
+| 7 | 全站結構改動未完整掃描 | 完整掃描後才動 |
+| 8 | 自我引入 bug | 交付前全鏈路檢查 |
+
+---
+
+## 二、Cloudflare Pages (CF Pages) 教條
+
+| 教訓 | 說明 |
+|---|---|
+| Functions 路由 | 每個 URL 應對應獨立實體檔或統一 Catch-all |
+| 不支援 shim | 用底線前綴（`_xxx.js`），避免跨檔 re-export |
+| 靜態檔案 | 所有連結需帶 `.html` |
+| _redirects | 不要對 `/` 加規則，避免無限迴圈 |
+| 環境變數 | 走 handler `{ env }`，非 `process.env` |
+
+---
+
+## 三、Page Engine 與 ES Module 教條
+
+| 教訓 | 說明 |
+|---|---|
+| customMount | 必須支援，供複雜邏輯逃生 |
+| onDataChange | 必須支援非同步資料流 |
+| 依賴圖 | key 與事件觸發必須一致 |
+| undefined | derived 計算需容忍初始 undefined |
+| 動態值 | 必須內部讀取最新狀態，不可快照 |
+| 動態注入 | 需先清空既有內容 |
+| esc 函式 | 必須從統一 `lib/dom.js` 導入 |
+| format 函式 | 必須從統一 `lib/format.js` 導入 |
+| 檔案搬移 | 必須全域搜尋並替換舊路徑 |
+| 無補丁 | 寧願整檔重寫，減少修補風險 |
+
+---
+
+## 四、關聯檔案
+
+| 主題 | 檔案 |
+|---|---|
+| 通用 SOP | W-06-sop.md |
+| ES Module 架構 | W-03-esmodule.md |
+| 體系學習日誌 | `R-04-learning.md` |
+
+---
+
+/* ═══ EOF ═══
+F: W-07-errors.md
+V: 1792581008
+W: ai-system-20261021-004#8
+═══ */
+<!-- === FILE END: AI-kernel/docs/skills/W/W-07-errors.md === -->
