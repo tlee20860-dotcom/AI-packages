@@ -1,6 +1,6 @@
 # R 包：規則總覽
 
-> 生成時間：2026-10-21 11:39:49 (HKT)
+> 生成時間：2026-10-21 11:44:28 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-03-terms.md === -->
@@ -9,14 +9,6 @@
 
 # R-03 共同語言表
 
->>>>>>> NEW
-
-<<<<<<< OLD
-V: 1792572000
-W: ai-system-20261021-003#57
-=======
-V: 1792575600
-W: ai-system-20261021-003#61
 用途：體系與專案對話的共同詞彙字典，確保認知一致。
 
 ---
@@ -80,8 +72,8 @@ W: ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-03-terms.md
-V: 1792572000
-W: ai-system-20261021-003#57
+V: 1792575600
+W: ai-system-20261021-003#61
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-03-terms.md === -->
 
@@ -91,12 +83,6 @@ W: ai-system-20261021-003#57
 
 # R-00 規則包
 
->>>>>>> NEW
-
-<<<<<<< OLD
-| MUST | 每個檔案 | EOF 三行：F（路徑）／V（Unix epoch）／W（編寫者） | 檔尾含三行 EOF | 無 EOF | 檢查檔尾 |
-=======
-| MUST | 每個檔案 | EOF 三行：F（路徑）／V（Unix epoch）／W（編寫者）；內文不得重複 Version 或 Writer | 檔尾含三行 EOF，且內文無 Version／Writer | 無 EOF；內文重複 Version | 檢查檔尾與內文 |
 用途：行為鐵律 R、事前提問 S、事後檢查 K、格式規範 F、禁止事項、專案邊界。
 
 ---
@@ -378,7 +364,7 @@ W: ai-system-20261021-003#57
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 每個檔案 | EOF 三行：F（路徑）／V（Unix epoch）／W（編寫者） | 檔尾含三行 EOF | 無 EOF | 檢查檔尾 |
+| MUST | 每個檔案 | EOF 三行：F（路徑）／V（Unix epoch）／W（編寫者）；內文不得重複 Version 或 Writer | 檔尾含三行 EOF，且內文無 Version／Writer | 無 EOF；內文重複 Version | 檢查檔尾與內文 |
 
 <a id="f-006"></a>
 ### F-006 狀態總表（位置限制）
@@ -392,14 +378,14 @@ W: ai-system-20261021-003#57
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 使用 Patch 模式 | OLD 字串唯一出現；單區塊內容 ≤3 行（EOF 替換區塊豁免）；不含空行；含 Emoji 或特殊符號確保唯一；**每個被 Patch 的檔案必須附 EOF 替換區塊，更新 V 與 W** | OLD 唯一且符合行數；檔尾 Version 已更新 | OLD 多次出現；區塊含空行；Patch 後 Version 未變 | 核對 OLD 唯一性與 EOF Version |
+| MUST | 使用 Patch 模式 | OLD 字串唯一出現；單區塊內容 ≤3 行（EOF 替換區塊豁免）；不含空行；含 Emoji 或特殊符號確保唯一；**每個被 Patch 的檔案必須附 EOF 替換區塊，更新 V 與 W**；**同一檔案僅允許一個 `## FILE:` 區塊，多處修改以多個 OLD/NEW 對錶示** | OLD 唯一且符合行數；檔尾 Version 已更新；同檔單一 FILE 區塊 | OLD 多次出現；區塊含空行；Patch 後 Version 未變；同檔多個 FILE 區塊 | 核對 OLD 唯一性、EOF Version 與 FILE 區塊數 |
 
 <a id="f-008"></a>
 ### F-008 結構完整性
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 交付完整檔 | 盤點原檔 § 章節，新檔章節數一致；貼「原檔行數」與「交付行數」對比（差異 ≤10 行）。若含重構刪除／契約化擴充，於 F-001 標頭註明原因，行數限制豁免。 | 含章節對照與行數對比；豁免已註明 | 以 Token 為由刪段落；僅給修改點要求自行覆蓋 | 核對章節與行數 |
+| MUST | 交付完整檔 | 盤點原檔 § 章節，新檔章節數一致；貼「原檔行數」與「交付行數」對比（差異 ≤10 行）。若含重構刪除／契約化擴充／刪除內文 Version，於 F-001 標頭註明原因，行數限制豁免。 | 含章節對照與行數對比；豁免已註明 | 以 Token 為由刪段落；僅給修改點要求自行覆蓋 | 核對章節與行數 |
 
 ---
 
@@ -443,14 +429,6 @@ W: ai-system-20261021-003#61
 
 # R-02 系統設計模式庫
 
->>>>>>> NEW
-
-<<<<<<< OLD
-V: 1792572000
-W: ai-system-20261021-003#57
-=======
-V: 1792575600
-W: ai-system-20261021-003#61
 用途：沉澱體系與專案開發的最佳實踐，供 AI 提架構方案時參考。
 
 ---
@@ -529,8 +507,8 @@ W: ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-02-patterns.md
-V: 1792572000
-W: ai-system-20261021-003#57
+V: 1792575600
+W: ai-system-20261021-003#61
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-02-patterns.md === -->
 
@@ -540,14 +518,6 @@ W: ai-system-20261021-003#57
 
 # R-04 學習日誌（歷史教訓）
 
->>>>>>> NEW
-
-<<<<<<< OLD
-V: 1792468200
-W: ai-system-20261020-013#32
-=======
-V: 1792575600
-W: ai-system-20261021-003#61
 用途：收錄體系與通用對話的歷史教訓，避免重複踩坑。
 
 ---
@@ -556,6 +526,7 @@ W: ai-system-20261021-003#61
 
 | 編號 | 場景 | 錯誤 | 正確 | 對應新規則 |
 |---|---|---|---|---|
+| L-031 | Patch 同一檔案多個 `## FILE:` 區塊，或同檔多個 OLD/NEW 對 | `apply_patch.py` 覆蓋或錯置標記，導致 Patch 語法寫入源檔 | 同檔多處修改改用完整檔；或每檔僅一個 `## FILE:` 區塊，內含多個 OLD/NEW 對並先驗證 | F-007 |
 | L-029 | AI 估算 Token 剩餘量 | 估算嚴重失準（誤報 <1%），且引發交付焦慮 | 全面廢除 Token 機制與公式，不再顯示 Token，不再倒數，只專注任務完整性與證據。 | 無（機制已廢除） |
 | L-028 | Actions yml 使用 `set -e` 與 `&&` 或空檔案讀取 | 腳本 0 秒崩潰 | 改用 `if [ ]; then continue; fi`；讀取前檢查 | 無 |
 | L-027 | 交付 yml 未先驗證語法 | yml 無效 | 交付前自我檢查語法 | 無 |
@@ -589,7 +560,7 @@ W: ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-04-learning.md
-V: 1792468200
-W: ai-system-20261020-013#32
+V: 1792575600
+W: ai-system-20261021-003#61
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-04-learning.md === -->
