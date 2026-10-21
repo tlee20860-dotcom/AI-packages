@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-21 19:38:25 (HKT)
+> 生成時間：2026-10-21 19:59:51 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -346,6 +346,8 @@ jobs:
             fi
           done || true
 
+          TIMESTAMP=$(date +%s)
+
           {
             echo "# STATE-INDEX"
             echo ""
@@ -363,7 +365,7 @@ jobs:
             echo ""
             echo "/* ═══ EOF ═══"
             echo "F: AI-General/docs/records/STATE-INDEX.md"
-            echo "V: $(date +%s)"
+            echo "V: $TIMESTAMP"
             echo "W: github-actions[bot]"
             echo "═══ */"
           } > "$OUTPUT"
@@ -424,7 +426,8 @@ jobs:
             echo "" >> "$OUTPUT"
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
-            for f in AI-kernel/docs/skills/W/W-0*.md; do
+            # [N-02 修正] 使用 W-*.md 取代 W-0*.md
+            for f in AI-kernel/docs/skills/W/W-*.md; do
               if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
             done
           fi
@@ -504,7 +507,6 @@ jobs:
 
             # 2. 填充 P 包 (智慧抓取所有 P-*.md 與 WF-*.md)
             P_FOUND=false
-            # 嘗試匹配可能的資料夾名稱
             for P_DIR_NAME in "web-app-family" "webapp" "${SAFE_NAME}" "AI-WEB-APP-Family"; do
               P_DIR="external/${SAFE_NAME}/docs/projects/${P_DIR_NAME}"
               if [ -d "$P_DIR" ]; then
@@ -516,7 +518,6 @@ jobs:
               fi
             done
             
-            # 如果沒在特定資料夾找到，去 docs/projects/ 下全面搜尋
             if [ "$P_FOUND" = false ] && [ -d "external/${SAFE_NAME}/docs/projects" ]; then
                (
                  cd "external/${SAFE_NAME}" || exit 0
@@ -526,7 +527,7 @@ jobs:
                ) || true
             fi
 
-            # 3. 填充 All-code 包 (排除 yml, md, docs, .github)
+            # 3. 填充 All-code 包
             if [ -d "external/${SAFE_NAME}" ]; then
               (
                 cd "external/${SAFE_NAME}" || exit 0
@@ -556,7 +557,6 @@ jobs:
             PROJ_DIR="external/${SAFE_NAME}/docs/projects"
             if [ ! -d "$PROJ_DIR" ]; then continue; fi
 
-            # 尋找專案資料夾 (通常只有一個，例如 web-app-family)
             TARGET_DIR=$(find "$PROJ_DIR" -maxdepth 1 -mindepth 1 -type d | head -n 1)
             if [ -z "$TARGET_DIR" ]; then continue; fi
 
@@ -572,12 +572,13 @@ jobs:
             done
 
             OUTPUT="$TARGET_DIR/WF-STATE-INDEX.md"
+            TIMESTAMP=$(date +%s)
             
             {
               echo "# WF-STATE-INDEX（專案檔案狀態索引）"
               echo ""
               echo "最後更新：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
-              echo "Version: $(date +%s)"
+              echo "Version: $TIMESTAMP"
               echo "Writer: github-actions[bot]"
               echo "用途：記錄所有已交付檔案的版本與清單（由體系自動生成）"
               echo ""
@@ -597,7 +598,7 @@ jobs:
               echo ""
               echo "/* ═══ EOF ═══"
               echo "F: WF-STATE-INDEX.md"
-              echo "V: $(date +%s)"
+              echo "V: $TIMESTAMP"
               echo "W: github-actions[bot]"
               echo "═══ */"
             } > "$OUTPUT"
@@ -758,7 +759,7 @@ jobs:
           )
           cd ..
 
-          # 2. 提交專案 WF-STATE-INDEX (防呆：確認檔案存在才 add)
+          # 2. 提交專案 WF-STATE-INDEX
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
@@ -768,7 +769,6 @@ jobs:
               git config user.name "github-actions[bot]"
               git config user.email "github-actions[bot]@users.noreply.github.com"
               
-              # 尋找是否有生成 WF-STATE-INDEX.md
               if [ -d "docs/projects" ]; then
                 TARGET_FILES=$(find docs/projects -name "WF-STATE-INDEX.md")
               else
