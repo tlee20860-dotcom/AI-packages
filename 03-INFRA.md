@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-21 23:25:42 (HKT)
+> 生成時間：2026-10-22 01:03:13 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -148,8 +148,11 @@ def check_eof(content):
 def check_inner_backticks(path, content):
     if not path.endswith(".md"):
         return None
+    # F-004 例外：外層用四反引號包裹時，內層三反引號合法
+    if "````" in content:
+        return None
     if "```" in content:
-        return "md 內含三反引號（F-004）"
+        return "md 內含三反引號（F-004），且無四反引號外層"
     return None
 
 def check_head(content):
@@ -400,7 +403,7 @@ jobs:
           echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           
-          for f in R-03-terms R-00-rules R-02-patterns R-04-learning; do
+          for f in R-03-terms R-00-rules R-02-patterns R-04-learning R-05-dsl-map; do
             FILE_PATH="AI-kernel/docs/r-rules/${f}.md"
             if [ -f "$FILE_PATH" ]; then 
               bash .github/workflows/append_file.sh "$FILE_PATH" "$OUTPUT" || true
@@ -447,7 +450,7 @@ jobs:
           echo "---" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
 
-          for f in AI-General/docs/records/SYSTEM-HANDOFF.md AI-General/docs/records/PROGRESS.md AI-General/docs/records/SYSTEM-CONCLUSION.md AI-General/docs/records/STATE-INDEX.md; do
+          for f in AI-General/docs/records/SYSTEM-HANDOFF.md AI-General/docs/records/PROGRESS.md AI-General/docs/records/SYSTEM-CONCLUSION.md AI-General/docs/records/SYSTEM-REJECTED.md AI-General/docs/records/SYSTEM-DEBT.md AI-General/docs/records/STATE-INDEX.md; do
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
@@ -744,6 +747,17 @@ jobs:
             fi
           done
 
+      - name: "Step 9.8: 交付驗證報告（report 模式，不擋）"
+        run: |
+          if [ ! -f ".github/scripts/validate_delivery.py" ]; then
+            echo "[SKIP] validate_delivery.py 不存在"
+            exit 0
+          fi
+          CHANGED=$(find AI-kernel/docs AI-General/docs -type f -name "*.md" 2>/dev/null || true)
+          export CHANGED_FILES="$CHANGED"
+          export VALIDATE_MODE=report
+          python3 .github/scripts/validate_delivery.py || true
+
       - name: "Step 10: 上傳共享包與專案索引"
         run: |
           # 1. 提交體系 STATE-INDEX
@@ -804,8 +818,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792589004
-# W: ai-system-20261021-005#4
+# V: 1792600035
+# W: ai-system-20261021-006#13
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->

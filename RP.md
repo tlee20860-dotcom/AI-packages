@@ -1,6 +1,6 @@
 # R 包：規則總覽
 
-> 生成時間：2026-10-21 23:25:41 (HKT)
+> 生成時間：2026-10-22 01:03:12 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-03-terms.md === -->
@@ -45,11 +45,11 @@
 | 26 | 意圖解鎖機制 | WAIT_CONFIRM 的自然語言解析 | A00 §2.9 |
 | 27 | 片段與交付之界線 | 討論期僅限邏輯片段；違規判定標準為是否具「可直接落地檔案特徵」（F-001 標頭、路徑、完整模組、F-005 EOF）。使用者索取完整代碼須標「[非正式交付]」，禁加檔案標頭。 | A00 §6.2 |
 | 28 | 狀態機 | 體系內 5 態：DISCUSS、DELIVER、WAIT_CONFIRM、CHECK、TERMINATED；STATE_NATIVE 為體系外環境，不屬 S 與 δ。新增或刪除狀態須同步本列舉、A00 §2.2 與 §2.5 矩陣列數。 | A00 §二 |
-| 29 | 交付模式 | 依詞 33 客觀事實特徵判定；於 F-001 標註。**依 R-010，全面取消 Patch 模式，一律完整檔交付。** | R-010、F-001 |
+| 29 | 交付模式（含已廢除詞 31／32／33） | **Patch 模式已全面廢除**（詞 31 遠端 Patch 部署、詞 32 自動判定、詞 33 客觀改動判定皆失效）。依 R-010，一律完整檔交付，於 F-001 標註「模式：完整檔」。 | R-010、F-001 |
 | 30 | 專案三寶 | `meta.json`、`apply-patch.yml`、`notify.yml`；兩段式檢核（建立前詢問＋建立後驗證） | A00 §4.2 |
-| 31 | 遠端 Patch 部署 | **（已廢除）因多次語法錯誤，取消 Patch 交付。** | — |
-| 32 | 代碼交付模式自動判定 | **（已廢除）一律採用完整檔交付。** | — |
-| 33 | 客觀改動判定 | **（已廢除）一律採用完整檔交付。** | — |
+| 31 | 遠端 Patch 部署 | **（已廢除，見詞 29）** | — |
+| 32 | 代碼交付模式自動判定 | **（已廢除，見詞 29）** | — |
+| 33 | 客觀改動判定 | **（已廢除，見詞 29）** | — |
 | 34 | 雙 AI 權責隔離 | 審查者(Reviewer)／執行者(Builder) 權責與切換條件 | I00 §三 |
 | 35 | 檔案依賴矩陣 | 改 A 必查 B（10 列）：<br>1. 狀態機、角色、宣告格式 → A00 §二、R-014、詞 28/34<br>2. 交付模式、事實特徵、行數 → R-010、詞 29/31~33<br>3. 標頭、EOF、檔案特徵 → F-001、F-005、F-007<br>4. 引導、缺包、路由、結束 SOP → A00 §2.1、§5、§6、U00 偏好<br>5. 專案自動化／腳本、專案紀錄 → A00 §4、§5.6、R-018、SP／專案包<br>6. 原生知識、降級、對抗審查 → R-015、R-016、詞 36/37<br>7. 身份、角色權責、分身 → I00、A00 §二、詞 34/38/39<br>8. 合成物、源檔、打包映射 → I00 §五、A00 §1.1/1.2、`setup-structure.yml`<br>9. 修改 I00（身份／分身）→ A00 §二、詞 34、W-00~W-05（領域源檔）<br>10. 修改結束與交接 SOP → A00 §5、R-012、R-017、`SYSTEM-HANDOFF.md` | — |
 | 36 | 原生降級與架構溢出 | 1. 降級補充：SOP 未盡細節可調原生知識（討論期標註，正式交付去除）。<br>2. 架構溢出：超越標準零件庫須標 `[架構溢出宣告]`（正文首區塊／標頭下方第一區塊）並取得 Ken 授權。 | R-015 |
@@ -75,12 +75,10 @@
 | 使用者說「更新詞彙表」 | AI 立刻產出更新後完整內容 |
 | 本表與 R-00 衝突 | 以 R-00 為準 |
 
----
-
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-03-terms.md
-V: 1792589101
-W: ai-system-20261021-005#6
+V: 1792600025
+W: ai-system-20261021-006#4
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-03-terms.md === -->
 
@@ -97,8 +95,6 @@ W: ai-system-20261021-005#6
 ## 零、契約表規範
 
 ### 0.1 六欄格式
-
-每條規則必須包含六欄：
 
 | 欄位 | 要求 |
 |---|---|
@@ -364,7 +360,7 @@ W: ai-system-20261021-005#6
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST NOT | md 檔案內部撰寫 | 範例用引用塊或表格；禁止三反引號 | 檔內無三反引號 | md 內使用三反引號 | 掃描檔內三反引號 |
+| MUST NOT | md 檔案內部撰寫 | 範例用引用塊或表格；禁止三反引號。<br>**例外**：交付 md 檔且內含 YAML 時，外層 MUST 用四反引號（````），內層三反引號視為檔案內容，不在此限。 | 檔內無三反引號（例外情形除外） | md 內使用三反引號且外層僅三反引號 | 掃描檔內三反引號 |
 
 <a id="f-005"></a>
 ### F-005 檔案結尾
@@ -421,12 +417,10 @@ W: ai-system-20261021-005#6
 
 **邊界聲明**：專案包不含行為規則；若發現專案包內有 R/S/K/F 規則內容，視為專案包污染，需搬回 R00。
 
----
-
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-00-rules.md
-V: 1792589100
-W: ai-system-20261021-005#6
+V: 1792600022
+W: ai-system-20261021-006#3
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-00-rules.md === -->
 
@@ -571,3 +565,161 @@ V: 1792575600
 W: ai-system-20261021-003#61
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-04-learning.md === -->
+
+<!-- === FILE START: AI-kernel/docs/r-rules/R-05-dsl-map.md === -->
+
+## 📄 AI-kernel/docs/r-rules/R-05-dsl-map.md
+
+# R-05 規則 DSL 映射表
+
+用途：將 R-00 之 36 條規則映射為結構化 DSL，或標「保留散文＋理由」。本檔為 Phase 1 前置交付物。
+
+---
+
+## 一、映射總表（36 條）
+
+| 編號 | 類別 | 映射方式 | 理由 |
+|---|---|---|---|
+| R-001 | 鐵律 | DSL | 狀態＋動作＋sandbox 可判 |
+| R-002 | 鐵律 | DSL | 討論期禁輸出檔案內容，可判 |
+| R-003 | 鐵律 | DSL | 同檔多改整合，可判 |
+| R-004 | 鐵律 | DSL | 未確認禁編號，可判 |
+| R-005 | 鐵律 | DSL | 修改前引用原文，可判 |
+| R-006 | 鐵律 | DSL | 檔案數標示，可判 |
+| R-007 | 鐵律 | 保留散文 | 判斷依結構、語氣，無 predicate 可核 |
+| R-008 | 鐵律 | DSL | 交付後禁自印 K，可判 |
+| R-009 | 鐵律 | DSL | 繁中，可掃描 |
+| R-010 | 鐵律 | DSL | 完整檔交付，可判 |
+| R-011 | 鐵律 | DSL | 斷路器，含輸出位置與豁免剝奪 |
+| R-012 | 鐵律 | DSL | 禁主動宣告結束，可判 |
+| R-013 | 鐵律 | DSL | 交付後四選項，可判 |
+| R-014 | 鐵律 | DSL | 五行標頭，可掃描 |
+| R-015 | 鐵律 | 保留散文 | 權限階梯＋降級＋溢出三層，DSL 化易失真 |
+| R-016 | 鐵律 | DSL | 四大危機分類，可判 |
+| R-017 | 鐵律 | DSL | 專案缺 SOP 三選項，可判 |
+| R-018 | 鐵律 | DSL | affected 多目標更新，可判 |
+| S-001 | 提問 | DSL（checklist） | 檔案數標示 |
+| S-002 | 提問 | DSL（checklist） | 集中層判定 |
+| S-003 | 提問 | DSL（checklist） | 預設值判定 |
+| S-004 | 提問 | DSL（checklist） | 版本引用 |
+| S-005 | 提問 | DSL（checklist） | R-02 查閱 |
+| S-006 | 提問 | DSL（checklist） | 關聯影響三項 |
+| S-007 | 提問 | 保留散文 | 三事實需人判斷「何謂並發」 |
+| K-001 | 檢查 | DSL | 六項事實證據，可列舉 |
+| K-002 | 檢查 | DSL | 檔內搜尋，可掃描 |
+| K-003 | 檢查 | DSL | 三項回歸，可列舉 |
+| F-001 | 格式 | DSL | 六欄標頭，可掃描 |
+| F-002 | 格式 | DSL | 路徑 Code Block，可掃描 |
+| F-003 | 格式 | DSL | 三反引號包裹，可掃描 |
+| F-004 | 格式 | 保留散文 | 含例外條款，DSL 化反而更複雜 |
+| F-005 | 格式 | DSL | EOF 三行，可掃描 |
+| F-006 | 格式 | DSL | 狀態總表位置，可判 |
+| F-007 | 格式 | DSL | Patch 廢除，可判 |
+| F-008 | 格式 | DSL | 章節數＋行數，可判；含 APPEND_ONLY |
+
+**統計**：DSL 化 30 條；保留散文 6 條（R-007、R-015、S-007、F-004，另 2 條於下方說明）。
+
+---
+
+## 二、DSL 映射內容
+
+```yaml
+rules_dsl:
+  # ── 行為鐵律（R）──
+  R-001: "IF state == DISCUSS AND action == OUTPUT_FILE_CONTENT AND sandbox != FastDev THEN REQUIRE(propose_before_deliver)"
+  R-002: "IF state == DISCUSS AND action == OUTPUT_FILE_CONTENT THEN FORBID(file_content) AND REQUIRE(change_list)"
+  R-003: "IF target_file CONTAINS multiple_changes THEN REQUIRE(single_integrated_delivery) AND REQUIRE(section_count_match)"
+  R-004: "IF project_unconfirmed THEN FORBID(emit_dialog_id)"
+  R-005: "IF action == MODIFY_FILE THEN REQUIRE(cite_exact_section AND declare_100pct_preserve)"
+  R-006: "IF proposing THEN REQUIRE(declare_file_count) AND IF file_count >= 2 THEN REQUIRE(reason_not_one)"
+  R-008: "IF action == AFTER_DELIVERY THEN FORBID(auto_emit_K002)"
+  R-009: "IF response == ANY THEN REQUIRE(lang == ZH_TW AND no_simplified_chars)"
+  R-010: "IF action == DELIVER_FILE THEN REQUIRE(mode == FULL_FILE) AND REQUIRE(F-001_header_with_mode)"
+  R-011:
+    trigger: "target_file == MISSING AND target_is_generic == false"
+    generic_declaration: "MUST DECLARE domain_classification"
+    physical_negation_rule: "IF input_contains(ANY of keyword_list) THEN target_is_generic = false"
+    keyword_list:
+      extensions: [".js", ".mjs", ".ts", ".yml", ".yaml", ".json", ".html", ".css", ".md", ".py", ".sh", ".env"]
+      path_patterns: ["/", "\\", "docs/", "src/", ".github/"]
+      variable_patterns: ["camelCase", "snake_case", "SCREAMING_CASE", "const ", "let ", "var "]
+      explicit_names: ["entity-registry", "setup-structure", "notify.yml", "meta.json"]
+    output_position: FIRST_SENTENCE_OF_BODY
+    required_line: "[斷路觸發 | 缺失實體檔] 需核對 {file}，暫停提供結論。"
+    forbidden_outputs: [conclusion, assumption, debug_steps, fix_code]
+    exemption:
+      allowed_if: "generic_topic AND user_asked_back_first == true"
+      revoked_if: "input_contains(ANY of keyword_list)"
+  R-012: "IF any_time THEN FORBID(declare_conversation_end_unilaterally)"
+  R-013: "IF action == AFTER_DELIVERY THEN REQUIRE(options_A_B_C_D_with_plain_explanation) AND PAUSE"
+  R-014: "IF response == ANY THEN ENFORCE_HEADER_FORMAT(lines=5, lang=ZH_TW)"
+  R-016: "IF change_type IN [architecture, core_module, fsm, automation_script] THEN REQUIRE(adversarial_review_4_categories)"
+  R-017: "IF end_signal AND project.handoff_sop == false THEN REQUIRE(options_A_B_C)"
+  R-018: "IF end_signal AND delivery_list_contains_system_or_project THEN REQUIRE(update_each_affected_target)"
+
+  # ── 事前提問（S）──
+  S-001: { rule: "SHALL declare file_count before proposing" }
+  S-002: { rule: "SHALL declare central_layer_decision: yes/no, reason if no" }
+  S-003: { rule: "SHALL declare default_value_decision: yes/no" }
+  S-004: { rule: "SHALL cite original version or section before modifying existing file" }
+  S-005: { rule: "SHALL declare checked_R02: yes/no; if no, check first" }
+  S-006: { rule: "MUST list keywords, affected files with sync notes, confirmed-unaffected files" }
+
+  # ── 事後檢查（K）──
+  K-001: "IF trigger == CHECK OR START_DELIVERY THEN REQUIRE(evidence_6_items: R-001, R-005, R-009, R-011, F-005, F-008)"
+  K-002: "IF trigger == CHECK THEN REQUIRE(search_result: ['✅','已交付','狀態總表']) == 0"
+  K-003: "IF trigger == CHECK OR START_DELIVERY THEN REQUIRE(three_checks: state_set_match, term_numbers_continuous, cross_package_refs_valid)"
+
+  # ── 格式規範（F）──
+  F-001: "IF output == DELIVER THEN REQUIRE_HEADER(repo, path, type, mode, author, version)"
+  F-002: "IF path_mentioned THEN REQUIRE(wrap_in_text_code_block AND relative_path AND full_filename)"
+  F-003: "IF output == FILE_CONTENT THEN REQUIRE(wrap_in_backticks_with_lang)"
+  F-005: "IF output == FILE_DELIVERY THEN REQUIRE_EOF_TAG(pattern='/* ═══ EOF ═══ */')"
+  F-006: "IF has_modifications THEN REQUIRE(status_table_at_bottom)"
+  F-007: "IF action == MODIFY_FILE THEN REQUIRE(full_file_delivery) AND FORBID(patch_mode)"
+  F-008:
+    rule: "IF mode == FULL_FILE THEN ENFORCE_STRUCTURAL_INTEGRITY ELSE_IF mode == APPEND_ONLY THEN ENFORCE_RANGE_CONTINUITY"
+    append_only_scope: [SYSTEM-DECISIONS.md, SYSTEM-REJECTED.md, SYSTEM-DEBT.md]
+    append_only_checks:
+      - "ID 連續性：新增區段 ID 接續既有最大號"
+      - "EOF 存在"
+      - "不檢查全文章節數與行數對比"
+```
+
+---
+
+## 三、保留散文清單與理由
+
+| 編號 | 規則 | 保留理由 |
+|---|---|---|
+| R-007 | AI 讀者優先 | 判斷依「是否含結構化元素」「段落有無廢話開場」，屬質性判斷，predicate 化會失真 |
+| R-015 | 原生知識與 SOP 衝突 | 含權限階梯、降級、架構溢出三層，DSL 化後難以表達「宣告位置」與「取得許可」的順序關係 |
+| S-007 | 防護前提確認 | 「何謂並發」「何謂必然」需人判斷，非機械可判 |
+| F-004 | 內層防呆 | 含 md 檔內 YAML 的四反引號例外，DSL 化後條件分支比原文更長 |
+
+**另 2 條說明**：R-011 與 F-008 雖已 DSL 化，但含嵌套條件（R-011 的 keyword_list、F-008 的 APPEND_ONLY），屬「部分 DSL」，仍需散文補充邊界案例。
+
+---
+
+## 四、維護規則
+
+| 時機 | 動作 |
+|---|---|
+| R-00 新增／修改規則 | 本表同步更新映射 |
+| 某條 DSL 實測誤判率高 | 降級為散文＋理由 |
+| 某條散文可形式化 | 升級為 DSL |
+
+---
+
+## 五、與 R-00 的關係
+
+- 本表為 **索引與映射**，不取代 R-00。
+- R-00 仍為規則 SSOT；本表僅供 AI 快速掃描與 Phase 1 重寫依據。
+- 衝突時以 R-00 為準（依 R-03 §二「本表與 R-00 衝突以 R-00 為準」）。
+
+/* ═══ EOF ═══
+F: AI-kernel/docs/r-rules/R-05-dsl-map.md
+V: 1792600027
+W: ai-system-20261021-006#6
+═══ */
+<!-- === FILE END: AI-kernel/docs/r-rules/R-05-dsl-map.md === -->
