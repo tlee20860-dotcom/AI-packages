@@ -1,6 +1,6 @@
 # R 包：規則總覽
 
-> 生成時間：2026-10-21 11:23:58 (HKT)
+> 生成時間：2026-10-21 11:26:56 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-03-terms.md === -->
@@ -75,8 +75,8 @@ Writer: ai-system-20261021-003#51
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-03-terms.md
-V: 1792569000
-W: ai-system-20261021-003#51
+V: 1792572000
+W: ai-system-20261021-003#57
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-03-terms.md === -->
 
@@ -424,8 +424,8 @@ Writer: ai-system-20261021-003#46
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-00-rules.md
-V: 1792563000
-W: ai-system-20261021-003#46
+V: 1792572000
+W: ai-system-20261021-003#57
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-00-rules.md === -->
 
@@ -516,8 +516,8 @@ Writer: ai-system-20261019-010#207
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-02-patterns.md
-V: 1792412000
-W: ai-system-20261019-010#207
+V: 1792572000
+W: ai-system-20261021-003#57
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-02-patterns.md === -->
 
