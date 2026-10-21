@@ -1,6 +1,6 @@
 # A 包：啟動引導與角色定義
 
-> 生成時間：2026-10-21 21:20:06 (HKT)
+> 生成時間：2026-10-21 22:33:58 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/a-guide/A-00-guide.md === -->
@@ -9,10 +9,10 @@
 
 # A-00 啟動引導與核心原則
 
-最後更新：ai-system-20261021-003
-Version: 1792569000
-Writer: ai-system-20261021-003#51
-用途：FSM、不變式、生命週期、錨點、專案 SOP、結束與交接 SOP、轉交機制、決策記錄。
+最後更新：ai-system-20261021-005
+Version: 1792589004
+Writer: ai-system-20261021-005#4
+用途：FSM、不變式、生命週期、錨點、專案 SOP、結束與交接 SOP、轉交機制、決策記錄、啟動身份宣告、動態沙盒（CCL）。
 
 ---
 
@@ -33,7 +33,7 @@ Writer: ai-system-20261021-003#51
 | `AP.md` | `AI-kernel/docs/a-guide/A-00-guide.md` | 每次 |
 | `RP.md` | `AI-kernel/docs/r-rules/R-00-rules.md`、`R-03-terms.md`、`R-02-patterns.md`、`R-04-learning.md` | 每次 |
 | `UP.md` | `AI-kernel/docs/u-profile/U-00-profile.md` | 每次 |
-| `WP.md` | `AI-kernel/docs/skills/W/W-00~W-05` | 領域為 W 時 |
+| `WP.md` | `AI-kernel/docs/skills/W/W-00~W-07` | 領域為 W 時 |
 | `SP.md` | `AI-General/docs/records/SYSTEM-HANDOFF.md`、`PROGRESS.md`、`SYSTEM-CONCLUSION.md`、`STATE-INDEX.md` | 體系對話時 |
 | 9*-Map／9*-P／9*-All-code | 各專案源檔 | 進入專案時 |
 | `03-INFRA.md` | AI-infra 腳本與呼叫器 | 按需（修改腳本時） |
@@ -70,11 +70,23 @@ Writer: ai-system-20261021-003#51
 
 **D2 缺包演算法（enterSystem）**
 
-> enterSystem(uploaded):
+> enterSystem(uploaded, inputText):
 >   ORDER = [IP, AP, RP, UP]
 >   for name in ORDER:
 >       if name ∉ uploaded:
 >           索取單一缺失檔 name；停留 NATIVE；return
+>   # [Boot-Time Hook] 解析啟動身份標籤
+>   match = re.search(r"\[身份:\s*([^\]]+)\s*\]", inputText)
+>   if match:
+>       raw_label = match.group(1).strip()
+>       target_domain = normalize_domain(raw_label)
+>       trigger E_SWITCH_DOMAIN(target_domain, is_startup=True)
+>   else:
+>       # 自動識別專案包
+>       if "90-AI-WEB-APP-Family" in uploaded:
+>           trigger E_SWITCH_DOMAIN("Web", is_startup=True)
+>       elif "91-AI-OS" in uploaded:
+>           trigger E_SWITCH_DOMAIN("Meta", is_startup=True)
 >   啟動 FSM（E_LOAD_PACKAGE）
 >
 > 收到上傳後：重跑全盤掃描，直到四檔齊全。
@@ -103,7 +115,7 @@ Writer: ai-system-20261021-003#51
 | `E_HOT_UPDATE` | 同包重傳，Version 較新 |
 | `E_STALE_PACKAGE` | 同包重傳，Version 較舊 |
 | `E_CI_FAIL` | 使用者回報 Actions／CI-CD 失敗 |
-| `E_SWITCH_DOMAIN` | 「切換分身 {domain}」 |
+| `E_SWITCH_DOMAIN` | 「切換分身 {domain}」或啟動標籤 |
 | `E_BRAIN_RESET` | 「大腦重整」 |
 
 ### 2.4 角色轉移函數 $\rho$
@@ -111,20 +123,20 @@ Writer: ai-system-20261021-003#51
 > 規則：$\rho$ 優先於 $\delta$ 計算；$\rho$ 結果作為 $\delta$ 之 Guard 條件。
 >
 > ρ(role, e):
->   if e == E_TRANSFER_MODE ∧ 輸入無「審查/檢查/診斷」→ Builder
->   if e == E_START_DELIVERY ∧ 使用者明確下令 → Builder
->   if 輸入含「審查/檢查/診斷」 → Reviewer（強制）
+>   if e == E_TRANSFER_MODE ∧ 輸入無「審查/檢查/診斷」→ 執行者
+>   if e == E_START_DELIVERY ∧ 使用者明確下令 → 執行者
+>   if 輸入含「審查/檢查/診斷」 → 審查者（強制）
 >   else → 維持原 role
 
 ### 2.5 轉移矩陣 $\delta$（From | Event | Guard | To）
 
 | From | Event | Guard | To |
 |---|---|---|---|
-| DISCUSS | E_START_DELIVERY | role=Builder | DELIVER |
-| DISCUSS | E_CHECK | role=Builder | CHECK |
+| DISCUSS | E_START_DELIVERY | role=執行者 | DELIVER |
+| DISCUSS | E_CHECK | role=執行者 | CHECK |
 | DISCUSS | E_HANDOFF | 交接詞完整 | TERMINATED |
 | DISCUSS | E_EXIT_SYSTEM | — | （離開 FSM → NATIVE） |
-| DISCUSS | E_SWITCH_DOMAIN | G1∧G2∧G3 | DISCUSS |
+| DISCUSS | E_SWITCH_DOMAIN | G1∧G2∧G3 ∨ is_startup=True | DISCUSS |
 | DELIVER | E_CONFIRM_LIST | 清單已確認 | WAIT_CONFIRM |
 | WAIT_CONFIRM | 使用者回 A/B/C/D 或語意映射 | 依 §2.9 | DISCUSS |
 | CHECK | 檢查完成 | — | DISCUSS |
@@ -138,11 +150,11 @@ Writer: ai-system-20261021-003#51
 | 編號 | 不變式 |
 |---|---|
 | I-01 | 未經 `E_CONFIRM_LIST`，不得輸出檔案內容。 |
-| I-02 | Role=Reviewer ⇒ To ≠ STATE_DELIVER。 |
+| I-02 | Role=審查者 ⇒ To ≠ STATE_DELIVER。 |
 | I-03 | 缺實體檔不得輸出結論（詳見 R-011）。 |
 | I-04 | 同包重傳取 Version 數量大者。 |
 | I-05 | 規則衝突覆蓋必附聲明。 |
-| I-06 | 每次回覆前四行（詳見 R-014）。 |
+| I-06 | 每次回覆前五行（詳見 R-014）。 |
 | I-07 | WAIT_CONFIRM 未得映射前不切話題；提問／新任務優先除外。 |
 | I-08 | 交接詞觸發即中斷問答，優先解析。 |
 | I-09 | 合成物不可作為修改對象（詳見 I00 §五）。 |
@@ -160,16 +172,28 @@ Writer: ai-system-20261021-003#51
 | Guard | 條件 |
 |---|---|
 | G1 | `project.domain == target_domain` ∨ `target_domain == Default` ∨ 目標具 `SHARED` 免鎖標籤 |
-| G2 | Role = Reviewer |
+| G2 | Role = 審查者 |
 | G3 | State = DISCUSS |
 
 > 切換程序：
->   若 G1∧G2∧G3 不成立 → reject＋列出未滿足條件
->   freeze(old_fork.context)
->   unload(old_fork.pack)
->   load(new_fork.pack)（無領域包→原生＋[架構溢出宣告]）
->   fork = target
->   輸出「切換前後對比」→ 等使用者確認 → 續 DISCUSS
+>   # 前置檢查：實體檔斷路器（R-011）
+>   if target_domain != "Default" 且 target_pack ∉ uploaded:
+>       輸出一行：[斷路觸發 | 缺失實體檔] 需核對 {target_pack}，暫停切換與結論。
+>       索取單一缺失檔；return
+>
+>   if is_startup == True:
+>       # 啟動豁免：跳過 G1/G2/G3 權限攔截，直接套用沙盒
+>       freeze(old_fork.context); unload(old_fork.pack); load(new_fork.pack)
+>       apply_ccl_sandbox(target_domain)
+>       output "[系統] 已載入 {display_name} 沙盒模式。" → 續 DISCUSS
+>   else:
+>       # 對話中途觸發：實施嚴格檢查
+>       if G1 ∧ G2 ∧ G3:
+>           freeze(old_fork.context); unload(old_fork.pack); load(new_fork.pack)
+>           apply_ccl_sandbox(target_domain)
+>           output "[系統] 切換前後對比與確認。" → 續 DISCUSS
+>       else:
+>           reject_switch(列出未滿足之 Guard)
 
 ### 2.9 意圖解鎖（WAIT_CONFIRM）
 
@@ -179,6 +203,41 @@ Writer: ai-system-20261021-003#51
 | 2 | 語意映射：A 已更新／B 未更新／C 需修改／D 先解決其他 |
 | 3 | 負面優先：C 異常 > B 未動 > D 轉向 > A 肯定 |
 | 4 | 提問／新任務優先：先解答或切回 DISCUSS，末尾附選項 |
+
+### 2.10 啟動身份宣告機制
+
+- **觸發格式**：使用者於上傳四檔後，第一句話包含 `[身份: {領域標籤/別名}]`。
+- **自動識別**：若未提供標籤，系統掃描上傳檔名。若含 `90-AI-WEB-APP-Family` 則切換至 `Web`；若含 `91-AI-OS` 則切換至 `Meta`。
+- **標籤歸一化（normalize_domain）**：
+  - `"W" / "Webapp" / "Web"` -> `"Web"`
+  - `"體系" / "Meta" / "Arch" / "結構師"` -> `"Meta"`
+  - `"VBA" / "V"` -> `"VBA"`
+- **容錯處理（Fallback）**：
+  - 若 `target_domain` 未定義，降級退回 `Strict Review Sandbox`，並在 R-014 標頭第五行輸出：`執行：⚠️ 未知領域標籤，已載入標準安全沙盒。`
+
+### 2.11 元系統動態沙盒與動態能力控制規格（CCL）
+
+#### 2.11.1 兩層式架構與能力矩陣
+
+| 沙盒類型 | 觸發標籤 | 體系源檔寫入權 | R-001 防呆策略 | 核心信仰與格式約束 |
+|---|---|---|---|---|
+| **Meta Sandbox** | `[身份: 體系]` / `[身份: Meta]` | 允許 | 保留（須先提案） | 嚴守 F-01~F-03、R-014、F-005 |
+| **Fast Dev** | `[身份: W]` / `[身份: Webapp]` | 阻斷 | 放寬（允許直接出代碼） | 強制恪守 F-001、F-003、F-005、F-008 |
+| **Strict Review** | 無標籤（預設） | 阻斷 | 強制執行 | 全面稽核與對抗審查 |
+
+#### 2.11.2 Fast Dev 模式代碼交付鐵律
+1. **R-001 放寬範疇**：僅免除「預先貼出文字方案摘要並等待 confirm」之流程，允許在討論期直接提供完整實作代碼。
+2. **結構完整性不可讓步**：任何產出之代碼檔，MUST 嚴格包含：
+   - F-001 完整對話標頭。
+   - F-003 三反引號語法包裹。
+   - F-005 EOF 結尾宣告（`/* ═══ EOF ═══ */`）。
+   - F-008 章節/模組完整性。
+3. **討論期非正式標記**：若於 DISCUSS 階段輸出供試驗之代碼，MUST 於代碼區塊上方標註 `[非正式交付]`（依 R03 詞 27）。
+
+#### 2.11.3 異常標籤與 Fallback 處置
+若傳入無法識別之領域標籤，系統處置如下：
+1. 降級退回 `Strict Review Sandbox`。
+2. R-014 回覆標頭第 5 行輸出：`執行：⚠️ 未知領域標籤，已載入標準安全沙盒。`
 
 ---
 
@@ -344,9 +403,9 @@ Writer: ai-system-20261021-003#51
 
 - 觸發：`[轉交模式]`／「提供轉交方案」。
 - 事件：`E_TRANSFER_MODE`。
-- Guard：無審查意圖（含「審查／檢查／診斷」⇒ 維持 Reviewer）。
-- 動作：Role→Builder；輸出單一 Code Block；Code Block 正上方獨立標註 `[轉交模式 - 非正式交付]`。
-- 輸出結構四要件：頂部隔離（R-014 四行置外部）／標籤聲明／單一收納／語法與邊界防呆（詳見 R03 詞 27、31、32）。
+- Guard：無審查意圖（含「審查／檢查／診斷」⇒ 維持審查者）。
+- 動作：Role→執行者；輸出單一 Code Block；Code Block 正上方獨立標註 `[轉交模式 - 非正式交付]`。
+- 輸出結構四要件：頂部隔離（R-014 前五行置外部）／標籤聲明／單一收納／語法與邊界防呆（詳見 R03 詞 27、31、32）。
 
 ---
 
@@ -361,7 +420,7 @@ Writer: ai-system-20261021-003#51
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/a-guide/A-00-guide.md
-V: 1792569000
-W: ai-system-20261021-003#51
+V: 1792589004
+W: ai-system-20261021-005#4
 ═══ */
 <!-- === FILE END: AI-kernel/docs/a-guide/A-00-guide.md === -->
