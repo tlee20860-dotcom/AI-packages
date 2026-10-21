@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-21 21:14:15 (HKT)
+> 生成時間：2026-10-21 21:20:07 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -426,7 +426,6 @@ jobs:
             echo "" >> "$OUTPUT"
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
-            # [N-02 修正] 使用 W-*.md 取代 W-0*.md
             for f in AI-kernel/docs/skills/W/W-*.md; do
               if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
             done
@@ -452,7 +451,69 @@ jobs:
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
-      - name: "Step 7: 生成專案包 (Map / P / All-code 拆分)"
+      - name: "Step 7: 生成並更新專案 WF-STATE-INDEX"
+        run: |
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            PKG_NO=$(echo "$row" | jq -r '.pkg_no')
+            DOMAIN=$(echo "$row" | jq -r '.domain')
+            CODE=$(echo "$row" | jq -r '.code')
+            DISPLAY=$(echo "$row" | jq -r '.display // "-"')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            
+            PROJ_DIR="external/${SAFE_NAME}/docs/projects"
+            if [ ! -d "$PROJ_DIR" ]; then continue; fi
+
+            TARGET_DIR=$(find "$PROJ_DIR" -maxdepth 1 -mindepth 1 -type d | head -n 1)
+            if [ -z "$TARGET_DIR" ]; then continue; fi
+
+            TMP_TABLE="/tmp/state-index-${SAFE_NAME}.txt"
+            > "$TMP_TABLE"
+            
+            find "$TARGET_DIR" -type f -name "*.md" -not -name "WF-STATE-INDEX.md" | sort | while read -r f; do
+              V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
+              if [ -z "$V" ]; then continue; fi
+              W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
+              FNAME=$(basename "$f")
+              echo "| $FNAME | $V | $W |" >> "$TMP_TABLE"
+            done
+
+            OUTPUT="$TARGET_DIR/WF-STATE-INDEX.md"
+            TIMESTAMP=$(date +%s)
+            
+            {
+              echo "# WF-STATE-INDEX（專案檔案狀態索引）"
+              echo ""
+              echo "最後更新：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
+              echo "Version: $TIMESTAMP"
+              echo "Writer: github-actions[bot]"
+              echo "用途：記錄所有已交付檔案的版本與清單（由體系自動生成）"
+              echo ""
+              echo "---"
+              echo ""
+              echo "## 一、專案總覽"
+              echo ""
+              echo "| 專案顯示名稱 | code | domain | package_no | repo |"
+              echo "|---|---|---|---|---|"
+              echo "| $DISPLAY | $CODE | $DOMAIN | $PKG_NO | $REPO |"
+              echo ""
+              echo "## 二、檔案清單（自動生成）"
+              echo ""
+              echo "| 檔案 | 版本 (V) | 編寫者 (W) |"
+              echo "|---|---|---|"
+              if [ -s "$TMP_TABLE" ]; then sort -t'|' -k2 -nr "$TMP_TABLE"; fi
+              echo ""
+              echo "/* ═══ EOF ═══"
+              echo "F: WF-STATE-INDEX.md"
+              echo "V: $TIMESTAMP"
+              echo "W: github-actions[bot]"
+              echo "═══ */"
+            } > "$OUTPUT"
+            
+            echo "Generated $OUTPUT"
+          done
+
+      - name: "Step 8: 生成專案包 (Map / P / All-code 拆分)"
         run: |
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
@@ -544,69 +605,7 @@ jobs:
             fi
           done
 
-      - name: "Step 7.5: 生成並更新專案 WF-STATE-INDEX"
-        run: |
-          jq -c '.[]' /tmp/projects.json | while read -r row; do
-            REPO=$(echo "$row" | jq -r '.repo')
-            PKG_NO=$(echo "$row" | jq -r '.pkg_no')
-            DOMAIN=$(echo "$row" | jq -r '.domain')
-            CODE=$(echo "$row" | jq -r '.code')
-            DISPLAY=$(echo "$row" | jq -r '.display // "-"')
-            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
-            
-            PROJ_DIR="external/${SAFE_NAME}/docs/projects"
-            if [ ! -d "$PROJ_DIR" ]; then continue; fi
-
-            TARGET_DIR=$(find "$PROJ_DIR" -maxdepth 1 -mindepth 1 -type d | head -n 1)
-            if [ -z "$TARGET_DIR" ]; then continue; fi
-
-            TMP_TABLE="/tmp/state-index-${SAFE_NAME}.txt"
-            > "$TMP_TABLE"
-            
-            find "$TARGET_DIR" -type f -name "*.md" -not -name "WF-STATE-INDEX.md" | sort | while read -r f; do
-              V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
-              if [ -z "$V" ]; then continue; fi
-              W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
-              FNAME=$(basename "$f")
-              echo "| $FNAME | $V | $W |" >> "$TMP_TABLE"
-            done
-
-            OUTPUT="$TARGET_DIR/WF-STATE-INDEX.md"
-            TIMESTAMP=$(date +%s)
-            
-            {
-              echo "# WF-STATE-INDEX（專案檔案狀態索引）"
-              echo ""
-              echo "最後更新：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
-              echo "Version: $TIMESTAMP"
-              echo "Writer: github-actions[bot]"
-              echo "用途：記錄所有已交付檔案的版本與清單（由體系自動生成）"
-              echo ""
-              echo "---"
-              echo ""
-              echo "## 一、專案總覽"
-              echo ""
-              echo "| 專案顯示名稱 | code | domain | package_no | repo |"
-              echo "|---|---|---|---|---|"
-              echo "| $DISPLAY | $CODE | $DOMAIN | $PKG_NO | $REPO |"
-              echo ""
-              echo "## 二、檔案清單（自動生成）"
-              echo ""
-              echo "| 檔案 | 版本 (V) | 編寫者 (W) |"
-              echo "|---|---|---|"
-              if [ -s "$TMP_TABLE" ]; then sort -t'|' -k2 -nr "$TMP_TABLE"; fi
-              echo ""
-              echo "/* ═══ EOF ═══"
-              echo "F: WF-STATE-INDEX.md"
-              echo "V: $TIMESTAMP"
-              echo "W: github-actions[bot]"
-              echo "═══ */"
-            } > "$OUTPUT"
-            
-            echo "Generated $OUTPUT"
-          done
-
-      - name: "Step 8: 生成基礎設施總包 (03-INFRA.md)"
+      - name: "Step 9: 生成基礎設施總包 (03-INFRA.md)"
         run: |
           OUTPUT="build-repo/03-INFRA.md"
           echo "# 基礎設施總包 (INFRA)" > "$OUTPUT"
@@ -731,7 +730,7 @@ jobs:
             fi
           done
 
-      - name: "Step 8.5: 生成控制台共享包 (92-Ai-github.md)"
+      - name: "Step 9.5: 生成控制台共享包 (92-Ai-github.md)"
         run: |
           OUTPUT="build-repo/92-Ai-github.md"
           echo "# 92 包：AI 控制台原始碼" > "$OUTPUT"
@@ -745,7 +744,7 @@ jobs:
             fi
           done
 
-      - name: "Step 9: 上傳共享包與專案索引"
+      - name: "Step 10: 上傳共享包與專案索引"
         run: |
           # 1. 提交體系 STATE-INDEX
           cd AI-General
@@ -801,7 +800,13 @@ jobs:
             git commit -m "chore: auto-build packages [skip ci]" && 
             (git pull --rebase origin main || true) && 
             git push
-          )```
+          )
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/setup-structure.yml
+# V: 1792589004
+# W: ai-system-20261021-005#4
+# ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
 

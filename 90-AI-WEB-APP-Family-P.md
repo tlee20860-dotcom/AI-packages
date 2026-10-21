@@ -1,6 +1,6 @@
 # 專案 P 檔總集：AI-WEB-APP-Family
 
-> 生成時間：2026-10-21 21:14:15 (HKT)
+> 生成時間：2026-10-21 21:20:07 (HKT)
 
 
 <!-- === FILE START: external/AI-WEB-APP-Family/docs/projects/web-app-family/P-01-index.md === -->
@@ -2076,8 +2076,8 @@ W: ai-system-20261021-005#3
 
 # WF-STATE-INDEX（專案檔案狀態索引）
 
-最後更新：2026-10-21 20:50:38 (HKT)
-Version: 1792587038
+最後更新：2026-10-21 21:20:07 (HKT)
+Version: 1792588807
 Writer: github-actions[bot]
 用途：記錄所有已交付檔案的版本與清單（由體系自動生成）
 
@@ -2093,9 +2093,9 @@ Writer: github-actions[bot]
 
 | 檔案 | 版本 (V) | 編寫者 (W) |
 |---|---|---|
-| WF-PROGRESS.md | 1792583005 | ai-system-20261021-005#5 |
-| WF-HANDOFF.md | 1792583004 | ai-system-20261021-005#4 |
-| WF-CONCLUSION.md | 1792583003 | ai-system-20261021-005#3 |
+| WF-PROGRESS.md | 1792588003 | ai-system-20261021-005#3 |
+| WF-HANDOFF.md | 1792588002 | ai-system-20261021-005#2 |
+| WF-CONCLUSION.md | 1792588001 | ai-system-20261021-005#1 |
 | P-99-errors-map.md | 1792581015 | ai-system-20261021-004#15 |
 | P-15-reorg-plan.md | 1792581023 | ai-system-20261021-004#23 |
 | P-14-decisions.md | 1792581014 | ai-system-20261021-004#14 |
@@ -2110,7 +2110,7 @@ Writer: github-actions[bot]
 
 /* ═══ EOF ═══
 F: WF-STATE-INDEX.md
-V: 1792587038
+V: 1792588807
 W: github-actions[bot]
 ═══ */
 
