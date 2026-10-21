@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-21 11:10:33 (HKT)
+> 生成時間：2026-10-21 11:20:04 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -266,7 +266,7 @@ W: ai-system-20261020-013#69
 
 # STATE-INDEX
 
-> 生成時間：2026-10-21 11:10:33 (HKT)
+> 生成時間：2026-10-21 11:20:04 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -277,12 +277,12 @@ W: ai-system-20261020-013#69
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-kernel|docs/r-rules/R-03-terms.md|1792563000|ai-system-20261021-003#46
+AI-kernel|docs/r-rules/R-03-terms.md|1792569000|ai-system-20261021-003#51
+AI-kernel|docs/a-guide/I-00-identity.md|1792569000|ai-system-20261021-003#51
+AI-kernel|docs/a-guide/A-00-guide.md|1792569000|ai-system-20261021-003#51
+AI-kernel|docs/u-profile/U-00-profile.md|1792566000|ai-system-20261021-003#50
 AI-kernel|docs/r-rules/R-00-rules.md|1792563000|ai-system-20261021-003#46
-AI-kernel|docs/a-guide/A-00-guide.md|1792563000|ai-system-20261021-003#46
-AI-kernel|docs/u-profile/U-00-profile.md|1792544000|ai-system-20261021-003#33
-AI-kernel|docs/a-guide/I-00-identity.md|1792544000|ai-system-20261021-003#33
-AI-General|docs/records/STATE-INDEX.md|1792540609|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792552233|github-actions[bot]
 AI-General|docs/records/SYSTEM-HANDOFF.md|1792468800|ai-system-20261020-013#69
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792468800|ai-system-20261020-013#69
 AI-General|docs/records/PROGRESS.md|1792468800|ai-system-20261020-013#69
@@ -297,7 +297,7 @@ AI-kernel|docs/skills/W/W-01-firebase.md|1791899500|A20261013-004#065
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792552233
+V: 1792552804
 W: github-actions[bot]
 ═══ */
 
