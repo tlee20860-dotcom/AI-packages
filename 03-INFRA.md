@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-21 19:26:31 (HKT)
+> 生成時間：2026-10-21 19:38:25 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -320,7 +320,7 @@ jobs:
           find build-repo -maxdepth 1 -name "*.md" -type f -delete
           echo "舊共享包已清空。"
 
-      - name: "Step 1.5: 生成 STATE-INDEX.md"
+      - name: "Step 1.5: 生成體系 STATE-INDEX.md"
         run: |
           OUTPUT="AI-General/docs/records/STATE-INDEX.md"
           mkdir -p "AI-General/docs/records"
@@ -543,6 +543,68 @@ jobs:
             fi
           done
 
+      - name: "Step 7.5: 生成並更新專案 WF-STATE-INDEX"
+        run: |
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            PKG_NO=$(echo "$row" | jq -r '.pkg_no')
+            DOMAIN=$(echo "$row" | jq -r '.domain')
+            CODE=$(echo "$row" | jq -r '.code')
+            DISPLAY=$(echo "$row" | jq -r '.display // "-"')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            
+            PROJ_DIR="external/${SAFE_NAME}/docs/projects"
+            if [ ! -d "$PROJ_DIR" ]; then continue; fi
+
+            # 尋找專案資料夾 (通常只有一個，例如 web-app-family)
+            TARGET_DIR=$(find "$PROJ_DIR" -maxdepth 1 -mindepth 1 -type d | head -n 1)
+            if [ -z "$TARGET_DIR" ]; then continue; fi
+
+            TMP_TABLE="/tmp/state-index-${SAFE_NAME}.txt"
+            > "$TMP_TABLE"
+            
+            find "$TARGET_DIR" -type f -name "*.md" -not -name "WF-STATE-INDEX.md" | sort | while read -r f; do
+              V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
+              if [ -z "$V" ]; then continue; fi
+              W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
+              FNAME=$(basename "$f")
+              echo "| $FNAME | $V | $W |" >> "$TMP_TABLE"
+            done
+
+            OUTPUT="$TARGET_DIR/WF-STATE-INDEX.md"
+            
+            {
+              echo "# WF-STATE-INDEX（專案檔案狀態索引）"
+              echo ""
+              echo "最後更新：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
+              echo "Version: $(date +%s)"
+              echo "Writer: github-actions[bot]"
+              echo "用途：記錄所有已交付檔案的版本與清單（由體系自動生成）"
+              echo ""
+              echo "---"
+              echo ""
+              echo "## 一、專案總覽"
+              echo ""
+              echo "| 專案顯示名稱 | code | domain | package_no | repo |"
+              echo "|---|---|---|---|---|"
+              echo "| $DISPLAY | $CODE | $DOMAIN | $PKG_NO | $REPO |"
+              echo ""
+              echo "## 二、檔案清單（自動生成）"
+              echo ""
+              echo "| 檔案 | 版本 (V) | 編寫者 (W) |"
+              echo "|---|---|---|"
+              if [ -s "$TMP_TABLE" ]; then sort -t'|' -k2 -nr "$TMP_TABLE"; fi
+              echo ""
+              echo "/* ═══ EOF ═══"
+              echo "F: WF-STATE-INDEX.md"
+              echo "V: $(date +%s)"
+              echo "W: github-actions[bot]"
+              echo "═══ */"
+            } > "$OUTPUT"
+            
+            echo "Generated $OUTPUT"
+          done
+
       - name: "Step 8: 生成基礎設施總包 (03-INFRA.md)"
         run: |
           OUTPUT="build-repo/03-INFRA.md"
@@ -682,8 +744,9 @@ jobs:
             fi
           done
 
-      - name: "Step 9: 上傳共享包"
+      - name: "Step 9: 上傳共享包與專案索引"
         run: |
+          # 1. 提交體系 STATE-INDEX
           cd AI-General
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -693,8 +756,44 @@ jobs:
             (git pull --rebase origin main || true) && 
             git push
           )
+          cd ..
 
-          cd ../build-repo
+          # 2. 提交專案 WF-STATE-INDEX (防呆：確認檔案存在才 add)
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            REPO=$(echo "$row" | jq -r '.repo')
+            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
+            
+            if [ -d "external/${SAFE_NAME}" ]; then
+              cd "external/${SAFE_NAME}"
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              
+              # 尋找是否有生成 WF-STATE-INDEX.md
+              if [ -d "docs/projects" ]; then
+                TARGET_FILES=$(find docs/projects -name "WF-STATE-INDEX.md")
+              else
+                TARGET_FILES=""
+              fi
+
+              if [ -n "$TARGET_FILES" ]; then
+                git add $TARGET_FILES
+                if ! git diff --cached --quiet; then
+                  git commit -m "chore: auto-update WF-STATE-INDEX [skip ci]"
+                  git pull --rebase origin main || true
+                  git push
+                  echo "Pushed WF-STATE-INDEX for $SAFE_NAME"
+                else
+                  echo "No changes in WF-STATE-INDEX for $SAFE_NAME"
+                fi
+              else
+                echo "No WF-STATE-INDEX generated for $SAFE_NAME"
+              fi
+              cd ../..
+            fi
+          done
+
+          # 3. 提交 build-repo 共享包
+          cd build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -1242,6 +1341,7 @@ on:
       - '**/*.ico'
       - '.gitignore'
       - 'LICENSE'
+      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
 
 jobs:
   notify:
@@ -1254,13 +1354,7 @@ jobs:
             -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
             https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
             -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"
-
-# ═══ EOF ═══
-# F: AI-WEB-APP-Family/.github/workflows/notify.yml
-# V: 1792357000
-# W: ai-system-20261019-010#085
-# ═══ EOF ═══```
+          echo "已通知 AI-infra 重新建置"```
 
 <!-- === FILE END: .github/workflows/notify.yml === -->
 
