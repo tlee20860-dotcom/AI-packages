@@ -1,6 +1,6 @@
 # 92 包：AI 控制台原始碼
 
-> 生成時間：2026-10-21 20:44:25 (HKT)
+> 生成時間：2026-10-21 20:47:11 (HKT)
 
 
 <!-- === FILE START: index.html === -->
@@ -156,6 +156,7 @@
         let pollInterval = null;
         let currentToken = '';
         let tokenList = [];
+        let triggerTime = 0; // 🆕 記錄手動觸發時間
 
         // 初始化
         window.onload = () => {
@@ -303,6 +304,7 @@
         async function triggerBuild() {
             const btn = document.getElementById('btn-trigger');
             btn.disabled = true;
+            triggerTime = Date.now(); // 記錄按下按鈕的時間
             updateStatus('build-status', 'running', '正在發送打包指令...');
 
             try {
@@ -312,10 +314,10 @@
                     body: JSON.stringify({ ref: 'main' })
                 });
                 
-                updateStatus('build-status', 'running', '指令已發送，等待回應...');
+                updateStatus('build-status', 'running', '指令已發送，等待 GitHub 建立新任務...');
                 if (pollInterval) clearInterval(pollInterval);
-                setTimeout(checkBuildStatus, 3000);
-                pollInterval = setInterval(checkBuildStatus, 10000);
+                setTimeout(checkBuildStatus, 3000); // 3秒後先查一次
+                pollInterval = setInterval(checkBuildStatus, 5000); // 之後每5秒查一次
             } catch (error) {
                 updateStatus('build-status', 'failure', error.message);
                 btn.disabled = false;
@@ -327,18 +329,27 @@
                 const data = await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`);
                 if (data.workflow_runs && data.workflow_runs.length > 0) {
                     const run = data.workflow_runs[0];
+                    const runTime = new Date(run.created_at).getTime();
                     const createdAt = new Date(run.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-                    
+
+                    // 如果目前是在「等待新任務」的狀態，且最新的 run 時間小於我們觸發的時間（留 10 秒容錯）
+                    if (triggerTime > 0 && runTime < triggerTime - 10000) {
+                        updateStatus('build-status', 'running', '指令已發送，等待 GitHub 排隊建立新任務...');
+                        return; // 繼續 polling，不更新狀態
+                    }
+
                     if (run.status === 'in_progress' || run.status === 'queued') {
                         updateStatus('build-status', 'running', `打包進行中... (始於 ${createdAt})`);
                     } else if (run.conclusion === 'success') {
                         updateStatus('build-status', 'success', `上次打包成功 (${createdAt})`);
                         document.getElementById('btn-trigger').disabled = false;
-                        if (pollInterval) { clearInterval(pollInterval); fetchFiles(); }
+                        triggerTime = 0; // 重置
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; fetchFiles(); }
                     } else {
                         updateStatus('build-status', 'failure', `上次打包失敗 (${createdAt})`);
                         document.getElementById('btn-trigger').disabled = false;
-                        if (pollInterval) clearInterval(pollInterval);
+                        triggerTime = 0; // 重置
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
                     }
                 } else {
                     updateStatus('build-status', '', '尚無打包紀錄');
@@ -347,48 +358,7 @@
             } catch (error) {
                 updateStatus('build-status', 'failure', error.message);
                 document.getElementById('btn-trigger').disabled = false;
-            }
-        }
-
-        // === 遠端 Patch 部署 ===
-        async function deployPatch() {
-            const btn = document.getElementById('btn-deploy-patch');
-            const targetRepo = document.getElementById('patch-repo').value.trim();
-            const branch = document.getElementById('patch-branch').value.trim() || 'main';
-            const patchContent = document.getElementById('patch-content').value;
-
-            if (!targetRepo || !targetRepo.includes('/')) return alert('請輸入正確目標 Repo (owner/repo)');
-            if (!patchContent) return alert('請貼上 Patch 內容');
-
-            btn.disabled = true;
-            updateStatus('patch-status', 'running', '正在取得檔案 SHA...');
-
-            try {
-                let sha = null;
-                try {
-                    const fileData = await githubAPI(`/repos/${targetRepo}/contents/.github/PATCH.md?ref=${branch}`);
-                    sha = fileData.sha;
-                } catch (e) {
-                    if (!e.message.includes('404') && !e.message.includes('找不到')) throw e;
-                }
-
-                updateStatus('patch-status', 'running', '正在寫入 PATCH.md...');
-                const contentBase64 = btoa(unescape(encodeURIComponent(patchContent)));
-                const putBody = { message: 'chore: apply patch via AI Console', content: contentBase64, branch: branch };
-                if (sha) putBody.sha = sha;
-
-                await githubAPI(`/repos/${targetRepo}/contents/.github/PATCH.md`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(putBody)
-                });
-
-                updateStatus('patch-status', 'success', 'PATCH.md 已寫入，Action 已觸發');
-                document.getElementById('patch-content').value = '';
-                btn.disabled = false;
-            } catch (error) {
-                updateStatus('patch-status', 'failure', error.message);
-                btn.disabled = false;
+                if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
             }
         }
 
@@ -545,22 +515,7 @@
         </div>
     </div>
 
-    <!-- 3. Patch 部署區 -->
-    <div class="card" id="patch-section">
-        <div class="card-title">🚀 遠端 Patch 部署</div>
-        <input type="text" id="patch-repo" placeholder="目標 Repo (如 tlee20860-dotcom/AI-WEB-APP-Family)" value="tlee20860-dotcom/AI-WEB-APP-Family">
-        <input type="text" id="patch-branch" placeholder="分支 (預設 main)" value="main">
-        <textarea id="patch-content" placeholder="請貼上 Patch 內容 (支援 ## FILE: path 語法)"></textarea>
-        <button class="btn-primary" id="btn-deploy-patch" onclick="deployPatch()">
-            ✏️ 寫入 PATCH.md 並觸發
-        </button>
-        <div class="status-box">
-            <div class="status-dot" id="patch-status-dot"></div>
-            <div id="patch-status-text">等待操作...</div>
-        </div>
-    </div>
-
-    <!-- 4. Pages 部署區 -->
+    <!-- 3. Pages 部署區 -->
     <div class="card" id="pages-section">
         <div class="card-title">🌐 Pages 部署</div>
         <input type="text" id="pages-repo" placeholder="目標 Repo (如 tlee20860-dotcom/AI-WEB-APP-Family)" value="tlee20860-dotcom/AI-WEB-APP-Family">
@@ -574,7 +529,7 @@
         </div>
     </div>
 
-    <!-- 5. 檔案下載區 -->
+    <!-- 4. 檔案下載區 -->
     <div class="card" id="files-section">
         <div class="card-title">📥 共享包獲取</div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -588,7 +543,13 @@
 </div>
 
 </body>
-</html>```
+</html>
+
+<!-- ═══ EOF ═══
+F: AI-infra/index.html
+V: 1792581600
+W: ai-system-20261021-005#1
+═══ -->```
 
 <!-- === FILE END: index.html === -->
 
@@ -628,7 +589,7 @@
 ## 📄 sw.js
 
 ```js
-const CACHE_NAME = 'ai-console-v1';
+const CACHE_NAME = 'ai-console-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -683,6 +644,12 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request);
       })
   );
-});```
+});
+
+/* ═══ EOF ═══
+F: AI-infra/sw.js
+V: 1792581601
+W: ai-system-20261021-005#2
+═══ */```
 
 <!-- === FILE END: sw.js === -->
