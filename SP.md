@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-22 01:23:16 (HKT)
+> 生成時間：2026-10-22 12:34:36 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -27,9 +27,9 @@ records_pending: []
 | 欄位 | 值 |
 |---|---|
 | 對話編號 | ai-system-20261021-006 |
-| 本次範圍 | 體系微核心化 v1.5 落地：I-00／A-00／R-00／R-03／U-00 交付、R-05-dsl-map 新增 |
-| 累計回覆 | 約 27 條 |
-| 狀態 | 5 檔已交付並確認；SP 四檔加 pending 欄進行中 |
+| 本次範圍 | 體系微核心化 v1.5 落地（四檔重構、R-05 新增、SP 擴六檔）、Phase 2 腳本升級（修補漏檔與 F-004 誤報） |
+| 累計回覆 | 約 48 條 |
+| 狀態 | 全數結案；已產出 STATE_SEAL 並重置 |
 
 ---
 
@@ -38,11 +38,11 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **微核心化定案**：v1.5 合併八裁決與四缺失補齊，經兩份外部審查後由 Ken 拍板落地。
+1. **微核心化定案**：v1.5 合併八裁決與四缺失，經兩份外部審查後落地。
 2. **FSM 結構化**：T99 移出 transitions 改 `fallback_handler`；加 `boot_check`、`pre_condition_guard`；`evaluation_order: strict_top_down`。
 3. **FastDev 自檢**：主走 GitHub Actions 正則，無 CI 時走提取式＋Ken 抽查。
-4. **R-011 補強**：物理關鍵字否定清單＋`domain_classification` 宣告。
-5. **F-004 例外**：md 檔內含 YAML 時，外層 MUST 用四反引號。
+4. **F-004 修正**：原「禁內層反引號」導致誤報，改為「檔案邊界防呆（首尾禁反引號）」。
+5. **SP 擴為六檔**：新增 `SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md`，採 APPEND_ONLY。
 
 ---
 
@@ -58,10 +58,9 @@ records_pending: []
 
 | # | 優先確認 |
 |---|---|
-| 1 | 是否使用最新四檔與 SP |
+| 1 | 是否使用最新四檔與 SP 六檔 |
 | 2 | `records_pending` 是否為空；非空須先補寫 |
-| 3 | STATE_SEAL 的 ssot 欄是否已改指向現有 SP 四檔（HANDOFF／PROGRESS／CONCLUSION／STATE-INDEX） |
-| 4 | R-05-dsl-map 是否已納入 RP 合成物（需更新 `setup-structure.yml`） |
+| 3 | `setup-structure.yml` 是否已將 R-05 與兩新檔正確打包 |
 
 ---
 
@@ -69,10 +68,9 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| STATE_SEAL ssot 欄改指向現有 SP 四檔 | 待處理 |
-| `setup-structure.yml` 支援 STATE_SEAL／APPEND_ONLY／pending | Phase 2 |
-| 36 條映射完成後，R-00 契約表加 DSL 欄 | 待處理 |
-| PROGRESS／CONCLUSION 是否需加 pending 欄 | 暫不加（單一真相在 HANDOFF） |
+| K-01：F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 暫不處理（見 SYSTEM-DEBT.md） |
+| K-03：R-00 契約表加 DSL 欄 | 待處理（見 SYSTEM-DEBT.md） |
+| 跨模型對抗驗收（Phase 3） | 未啟動 |
 
 ---
 
@@ -80,14 +78,14 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 交付 SP 其餘三檔（PROGRESS／CONCLUSION／STATE-INDEX）之確認或維持 |
-| 2 | 更新 STATE_SEAL ssot 欄指向 |
-| 3 | 進入 Phase 2：`setup-structure.yml` 升級 |
+| 1 | 跑一次 Actions，確認 Step 9.8 驗證報告為 0 錯誤 |
+| 2 | 若需處理體系技術債，可開新對話處理 K-01／K-03 |
+| 3 | 進入 WebApp 專案對話，處理 `entity-registry.js` 與 B34-5 業務開發 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792600028
-W: ai-system-20261021-006#7
+V: 1792600038
+W: ai-system-20261021-006#15
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
@@ -103,18 +101,18 @@ W: ai-system-20261021-006#7
 
 ## 一、當前任務
 
-### 任務十八：體系身份重構與腳本修復（005）
+### 任務十九：體系微核心化與腳本對齊（006）
 | 欄位 | 值 |
 |---|---|
-| 任務名稱 | WF-* 污染修復、腳本順序修復、全中文標頭、沙盒機制 |
+| 任務名稱 | 微核心化 v1.5 落地、F-004 修正、Phase 2 腳本升級 |
 | 開始時間 | 2026-10-21 |
 | 當前階段 | 全數完成 |
 | 完成度 | 100% |
 
-### 任務十七：W 包與自動化對齊（004）
+### 任務十八：體系身份重構與腳本修復（005）
 | 欄位 | 值 |
 |---|---|
-| 任務名稱 | W 包升級、WF 紀錄對齊、自動化腳本閉環 |
+| 任務名稱 | WF-* 污染修復、腳本順序修復、全中文標頭、沙盒機制 |
 | 開始時間 | 2026-10-21 |
 | 完成度 | 100% |
 
@@ -122,17 +120,18 @@ W: ai-system-20261021-006#7
 
 ## 二、步驟清單
 
-### 任務十八：體系身份重構與腳本修復
+### 任務十九：體系微核心化與腳本對齊
 | # | 步驟 | 狀態 | 完成時間 |
 |---|---|---|---|
-| 1 | 修復專案 WF-* 污染 | ✅ | 2026-10-21 |
-| 2 | 修復 `setup-structure.yml` 索引滯後 | ✅ | 2026-10-21 |
-| 3 | 重構身份設定（啟動標籤、自動識別、5-Core） | ✅ | 2026-10-21 |
-| 4 | 全中文標頭與 CCL 沙盒整合 | ✅ | 2026-10-21 |
-| 5 | 廢除 Patch 模式，回歸完整檔 | ✅ | 2026-10-21 |
+| 1 | v1.5 規格定稿（合併八裁決與四缺失） | ✅ | 2026-10-22 |
+| 2 | 重寫 I-00／A-00／R-00／R-03／U-00 | ✅ | 2026-10-22 |
+| 3 | 新增 R-05-dsl-map（36 條映射） | ✅ | 2026-10-22 |
+| 4 | SP 擴為六檔（新增 REJECTED／DEBT） | ✅ | 2026-10-22 |
+| 5 | 修改 setup-structure.yml（補 R-05、兩新檔、Step 9.8） | ✅ | 2026-10-22 |
+| 6 | 修改 validate_delivery.py（F-004 邊界防呆） | ✅ | 2026-10-22 |
 
-### 任務十七：W 包與自動化對齊（承接）
-*(步驟 1~4 已完成，省略)*
+### 任務十八：體系身份重構與腳本修復（承接）
+*(步驟 1~5 已完成，省略)*
 
 ---
 
@@ -153,16 +152,14 @@ W: ai-system-20261021-006#7
 
 | 日期 | 對話編號 | 完成任務 |
 |---|---|---|
-| 2026-10-21 | ai-system-20261021-003 | 任務十六（5/6） |
 | 2026-10-21 | ai-system-20261021-004 | 任務十七（100%） |
 | 2026-10-21 | ai-system-20261021-005 | 任務十八（100%） |
-
----
+| 2026-10-22 | ai-system-20261021-006 | 任務十九（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792589104
-W: ai-system-20261021-005#8
+V: 1792600037
+W: ai-system-20261021-006#15
 ═══ */
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
@@ -364,7 +361,7 @@ W: ai-system-20261021-006#9
 
 # STATE-INDEX
 
-> 生成時間：2026-10-22 01:23:16 (HKT)
+> 生成時間：2026-10-22 12:34:36 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -375,18 +372,18 @@ W: ai-system-20261021-006#9
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792602689|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792603396|github-actions[bot]
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792600038|ai-system-20261021-006#15
+AI-General|docs/records/PROGRESS.md|1792600037|ai-system-20261021-006#15
 AI-kernel|docs/r-rules/R-00-rules.md|1792600036|ai-system-20261021-006#14
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792600033|ai-system-20261021-006#11
 AI-kernel|docs/a-guide/A-00-guide.md|1792600032|ai-system-20261021-006#10
 AI-General|docs/records/SYSTEM-DEBT.md|1792600031|ai-system-20261021-006#9
 AI-General|docs/records/SYSTEM-REJECTED.md|1792600030|ai-system-20261021-006#9
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792600028|ai-system-20261021-006#7
 AI-kernel|docs/r-rules/R-05-dsl-map.md|1792600027|ai-system-20261021-006#6
 AI-kernel|docs/u-profile/U-00-profile.md|1792600026|ai-system-20261021-006#5
 AI-kernel|docs/r-rules/R-03-terms.md|1792600025|ai-system-20261021-006#4
 AI-kernel|docs/a-guide/I-00-identity.md|1792600023|ai-system-20261021-006#3
-AI-General|docs/records/PROGRESS.md|1792589104|ai-system-20261021-005#8
 AI-kernel|docs/skills/W/W-07-errors.md|1792581008|ai-system-20261021-004#8
 AI-kernel|docs/skills/W/W-06-sop.md|1792581007|ai-system-20261021-004#7
 AI-kernel|docs/skills/W/W-05-schema.md|1792581006|ai-system-20261021-004#6
@@ -400,7 +397,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792603396
+V: 1792643676
 W: github-actions[bot]
 ═══ */
 
