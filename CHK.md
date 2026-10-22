@@ -1,6 +1,6 @@
 # CHK 審查包（合規審判者用）
 
-> 生成時間：2026-10-22 22:13:02 (HKT)
+> 生成時間：2026-10-23 02:06:56 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/review/REVIEW-FORMAT.md === -->
