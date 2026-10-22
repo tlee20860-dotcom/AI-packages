@@ -1,6 +1,6 @@
 # 基礎設施總包 (INFRA)
 
-> 生成時間：2026-10-22 12:34:37 (HKT)
+> 生成時間：2026-10-22 13:36:12 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 ## 🏢 體系層：AI-infra（唯一腳本）
@@ -462,6 +462,36 @@ jobs:
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
+      - name: "Step 6.5: 生成審查包 (CHK.md)"
+        run: |
+          OUTPUT="build-repo/CHK.md"
+          SRC_DIR="AI-kernel/docs/review"
+          SRC_LIST="REVIEW-FORMAT.md ROLE-BOUNDARY.md CHK-INDEX.md CHK-E.md"
+
+          MISSING=""
+          for f in $SRC_LIST; do
+            if [ ! -f "$SRC_DIR/$f" ]; then
+              MISSING="$MISSING $f"
+            fi
+          done
+
+          if [ -n "$MISSING" ]; then
+            echo "[FAIL] CHK.md 生成中止：缺源檔$MISSING"
+            rm -f "$OUTPUT"
+            exit 1
+          fi
+
+          echo "# CHK 審查包（合規審判者用）" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+
+          for f in $SRC_LIST; do
+            bash .github/workflows/append_file.sh "$SRC_DIR/$f" "$OUTPUT" || { rm -f "$OUTPUT"; exit 1; }
+          done
+
+          echo "[OK] CHK.md 已生成。"
+
       - name: "Step 7: 生成並更新專案 WF-STATE-INDEX"
         run: |
           jq -c '.[]' /tmp/projects.json | while read -r row; do
@@ -826,8 +856,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792600035
-# W: ai-system-20261021-006#13
+# V: 1792607001
+# W: ai-system-20261022-007#73#1
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
