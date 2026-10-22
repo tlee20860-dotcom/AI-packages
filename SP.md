@@ -1,6 +1,6 @@
 # AI 對話系統 - 體系狀態包
 
-> 生成時間：2026-10-22 14:23:46 (HKT)
+> 生成時間：2026-10-22 14:34:39 (HKT)
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
@@ -26,9 +26,9 @@ records_pending: []
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261021-006 |
-| 本次範圍 | 體系微核心化 v1.5 落地（四檔重構、R-05 新增、SP 擴六檔）、Phase 2 腳本升級（修補漏檔與 F-004 誤報） |
-| 累計回覆 | 約 48 條 |
+| 對話編號 | ai-system-20261022-007 |
+| 本次範圍 | 三 AI 模式落地、CHK 審查包建置、setup-structure.yml 升級、外部 AI 實測 |
+| 累計回覆 | 約 93 條 |
 | 狀態 | 全數結案；已產出 STATE_SEAL 並重置 |
 
 ---
@@ -38,11 +38,11 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **微核心化定案**：v1.5 合併八裁決與四缺失，經兩份外部審查後落地。
-2. **FSM 結構化**：T99 移出 transitions 改 `fallback_handler`；加 `boot_check`、`pre_condition_guard`；`evaluation_order: strict_top_down`。
-3. **FastDev 自檢**：主走 GitHub Actions 正則，無 CI 時走提取式＋Ken 抽查。
-4. **F-004 修正**：原「禁內層反引號」導致誤報，改為「檔案邊界防呆（首尾禁反引號）」。
-5. **SP 擴為六檔**：新增 `SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md`，採 APPEND_ONLY。
+1. **三 AI 模式定案**：體系開發與結構師／挑戰方案對抗者／合規審判者。
+2. **CHK 審查包建置**：新增 `docs/review/` 四檔，15 條可核項目。
+3. **FSM 調整**：對抗者與審判者外部化，不進 FSM。
+4. **打包自動化**：Action 新增 Step 6.5，自動生成 `CHK.md`。
+5. **外部 AI 實測**：成功透過「特徵化」與「例外機制」防堵 AI 敷衍瞎判。
 
 ---
 
@@ -50,7 +50,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-150～D-156。
+**本次新增決策**：D-157～D-165。
 
 ---
 
@@ -60,7 +60,7 @@ records_pending: []
 |---|---|
 | 1 | 是否使用最新四檔與 SP 六檔 |
 | 2 | `records_pending` 是否為空；非空須先補寫 |
-| 3 | `setup-structure.yml` 是否已將 R-05 與兩新檔正確打包 |
+| 3 | `setup-structure.yml` 是否已包含 Step 6.5（CHK.md 生成） |
 
 ---
 
@@ -70,7 +70,8 @@ records_pending: []
 |---|---|
 | K-01：F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 暫不處理（見 SYSTEM-DEBT.md） |
 | K-03：R-00 契約表加 DSL 欄 | 待處理（見 SYSTEM-DEBT.md） |
-| 跨模型對抗驗收（Phase 3） | 未啟動 |
+| K-04：外部 AI 審查敷衍風險 | 已初步緩解，持續觀察（見 SYSTEM-DEBT.md） |
+| CHK-COMMON 及其他領域 CHK 建立 | 待辦 |
 
 ---
 
@@ -78,14 +79,14 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 跑一次 Actions，確認 Step 9.8 驗證報告為 0 錯誤 |
-| 2 | 若需處理體系技術債，可開新對話處理 K-01／K-03 |
-| 3 | 進入 WebApp 專案對話，處理 `entity-registry.js` 與 B34-5 業務開發 |
+| 1 | 跑一次 Actions，確認 Step 6.5 成功生成 CHK.md |
+| 2 | 進入 WebApp 專案對話，處理 `entity-registry.js` 與 B34-5 業務開發 |
+| 3 | 若需處理技術債，可開新對話處理 K-01／K-03 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792600038
-W: ai-system-20261021-006#15
+V: 1792613001
+W: ai-system-20261022-007#93#1
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
@@ -101,18 +102,18 @@ W: ai-system-20261021-006#15
 
 ## 一、當前任務
 
+### 任務二十：三 AI 模式與審查包建置（007）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 三 AI 模式落地、CHK 審查包建置、腳本升級與實測 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
 ### 任務十九：體系微核心化與腳本對齊（006）
 | 欄位 | 值 |
 |---|---|
 | 任務名稱 | 微核心化 v1.5 落地、F-004 修正、Phase 2 腳本升級 |
-| 開始時間 | 2026-10-21 |
-| 當前階段 | 全數完成 |
-| 完成度 | 100% |
-
-### 任務十八：體系身份重構與腳本修復（005）
-| 欄位 | 值 |
-|---|---|
-| 任務名稱 | WF-* 污染修復、腳本順序修復、全中文標頭、沙盒機制 |
 | 開始時間 | 2026-10-21 |
 | 完成度 | 100% |
 
@@ -120,18 +121,17 @@ W: ai-system-20261021-006#15
 
 ## 二、步驟清單
 
-### 任務十九：體系微核心化與腳本對齊
+### 任務二十：三 AI 模式與審查包建置
 | # | 步驟 | 狀態 | 完成時間 |
 |---|---|---|---|
-| 1 | v1.5 規格定稿（合併八裁決與四缺失） | ✅ | 2026-10-22 |
-| 2 | 重寫 I-00／A-00／R-00／R-03／U-00 | ✅ | 2026-10-22 |
-| 3 | 新增 R-05-dsl-map（36 條映射） | ✅ | 2026-10-22 |
-| 4 | SP 擴為六檔（新增 REJECTED／DEBT） | ✅ | 2026-10-22 |
-| 5 | 修改 setup-structure.yml（補 R-05、兩新檔、Step 9.8） | ✅ | 2026-10-22 |
-| 6 | 修改 validate_delivery.py（F-004 邊界防呆） | ✅ | 2026-10-22 |
-
-### 任務十八：體系身份重構與腳本修復（承接）
-*(步驟 1~5 已完成，省略)*
+| 1 | 定案三 AI 模式與邊界（I-00） | ✅ | 2026-10-22 |
+| 2 | 新增 docs/review 四檔（REVIEW-FORMAT、ROLE-BOUNDARY、CHK-INDEX、CHK-E） | ✅ | 2026-10-22 |
+| 3 | 修改 R-00（新增 §七 審查機制）與 R-03（新增詞 48~57） | ✅ | 2026-10-22 |
+| 4 | 修改 A-00（FSM 角色外部化）與 U-00（加三角色指名） | ✅ | 2026-10-22 |
+| 5 | 修改 setup-structure.yml（新增 Step 6.5 生成 CHK.md） | ✅ | 2026-10-22 |
+| 6 | 更新 R-05 映射（新增 R00-7.x）與詞 39 修正 | ✅ | 2026-10-22 |
+| 7 | 特徵化 CHK-E 與新增 REVIEW-FORMAT 例外機制 | ✅ | 2026-10-22 |
+| 8 | 外部 AI 實測通過（防堵敷衍瞎判） | ✅ | 2026-10-22 |
 
 ---
 
@@ -152,14 +152,14 @@ W: ai-system-20261021-006#15
 
 | 日期 | 對話編號 | 完成任務 |
 |---|---|---|
-| 2026-10-21 | ai-system-20261021-004 | 任務十七（100%） |
 | 2026-10-21 | ai-system-20261021-005 | 任務十八（100%） |
 | 2026-10-22 | ai-system-20261021-006 | 任務十九（100%） |
+| 2026-10-22 | ai-system-20261022-007 | 任務二十（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792600037
-W: ai-system-20261021-006#15
+V: 1792613002
+W: ai-system-20261022-007#93#2
 ═══ */
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
@@ -177,57 +177,47 @@ W: ai-system-20261021-006#15
 
 | # | 議題 | 狀態 |
 |---|---|---|
-| 1~69 | 歷史議題 | ✅ |
-| 70 | Version SSOT 與 Patch 工具缺陷 | ✅ |
+| 1~70 | 歷史議題 | ✅ |
 | 71 | W 包重構與專案紀錄 WF 對齊 | ✅ |
 | 72 | 體系微核心化 v1.5（DSL／FSM／STATE_SEAL） | ✅ |
+| 73 | 三 AI 模式與 CHK 審查包機制建置 | ✅ |
 
 ---
 
 ## 二、設計結論
 
-*(2.1~2.22 保留原樣)*
-
-### 2.23 體系 v3 重構（003 定案）
-*(原 10 點保留)*
+*(2.1~2.23 保留原樣)*
 
 ### 2.24 W 包與自動化對齊（004 定案）
-1. **W 包現代化**：擴充至 W-00~W-07（新增通用 SOP 與錯誤），完全拔除專案綁定字眼。
-2. **紀錄分離**：專案紀錄檔對齊 AI-G 命名（WF-*）；決策與錯誤明細降級為 P-04/14/99。
-3. **腳本自治**：`setup-structure.yml` 不只打包，還負責生成並回寫專案的 `WF-STATE-INDEX.md`。
-4. **防撞機制**：專案 `notify.yml` 忽略 `WF-STATE-INDEX.md`，阻斷無限迴圈。
+*(原 4 點保留)*
 
 ### 2.25 體系微核心化 v1.5（006 定案）
-1. **FSM 結構化**：T99 移出 transitions 改 `fallback_handler`；`evaluation_order: strict_top_down`；四步求值（boot_check → pending → transitions → fallback）。
-2. **開場版本比對**：`boot_check` 抓「改過四檔卻未結案」；口頭決策遺失抓不到。
-3. **pending 攔截**：`records_pending` 單一真相在 HANDOFF 檔頭；只擋交付，不擋討論。
-4. **FastDev 自檢**：主走 GitHub Actions 正則；無 CI 時提取式＋Ken 抽查。
-5. **R-011 補強**：物理關鍵字否定清單＋`domain_classification` 宣告。
-6. **F-004 例外**：md 檔內含 YAML 時，外層 MUST 用四反引號。
-7. **SP 擴為六檔**：新增 `SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md`，皆 APPEND_ONLY。
-8. **STATE_SEAL**：取代長篇交接詞，ssot 指向六檔，`rejected_options`／`tech_debts` 帶 RJ／K 編號。
+*(原 8 點保留)*
+
+### 2.26 三 AI 模式與審查包機制（007 定案）
+1. **三 AI 模式**：體系開發與結構師、挑戰方案對抗者、合規審判者；對抗者與審判者為外部角色，不進 FSM。
+2. **CHK 機制**：新增 `docs/review/` 四檔，定義 15 條可核對項目（CHK-E-001~015）。
+3. **特徵化與例外**：CHK-E 期望全面特徵化；REVIEW-FORMAT 新增「特徵搜尋類」與「定點檢查類」，不強制給前中後。
+4. **打包自動化**：Action 新增 Step 6.5，缺任一源檔即失敗，不產出半套 CHK.md。
+5. **防堵敷衍**：引入 FMT-09，判定必須基於期望特徵，拿無關行號湊數即 FAIL。
 
 ---
 
 ## 三、決策記錄
 
-*(D-198~D-343 保留原樣)*
+*(D-144~D-156 保留原樣)*
 
 | 編號 | 決策 | 說明 |
 |---|---|---|
-| D-144 | W 包擴充並中性化 | W-00~W-07；拔除特定專案字眼。 |
-| D-145 | 專案紀錄檔改名 WF-* | 對齊 AI-G；P-02/03/12/13 廢除並轉型。 |
-| D-146 | 體系代管專案索引生成 | `setup-structure.yml` 增加 Step 7.5 與 9。 |
-| D-147 | 腳本防呆 | 加入 `if [ -d "docs/projects" ]` 避免空目錄崩潰。 |
-| D-148 | R-00 F-007 語法補齊 | 納入 REGEX 與 REPLACE_ALL。 |
-| D-149 | `entity-registry.js` code 留待專案 | 屬業務邏輯，由專案對話處理。 |
-| D-150 | FSM 改 `fallback_handler` | T99 留 transitions 無法物理保證最後匹配。 |
-| D-151 | 加 `boot_check` 開場版本比對 | 抓「改過四檔卻未結案」；口頭決策抓不到。 |
-| D-152 | `records_pending` 單一真相在 HANDOFF | 其他三檔不重複加，避免多處真相。 |
-| D-153 | SP 擴為六檔 | 新建 REJECTED／DEBT，皆 APPEND_ONLY。 |
-| D-154 | F-004 加四反引號例外 | md 內含 YAML 時外層用 ````。 |
-| D-155 | FastDev 自檢主走 CI、次走提取式 | 無 CI 時提取原文＋Ken 抽查。 |
-| D-156 | R-05-dsl-map 新增 | 36 條映射：30 DSL、4 散文、2 部分 DSL。 |
+| D-157 | 雙 AI 改三 AI 模式 | 新增挑戰方案對抗者與合規審判者。 |
+| D-158 | 對抗者與審判者外部化 | 不進 FSM 狀態與 δ 轉移。 |
+| D-159 | CHK 審查包新增 | 建立 docs/review/ 四源檔，打包為 CHK.md。 |
+| D-160 | CHK.md 由 Action 生成 | setup-structure.yml 新增 Step 6.5。 |
+| D-161 | 核對範圍限縮 | 不核交付外層（F-001/003）與對話層（R-014）。 |
+| D-162 | 前中後機制 | 預設 L1，高風險可升層，支援重複抽查。 |
+| D-163 | CHK-E 特徵化 | 期望改為具體特徵，如 `V:`、`F/V/W`。 |
+| D-164 | REVIEW-FORMAT 例外 | 新增特徵搜尋與定點檢查類，免前中後。 |
+| D-165 | FMT-09 敷衍防堵 | 拿無關行號湊數即 FAIL。 |
 
 **決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
 
@@ -242,16 +232,17 @@ W: ai-system-20261021-006#15
 | 被否決方案台帳 | SYSTEM-REJECTED.md |
 | 技術債台帳 | SYSTEM-DEBT.md |
 | 檔案清單索引 | STATE-INDEX.md |
-| 身份與信仰 | I-00-identity.md（合成物 IP） |
-| 啟動引導 | A-00-guide.md（合成物 AP） |
-| 核心規則 | R-00-rules.md（合成物 RP） |
-| 規則 DSL 映射 | R-05-dsl-map.md（合成物 RP） |
-| 使用者畫像 | U-00-profile.md（合成物 UP） |
+| 身份與信仰 | I-00-identity.md（IP） |
+| 啟動引導 | A-00-guide.md（AP） |
+| 核心規則 | R-00-rules.md（RP） |
+| 規則 DSL 映射 | R-05-dsl-map.md（RP） |
+| 使用者畫像 | U-00-profile.md（UP） |
+| 審查包源檔 | docs/review/（合成物 CHK.md） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792600033
-W: ai-system-20261021-006#11
+V: 1792613003
+W: ai-system-20261022-007#93#3
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
@@ -276,6 +267,7 @@ W: ai-system-20261021-006#11
 | RJ-003 | 草稿 SEAL（每輪寫 draft_seal） | 每輪寫入過於頻繁，違 UP「一次交付完」偏好 | ai-system-20261021-006 | 2026-10-21 |
 | RJ-004 | T99 留在 transitions 陣列 | 無法物理保證「最後才匹配」；改 fallback_handler | ai-system-20261021-006 | 2026-10-21 |
 | RJ-005 | 純 B 範式（只寫不變式、刪流程） | 會造成交接順序無人管（資料遺失風險） | ai-system-20261021-006 | 2026-10-21 |
+| RJ-006 | 審查項目的「前中後」機制硬套於全文搜尋/定點檢查 | 導致 AI 為了湊格式，拿無關行號敷衍瞎判；改為特徵搜尋類例外 | ai-system-20261022-007 | 2026-10-22 |
 
 ---
 
@@ -296,8 +288,8 @@ W: ai-system-20261021-006#11
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792600030
-W: ai-system-20261021-006#9
+V: 1792613004
+W: ai-system-20261022-007#93#4
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
@@ -361,7 +353,7 @@ W: ai-system-20261021-006#9
 
 # STATE-INDEX
 
-> 生成時間：2026-10-22 14:23:45 (HKT)
+> 生成時間：2026-10-22 14:34:39 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -372,7 +364,11 @@ W: ai-system-20261021-006#9
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792649032|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792650225|github-actions[bot]
+AI-General|docs/records/SYSTEM-REJECTED.md|1792613004|ai-system-20261022-007#93#4
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792613003|ai-system-20261022-007#93#3
+AI-General|docs/records/PROGRESS.md|1792613002|ai-system-20261022-007#93#2
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792613001|ai-system-20261022-007#93#1
 AI-kernel|docs/review/CHK-E.md|1792612002|ai-system-20261022-007#90#2
 AI-kernel|docs/review/REVIEW-FORMAT.md|1792612001|ai-system-20261022-007#90#1
 AI-kernel|docs/r-rules/R-03-terms.md|1792610001|ai-system-20261022-007#81#1
@@ -383,11 +379,7 @@ AI-kernel|docs/r-rules/R-00-rules.md|1792606002|ai-system-20261022-007#72#2
 AI-kernel|docs/a-guide/I-00-identity.md|1792606001|ai-system-20261022-007#72#1
 AI-kernel|docs/review/ROLE-BOUNDARY.md|1792605003|ai-system-20261022-007#70#2
 AI-kernel|docs/review/CHK-INDEX.md|1792605003|ai-system-20261022-007#70#3
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792600038|ai-system-20261021-006#15
-AI-General|docs/records/PROGRESS.md|1792600037|ai-system-20261021-006#15
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792600033|ai-system-20261021-006#11
 AI-General|docs/records/SYSTEM-DEBT.md|1792600031|ai-system-20261021-006#9
-AI-General|docs/records/SYSTEM-REJECTED.md|1792600030|ai-system-20261021-006#9
 AI-kernel|docs/skills/W/W-07-errors.md|1792581008|ai-system-20261021-004#8
 AI-kernel|docs/skills/W/W-06-sop.md|1792581007|ai-system-20261021-004#7
 AI-kernel|docs/skills/W/W-05-schema.md|1792581006|ai-system-20261021-004#6
@@ -401,7 +393,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792650225
+V: 1792650879
 W: github-actions[bot]
 ═══ */
 
