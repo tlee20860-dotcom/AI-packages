@@ -1,6 +1,6 @@
 # 專案地圖包：AI-WEB-APP-Family
 
-> 生成時間：2026-10-22 18:49:46 (HKT)
+> 生成時間：2026-10-22 22:03:45 (HKT)
 
 ## meta.json
 
@@ -20,13 +20,15 @@
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
-總檔數：129
+總檔數：142
 
 .github/PATCH.md
 .github/workflows/apply-patch.yml
 .github/workflows/notify.yml
 admin.html
 annual-report.html
+app.css
+app.html
 code-list.html
 css/components.css
 css/layout.css
@@ -52,6 +54,7 @@ docs/projects/web-app-family/WF-STATE-INDEX.md
 finance-overview.html
 functions/api/[[path]].js
 functions/api/_admin.js
+functions/api/_api-core.js
 functions/api/_bank.js
 functions/api/_config.js
 functions/api/_entity.js
@@ -66,6 +69,14 @@ input-center.html
 insurance.html
 js/admin/admin.js
 js/admin/platform-defaults.js
+js/app-core.js
+js/app-data.js
+js/app-domain.js
+js/app-entities.js
+js/app-pages-core.js
+js/app-pages-reports.js
+js/app-ui.js
+js/app-widgets.js
 js/blocks/detail-block.js
 js/blocks/filter-block.js
 js/blocks/form-block.js
@@ -143,6 +154,7 @@ js/ui/tab-panel.js
 js/ui/toast.js
 js/ui/view-toggle.js
 login.html
+manifest-app.json
 manifest.json
 member-report.html
 meta.json
@@ -150,4 +162,5 @@ portfolio.html
 register.html
 settings.html
 settlements.html
+sw-app.js
 sw.js

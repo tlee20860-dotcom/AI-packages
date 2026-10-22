@@ -1,6 +1,6 @@
 # 專案 P 檔總集：AI-WEB-APP-Family
 
-> 生成時間：2026-10-22 18:49:46 (HKT)
+> 生成時間：2026-10-22 22:03:45 (HKT)
 
 
 <!-- === FILE START: external/AI-WEB-APP-Family/docs/projects/web-app-family/P-01-index.md === -->
@@ -1864,6 +1864,7 @@ W: ai-system-20261021-004#15
 | 7 | 專案四層架構與 W 包抽離 | 已完成 |
 | 9 | 通用大腦與領域技能包對齊 | 已完成 |
 | 71 | 體系對齊與專案紀錄重整 | 已完成 |
+| 72 | SPA 重構與後端極簡化（V2） | 已完成 |
 
 ---
 
@@ -1871,12 +1872,17 @@ W: ai-system-20261021-004#15
 
 ### 2.1 編號系統與 API 統一（B34-4 定案）
 1. **統一端點**：廢棄所有獨立 CRUD 端點，統一由 `POST /api/entity-create` 處理（含 `action` 參數）。
-2. **編號生成**：由前端 `js/lib/code-registry.js` 負責，透過遍歷現有資料取得最大編號 +1，無計數器，防併發重複檢測。
+2. **編號生成**：由前端 `js/app-data.js` 負責，透過遍歷現有資料取得最大編號 +1，無計數器，防併發重複檢測。
 3. **清單頁面**：`code-list.html` 取代舊 `database.html`，提供篩選與權限管理。
 
 ### 2.2 專案重組與體系對齊（B34-5 定案）
-1. **紀錄檔重組**：專案技術文件保留 `P-*`（P-01, P-04, P-05 等），紀錄檔全面轉為 `WF-*`。
-2. **領域資料抽離**：通用 Web App 規則已抽至體系 `W-00 ~ W-07`，專案內僅留專屬實作。
+1. **紀錄檔重組**：專案技術文件保留 `P-*`，紀錄檔全面轉為 `WF-*`。
+2. **領域資料抽離**：通用 Web App 規則已抽至體系 `W-00 ~ W-07`。
+
+### 2.3 SPA 架構與後端極簡化（2026-10-22 定案）
+1. **前端 10 檔架構**：將舊版 129 個檔案重構為 `app.html`, `app.css`, `sw-app.js`, `manifest-app.json`，以及 7 個 `app-*.js` 核心模組。
+2. **後端 2 檔架構**：將 `functions/api/` 下 11 個檔案合併為 `[[path]].js` 與 `_api-core.js`。
+3. **舊檔案分離**：舊版檔案已全數遷移至 `old-AI-WEB-APP-FAMILY` 倉庫，確保新倉庫極度乾淨。
 
 ---
 
@@ -1889,7 +1895,9 @@ W: ai-system-20261021-004#15
 | D-063 | entity-create 單一端點 | 取代舊有各自獨立的 CRUD 端點。 |
 | D-064 | 舊端點全廢 | 只保留 GET 與特殊邏輯端點。 |
 | D-118 | 通用大腦 + N 領域技能包 | 將通用邏輯抽離至體系 W 包。 |
-| D-149 | `entity-registry.js` code 支援 | 留待 B34-5 業務階段處理。 |
+| D-149 | `entity-registry.js` code 支援 | 已完成於新版 `app-data.js`。 |
+| D-170 | SPA 重構與後端合併 | 前端 129 檔合併為 11 檔，後端 11 檔合併為 2 檔。舊檔移轉至 `old-AI-WEB-APP-FAMILY`。 |
+| D-171 | 新增 V2 識別與環境綁定 | `app.html` 加註 V2 與橘色識別；Cloudflare 環境變數設為 `DB_TARGET=new`。 |
 
 ---
 
@@ -1906,9 +1914,10 @@ W: ai-system-20261021-004#15
 
 /* ═══ EOF ═══
 F: WF-CONCLUSION.md
-V: 1792588001
-W: ai-system-20261021-005#1
+V: 1792670012
+W: webapp-20261022-046#1
 ═══ */
+
 <!-- === FILE END: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-CONCLUSION.md === -->
 
 <!-- === FILE START: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-HANDOFF.md === -->
@@ -1918,9 +1927,9 @@ W: ai-system-20261021-005#1
 # WF-HANDOFF（專案交接快照）
 
 上限：80 行（嚴格限制）
-最後更新：2026-10-21
-Version: 1792588002
-Writer: ai-system-20261021-005#2
+最後更新：2026-10-22
+Version: 1792670013
+Writer: webapp-20261022-046#2
 用途：提供下一輪對話 AI 的專案現況快照
 
 ---
@@ -1929,9 +1938,9 @@ Writer: ai-system-20261021-005#2
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261021-004（專案 B34-5 階段） |
-| 本次範圍 | P-15 重組與體系對齊、紀錄結構修復 |
-| 狀態 | 專案 WF-* 紀錄檔已修正，待繼續業務開發 |
+| 對話編號 | webapp-20261022-045 |
+| 本次範圍 | SPA 前端重構（10 檔）與後端合併（2 檔） |
+| 狀態 | 程式碼重構完成，準備進入最終驗收階段 |
 
 ---
 
@@ -1940,9 +1949,9 @@ Writer: ai-system-20261021-005#2
 **指向**：`WF-CONCLUSION.md` §一
 
 **本對話重點**：
-1. 專案技術文件（P-*）與紀錄檔（WF-*）分離完成。
-2. W 包通用領域規則抽離完成（對齊 W-00~W-07）。
-3. 專案自動索引 `WF-STATE-INDEX.md` 已由 GitHub Actions 接管。
+1. 完成 V2 版全新 SPA 架構。
+2. 後端 `functions/api/` 重寫並合併為 2 檔。
+3. 舊有 129 個檔案已轉移至 `old-AI-WEB-APP-FAMILY`。
 
 ---
 
@@ -1950,7 +1959,7 @@ Writer: ai-system-20261021-005#2
 
 **指向**：`WF-CONCLUSION.md` §三
 
-**本次新增決策**：紀錄檔修復決策（見本對話 D-?）。
+**本次新增決策**：D-170（SPA 重構）、D-171（V2 識別與環境綁定）。
 
 ---
 
@@ -1958,8 +1967,9 @@ Writer: ai-system-20261021-005#2
 
 | # | 優先確認 |
 |---|---|
-| 1 | 是否使用最新版專案包（`90-AI-WEB-APP-Family-P.md`）？ |
-| 2 | `entity-registry.js` 是否已加上 `code` 解析？ |
+| 1 | 是否已使用最新版專案包（包含本次重構紀錄）？ |
+| 2 | Cloudflare 環境變數 `DB_TARGET` 是否為 `new`？ |
+| 3 | 後端 `functions/api/` 是否只剩 `[[path]].js` 與 `_api-core.js`？ |
 
 ---
 
@@ -1967,9 +1977,9 @@ Writer: ai-system-20261021-005#2
 
 | 項目 | 狀態 |
 |---|---|
-| `entity-registry.js` 支援 code 解析 | 待處理（B34-5 業務開發） |
-| 程式碼 END OF FILE 補齊（約 44 檔） | 技術債（C-01） |
-| 版本號統一（v103.0.xx） | 技術債 |
+| 30 項功能驗收（AC） | 待執行（專案已可運作，需人工逐項點擊） |
+| 8 項差分測試（DT） | 待執行（確保計算邏輯未變） |
+| 部分檔案補齊 EOF（F-005） | 技術債（C-02） |
 
 ---
 
@@ -1977,17 +1987,19 @@ Writer: ai-system-20261021-005#2
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 開啟 WebApp 專案對話。 |
-| 2 | 修改 `js/config/entity-registry.js` 支援 code。 |
-| 3 | 繼續 B34-5 業務開發。 |
+| 1 | 開啟新對話（`[身份: Web]`）。 |
+| 2 | 執行 30 項驗收清單，確認舊版功能 100% 還原。 |
+| 3 | 執行 8 項差分測試，確保金額計算無誤。 |
+| 4 | 補齊 `app-core.js` 等檔案末尾的 EOF。 |
 
 ---
 
 /* ═══ EOF ═══
 F: WF-HANDOFF.md
-V: 1792588002
-W: ai-system-20261021-005#2
+V: 1792670013
+W: webapp-20261022-046#2
 ═══ */
+
 <!-- === FILE END: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-HANDOFF.md === -->
 
 <!-- === FILE START: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-PROGRESS.md === -->
@@ -1996,42 +2008,44 @@ W: ai-system-20261021-005#2
 
 # WF-PROGRESS（專案任務進度追蹤）
 
-最後更新：2026-10-21
-Version: 1792588003
-Writer: ai-system-20261021-005#3
+最後更新：2026-10-22
+Version: 1792670014
+Writer: webapp-20261022-046#3
 用途：追蹤 WebApp Family 專案的步驟進度（跨對話持續）
 
 ---
 
 ## 一、當前任務
 
-### 任務 B34-5：P-15 重組與業務開發
+### 任務 B34-6：SPA 重構與後端極簡化
 | 欄位 | 值 |
 |---|---|
-| 任務名稱 | 執行 P-15 重組計畫、對齊體系 WF 結構、恢復專案紀錄 |
-| 開始時間 | 2026-10-21 |
-| 當前階段 | 體系對齊與檔案重構完成，待業務開發 |
-| 完成度 | 5/7（待 `entity-registry.js` 與技術債處理） |
+| 任務名稱 | 前端 SPA 重構（10 檔）、後端合併（2 檔）、舊檔分離 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 程式碼已完成，待驗收 |
+| 完成度 | 7/9（待 AC 與 DT 驗證） |
 
 ---
 
 ## 二、步驟清單
 
-### 任務 B34-5：P-15 重組與業務開發
+### 任務 B34-6：SPA 重構與後端極簡化
 | # | 步驟 | 狀態 | 備註 |
 |---|---|---|---|
-| 1 | 抽出 W 包通用領域資料（W-06, W-07 等） | 已完成 | 已於 004 交付 |
-| 2 | P 紀錄檔改名與結構對齊（WF-*） | 已完成 | 已於 004 交付 |
-| 3 | 上傳新版 W-* 與 WF-* 檔案 | 已完成 | 使用者已上傳 |
-| 4 | 執行 `setup-structure.yml` 產生共享包 | 已完成 | 已成功運行 |
-| 5 | 修復專案 WF-* 紀錄檔錯置 | 已完成 | 本對話 005 交付 |
-| 6 | `entity-registry.js` 加 code 支援 | 待處理 | 專案專屬業務邏輯 |
-| 7 | END OF FILE 補齊與版本號統一 | 待處理 | 技術債 |
+| 1 | 建立 `app.html` 與 `app.css` SPA 骨架 | 已完成 | 含 V2 識別 |
+| 2 | 重寫前端核心（`app-core`, `app-ui`, `app-data`） | 已完成 | — |
+| 3 | 重寫前端業務（`app-domain`, `app-entities`, `app-widgets`） | 已完成 | — |
+| 4 | 重寫前端頁面（`app-pages-core`, `app-pages-reports`） | 已完成 | — |
+| 5 | 重寫後端（`_api-core.js`, `[[path]].js`） | 已完成 | 合併 11 檔為 2 檔 |
+| 6 | 建立 Legacy 倉庫並轉移舊檔 | 已完成 | `old-AI-WEB-APP-FAMILY` |
+| 7 | 設定 Cloudflare 環境變數（`DB_TARGET=new`） | 已完成 | — |
+| 8 | 執行 30 項人工驗收（AC） | 待處理 | — |
+| 9 | 執行 8 項差分測試（DT）與補齊 EOF | 待處理 | 技術債 C-02 |
 
-### 任務 B34-4：編號系統程式碼交付（歷史紀錄）
+### 任務 B34-5：P-15 重組與業務開發（歷史紀錄）
 | # | 步驟 | 狀態 |
 |---|---|---|
-| 1~8 | 編號系統、code-list、entity-create 端點等 | 全數完成（8/8） |
+| 1~7 | 體系對齊與紀錄修復 | 全數完成 |
 
 ---
 
@@ -2052,22 +2066,17 @@ Writer: ai-system-20261021-005#3
 
 | 日期 | 對話編號 | 完成任務 |
 |---|---|---|
-| 2026-10-20 | A20261013-004 | B34-4 完成 |
-| 2026-10-21 | ai-system-20261021-004 | B34-5 重組（4/7 完成） |
 | 2026-10-21 | ai-system-20261021-005 | B34-5 修復紀錄（5/7 完成） |
-
----
-
-## 五、歷史批次紀錄
-*(保持原樣)*
+| 2026-10-22 | webapp-20261022-045 | B34-6 SPA 重構程式碼完成 |
 
 ---
 
 /* ═══ EOF ═══
 F: WF-PROGRESS.md
-V: 1792588003
-W: ai-system-20261021-005#3
+V: 1792670014
+W: webapp-20261022-046#3
 ═══ */
+
 <!-- === FILE END: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-PROGRESS.md === -->
 
 <!-- === FILE START: external/AI-WEB-APP-Family/docs/projects/web-app-family/WF-STATE-INDEX.md === -->
@@ -2076,8 +2085,8 @@ W: ai-system-20261021-005#3
 
 # WF-STATE-INDEX（專案檔案狀態索引）
 
-最後更新：2026-10-22 18:49:46 (HKT)
-Version: 1792666186
+最後更新：2026-10-22 22:03:45 (HKT)
+Version: 1792677825
 Writer: github-actions[bot]
 用途：記錄所有已交付檔案的版本與清單（由體系自動生成）
 
@@ -2093,9 +2102,9 @@ Writer: github-actions[bot]
 
 | 檔案 | 版本 (V) | 編寫者 (W) |
 |---|---|---|
-| WF-PROGRESS.md | 1792588003 | ai-system-20261021-005#3 |
-| WF-HANDOFF.md | 1792588002 | ai-system-20261021-005#2 |
-| WF-CONCLUSION.md | 1792588001 | ai-system-20261021-005#1 |
+| WF-PROGRESS.md | 1792670014 | webapp-20261022-046#3 |
+| WF-HANDOFF.md | 1792670013 | webapp-20261022-046#2 |
+| WF-CONCLUSION.md | 1792670012 | webapp-20261022-046#1 |
 | P-99-errors-map.md | 1792581015 | ai-system-20261021-004#15 |
 | P-15-reorg-plan.md | 1792581023 | ai-system-20261021-004#23 |
 | P-14-decisions.md | 1792581014 | ai-system-20261021-004#14 |
@@ -2110,7 +2119,7 @@ Writer: github-actions[bot]
 
 /* ═══ EOF ═══
 F: WF-STATE-INDEX.md
-V: 1792666186
+V: 1792677825
 W: github-actions[bot]
 ═══ */
 
