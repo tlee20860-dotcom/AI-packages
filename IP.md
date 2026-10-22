@@ -1,6 +1,6 @@
 # I 包：身份與信仰
 
-> 生成時間：2026-10-22 13:53:40 (HKT)
+> 生成時間：2026-10-22 14:03:52 (HKT)
 
 
 <!-- === FILE START: AI-kernel/docs/a-guide/I-00-identity.md === -->
