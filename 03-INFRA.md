@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 08:59:08 (HKT)
+> 生成時間：2026-10-23 09:38:55 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -228,7 +228,7 @@ if __name__ == "__main__":
 name: Build Shared Packages
 
 on:
-  workflow_dispatch: # 僅保留手動觸發，避免自動競爭衝突
+  workflow_dispatch:
 
 jobs:
   build:
@@ -249,7 +249,9 @@ jobs:
           mkdir -p config
           
           echo '[' > /tmp/projects_array.json
-          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages") | .owner.login + "/" + .name')
+          
+          # 抓取時排除 old 倉，避免與下方手動追加重複
+          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages" and .name != "old-AI-WEB-APP-FAMILY") | .owner.login + "/" + .name')
           
           FIRST=true
           for REPO in $REPOS; do
@@ -270,10 +272,22 @@ jobs:
             if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> /tmp/projects_array.json; fi
             echo "    {\"repo\": \"$REPO\", \"domain\": \"$DOMAIN\", \"code\": \"$CODE\", \"display\": \"$DISPLAY\", \"pkg_no\": \"$PKG_NO\"}" >> /tmp/projects_array.json
           done
+
+          # 顯式追加 old-AI-WEB-APP-FAMILY（確保不受 topic 標籤設定影響）
+          OLD_REPO="tlee20860-dotcom/old-AI-WEB-APP-FAMILY"
+          OLD_META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$OLD_REPO/main/meta.json")
+          if echo "$OLD_META" | grep -q "pkg_no"; then
+            if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> /tmp/projects_array.json; fi
+            DOMAIN=$(echo "$OLD_META" | jq -r '.domain')
+            PKG_NO=$(echo "$OLD_META" | jq -r '.pkg_no')
+            CODE=$(echo "$OLD_META" | jq -r '.code // "-"')
+            DISPLAY=$(echo "$OLD_META" | jq -r '.display // "-"')
+            echo "    {\"repo\": \"$OLD_REPO\", \"domain\": \"$DOMAIN\", \"code\": \"$CODE\", \"display\": \"$DISPLAY\", \"pkg_no\": \"$PKG_NO\"}" >> /tmp/projects_array.json
+          fi
+
           echo '' >> /tmp/projects_array.json
           echo ']' >> /tmp/projects_array.json
 
-          # 使用 jq 進行排序（按 pkg_no）
           echo '{' > config/repos.json
           echo '  "kernel": "tlee20860-dotcom/AI-kernel",' >> config/repos.json
           echo '  "general": "tlee20860-dotcom/AI-General",' >> config/repos.json
@@ -282,7 +296,6 @@ jobs:
           jq 'sort_by(.pkg_no)' /tmp/projects_array.json >> config/repos.json
           echo '}' >> config/repos.json
           
-          # 提交 repos.json 至倉庫備份
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add config/repos.json
@@ -563,12 +576,10 @@ jobs:
             CODE=$(echo "$row" | jq -r '.code')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             
-            # 定義三個檔案輸出路徑
             OUTPUT_MAP="build-repo/${PKG_NO}-${SAFE_NAME}-Map.md"
             OUTPUT_P="build-repo/${PKG_NO}-${SAFE_NAME}-P.md"
             OUTPUT_CODE="build-repo/${PKG_NO}-${SAFE_NAME}-All-code.md"
 
-            # 初始化標頭（時間在前）
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_MAP"
             echo "" >> "$OUTPUT_MAP"
             echo "# 專案地圖包：${SAFE_NAME}" >> "$OUTPUT_MAP"
@@ -584,7 +595,6 @@ jobs:
             echo "# 專案全程式碼包：${SAFE_NAME}" >> "$OUTPUT_CODE"
             echo "" >> "$OUTPUT_CODE"
 
-            # 1. 填充 Map 包 (meta.json + 檔案樹)
             if [ -f "external/${SAFE_NAME}/meta.json" ]; then
               echo "## meta.json" >> "$OUTPUT_MAP"
               bash .github/workflows/append_file.sh "external/${SAFE_NAME}/meta.json" "$OUTPUT_MAP" || true
@@ -607,7 +617,6 @@ jobs:
               ) || true
             fi
 
-            # 2. 填充 P 包 (智慧抓取所有 P-*.md 與 WF-*.md)
             P_FOUND=false
             for P_DIR_NAME in "web-app-family" "webapp" "${SAFE_NAME}" "AI-WEB-APP-Family"; do
               P_DIR="external/${SAFE_NAME}/docs/projects/${P_DIR_NAME}"
@@ -629,7 +638,6 @@ jobs:
                ) || true
             fi
 
-            # 3. 填充 All-code 包
             if [ -d "external/${SAFE_NAME}" ]; then
               (
                 cd "external/${SAFE_NAME}" || exit 0
@@ -686,7 +694,6 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
-          # === AI-kernel 區塊 ===
           echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           mkdir -p "AI-kernel/.github/workflows"
@@ -717,7 +724,6 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
-          # === AI-General 區塊 ===
           echo "## 🏢 體系層：AI-General 的呼叫器" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           mkdir -p "AI-General/.github/workflows"
@@ -828,7 +834,6 @@ jobs:
 
       - name: "Step 10: 上傳共享包與專案索引"
         run: |
-          # 1. 提交體系 STATE-INDEX
           cd AI-General
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -840,7 +845,6 @@ jobs:
           )
           cd ..
 
-          # 2. 提交專案 WF-STATE-INDEX
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
@@ -873,7 +877,6 @@ jobs:
             fi
           done
 
-          # 3. 提交 build-repo 共享包
           cd build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -886,9 +889,10 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792705000
+# V: 1792708003
 # W: ai-system-20261022-009#1
-# ═══ EOF ═══```
+# ═══ EOF ═══
+```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
 
@@ -1053,6 +1057,13 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
     "code": "webapp",
     "display": "家庭 webapp",
     "pkg_no": "90"
+  },
+  {
+    "repo": "tlee20860-dotcom/old-AI-WEB-APP-FAMILY",
+    "domain": "W",
+    "code": "old-webapp",
+    "display": "家庭 webapp 舊版",
+    "pkg_no": "90-old"
   },
   {
     "repo": "tlee20860-dotcom/AI-OS",
@@ -1480,6 +1491,104 @@ build-repo/
 tmp/```
 
 <!-- === FILE END: external/AI-WEB-APP-Family/.gitignore === -->
+
+## 🏢 專案層：tlee20860-dotcom/old-AI-WEB-APP-FAMILY 的呼叫器
+
+### 📄 檔案：.github/workflows/apply-patch.yml
+
+
+<!-- === FILE START: .github/workflows/apply-patch.yml === -->
+
+## 📄 .github/workflows/apply-patch.yml
+
+```yml
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/apply-patch.yml === -->
+
+### 📄 檔案：.github/workflows/notify.yml
+
+
+<!-- === FILE START: .github/workflows/notify.yml === -->
+
+## 📄 .github/workflows/notify.yml
+
+```yml
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+      - '**/*.ico'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"```
+
+<!-- === FILE END: .github/workflows/notify.yml === -->
 
 ## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
 
