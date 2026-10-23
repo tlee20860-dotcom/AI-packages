@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 09:38:55 (HKT)
+> 生成時間：2026-10-23 09:47:09 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -251,7 +251,7 @@ jobs:
           echo '[' > /tmp/projects_array.json
           
           # 抓取時排除 old 倉，避免與下方手動追加重複
-          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages" and .name != "old-AI-WEB-APP-FAMILY") | .owner.login + "/" + .name')
+          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-kernel" and .name != "AI-General" and .name != "AI-infra" and .name != "AI-packages" and .name != "old-AI-WA-FAMILY") | .owner.login + "/" + .name')
           
           FIRST=true
           for REPO in $REPOS; do
@@ -273,8 +273,8 @@ jobs:
             echo "    {\"repo\": \"$REPO\", \"domain\": \"$DOMAIN\", \"code\": \"$CODE\", \"display\": \"$DISPLAY\", \"pkg_no\": \"$PKG_NO\"}" >> /tmp/projects_array.json
           done
 
-          # 顯式追加 old-AI-WEB-APP-FAMILY（確保不受 topic 標籤設定影響）
-          OLD_REPO="tlee20860-dotcom/old-AI-WEB-APP-FAMILY"
+          # 顯式追加 old-AI-WA-FAMILY
+          OLD_REPO="tlee20860-dotcom/old-AI-WA-FAMILY"
           OLD_META=$(curl -s -H "Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/$OLD_REPO/main/meta.json")
           if echo "$OLD_META" | grep -q "pkg_no"; then
             if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> /tmp/projects_array.json; fi
@@ -840,7 +840,7 @@ jobs:
           git add docs/records/STATE-INDEX.md
           git diff --cached --quiet || (
             git commit -m "chore: auto-update STATE-INDEX [skip ci]" && 
-            (git pull --rebase origin main || true) && 
+            git pull --rebase origin main || true && 
             git push
           )
           cd ..
@@ -864,7 +864,12 @@ jobs:
                 git add $TARGET_FILES
                 if ! git diff --cached --quiet; then
                   git commit -m "chore: auto-update WF-STATE-INDEX [skip ci]"
-                  git pull --rebase origin main || true
+                  # 改良版：若 rebase 衝突則放棄遠端並強制合併，防止 detached HEAD 崩潰
+                  git pull --rebase origin main || {
+                    echo "⚠️ Rebase 衝突，自動放棄遠端變更並強制合併"
+                    git rebase --abort || true
+                    git pull origin main --no-rebase -X ours || true
+                  }
                   git push
                   echo "Pushed WF-STATE-INDEX for $SAFE_NAME"
                 else
@@ -883,14 +888,14 @@ jobs:
           git add -A
           git diff --cached --quiet || (
             git commit -m "chore: auto-build packages [skip ci]" && 
-            (git pull --rebase origin main || true) && 
+            git pull --rebase origin main || true && 
             git push
           )
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792708003
-# W: ai-system-20261022-009#1
+# V: 1792708005
+# W: ai-system-20261022-009#2
 # ═══ EOF ═══
 ```
 
@@ -1059,7 +1064,7 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
     "pkg_no": "90"
   },
   {
-    "repo": "tlee20860-dotcom/old-AI-WEB-APP-FAMILY",
+    "repo": "tlee20860-dotcom/old-AI-WA-FAMILY",
     "domain": "W",
     "code": "old-webapp",
     "display": "家庭 webapp 舊版",
@@ -1492,7 +1497,7 @@ tmp/```
 
 <!-- === FILE END: external/AI-WEB-APP-Family/.gitignore === -->
 
-## 🏢 專案層：tlee20860-dotcom/old-AI-WEB-APP-FAMILY 的呼叫器
+## 🏢 專案層：tlee20860-dotcom/old-AI-WA-FAMILY 的呼叫器
 
 ### 📄 檔案：.github/workflows/apply-patch.yml
 

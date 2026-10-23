@@ -1,12 +1,12 @@
-> 生成時間：2026-10-23 09:38:55 (HKT)
+> 生成時間：2026-10-23 09:47:09 (HKT)
 
-# 專案地圖包：old-AI-WEB-APP-FAMILY
+# 專案地圖包：old-AI-WA-FAMILY
 
 ## meta.json
 
-<!-- === FILE START: external/old-AI-WEB-APP-FAMILY/meta.json === -->
+<!-- === FILE START: external/old-AI-WA-FAMILY/meta.json === -->
 
-## 📄 external/old-AI-WEB-APP-FAMILY/meta.json
+## 📄 external/old-AI-WA-FAMILY/meta.json
 
 ```json
 {
@@ -17,7 +17,7 @@
 }
 ```
 
-<!-- === FILE END: external/old-AI-WEB-APP-FAMILY/meta.json === -->
+<!-- === FILE END: external/old-AI-WA-FAMILY/meta.json === -->
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
