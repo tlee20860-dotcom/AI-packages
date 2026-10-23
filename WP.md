@@ -1,6 +1,6 @@
-# W 包：Web App 領域技能
+> 生成時間：2026-10-23 08:01:19 (HKT)
 
-> 生成時間：2026-10-23 02:06:56 (HKT)
+# W 包：Web App 領域技能
 
 
 <!-- === FILE START: AI-kernel/docs/skills/W/W-00-startup.md === -->
