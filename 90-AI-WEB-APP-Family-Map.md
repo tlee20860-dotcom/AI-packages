@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 22:27:20 (HKT)
+> 生成時間：2026-10-23 22:50:47 (HKT)
 
 # 專案地圖包：AI-WEB-APP-Family
 
@@ -26,13 +26,13 @@
 .github/workflows/apply-patch.yml
 .github/workflows/notify.yml
 app.css
-app.html
 docs/records/WF-CONCLUSION.md
 docs/records/WF-HANDOFF.md
 docs/records/WF-PROGRESS.md
 docs/records/WF-STATE-INDEX.md
 functions/api/[[path]].js
 functions/api/_api-core.js
+index.html
 js/app-core.js
 js/app-data.js
 js/app-domain.js

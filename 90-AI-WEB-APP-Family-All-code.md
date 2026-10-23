@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 22:27:20 (HKT)
+> 生成時間：2026-10-23 22:50:47 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
@@ -203,77 +203,6 @@ W: webapp-20261023-001#20
 ═══ */```
 
 <!-- === FILE END: ./app.css === -->
-
-<!-- === FILE START: ./app.html === -->
-
-## 📄 ./app.html
-
-```html
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FAMILY.FIN | 智能機械系統</title>
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
-  <link rel="stylesheet" href="./app.css">
-  <link rel="manifest" href="./manifest-app.json">
-  <meta name="theme-color" content="#0B0F19">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="FAMILY.FIN">
-</head>
-<body>
-  <!-- 登入畫面 -->
-  <div id="auth-view" class="auth-page" style="display:none; align-items:center; justify-content:center; min-height:100vh;">
-    <div class="mecha-panel" style="width:100%; max-width:400px;">
-      <div class="mecha-content" style="padding:32px;">
-        <h1 style="font-family:var(--font-mono); color:var(--primary); text-align:center; margin-bottom:8px; font-size:24px; letter-spacing:2px; text-shadow:0 0 10px var(--primary-glow);">[ FAMILY.FIN ]</h1>
-        <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-bottom:24px;">智能機械系統終端</p>
-        <form id="login-form">
-          <div class="field">
-            <label class="field-label" for="account">終端帳號</label>
-            <input class="input" type="text" id="account" required placeholder="例如：superadmin" autocomplete="username">
-          </div>
-          <div class="field">
-            <label class="field-label" for="password">存取密碼</label>
-            <input class="input" type="password" id="password" required minlength="6" placeholder="請輸入密碼" autocomplete="current-password">
-          </div>
-          <div id="login-error" class="badge badge-magenta" style="display:none; width:100%; margin-bottom:16px; padding:8px;"></div>
-          <button class="btn btn-primary" type="submit" id="login-btn" style="width:100%; justify-content:center; padding:12px;">連線登入</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- 載入畫面 -->
-  <div id="loading-view" style="display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column;">
-    <div class="mono" style="color:var(--primary); font-size:18px; animation:pulse 1s infinite;">[ 系統連線中... ]</div>
-    <div id="loading-message" style="color:var(--text-muted); font-size:12px; margin-top:12px;">驗證憑證</div>
-  </div>
-
-  <!-- 主程式畫面 -->
-  <div id="app-view" class="app-shell" style="display:none;">
-    <aside id="sidebar-root" class="sidebar">
-      <nav class="sidebar-nav" id="sidebar-nav"></nav>
-    </aside>
-    <div class="main-area">
-      <header id="navbar-root" class="navbar"></header>
-      <main class="content content-min-height" id="page-content"></main>
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer></script>
-  <script type="module" src="./js/app-core.js"></script>
-  
-  <style>
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-  </style>
-</body>
-</html>```
-
-<!-- === FILE END: ./app.html === -->
 
 <!-- === FILE START: ./functions/api/[[path]].js === -->
 
@@ -983,6 +912,77 @@ W: webapp-20261022-041#1
 ```
 
 <!-- === FILE END: ./functions/api/_api-core.js === -->
+
+<!-- === FILE START: ./index.html === -->
+
+## 📄 ./index.html
+
+```html
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAMILY.FIN | 智能機械系統</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="stylesheet" href="./app.css">
+  <link rel="manifest" href="./manifest-app.json">
+  <meta name="theme-color" content="#0B0F19">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FAMILY.FIN">
+</head>
+<body>
+  <!-- 登入畫面 -->
+  <div id="auth-view" class="auth-page" style="display:none; align-items:center; justify-content:center; min-height:100vh;">
+    <div class="mecha-panel" style="width:100%; max-width:400px;">
+      <div class="mecha-content" style="padding:32px;">
+        <h1 style="font-family:var(--font-mono); color:var(--primary); text-align:center; margin-bottom:8px; font-size:24px; letter-spacing:2px; text-shadow:0 0 10px var(--primary-glow);">[ FAMILY.FIN ]</h1>
+        <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-bottom:24px;">智能機械系統終端</p>
+        <form id="login-form">
+          <div class="field">
+            <label class="field-label" for="account">終端帳號</label>
+            <input class="input" type="text" id="account" required placeholder="例如：superadmin" autocomplete="username">
+          </div>
+          <div class="field">
+            <label class="field-label" for="password">存取密碼</label>
+            <input class="input" type="password" id="password" required minlength="6" placeholder="請輸入密碼" autocomplete="current-password">
+          </div>
+          <div id="login-error" class="badge badge-magenta" style="display:none; width:100%; margin-bottom:16px; padding:8px;"></div>
+          <button class="btn btn-primary" type="submit" id="login-btn" style="width:100%; justify-content:center; padding:12px;">連線登入</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 載入畫面 -->
+  <div id="loading-view" style="display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column;">
+    <div class="mono" style="color:var(--primary); font-size:18px; animation:pulse 1s infinite;">[ 系統連線中... ]</div>
+    <div id="loading-message" style="color:var(--text-muted); font-size:12px; margin-top:12px;">驗證憑證</div>
+  </div>
+
+  <!-- 主程式畫面 -->
+  <div id="app-view" class="app-shell" style="display:none;">
+    <aside id="sidebar-root" class="sidebar">
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    </aside>
+    <div class="main-area">
+      <header id="navbar-root" class="navbar"></header>
+      <main class="content content-min-height" id="page-content"></main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer></script>
+  <script type="module" src="./js/app-core.js"></script>
+  
+  <style>
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+  </style>
+</body>
+</html>```
+
+<!-- === FILE END: ./index.html === -->
 
 <!-- === FILE START: ./js/app-core.js === -->
 
@@ -5909,7 +5909,7 @@ export function mount(container) {
   "name": "FAMILY.FIN 智能機械系統",
   "short_name": "FAMILY.FIN",
   "description": "家庭財務、保險供款、基金資產、銀行交易即時管理終端",
-  "start_url": "./app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -5949,13 +5949,13 @@ export function mount(container) {
 
 ```js
 // ============================================
-// sw-app.js — Service Worker (智能機械 v2)
+// sw-app.js — Service Worker (智能機械 v2.1)
 // ============================================
 
-const CACHE_NAME = 'family-fin-mecha-v1';
+const CACHE_NAME = 'family-fin-mecha-v2';
 
 const STATIC_ASSETS = [
-  './app.html',
+  './index.html',
   './app.css',
   './manifest-app.json',
   
@@ -5964,6 +5964,7 @@ const STATIC_ASSETS = [
   './js/app-data.js',
   './js/app-domain.js',
   './js/app-ui.js',
+  './js/app-pages-loader.js',
   
   // Components
   './js/components/data-table.js',
@@ -5989,8 +5990,6 @@ const STATIC_ASSETS = [
   './js/pages/member-report.js',
   './js/pages/settings.js',
   './js/pages/admin.js',
-  
-  // Loader (若您需要路由自動載入，可在此加入)
 ];
 
 self.addEventListener('install', (e) => {
@@ -6040,17 +6039,11 @@ async function _networkFirst(request) {
     const cached = await caches.match(request);
     if (cached) return cached;
     if (isHtml) {
-      const fallback = await caches.match('./app.html');
+      const fallback = await caches.match('./index.html');
       if (fallback) return fallback;
     }
     return new Response('離線中，請稍後再試', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
   }
-}
-
-/* ═══ EOF ═══
-F: sw-app.js
-V: 1792800100
-W: webapp-20261023-001#45
-═══ */```
+}```
 
 <!-- === FILE END: ./sw-app.js === -->
