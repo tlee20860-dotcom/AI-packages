@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 09:47:09 (HKT)
+> 生成時間：2026-10-23 09:53:16 (HKT)
 
 # 專案地圖包：old-AI-WA-FAMILY
 
@@ -21,7 +21,7 @@
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
-總檔數：137
+總檔數：129
 
 .github/PATCH.md
 .github/workflows/apply-patch.yml
@@ -67,14 +67,6 @@ input-center.html
 insurance.html
 js/admin/admin.js
 js/admin/platform-defaults.js
-js/app-core.js
-js/app-data.js
-js/app-domain.js
-js/app-entities.js
-js/app-pages-core.js
-js/app-pages-reports.js
-js/app-ui.js
-js/app-widgets.js
 js/blocks/detail-block.js
 js/blocks/filter-block.js
 js/blocks/form-block.js
