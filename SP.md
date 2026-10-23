@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 09:53:16 (HKT)
+> 生成時間：2026-10-23 18:36:33 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -14,8 +14,6 @@
 
 ## 📄 AI-General/docs/records/SYSTEM-HANDOFF.md
 
-## 📄 AI-General/docs/records/SYSTEM-HANDOFF.md
-
 # SYSTEM-HANDOFF（體系層交接快照）
 
 上限：80 行
@@ -28,10 +26,10 @@ records_pending: []
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261022-008 |
-| 本次範圍 | 體系進化史建立（10-12~10-22 史料整合）、R-019 新增、4 檔記錄 |
-| 累計回覆 | 約 78 條 |
-| 狀態 | 全數結案；已產出 STATE_SEAL 並重置 |
+| 對話編號 | ai-system-20261022-009 |
+| 本次範圍 | 區模型落地、11 個密語機制、歷史歸檔、專案分離與 R-05 補齊 |
+| 累計回覆 | 約 109 條 |
+| 狀態 | 全數結案；已產出最終 STATE_SEAL 並重置 |
 
 ---
 
@@ -40,10 +38,10 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **進化史獨立**：新增 `SYSTEM-EVOLUTION.md`（第七檔），八段結構，§零點五 時間軸總覽，§八 33 項衝突。
-2. **史料整合**：10-15 `my-ai-framework`、10-16~10-17 B34、10-18~10-20 五倉與規則重構、10-21 v1.5、10-22 v1.6，全部納入時間軸。
-3. **R-019 新增**：重大結構變更（拆檔／增檔／刪檔／新模式角色／FSM 分層大變）須列清單並提示記入歷史，AI 不得自行寫入。
-4. **4 檔記錄**：CONCLUSION（議題 74、D-166）、PROGRESS（任務二十一 100%）、HANDOFF、STATE-INDEX 同步。
+1. **密語安全鎖**：建立 11 個全域密語（如 `方案已定案可交付`）。未收到指定字串，AI 不得交付檔案或執行破壞性操作。
+2. **架構鎖定**：專案與體系紀錄全面統一至 `docs/records/`，未經 `[授權架構變更]` 不得搬移。
+3. **專案分離**：Webapp 90 倉（新）與 old 倉（舊）成功分離，體系修正了遷移腳本誤搬 JS 的問題。
+4. **R-05 補齊**：完成 40 條鐵律與密語事件的 DSL 映射。
 
 ---
 
@@ -51,7 +49,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-166（新增第七檔 SYSTEM-EVOLUTION 與 R-019）。
+**本次新增決策**：D-167 至 D-176。
 
 ---
 
@@ -59,9 +57,10 @@ records_pending: []
 
 | # | 優先確認 |
 |---|---|
-| 1 | `SYSTEM-EVOLUTION.md` 是否存在且 `V:1792662000` |
-| 2 | `R-00` 是否含 R-019；`R-05` 是否含 R-019 映射 |
-| 3 | `records_pending` 是否為空；非空須先補寫 |
+| 1 | 載入四檔與 SP 後，是否確認 `R-00` 包含 R-020~R-023？ |
+| 2 | `A-00` FSM 是否包含 `E_USER_CONFIRM_DELIVER` 等密語事件？ |
+| 3 | `R-05` 是否已映射 40 條規則？ |
+| 4 | `records_pending` 是否為空？ |
 
 ---
 
@@ -69,12 +68,8 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| OI-01：10-14 無直接證據，推測為 webapp B34-4 延續 | 待日後補 commit |
-| OI-02：B34-4 commit 日期 10-13 與 10-16 建倉記錄存在偏移 | 原因未解 |
-| OI-03：`SYSTEM-EVOLUTION.md` 為第七檔，未納入 A-00 §5.2 affected 判定 | 待裁決 |
-| OI-04：`C-11` 30 條詞彙與 AI-OS 6 檔骨架已記錄未展開 | 屬細節 |
-| K-01：F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 暫不處理（見 SYSTEM-DEBT.md） |
-| K-03：R-00 契約表加 DSL 欄 | 待處理（見 SYSTEM-DEBT.md） |
+| Webapp 程式碼對照重寫 | 待 Web 開發者依 `old` 倉的 P 檔規格，補齊新倉 `app-*.js` |
+| F-005 漸進式收斂 | 日常改檔時順手刪除檔頭三行 |
 
 ---
 
@@ -82,20 +77,18 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 開新對話，確認 `SYSTEM-EVOLUTION.md` 與 R-019 是否生效 |
-| 2 | 裁決 OI-03：第七檔是否納入 A-00 §5.2 affected 判定 |
-| 3 | 若需處理技術債，可開新對話處理 K-01／K-03 |
+| 1 | 開新對話，確認密語機制運作正常（AI 不會隨便交付）。 |
+| 2 | 轉交 Webapp 開發者進行新舊架構對照。 |
+| 3 | 若需新增專案，確保 `docs/records/` 架構已建立。 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792666000
-W: ai-system-20261022-008#78
+V: 1792719003
+W: ai-system-20261022-009#4
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
 <!-- === FILE START: AI-General/docs/records/PROGRESS.md === -->
-
-## 📄 AI-General/docs/records/PROGRESS.md
 
 ## 📄 AI-General/docs/records/PROGRESS.md
 
@@ -106,6 +99,22 @@ W: ai-system-20261022-008#78
 ---
 
 ## 一、當前任務
+
+### 任務二十三：密語安全機制與紀錄對齊（009）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 密語矩陣建置、紀錄路徑對齊、R-05 補齊 |
+| 開始時間 | 2026-10-23 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+### 任務二十二：區模型、權限階層與歷史歸檔（009）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 區模型落地、權限正名、歷史檔與打包機制、專案分離 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
 
 ### 任務二十一：體系進化史建立與 R-019（008）
 | 欄位 | 值 |
@@ -133,6 +142,27 @@ W: ai-system-20261022-008#78
 ---
 
 ## 二、步驟清單
+
+### 任務二十三：密語安全機制與紀錄對齊
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 修改 R-00 加入 R-020~R-023 鐵律 | ✅ | 2026-10-23 |
+| 2 | 修改 AP 加入 11 個密語事件與 FSM 矩陣 | ✅ | 2026-10-23 |
+| 3 | 修改 R-03 加入密語詞條（詞 65~75） | ✅ | 2026-10-23 |
+| 4 | 修改 A-00 §4.4 鎖定 `docs/records/` 架構 | ✅ | 2026-10-23 |
+| 5 | 補齊 R-05 的 40 條規則與密語 DSL 映射 | ✅ | 2026-10-23 |
+| 6 | 更新體系進化史（v1.7） | ✅ | 2026-10-23 |
+| 7 | 專案 90 新舊架構分離與 JS 誤搬修正 | ✅ | 2026-10-23 |
+
+### 任務二十二：區模型、權限階層與歷史歸檔
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 修改 AP（區模型、boot_check 拆分、授權閘） | ✅ | 2026-10-22 |
+| 2 | 修改 IP（階層正名、權限表） | ✅ | 2026-10-22 |
+| 3 | 修改 R-00（S-001 三欄、F-005 修正、全區格式） | ✅ | 2026-10-22 |
+| 4 | 修改 R-03（詞 58~64）、R-05（映射擴充） | ✅ | 2026-10-22 |
+| 5 | 修改 YML（Step 9.3 歷史包、時間戳首行） | ✅ | 2026-10-23 |
+| 6 | 建立 `SYSTEM-ARCHIVE.md` 與更新 `SYSTEM-DEBT.md` | ✅ | 2026-10-23 |
 
 ### 任務二十一：體系進化史建立與 R-019
 | # | 步驟 | 狀態 | 完成時間 |
@@ -177,18 +207,19 @@ W: ai-system-20261022-008#78
 | 2026-10-21 | ai-system-20261021-005 | 任務十八（100%） |
 | 2026-10-22 | ai-system-20261021-006 | 任務十九（100%） |
 | 2026-10-22 | ai-system-20261022-007 | 任務二十（100%） |
-| **2026-10-22** | **ai-system-20261022-008** | **任務二十一（100%）** |
+| 2026-10-22 | ai-system-20261022-008 | 任務二十一（100%） |
+| 2026-10-23 | ai-system-20261022-009 | 任務二十二（100%） |
+| 2026-10-23 | ai-system-20261022-009 | 任務二十三（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792665000
-W: ai-system-20261022-008#77
+V: 1792719002
+W: ai-system-20261022-009#3
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
-
-## 📄 AI-General/docs/records/SYSTEM-CONCLUSION.md
 
 ## 📄 AI-General/docs/records/SYSTEM-CONCLUSION.md
 
@@ -206,19 +237,29 @@ W: ai-system-20261022-008#77
 | 71 | W 包重構與專案紀錄 WF 對齊 | ✅ |
 | 72 | 體系微核心化 v1.5（DSL／FSM／STATE_SEAL） | ✅ |
 | 73 | 三 AI 模式與 CHK 審查包機制建置 | ✅ |
-| **74** | **體系進化史建立與 R-019 結構變更提示** | **✅** |
+| 74 | 體系進化史建立與 R-019 結構變更提示 | ✅ |
+| 75 | 區模型、權限階層與歷史歸檔機制 | ✅ |
+| 76 | 密語安全機制、記憶架構對齊與 R-05 補齊 | ✅ |
 
 ---
 
 ## 二、設計結論
 
-*(2.1~2.23 保留原樣)*
-
 ### 2.24 W 包與自動化對齊（004 定案）
-*(原 4 點保留)*
+1. W 包新增 W-06、W-07。
+2. 專案層建立 WF-CONCLUSION.md。
+3. 確立 WF-* 命名與對齊。
+4. 自動化支援 WF-* 生成。
 
 ### 2.25 體系微核心化 v1.5（006 定案）
-*(原 8 點保留)*
+1. 四檔分立：IP、AP、RP、UP。
+2. 契約表六欄制。
+3. 廢除 Token。
+4. 狀態機 5 態，ρ 先於 δ。
+5. 轉交分層。
+6. 合成物認知。
+7. Version SSOT（EOF 唯一）。
+8. 檔案邊界防呆（F-004）。
 
 ### 2.26 三 AI 模式與審查包機制（007 定案）
 1. **三 AI 模式**：體系開發與結構師、挑戰方案對抗者、合規審判者；對抗者與審判者為外部角色，不進 FSM。
@@ -233,14 +274,28 @@ W: ai-system-20261022-008#77
 3. **衝突表**：§八 累積 33 項史料衝突，各段只記該期形態，不跨期混用。
 4. **R-019 結構變更提示**：交付涉及拆檔、增檔、刪檔、引入新模式／角色、FSM 或分層大變時，必須列結構變更清單並提示記入進化史；AI 不得自行寫入。
 
+### 2.28 區模型與權限階層（009 定案）
+1. **區模型**：四檔進體系，＋SP 進體系核心，＋領域包進領域，＋專案包進專案區，＋CHK 進審核區。單區獨佔，須退出才能換區。
+2. **權限與角色**：初創者（Ken）＞體系開發者（全權）＞領域開發者（領域包須 Ken 同意）。核心區切換角色須輸入 `[授權切換：角色]`。
+3. **上傳判定**：四檔全域熱更新。異區上傳提示退出。混合包（合法＋非法）原子性阻擋。
+4. **歷史歸檔**：新增 `SYSTEM-ARCHIVE.md`（APPEND_ONLY）。累積型檔案（REJECTED／DEBT／R-04 等）達門檻後，舊資料搬至 ARCHIVE，正文節尾留一行指標。
+5. **F-005 修正**：改為「內文不得重複 Version 或 Writer（代碼內容除外）」；採漸進式收斂，改檔時順手刪檔頭三行。
+6. **歷史包與時間戳**：新增 `HISTORY.md` 歷史包（含 EVOLUTION／REJECTED／DEBT／R-04）。合成包生成時間移至第一行。
+
+### 2.29 密語安全機制與紀錄對齊（009 定案）
+1. **交付密語**：AI 不得再憑自由心證交付。必須收到 Ken 專屬密語 `方案已定案可交付` 才能輸出檔案。
+2. **特權密語**：新增 4 個防呆鎖（破壞性操作、全域批次、強制中止、跨區操作），全數寫入 `R-00` R-020~R-023。
+3. **排版規範**：提供密語時，必須獨立成行並用 Code Block 包裹，禁止列入 A/B/C 選項。
+4. **目錄對齊**：所有專案紀錄（`WF-*`）統一放至 `docs/records/`，與體系架構一致。
+5. **R-05 補齊**：同步將 R-020~R-023 與密語事件映射至 DSL。
+
 ---
 
 ## 三、決策記錄
 
-*(D-144~D-156 保留原樣)*
-
 | 編號 | 決策 | 說明 |
 |---|---|---|
+| D-144 ~ D-156 | v1.5 階段決策 | 詳見進化史第五段。 |
 | D-157 | 雙 AI 改三 AI 模式 | 新增挑戰方案對抗者與合規審判者。 |
 | D-158 | 對抗者與審判者外部化 | 不進 FSM 狀態與 δ 轉移。 |
 | D-159 | CHK 審查包新增 | 建立 docs/review/ 四源檔，打包為 CHK.md。 |
@@ -250,7 +305,17 @@ W: ai-system-20261022-008#77
 | D-163 | CHK-E 特徵化 | 期望改為具體特徵，如 `V:`、`F/V/W`。 |
 | D-164 | REVIEW-FORMAT 例外 | 新增特徵搜尋與定點檢查類，免前中後。 |
 | D-165 | FMT-09 敷衍防堵 | 拿無關行號湊數即 FAIL。 |
-| **D-166** | **新增第七檔 SYSTEM-EVOLUTION 與 R-019** | **進化史獨立為第七檔；R-019 要求重大結構變更時列清單並提示記入歷史，AI 不得自行寫入。** |
+| D-166 | 新增第七檔 SYSTEM-EVOLUTION 與 R-019 | 進化史獨立為第七檔；R-019 要求重大結構變更時列清單並提示記入歷史，AI 不得自行寫入。 |
+| D-167 | 導入區模型與單區獨佔 | 四檔＋SP／領域／專案／CHK 對應不同區。 |
+| D-168 | 權限階層正名 | 初創者／體系開發者／領域開發者。 |
+| D-169 | 核心區角色切換授權閘 | 須輸入 `[授權切換：目標角色]`，防角色漂移。 |
+| D-170 | F-005 修正與 K-01 收斂 | 加「代碼內容除外」，採漸進式刪除檔頭三行。 |
+| D-171 | 歷史歸檔機制建立 | 新增 `SYSTEM-ARCHIVE.md` 與打包 `HISTORY.md`。 |
+| D-172 | 合成包時間戳移至第一行 | 全體系 13 處生成腳本對調。 |
+| D-173 | 專案 90 新舊分離決策 | Webapp 開發者新建 SPA 導致新舊交錯，決議將舊檔遷移至 `old-AI-WA-FAMILY`。 |
+| D-174 | 導入 11 個密語安全機制 | 交付、換角色、改架構、刪檔、中止等皆需密語解鎖。 |
+| D-175 | 紀錄目錄架構鎖定 | 專案紀錄統一放 `docs/records/`，變更須輸入 `[授權架構變更]`。 |
+| D-176 | R-05 補齊密語映射 | 將 R-00 新增的 4 條鐵律與密語事件寫入 DSL 映射表。 |
 
 **決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
 
@@ -264,8 +329,9 @@ W: ai-system-20261022-008#77
 | 任務進度 | PROGRESS.md |
 | 被否決方案台帳 | SYSTEM-REJECTED.md |
 | 技術債台帳 | SYSTEM-DEBT.md |
+| 歸檔台帳 | SYSTEM-ARCHIVE.md |
 | 檔案清單索引 | STATE-INDEX.md |
-| **體系進化史** | **SYSTEM-EVOLUTION.md** |
+| 體系進化史 | SYSTEM-EVOLUTION.md |
 | 身份與信仰 | I-00-identity.md（IP） |
 | 啟動引導 | A-00-guide.md（AP） |
 | 核心規則 | R-00-rules.md（RP） |
@@ -275,9 +341,10 @@ W: ai-system-20261022-008#77
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792664000
-W: ai-system-20261022-008#76
+V: 1792719001
+W: ai-system-20261022-009#2
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-REJECTED.md === -->
@@ -387,7 +454,7 @@ W: ai-system-20261022-009#1
 
 # STATE-INDEX
 
-> 生成時間：2026-10-23 09:53:16 (HKT)
+> 生成時間：2026-10-23 18:36:33 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -399,19 +466,19 @@ W: ai-system-20261022-009#1
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792720028|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792720396|github-actions[bot]
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792719003|ai-system-20261022-009#4
+AI-General|docs/records/PROGRESS.md|1792719002|ai-system-20261022-009#3
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792719001|ai-system-20261022-009#2
+AI-General|docs/records/SYSTEM-EVOLUTION.md|1792719000|ai-system-20261022-009#1
+AI-kernel|docs/r-rules/R-05-dsl-map.md|1792718000|ai-system-20261022-009#1
+AI-kernel|docs/r-rules/R-03-terms.md|1792716002|ai-system-20261022-009#3
+AI-kernel|docs/r-rules/R-00-rules.md|1792716001|ai-system-20261022-009#2
+AI-kernel|docs/a-guide/A-00-guide.md|1792716000|ai-system-20261022-009#1
 AI-General|docs/records/SYSTEM-DEBT.md|1792705003|ai-system-20261022-009#1
-AI-kernel|docs/r-rules/R-00-rules.md|1792705002|ai-system-20261022-009#1
 AI-General|docs/records/SYSTEM-ARCHIVE.md|1792700007|ai-system-20261022-009#7
-AI-kernel|docs/r-rules/R-05-dsl-map.md|1792700005|ai-system-20261022-009#5
-AI-kernel|docs/r-rules/R-03-terms.md|1792700004|ai-system-20261022-009#4
 AI-kernel|docs/a-guide/I-00-identity.md|1792700002|ai-system-20261022-009#2
-AI-kernel|docs/a-guide/A-00-guide.md|1792700001|ai-system-20261022-009#1
-AI-General|docs/records/SYSTEM-EVOLUTION.md|1792669000|webapp-20261022-047#1
 AI-kernel|docs/skills/W/W-06-sop.md|1792668000|webapp-20261022-014#1
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792666000|ai-system-20261022-008#78
-AI-General|docs/records/PROGRESS.md|1792665000|ai-system-20261022-008#77
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792664000|ai-system-20261022-008#76
 AI-General|docs/records/SYSTEM-REJECTED.md|1792613004|ai-system-20261022-007#93#4
 AI-kernel|docs/review/CHK-E.md|1792612002|ai-system-20261022-007#90#2
 AI-kernel|docs/review/REVIEW-FORMAT.md|1792612001|ai-system-20261022-007#90#1
@@ -430,7 +497,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792720396
+V: 1792751793
 W: github-actions[bot]
 ═══ */
 

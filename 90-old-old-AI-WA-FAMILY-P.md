@@ -1,11 +1,11 @@
-> 生成時間：2026-10-23 09:53:16 (HKT)
+> 生成時間：2026-10-23 18:36:34 (HKT)
 
 # 專案 P 檔總集：old-AI-WA-FAMILY
 
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-01-index.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-01-index.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-01-index.md
+## 📄 docs/projects/web-app-family/P-01-index.md
 
 # P-01 專案索引 + 技術架構
 
@@ -118,11 +118,11 @@ F: P-01-index.md
 V: 1792581016
 W: ai-system-20261021-004#16
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-01-index.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-01-index.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-04-adr-index.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-04-adr-index.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-04-adr-index.md
+## 📄 docs/projects/web-app-family/P-04-adr-index.md
 
 # P-04 ADR 歷史索引
 
@@ -234,11 +234,11 @@ F: P-04-adr-index.md
 V: 1792581013
 W: ai-system-20261021-004#13
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-04-adr-index.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-04-adr-index.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-05-sop.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-05-sop.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-05-sop.md
+## 📄 docs/projects/web-app-family/P-05-sop.md
 
 # P-05 常見任務 SOP
 
@@ -434,11 +434,11 @@ F: P-05-sop.md
 V: 1792581017
 W: ai-system-20261021-004#17
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-05-sop.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-05-sop.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-06-pagemap.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-06-pagemap.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-06-pagemap.md
+## 📄 docs/projects/web-app-family/P-06-pagemap.md
 
 # P-06 頁面 → 檔案對照表
 
@@ -630,11 +630,11 @@ F: P-06-pagemap.md
 V: 1792581020
 W: ai-system-20261021-004#20
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-06-pagemap.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-06-pagemap.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-07-uispec.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-07-uispec.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-07-uispec.md
+## 📄 docs/projects/web-app-family/P-07-uispec.md
 
 # P-07 專案 UI 規格與業務術語
 
@@ -790,11 +790,11 @@ F: P-07-uispec.md
 V: 1792581018
 W: ai-system-20261021-004#18
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-07-uispec.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-07-uispec.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-08-api.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-08-api.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-08-api.md
+## 📄 docs/projects/web-app-family/P-08-api.md
 
 # P-08 API 契約
 
@@ -897,11 +897,11 @@ F: P-08-api.md
 V: 1792581019
 W: ai-system-20261021-004#19
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-08-api.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-08-api.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-09-data.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-09-data.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-09-data.md
+## 📄 docs/projects/web-app-family/P-09-data.md
 
 # P-09 Firebase RTDB 資料結構
 
@@ -1249,11 +1249,11 @@ F: P-09-data.md
 V: 1792581021
 W: ai-system-20261021-004#21
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-09-data.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-09-data.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-10-incident.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-10-incident.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-10-incident.md
+## 📄 docs/projects/web-app-family/P-10-incident.md
 
 # P-10 事故日誌
 
@@ -1535,11 +1535,11 @@ F: P-10-incident.md
 V: 1792581022
 W: ai-system-20261021-004#22
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-10-incident.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-10-incident.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-14-decisions.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-14-decisions.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-14-decisions.md
+## 📄 docs/projects/web-app-family/P-14-decisions.md
 
 # P-14 專案決策明細附錄
 
@@ -1609,11 +1609,11 @@ F: P-14-decisions.md
 V: 1792581014
 W: ai-system-20261021-004#14
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-14-decisions.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-14-decisions.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-15-reorg-plan.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-15-reorg-plan.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-15-reorg-plan.md
+## 📄 docs/projects/web-app-family/P-15-reorg-plan.md
 
 # P-15 專案重組與體系對齊計畫書
 
@@ -1745,11 +1745,11 @@ F: P-15-reorg-plan.md
 V: 1792581023
 W: ai-system-20261021-004#23
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-15-reorg-plan.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-15-reorg-plan.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-99-errors-map.md === -->
+<!-- === FILE START: docs/projects/web-app-family/P-99-errors-map.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-99-errors-map.md
+## 📄 docs/projects/web-app-family/P-99-errors-map.md
 
 # P-99 錯誤快速查核表（交付前必讀）
 
@@ -1842,11 +1842,11 @@ F: P-99-errors-map.md
 V: 1792581015
 W: ai-system-20261021-004#15
 ═══ */
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/P-99-errors-map.md === -->
+<!-- === FILE END: docs/projects/web-app-family/P-99-errors-map.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-CONCLUSION.md === -->
+<!-- === FILE START: docs/projects/web-app-family/WF-CONCLUSION.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-CONCLUSION.md
+## 📄 docs/projects/web-app-family/WF-CONCLUSION.md
 
 # WF-CONCLUSION（專案滾動結論）
 
@@ -1918,11 +1918,11 @@ V: 1792670012
 W: webapp-20261022-046#1
 ═══ */
 
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-CONCLUSION.md === -->
+<!-- === FILE END: docs/projects/web-app-family/WF-CONCLUSION.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-HANDOFF.md === -->
+<!-- === FILE START: docs/projects/web-app-family/WF-HANDOFF.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-HANDOFF.md
+## 📄 docs/projects/web-app-family/WF-HANDOFF.md
 
 # WF-HANDOFF（專案交接快照）
 
@@ -2000,11 +2000,11 @@ V: 1792670013
 W: webapp-20261022-046#2
 ═══ */
 
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-HANDOFF.md === -->
+<!-- === FILE END: docs/projects/web-app-family/WF-HANDOFF.md === -->
 
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-PROGRESS.md === -->
+<!-- === FILE START: docs/projects/web-app-family/WF-PROGRESS.md === -->
 
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-PROGRESS.md
+## 📄 docs/projects/web-app-family/WF-PROGRESS.md
 
 # WF-PROGRESS（專案任務進度追蹤）
 
@@ -2077,50 +2077,4 @@ V: 1792670014
 W: webapp-20261022-046#3
 ═══ */
 
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-PROGRESS.md === -->
-
-<!-- === FILE START: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-STATE-INDEX.md === -->
-
-## 📄 external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-STATE-INDEX.md
-
-# WF-STATE-INDEX（專案檔案狀態索引）
-
-最後更新：2026-10-23 09:53:16 (HKT)
-Version: 1792720396
-Writer: github-actions[bot]
-用途：記錄所有已交付檔案的版本與清單（由體系自動生成）
-
----
-
-## 一、專案總覽
-
-| 專案顯示名稱 | code | domain | package_no | repo |
-|---|---|---|---|---|
-| 家庭 webapp 舊版 | old-webapp | W | 90-old | tlee20860-dotcom/old-AI-WA-FAMILY |
-
-## 二、檔案清單（自動生成）
-
-| 檔案 | 版本 (V) | 編寫者 (W) |
-|---|---|---|
-| WF-PROGRESS.md | 1792670014 | webapp-20261022-046#3 |
-| WF-HANDOFF.md | 1792670013 | webapp-20261022-046#2 |
-| WF-CONCLUSION.md | 1792670012 | webapp-20261022-046#1 |
-| P-99-errors-map.md | 1792581015 | ai-system-20261021-004#15 |
-| P-15-reorg-plan.md | 1792581023 | ai-system-20261021-004#23 |
-| P-14-decisions.md | 1792581014 | ai-system-20261021-004#14 |
-| P-10-incident.md | 1792581022 | ai-system-20261021-004#22 |
-| P-09-data.md | 1792581021 | ai-system-20261021-004#21 |
-| P-08-api.md | 1792581019 | ai-system-20261021-004#19 |
-| P-07-uispec.md | 1792581018 | ai-system-20261021-004#18 |
-| P-06-pagemap.md | 1792581020 | ai-system-20261021-004#20 |
-| P-05-sop.md | 1792581017 | ai-system-20261021-004#17 |
-| P-04-adr-index.md | 1792581013 | ai-system-20261021-004#13 |
-| P-01-index.md | 1792581016 | ai-system-20261021-004#16 |
-
-/* ═══ EOF ═══
-F: WF-STATE-INDEX.md
-V: 1792720396
-W: github-actions[bot]
-═══ */
-
-<!-- === FILE END: external/old-AI-WA-FAMILY/docs/projects/web-app-family/WF-STATE-INDEX.md === -->
+<!-- === FILE END: docs/projects/web-app-family/WF-PROGRESS.md === -->
