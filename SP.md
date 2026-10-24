@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 12:50:02 (HKT)
+> 生成時間：2026-10-24 13:40:47 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -82,8 +82,8 @@ records_pending: []
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792900003
-W: ai-system-20261023-010#1
+V: 1792900010
+W: ai-system-20261024-011#19
 ═══ */
 
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
@@ -119,6 +119,40 @@ W: ai-system-20261023-010#1
 ### 任務二十三：密語安全機制與紀錄對齊（009）
 | 欄位 | 值 |
 |---|---|
+| 任務名稱 | 密語矩陣建置、紀錄路徑對齊、R-05 補齊 |
+| 開始時間 | 2026-10-23 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+### 任務二十二：區模型、權限階層與歷史歸檔（009）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 區模型落地、權限正名、歷史檔與打包機制、專案分離 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+### 任務二十一：體系進化史建立與 R-019（008）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 體系進化史建立、史料整合、R-019 結構變更提示 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+### 任務二十：三 AI 模式與審查包建置（007）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 三 AI 模式落地、CHK 審查包建置、腳本升級與實測 |
+| 開始時間 | 2026-10-22 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+### 任務十九：體系微核心化與腳本對齊（006）
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 微核心化 v1.5 落地、F-004 修正、Phase 2 腳本升級 |
+| 開始時間 | 2026-10-21 |
 | 完成時間 | 2026-10-23 |
 | 完成度 | 100% |
 
@@ -141,6 +175,48 @@ W: ai-system-20261023-010#1
 | 2 | 修改 R-00 的 F-001，改為不可變填空模板 | ✅ | 2026-10-23 |
 | 3 | 審查專案開發者脫軌事件（無密語交件、格式錯誤） | ✅ | 2026-10-23 |
 
+### 任務二十三：密語安全機制與紀錄對齊
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 修改 R-00 加入 R-020~R-023 鐵律 | ✅ | 2026-10-23 |
+| 2 | 修改 AP 加入 11 個密語事件與 FSM 矩陣 | ✅ | 2026-10-23 |
+| 3 | 修改 R-03 加入密語詞條（詞 65~75） | ✅ | 2026-10-23 |
+| 4 | 修改 A-00 §4.4 鎖定 `docs/records/` 架構 | ✅ | 2026-10-23 |
+| 5 | 補齊 R-05 的 40 條規則與密語 DSL 映射 | ✅ | 2026-10-23 |
+| 6 | 更新體系進化史（v1.7） | ✅ | 2026-10-23 |
+| 7 | 專案 90 新舊架構分離與 JS 誤搬修正 | ✅ | 2026-10-23 |
+
+### 任務二十二：區模型、權限階層與歷史歸檔
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 修改 AP（區模型、boot_check 拆分、授權閘） | ✅ | 2026-10-22 |
+| 2 | 修改 IP（階層正名、權限表） | ✅ | 2026-10-22 |
+| 3 | 修改 R-00（S-001 三欄、F-005 修正、全區格式） | ✅ | 2026-10-22 |
+| 4 | 修改 R-03（詞 58~64）、R-05（映射擴充） | ✅ | 2026-10-22 |
+| 5 | 修改 YML（Step 9.3 歷史包、時間戳首行） | ✅ | 2026-10-23 |
+| 6 | 建立 `SYSTEM-ARCHIVE.md` 與更新 `SYSTEM-DEBT.md` | ✅ | 2026-10-23 |
+
+### 任務二十一：體系進化史建立與 R-019
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 接收 10-12~10-22 共 30+ 份史料，逐批核對 | ✅ | 2026-10-22 |
+| 2 | 建立 `SYSTEM-EVOLUTION.md`，六段改為八段（含 §四點五） | ✅ | 2026-10-22 |
+| 3 | §零點五 時間軸總覽、§八 衝突表 33 項 | ✅ | 2026-10-22 |
+| 4 | 新增 R-019（R-00）與 R-05 映射 | ✅ | 2026-10-22 |
+| 5 | 4 檔記錄（CONCLUSION／PROGRESS／HANDOFF／STATE-INDEX） | ✅ | 2026-10-22 |
+
+### 任務二十：三 AI 模式與審查包建置
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 定案三 AI 模式與邊界（I-00） | ✅ | 2026-10-22 |
+| 2 | 新增 docs/review 四檔（REVIEW-FORMAT、ROLE-BOUNDARY、CHK-INDEX、CHK-E） | ✅ | 2026-10-22 |
+| 3 | 修改 R-00（新增 §七 審查機制）與 R-03（新增詞 48~57） | ✅ | 2026-10-22 |
+| 4 | 修改 A-00（FSM 角色外部化）與 U-00（加三角色指名） | ✅ | 2026-10-22 |
+| 5 | 修改 setup-structure.yml（新增 Step 6.5 生成 CHK.md） | ✅ | 2026-10-22 |
+| 6 | 更新 R-05 映射（新增 R00-7.x）與詞 39 修正 | ✅ | 2026-10-22 |
+| 7 | 特徵化 CHK-E 與新增 REVIEW-FORMAT 例外機制 | ✅ | 2026-10-22 |
+| 8 | 外部 AI 實測通過（防堵敷衍瞎判） | ✅ | 2026-10-22 |
+
 ---
 
 ## 三、狀態定義
@@ -160,14 +236,18 @@ W: ai-system-20261023-010#1
 
 | 日期 | 對話編號 | 完成任務 |
 |---|---|---|
+| 2026-10-21 | ai-system-20261021-005 | 任務十八（100%） |
+| 2026-10-22 | ai-system-20261021-006 | 任務十九（100%） |
+| 2026-10-22 | ai-system-20261022-007 | 任務二十（100%） |
+| 2026-10-22 | ai-system-20261022-008 | 任務二十一（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十二（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十三（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十四（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792900001
-W: ai-system-20261023-010#1
+V: 1792900008
+W: ai-system-20261024-011#8
 ═══ */
 
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
@@ -380,7 +460,7 @@ W: ai-system-20261022-007#93#4
 
 | 編號 | 類別 | 描述 | 優先級 | 狀態 | 來源對話 |
 |---|---|---|---|---|---|
-| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 暫不處理（D-342；漸進式收斂：改檔時順手刪檔頭三行） | ai-system-20261021-004 |
+| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 暫不處理（漸進式收斂：改檔時順手刪檔頭三行） | ai-system-20261021-004 |
 | C-01 | 專案 | 專案程式碼 END OF FILE 補齊（約 44 檔） | 低 | 待處理 | ai-system-20261021-004 |
 | K-03 | 體系 | 36 條映射完成後，R-00 契約表加 DSL 欄 | 中 | 待處理 | ai-system-20261021-006 |
 
@@ -413,9 +493,10 @@ W: ai-system-20261022-007#93#4
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792705003
-W: ai-system-20261022-009#1
+V: 1792900009
+W: ai-system-20261024-011#11
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
 
 <!-- === FILE START: AI-General/docs/records/STATE-INDEX.md === -->
@@ -424,7 +505,7 @@ W: ai-system-20261022-009#1
 
 # STATE-INDEX
 
-> 生成時間：2026-10-24 12:50:02 (HKT)
+> 生成時間：2026-10-24 13:40:47 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -436,16 +517,16 @@ W: ai-system-20261022-009#1
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792900003|ai-system-20261023-010#1
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792900010|ai-system-20261024-011#19
+AI-General|docs/records/SYSTEM-DEBT.md|1792900009|ai-system-20261024-011#11
+AI-General|docs/records/PROGRESS.md|1792900008|ai-system-20261024-011#8
+AI-kernel|docs/r-rules/R-03-terms.md|1792900006|ai-system-20261024-011#3
+AI-kernel|docs/r-rules/R-00-rules.md|1792900005|ai-system-20261024-011#2
 AI-General|docs/records/SYSTEM-CONCLUSION.md|1792900002|ai-system-20261023-010#1
-AI-General|docs/records/PROGRESS.md|1792900001|ai-system-20261023-010#1
-AI-General|docs/records/STATE-INDEX.md|1792811899|github-actions[bot]
+AI-General|docs/records/STATE-INDEX.md|1792817402|github-actions[bot]
 AI-General|docs/records/SYSTEM-EVOLUTION.md|1792720502|ai-system-20261022-009#3
-AI-kernel|docs/r-rules/R-00-rules.md|1792719601|ai-system-20261022-009#2
 AI-kernel|docs/a-guide/A-00-guide.md|1792719600|ai-system-20261022-009#1
 AI-kernel|docs/r-rules/R-05-dsl-map.md|1792718000|ai-system-20261022-009#1
-AI-kernel|docs/r-rules/R-03-terms.md|1792716002|ai-system-20261022-009#3
-AI-General|docs/records/SYSTEM-DEBT.md|1792705003|ai-system-20261022-009#1
 AI-General|docs/records/SYSTEM-ARCHIVE.md|1792700007|ai-system-20261022-009#7
 AI-kernel|docs/a-guide/I-00-identity.md|1792700002|ai-system-20261022-009#2
 AI-kernel|docs/skills/W/W-06-sop.md|1792668000|webapp-20261022-014#1
@@ -467,7 +548,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792817402
+V: 1792820447
 W: github-actions[bot]
 ═══ */
 

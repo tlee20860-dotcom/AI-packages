@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 12:50:04 (HKT)
+> 生成時間：2026-10-24 13:40:49 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -550,7 +550,7 @@ W: ai-system-20261022-007#93#4
 
 | 編號 | 類別 | 描述 | 優先級 | 狀態 | 來源對話 |
 |---|---|---|---|---|---|
-| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 暫不處理（D-342；漸進式收斂：改檔時順手刪檔頭三行） | ai-system-20261021-004 |
+| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 暫不處理（漸進式收斂：改檔時順手刪檔頭三行） | ai-system-20261021-004 |
 | C-01 | 專案 | 專案程式碼 END OF FILE 補齊（約 44 檔） | 低 | 待處理 | ai-system-20261021-004 |
 | K-03 | 體系 | 36 條映射完成後，R-00 契約表加 DSL 欄 | 中 | 待處理 | ai-system-20261021-006 |
 
@@ -583,9 +583,10 @@ W: ai-system-20261022-007#93#4
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792705003
-W: ai-system-20261022-009#1
+V: 1792900009
+W: ai-system-20261024-011#11
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-04-learning.md === -->
