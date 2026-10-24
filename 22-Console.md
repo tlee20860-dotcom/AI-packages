@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 19:19:42 (HKT)
+> 生成時間：2026-10-24 19:57:02 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -271,13 +271,13 @@
         // === 共享包獲取 (去重與分類) ===
         let currentFilesData = []; 
 
+        // 根據全數字前綴進行分類
         function getCategoryInfo(filename) {
-            if (/^(IP|AP|RP|UP)\.md$/.test(filename)) return { key: 'core', title: '🧠 體系四檔（核心大腦）', order: 1 };
-            if (/^\d{2}-/.test(filename)) return { key: 'project', title: '📦 專案合併包', order: 2 };
-            if (/^[A-Z]{1,2}P\.md$/.test(filename)) return { key: 'domain', title: '🧩 領域技能包', order: 3 };
-            if (/^(03-INFRA|92-Ai-github)\.md$/.test(filename)) return { key: 'infra', title: '⚙️ 基礎設施與控制台', order: 4 };
-            if (/^SP\.md$/.test(filename)) return { key: 'record', title: '📝 體系紀錄（狀態）', order: 5 };
-            return { key: 'other', title: '📁 其他檔案', order: 6 };
+            if (/^0[0-4]-/.test(filename)) return { key: 'core', title: '🧠 核心與領域 (00-04)', order: 1 };
+            if (/^1\d-/.test(filename)) return { key: 'domain', title: '🧩 領域技能包 (10-19)', order: 2 };
+            if (/^2\d-/.test(filename)) return { key: 'record', title: '⚙️ 體系紀錄與工具 (20-29)', order: 3 };
+            if (/^9\d-/.test(filename)) return { key: 'project', title: '📦 專案合併包 (90+)', order: 4 };
+            return { key: 'other', title: '📁 其他檔案', order: 5 };
         }
 
         async function fetchFiles() {
@@ -438,8 +438,8 @@
 </html>
 /* ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792900066
-W: ai-system-20261024-012#101
+V: 1792900075
+W: ai-system-20261024-012#117
 ═══ */```
 
 <!-- === FILE END: index.html === -->
@@ -480,7 +480,7 @@ W: ai-system-20261024-012#101
 ## 📄 sw.js
 
 ```js
-const CACHE_NAME = 'ai-console-v4';
+const CACHE_NAME = 'ai-console-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -533,8 +533,8 @@ self.addEventListener('fetch', (event) => {
 
 /* ═══ EOF ═══
 F: AI-infra/sw.js
-V: 1792900067
-W: ai-system-20261024-012#102
+V: 1792900076
+W: ai-system-20261024-012#118
 ═══ */```
 
 <!-- === FILE END: sw.js === -->

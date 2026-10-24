@@ -1,12 +1,12 @@
-> 生成時間：2026-10-24 19:19:40 (HKT)
+> 生成時間：2026-10-24 19:57:01 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
 ---
 ⚠️ **【給 AI 的強制前置檢查】**
-請立刻確認：你是否已經讀取 `IP.md`、`AP.md`、`RP.md`、`UP.md`（體系四檔）？
+請立刻確認：你是否已經讀取 `00-IP.md`、`01-AP.md`、`02-RP.md`、`03-UP.md`（體系四檔）？
 1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取缺漏的檔案，載入身份、流程、規則與偏好。
-2. 如果「是」，請依據 `IP.md` 與 `AP.md` 輸出載入確認。
+2. 如果「是」，請依據 `00-IP.md` 與 `01-AP.md` 輸出載入確認。
 ---
 
 
@@ -582,7 +582,7 @@ W: ai-system-20261024-012#108
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792575600 | ai-system-20261021-003#61 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900039 | ai-system-20261024-012#52 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900044 | ai-system-20261024-012#63 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900045 | ai-system-20261024-012#64 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900074 | ai-system-20261024-012#116 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900048 | ai-system-20261024-012#67 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
