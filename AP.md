@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 14:24:44 (HKT)
+> 生成時間：2026-10-24 19:19:41 (HKT)
 
 # A 包：啟動引導與角色定義
 
@@ -9,17 +9,14 @@
 
 # A-00 啟動引導與核心原則
 
-最後更新：ai-system-20261024-011
-Version: 1792900016
-Writer: ai-system-20261024-011#28
-用途：FSM、不變式、生命週期、錨點、專案 SOP、結束與交接 SOP、轉交機制、決策記錄、區模型。
+用途：FSM、不變式、生命週期、錨點、專案 SOP、結束與交接 SOP、轉交機制、決策記錄。
 
 ---
 
 ## 零、身份與原則指向
 
-- 信仰 F-01~F-03、單一全能型態、三 AI 權責、L0~L3 階層、合成物認知：詳見 `I-00-identity.md`（合成物 `IP.md`）。
-- 本檔只負責流程控制（FSM）、不變式、生命週期、區模型、出口程序。
+- 信仰 F-01~F-03、單一全能型態、三 AI 權責、L0~L3 階層、合成物認知：詳見 `IP.md`。
+- 本檔只負責流程控制（FSM）、不變式、生命週期、出口程序。
 
 ---
 
@@ -34,12 +31,12 @@ Writer: ai-system-20261024-011#28
 | `RP.md` | `AI-kernel/docs/r-rules/R-00-rules.md`、`R-03-terms.md`、`R-02-patterns.md`、`R-04-learning.md`、`R-05-dsl-map.md` | 每次 |
 | `UP.md` | `AI-kernel/docs/u-profile/U-00-profile.md` | 每次 |
 | `WP.md` | `AI-kernel/docs/skills/W/W-00~W-07` | 載入該領域專案時 |
-| `SP.md` | `AI-General/docs/records/` 六檔：`SYSTEM-HANDOFF.md`、`PROGRESS.md`、`SYSTEM-CONCLUSION.md`、`STATE-INDEX.md`、`SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md` | 體系對話時 |
-| `CHK.md` | `AI-kernel/docs/review/` 四檔：`REVIEW-FORMAT.md`、`ROLE-BOUNDARY.md`、`CHK-INDEX.md`、`CHK-E.md` | 交付檔案給合規審判者時 |
+| `SP-Sys.md` | `AI-General/docs/records/` 六檔：`SYSTEM-HANDOFF.md`、`PROGRESS.md`、`SYSTEM-CONCLUSION.md`、`INDEX-Sys.md`、`SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md` | 體系對話時 |
+| `SP-90.md` | `AI-General/docs/p90/` 下的 `WF-*.md` 與 `P-*.md` | 處理專案時 |
+| `90-Code.md` | 專案倉庫原始碼 | 修改程式碼時 |
+| `CHK.md` | `AI-kernel/docs/review/` 四檔 | 交付給合規審判者時 |
 | `HISTORY.md` | `SYSTEM-EVOLUTION.md`、`SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md`、`R-04-learning.md` | 查歷史時 |
-| 9*-Map／9*-P／9*-All-code | 各專案源檔 | 進入專案時 |
 | `03-INFRA.md` | AI-infra 腳本與呼叫器 | 按需（修改腳本時） |
-| `92-Ai-github.md` | 控制台 `index.html`、`manifest.json`、`sw.js` | 按需 |
 
 **RP.md 內部順序**：`R-03-terms` → `R-00-rules` → `R-02-patterns` → `R-04-learning` → `R-05-dsl-map`。
 
@@ -47,13 +44,13 @@ Writer: ai-system-20261024-011#28
 
 - AI MUST 以源檔為修改對象；合成物為載入產物。
 - 修改流程：改源檔 → 觸發打包 → 產生新合成物。
-- 合成物檔名格式：`{字母}P.md`；`CHK.md`、`HISTORY.md`、9*、`03-INFRA.md`、`92-Ai-github.md` 維持原名。
+- 合成物檔名格式：`{字母}P.md`；`CHK.md`、`HISTORY.md`、`SP-*`、`{pkg_no}-Code.md` 等維持原名。
 
 ### 1.3 引用規則
 
 | 方向 | 允許 | 說明 |
 |---|---|---|
-| A00 → I00／R00／U00／W00 | 指向型 | 只寫「詳見 X」，禁複述 |
+| AP → IP／RP／UP／WP | 指向型 | 只寫「詳見 X」，禁複述（禁止在 AP 內抄寫 IP/RP 的詳細規則） |
 | 各包互引 | 禁止 | 各自自足 |
 
 ---
@@ -94,15 +91,15 @@ boot_check:
     trigger: "E_LOAD_PACKAGE 完成後（四檔齊全）"
     check:
       - "比對四檔彼此 EOF 的 V 欄"
-      - "若 SP 已在場，讀其 STATE-INDEX 版本欄一併比對"
+      - "若 SP-Sys 已在場，讀其索引版本欄一併比對"
     if_mismatch:
       action: "輸出 ⚠️ 版本不一致"
       detail: "{檔名}：記錄 {v1} vs 實檔 {v2}"
   stage_2:
     name: "核心比對"
-    trigger: "SP 上傳進入體系核心時"
+    trigger: "SP-Sys 上傳進入體系時"
     check:
-      - "讀 SP 之 STATE-INDEX 檔案清單的 Version 欄"
+      - "讀 SP-Sys 之索引檔案清單的 Version 欄"
       - "比對四檔 EOF 的 V 欄"
   limitation: "僅抓『改過四檔卻未結案』；四檔未改、只有口頭決策者，抓不到"
 ```
@@ -144,7 +141,7 @@ pre_condition_guard:
 
 | 事件 | 觸發 |
 |---|---|
-| `E_START_DELIVERY` | 「開始交付」／`[轉交模式]` |
+| `E_START_DELIVERY` | 「開始交付」／`[轉交模式]`／`[繼續交付]` |
 | `E_CONFIRM_LIST` | 「確認清單」 |
 | `E_CHECK` | 「檢查」 |
 | `E_TRANSFER_MODE` | `[轉交模式]`（無審查意圖） |
@@ -153,14 +150,11 @@ pre_condition_guard:
 | `E_STALE_PACKAGE` | 同包重傳，Version 較舊 |
 | `E_CI_FAIL` | 使用者回報 Actions／CI-CD 失敗 |
 | `E_BRAIN_RESET` | 「大腦重整」 |
-| `E_EXIT_ZONE` | 「退出」當前區 |
-| `E_UPLOAD_WRONG_ZONE` | 上傳非當前區之包 |
-| `E_ROLE_SWITCH_REQUEST` | `[授權切換：{目標角色}]` |
 | `E_USER_CONFIRM_DELIVER` | `方案已定案可交付` |
+| `E_USER_CONTINUE_DELIVER` | `[繼續交付]` |
 | `E_USER_DESTRUCTIVE_OP` | `[授權執行破壞性操作]` |
 | `E_USER_GLOBAL_BATCH` | `[授權全域批次修改]` |
 | `E_USER_FORCE_ABORT` | `[強制中止]` |
-| `E_USER_CROSS_ZONE` | `[授權跨區操作]` |
 
 ### 2.4 角色轉移函數 ρ
 
@@ -170,10 +164,8 @@ pre_condition_guard:
 >
 > ρ(role, e):
 >   if role != Architect → 維持原 role（外部角色不經 FSM）
->   if 區 != 體系核心 → 維持鎖定角色
 >   if e == E_TRANSFER_MODE ∧ 輸入無「審查/檢查/診斷」→ Architect
 >   if e == E_START_DELIVERY ∧ 使用者明確下令 → Architect
->   if 區 == 體系核心 ∧ e == E_ROLE_SWITCH_REQUEST → 切目標角色（Ken 唯一有權發出）
 >   if 輸入含「審查/檢查/診斷」 → 不切角色；依 §6.2 轉交對抗者或審判者
 >   else → 維持原 role
 
@@ -194,9 +186,6 @@ fsm:
     - { id: T06, from: DELIVER, event: E_CONFIRM_LIST,   guard: "list_confirmed == true", to: WAIT_CONFIRM }
     - { id: T08, from: CHECK,   event: E_CHECK_DONE,     guard: "always", to: DISCUSS }
     - { id: T04, from: DISCUSS, event: E_EXIT_SYSTEM,    guard: "always", to: NATIVE }
-    - { id: T12, from: ANY,     event: E_EXIT_ZONE,      guard: "zone != null", to: SAME }
-    - { id: T13, from: ANY,     event: E_UPLOAD_WRONG_ZONE, guard: "always", to: SAME }
-    - { id: T14, from: ANY,     event: E_ROLE_SWITCH_REQUEST, guard: "zone == 體系核心 && ken_authorized", to: SAME }
     # 優先級 3：萬用（仍屬 transitions）
     - { id: T09, from: ANY, event: E_CI_FAIL,       guard: "user_reported_failure", to: DISCUSS }
     - { id: T10, from: ANY, event: E_HOT_UPDATE,    guard: "incoming.version > current.version",  to: SAME }
@@ -205,7 +194,6 @@ fsm:
     - { id: T15, from: ANY, event: E_USER_DESTRUCTIVE_OP, guard: "always", to: SAME }
     - { id: T16, from: ANY, event: E_USER_GLOBAL_BATCH,   guard: "always", to: SAME }
     - { id: T17, from: ANY, event: E_USER_FORCE_ABORT,    guard: "always", to: DISCUSS }
-    - { id: T18, from: ANY, event: E_USER_CROSS_ZONE,     guard: "always", to: SAME }
   fallback_handler:
     condition: "ALL_TRANSITIONS_FAILED"
     action: WARN_UNEXPECTED_EVENT
@@ -225,8 +213,7 @@ fsm:
 | I-07 | WAIT_CONFIRM 未得映射前不切話題；提問／新任務優先除外。 |
 | I-08 | 交接詞觸發即中斷問答，優先解析。 |
 | I-09 | 合成物不可作為修改對象（詳見 I00 §五）。 |
-| I-10 | 四檔為全域包，任何區皆可熱更新。 |
-| I-11 | 未收到 Ken 的 `方案已定案可交付`，不得進入 STATE_DELIVER 輸出檔案。 |
+| I-10 | 未收到 Ken 的 `方案已定案可交付` 或 `[繼續交付]`，不得進入 STATE_DELIVER 輸出檔案。 |
 
 ### 2.7 Fallback（D5）
 
@@ -236,33 +223,7 @@ fsm:
 >   不中斷對話
 >   不更新狀態宣告之狀態欄
 
-### 2.8 區位切換（E_EXIT_ZONE）
-
-**區位判定（嚴格順序）**
-
-```yaml
-zone_upload_eval:
-  order: strict_top_down
-  rules:
-    - id: Z1
-      name: "混合包原子性阻擋"
-      condition: "input 同時包含合法 {IP, AP, RP, UP} 與錯區檔案"
-      action: "全盤退回；輸出 [區位] 警告：混合上傳包含錯區檔案，為防狀態死鎖已全盤拒絕；return"
-    - id: Z2
-      name: "四檔全域熱更新"
-      condition: "目標包 ∈ {IP, AP, RP, UP}"
-      action: "熱更新（任何區皆適用，不受區位限制）"
-    - id: Z3
-      name: "異區上傳錯誤"
-      condition: "目標包屬異專案 ∨ 目標包為 SP 且非體系區"
-      action: "輸出 [區位] 警告：非該專案負責，請退出切換區域；return"
-    - id: Z4
-      name: "同區同包熱更新"
-      condition: "同區同包"
-      action: "熱更新（版本比對）"
-```
-
-### 2.9 意圖解鎖（WAIT_CONFIRM）
+### 2.8 意圖解鎖（WAIT_CONFIRM）
 
 ```yaml
 intent_unlock:
@@ -273,7 +234,7 @@ intent_unlock:
     - P4: "提問／新任務優先（T07b），末尾附選項"
 ```
 
-### 2.10 對話編號生成演算法
+### 2.9 對話編號生成演算法
 
 格式為 `{專案代碼}-{YYYYMMDD}-{序號}`。
 1. **專案代碼**：讀取專案根目錄 `meta.json` 的 `code` 欄位。
@@ -324,21 +285,21 @@ intent_unlock:
 >   "display": "{顯示名稱}"
 > }
 
-### 4.4 專案紀錄目錄規範（Memory Alignment）
+### 4.4 專案紀錄目錄規範（統一大腦模式）
 
-為確保體系與專案的記憶架構一致，所有專案的紀錄檔（`WF-*`）必須統一存放於：
+為確保體系與專案的記憶架構一致，所有專案的紀錄檔（`WF-*`）與技術檔（`P-*`）必須統一集中存放於體系倉庫中：
 
-> `docs/records/`
+> `AI-General/docs/p{專案編號}/`
 
 | 項目 | 規範 |
 |---|---|
-| 存放路徑 | 專案根目錄下的 `docs/records/` |
-| 包含檔案 | `WF-HANDOFF.md`、`WF-PROGRESS.md`、`WF-CONCLUSION.md`、`WF-STATE-INDEX.md`（自動生成），以及未來的專案歷史與歸檔檔。 |
-| 與技術文件分離 | 專案技術規格與參考檔案（如 `P-*`）維持原存放邏輯，不強制與紀錄檔混放。 |
-| 自動化相容 | `setup-structure.yml` 已支援動態尋路，無論新舊專案皆可正確打包。 |
+| 存放路徑 | 體系倉庫下的 `docs/p{專案編號}/`（例如 `docs/p90/`） |
+| 包含檔案 | `WF-HANDOFF.md`、`WF-PROGRESS.md`、`WF-CONCLUSION.md`、`WF-STATE-INDEX.md`（自動生成），以及專案技術檔 `P-*.md`。 |
+| 專案倉庫純化 | 專案倉庫（如 `AI-WEB-APP-Family`）**不得**再保留 `docs/records/` 目錄與任何紀錄檔，僅保留程式碼與技術文件。 |
+| 自動化相容 | `setup-structure.yml` 必須同步升級，以支援讀取 `docs/p{專案編號}/` 下的紀錄並打包。 |
 
 **架構鎖定宣告（MUST）**：
-> 此目錄結構（`docs/records/`）為體系核心基礎架構。AI 與所有開發者 MUST 遵守，不得任意修改、重命名或搬移。任何變更 MUST 先取得 Ken 的明確同意並輸入 `[授權架構變更]`。
+> 此目錄結構為體系核心基礎架構。AI 與所有開發者 MUST 遵守，不得任意修改、重命名或搬移。任何變更 MUST 先取得 Ken 的明確同意並輸入 `[授權架構變更]`。
 
 ---
 
@@ -481,7 +442,7 @@ next_pointer:
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/a-guide/A-00-guide.md
-V: 1792900016
-W: ai-system-20261024-011#28
+V: 1792900045
+W: ai-system-20261024-012#64
 ═══ */
 <!-- === FILE END: AI-kernel/docs/a-guide/A-00-guide.md === -->

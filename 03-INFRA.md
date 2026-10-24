@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 14:24:45 (HKT)
+> 生成時間：2026-10-24 19:19:42 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -221,8 +221,8 @@ if __name__ == "__main__":
 
 ```yml
 # ============================================
-# setup-structure.yml — 動態共享包打包腳本 (手動觸發版)
-# 用途：僅限手動觸發，並加入 pull --rebase 防撞機制
+# setup-structure.yml — 動態共享包打包腳本 (統一大腦版)
+# 用途：手動觸發，所有生成物只寫入 AI-Packages，絕不回寫源檔
 # ============================================
 
 name: Build Shared Packages
@@ -342,55 +342,47 @@ jobs:
           find build-repo -maxdepth 1 -name "*.md" -type f -delete
           echo "舊共享包已清空。"
 
-      - name: "Step 1.5: 生成體系 STATE-INDEX.md"
+      - name: "Step 1.5: 生成體系狀態 (SP-Sys.md)"
         run: |
-          OUTPUT="AI-General/docs/records/STATE-INDEX.md"
-          mkdir -p "AI-General/docs/records"
-          TMP_TABLE="/tmp/state-index-files.txt"
+          OUTPUT="build-repo/SP-Sys.md"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "# AI 對話系統 - 體系狀態包" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "---" >> "$OUTPUT"
+          echo "⚠️ **【給 AI 的強制前置檢查】**" >> "$OUTPUT"
+          echo "請立刻確認：你是否已經讀取 \`IP.md\`、\`AP.md\`、\`RP.md\`、\`UP.md\`（體系四檔）？" >> "$OUTPUT"
+          echo "1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取缺漏的檔案，載入身份、流程、規則與偏好。" >> "$OUTPUT"
+          echo "2. 如果「是」，請依據 \`IP.md\` 與 \`AP.md\` 輸出載入確認。" >> "$OUTPUT"
+          echo "---" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+
+          # 1. 打包體系紀錄
+          for f in AI-General/docs/records/SYSTEM-HANDOFF.md AI-General/docs/records/PROGRESS.md AI-General/docs/records/SYSTEM-CONCLUSION.md AI-General/docs/records/SYSTEM-REJECTED.md AI-General/docs/records/SYSTEM-DEBT.md; do
+            if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+          done
+
+          # 2. 生成體系索引並附加在 SP-Sys 尾端
+          echo "" >> "$OUTPUT"
+          echo "## 體系檔案索引" >> "$OUTPUT"
+          echo "| Repo | 檔案 | Version | Writer |" >> "$OUTPUT"
+          echo "|---|---|---|---|" >> "$OUTPUT"
+          TMP_TABLE="/tmp/state-index-sys.txt"
           > "$TMP_TABLE"
-          
-          for REPO_DIR in "AI-General" "AI-kernel"; do
-            if [ -d "$REPO_DIR/docs" ]; then
-              find "$REPO_DIR/docs" -type f -name "*.md" -not -path "*/.git/*" | while read -r f; do
+          for REPO_DIR in "AI-General/docs/records" "AI-kernel/docs"; do
+            if [ -d "$REPO_DIR" ]; then
+              find "$REPO_DIR" -type f -name "*.md" -not -path "*/.git/*" | while read -r f; do
                 V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
                 if [ -z "$V" ]; then continue; fi
                 W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
-                
                 REPO_NAME="AI-General"
                 CLEAN_F=${f#AI-General/}
-                if [[ "$f" == AI-kernel/* ]]; then 
-                  REPO_NAME="AI-kernel"
-                  CLEAN_F=${f#AI-kernel/}
-                fi
-                
-                echo "$REPO_NAME|$CLEAN_F|$V|$W" >> "$TMP_TABLE"
+                if [[ "$f" == AI-kernel/* ]]; then REPO_NAME="AI-kernel"; CLEAN_F=${f#AI-kernel/}; fi
+                echo "| $REPO_NAME | $CLEAN_F | $V | $W |" >> "$TMP_TABLE"
               done
             fi
           done || true
-
-          TIMESTAMP=$(date +%s)
-
-          {
-            echo "# STATE-INDEX"
-            echo ""
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
-            echo ""
-            echo "## 一、專案總覽"
-            echo "| 專案顯示名稱 | code | domain | package_no | repo |"
-            echo "|---|---|---|---|---|"
-            jq -r '.[] | "| \(.display // "-") | \(.code // "-") | \(.domain) | \(.pkg_no) | \(.repo) |"' /tmp/projects.json
-            echo ""
-            echo "## 二、檔案清單"
-            echo "| Repo | 檔案 | Version | Writer |"
-            echo "|---|---|---|---|"
-            if [ -s "$TMP_TABLE" ]; then sort -t'|' -k3 -nr "$TMP_TABLE" | head -50; fi
-            echo ""
-            echo "/* ═══ EOF ═══"
-            echo "F: AI-General/docs/records/STATE-INDEX.md"
-            echo "V: $TIMESTAMP"
-            echo "W: github-actions[bot]"
-            echo "═══ */"
-          } > "$OUTPUT"
+          if [ -s "$TMP_TABLE" ]; then sort -t'|' -k3 -nr "$TMP_TABLE" >> "$OUTPUT"; fi
 
       - name: "Step 1.9: 生成 I 包 (IP.md)"
         run: |
@@ -399,9 +391,7 @@ jobs:
           echo "" >> "$OUTPUT"
           echo "# I 包：身份與信仰" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
-          if [ -f "AI-kernel/docs/a-guide/I-00-identity.md" ]; then 
-            bash .github/workflows/append_file.sh "AI-kernel/docs/a-guide/I-00-identity.md" "$OUTPUT" || true
-          fi
+          if [ -f "AI-kernel/docs/a-guide/I-00-identity.md" ]; then bash .github/workflows/append_file.sh "AI-kernel/docs/a-guide/I-00-identity.md" "$OUTPUT" || true; fi
 
       - name: "Step 2: 生成 A 包 (AP.md)"
         run: |
@@ -410,9 +400,7 @@ jobs:
           echo "" >> "$OUTPUT"
           echo "# A 包：啟動引導與角色定義" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
-          if [ -f "AI-kernel/docs/a-guide/A-00-guide.md" ]; then 
-            bash .github/workflows/append_file.sh "AI-kernel/docs/a-guide/A-00-guide.md" "$OUTPUT" || true
-          fi
+          if [ -f "AI-kernel/docs/a-guide/A-00-guide.md" ]; then bash .github/workflows/append_file.sh "AI-kernel/docs/a-guide/A-00-guide.md" "$OUTPUT" || true; fi
 
       - name: "Step 3: 生成 R 包 (RP.md)"
         run: |
@@ -421,12 +409,9 @@ jobs:
           echo "" >> "$OUTPUT"
           echo "# R 包：規則總覽" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
-          
           for f in R-03-terms R-00-rules R-02-patterns R-04-learning R-05-dsl-map; do
             FILE_PATH="AI-kernel/docs/r-rules/${f}.md"
-            if [ -f "$FILE_PATH" ]; then 
-              bash .github/workflows/append_file.sh "$FILE_PATH" "$OUTPUT" || true
-            fi
+            if [ -f "$FILE_PATH" ]; then bash .github/workflows/append_file.sh "$FILE_PATH" "$OUTPUT" || true; fi
           done
 
       - name: "Step 4: 生成 U 包 (UP.md)"
@@ -436,9 +421,7 @@ jobs:
           echo "" >> "$OUTPUT"
           echo "# U 包：使用者通用描述" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
-          if [ -f "AI-kernel/docs/u-profile/U-00-profile.md" ]; then 
-            bash .github/workflows/append_file.sh "AI-kernel/docs/u-profile/U-00-profile.md" "$OUTPUT" || true
-          fi
+          if [ -f "AI-kernel/docs/u-profile/U-00-profile.md" ]; then bash .github/workflows/append_file.sh "AI-kernel/docs/u-profile/U-00-profile.md" "$OUTPUT" || true; fi
 
       - name: "Step 5: 生成 W 包 (WP.md)（若存在）"
         run: |
@@ -453,26 +436,6 @@ jobs:
             done
           fi
 
-      - name: "Step 6: 生成 S 包 (SP.md)"
-        run: |
-          OUTPUT="build-repo/SP.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
-          echo "" >> "$OUTPUT"
-          echo "# AI 對話系統 - 體系狀態包" >> "$OUTPUT"
-          echo "" >> "$OUTPUT"
-          
-          echo "---" >> "$OUTPUT"
-          echo "⚠️ **【給 AI 的強制前置檢查】**" >> "$OUTPUT"
-          echo "請立刻確認：你是否已經讀取 \`IP.md\`、\`AP.md\`、\`RP.md\`、\`UP.md\`（體系四檔）？" >> "$OUTPUT"
-          echo "1. 如果「否」或「不確定」，請立刻停止閱讀本檔，先去讀取缺漏的檔案，載入身份、流程、規則與偏好。" >> "$OUTPUT"
-          echo "2. 如果「是」，請依據 \`IP.md\` 與 \`AP.md\` 輸出載入確認。" >> "$OUTPUT"
-          echo "---" >> "$OUTPUT"
-          echo "" >> "$OUTPUT"
-
-          for f in AI-General/docs/records/SYSTEM-HANDOFF.md AI-General/docs/records/PROGRESS.md AI-General/docs/records/SYSTEM-CONCLUSION.md AI-General/docs/records/SYSTEM-REJECTED.md AI-General/docs/records/SYSTEM-DEBT.md AI-General/docs/records/STATE-INDEX.md; do
-            if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
-          done
-
       - name: "Step 6.5: 生成審查包 (CHK.md)"
         run: |
           OUTPUT="build-repo/CHK.md"
@@ -481,9 +444,7 @@ jobs:
 
           MISSING=""
           for f in $SRC_LIST; do
-            if [ ! -f "$SRC_DIR/$f" ]; then
-              MISSING="$MISSING $f"
-            fi
+            if [ ! -f "$SRC_DIR/$f" ]; then MISSING="$MISSING $f"; fi
           done
 
           if [ -n "$MISSING" ]; then
@@ -501,9 +462,7 @@ jobs:
             bash .github/workflows/append_file.sh "$SRC_DIR/$f" "$OUTPUT" || { rm -f "$OUTPUT"; exit 1; }
           done
 
-          echo "[OK] CHK.md 已生成。"
-
-      - name: "Step 7: 生成並更新專案 WF-STATE-INDEX"
+      - name: "Step 7: 生成專案狀態與索引 (SP-{pkg_no}.md)"
         run: |
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
@@ -513,77 +472,50 @@ jobs:
             DISPLAY=$(echo "$row" | jq -r '.display // "-"')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             
-            # 動態尋找包含 WF-PROGRESS.md 的目錄 (相容 docs/records 與 docs/projects)
-            PROJ_DIR=$(find "external/${SAFE_NAME}/docs" -type f -name "WF-PROGRESS.md" -exec dirname {} \; 2>/dev/null | head -n 1)
-            if [ -z "$PROJ_DIR" ]; then continue; fi
+            OUTPUT="build-repo/SP-${PKG_NO}.md"
+            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+            echo "" >> "$OUTPUT"
+            echo "# 專案狀態包：${SAFE_NAME}" >> "$OUTPUT"
+            echo "" >> "$OUTPUT"
 
-            TMP_TABLE="/tmp/state-index-${SAFE_NAME}.txt"
-            > "$TMP_TABLE"
-            
-            find "$PROJ_DIR" -type f -name "*.md" -not -name "WF-STATE-INDEX.md" | sort | while read -r f; do
-              V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
-              if [ -z "$V" ]; then continue; fi
-              W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
-              FNAME=$(basename "$f")
-              echo "| $FNAME | $V | $W |" >> "$TMP_TABLE"
-            done
-
-            OUTPUT="$PROJ_DIR/WF-STATE-INDEX.md"
-            TIMESTAMP=$(date +%s)
-            
-            {
-              echo "# WF-STATE-INDEX（專案檔案狀態索引）"
-              echo ""
-              echo "最後更新：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)"
-              echo "Version: $TIMESTAMP"
-              echo "Writer: github-actions[bot]"
-              echo "用途：記錄所有已交付檔案的版本與清單（由體系自動生成）"
-              echo ""
-              echo "---"
-              echo ""
-              echo "## 一、專案總覽"
-              echo ""
-              echo "| 專案顯示名稱 | code | domain | package_no | repo |"
-              echo "|---|---|---|---|---|"
-              echo "| $DISPLAY | $CODE | $DOMAIN | $PKG_NO | $REPO |"
-              echo ""
-              echo "## 二、檔案清單（自動生成）"
-              echo ""
-              echo "| 檔案 | 版本 (V) | 編寫者 (W) |"
-              echo "|---|---|---|"
-              if [ -s "$TMP_TABLE" ]; then sort -t'|' -k2 -nr "$TMP_TABLE"; fi
-              echo ""
-              echo "/* ═══ EOF ═══"
-              echo "F: WF-STATE-INDEX.md"
-              echo "V: $TIMESTAMP"
-              echo "W: github-actions[bot]"
-              echo "═══ */"
-            } > "$OUTPUT"
-            
-            echo "Generated $OUTPUT"
+            PROJ_DIR="AI-General/docs/p${PKG_NO}"
+            if [ -d "$PROJ_DIR" ]; then
+              # 打包進度與技術檔
+              for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/P-*.md; do
+                if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+              done
+              
+              # 生成專案索引
+              echo "" >> "$OUTPUT"
+              echo "## 專案檔案索引" >> "$OUTPUT"
+              echo "| 檔案 | Version | Writer |" >> "$OUTPUT"
+              echo "|---|---|---|" >> "$OUTPUT"
+              TMP_TABLE="/tmp/state-index-${PKG_NO}.txt"
+              > "$TMP_TABLE"
+              find "$PROJ_DIR" -type f -name "*.md" | sort | while read -r f; do
+                V=$(tail -n 15 "$f" | grep -oE 'V: *[0-9]+' | head -1 | sed 's/V: *//' || true)
+                if [ -z "$V" ]; then continue; fi
+                W=$(tail -n 15 "$f" | grep -oE 'W: *[^ ]+' | head -1 | sed 's/W: *//' || true)
+                FNAME=$(basename "$f")
+                echo "| $FNAME | $V | $W |" >> "$TMP_TABLE"
+              done
+              if [ -s "$TMP_TABLE" ]; then sort -t'|' -k2 -nr "$TMP_TABLE" >> "$OUTPUT"; fi
+            fi
           done
 
-      - name: "Step 8: 生成專案包 (Map / P / All-code 拆分)"
+      - name: "Step 8: 生成專案技術包與代碼包 ({pkg_no}-P.md, {pkg_no}-Code.md)"
         run: |
           jq -c '.[]' /tmp/projects.json | while read -r row; do
             REPO=$(echo "$row" | jq -r '.repo')
             PKG_NO=$(echo "$row" | jq -r '.pkg_no')
-            DOMAIN=$(echo "$row" | jq -r '.domain')
-            CODE=$(echo "$row" | jq -r '.code')
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             
-            OUTPUT_MAP="build-repo/${PKG_NO}-${SAFE_NAME}-Map.md"
-            OUTPUT_P="build-repo/${PKG_NO}-${SAFE_NAME}-P.md"
-            OUTPUT_CODE="build-repo/${PKG_NO}-${SAFE_NAME}-All-code.md"
-
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_MAP"
-            echo "" >> "$OUTPUT_MAP"
-            echo "# 專案地圖包：${SAFE_NAME}" >> "$OUTPUT_MAP"
-            echo "" >> "$OUTPUT_MAP"
+            OUTPUT_P="build-repo/${PKG_NO}-P.md"
+            OUTPUT_CODE="build-repo/${PKG_NO}-Code.md"
 
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_P"
             echo "" >> "$OUTPUT_P"
-            echo "# 專案 P 檔總集：${SAFE_NAME}" >> "$OUTPUT_P"
+            echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
             echo "" >> "$OUTPUT_P"
 
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_CODE"
@@ -591,38 +523,15 @@ jobs:
             echo "# 專案全程式碼包：${SAFE_NAME}" >> "$OUTPUT_CODE"
             echo "" >> "$OUTPUT_CODE"
 
-            if [ -f "external/${SAFE_NAME}/meta.json" ]; then
-              echo "## meta.json" >> "$OUTPUT_MAP"
-              bash .github/workflows/append_file.sh "external/${SAFE_NAME}/meta.json" "$OUTPUT_MAP" || true
-              echo "" >> "$OUTPUT_MAP"
+            # 打包 P 檔至專案技術包
+            PROJ_DIR="AI-General/docs/p${PKG_NO}"
+            if [ -d "$PROJ_DIR" ]; then
+              for f in "$PROJ_DIR"/P-*.md; do
+                if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT_P" || true; fi
+              done
             fi
 
-            if [ -d "external/${SAFE_NAME}" ]; then
-              (
-                cd "external/${SAFE_NAME}" || exit 0
-                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" -o -name "*.yml" -o -name "*.md" \) -not -path "./.git/*" -not -path "./node_modules/*" | sort > /tmp/all_files.txt || true
-                if [ -s /tmp/all_files.txt ]; then
-                  {
-                    echo "## 程式碼檔案樹（僅列路徑，不讀內容）"
-                    echo ""
-                    echo "總檔數：$(wc -l < /tmp/all_files.txt)"
-                    echo ""
-                    sed 's|^\./||' /tmp/all_files.txt
-                  } >> "../../$OUTPUT_MAP"
-                fi
-              ) || true
-            fi
-
-            # 動態尋找 P 與 WF 檔 (相容 docs/records 與 docs/projects)
-            if [ -d "external/${SAFE_NAME}/docs" ]; then
-               (
-                 cd "external/${SAFE_NAME}" || exit 0
-                 find docs -type f \( -name "P-*.md" -o -name "WF-*.md" \) -not -name "WF-STATE-INDEX.md" | sort | while read -r f; do
-                   bash "../../.github/workflows/append_file.sh" "$f" "../../$OUTPUT_P" || true
-                 done
-               ) || true
-            fi
-
+            # 打包程式碼
             if [ -d "external/${SAFE_NAME}" ]; then
               (
                 cd "external/${SAFE_NAME}" || exit 0
@@ -631,9 +540,7 @@ jobs:
                   -not -path "./node_modules/*" \
                   -not -path "./docs/*" \
                   -not -path "./.github/*" | sort | while read -r f; do
-                  if [ -f "$f" ]; then 
-                    bash "../../.github/workflows/append_file.sh" "$f" "../../$OUTPUT_CODE" || true
-                  fi
+                  if [ -f "$f" ]; then bash "../../.github/workflows/append_file.sh" "$f" "../../$OUTPUT_CODE" || true; fi
                 done
               ) || true
             fi
@@ -659,7 +566,7 @@ jobs:
             fi
           done
 
-          for wf in setup-structure.yml migrate.yml append_file.sh; do
+          for wf in setup-structure.yml migrate.yml append_file.sh backup.yml copy-backup.yml; do
             if [ -f ".github/workflows/$wf" ]; then 
               echo "### 📄 檔案：$wf (infra)" >> "$OUTPUT"
               bash .github/workflows/append_file.sh ".github/workflows/$wf" "$OUTPUT" || true
@@ -673,95 +580,6 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
-          if [ -f ".gitignore" ]; then 
-            echo "### 📄 檔案：.gitignore (infra)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh ".gitignore" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          fi
-
-          echo "## 🏢 體系層：AI-kernel 的呼叫器" >> "$OUTPUT"
-          echo "" >> "$OUTPUT"
-          mkdir -p "AI-kernel/.github/workflows"
-          
-          curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.KERNEL_REPO }}/main/.github/workflows/apply-patch.yml" -o "AI-kernel/.github/workflows/apply-patch.yml" || true
-          if [ -s "AI-kernel/.github/workflows/apply-patch.yml" ]; then
-            echo "### 📄 檔案：.github/workflows/apply-patch.yml" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-kernel/.github/workflows/apply-patch.yml" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          else
-            echo "> ⚠️ 找不到 \`AI-kernel/.github/workflows/apply-patch.yml\`" >> "$OUTPUT"
-          fi
-
-          curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.KERNEL_REPO }}/main/.github/workflows/notify.yml" -o "AI-kernel/.github/workflows/notify.yml" || true
-          if [ -s "AI-kernel/.github/workflows/notify.yml" ]; then
-            echo "### 📄 檔案：.github/workflows/notify.yml" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-kernel/.github/workflows/notify.yml" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          else
-            echo "> ⚠️ 找不到 \`AI-kernel/.github/workflows/notify.yml\`" >> "$OUTPUT"
-          fi
-          
-          if [ -f "AI-kernel/.gitignore" ]; then 
-            echo "### 📄 檔案：.gitignore (AI-kernel)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-kernel/.gitignore" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          fi
-
-          echo "## 🏢 體系層：AI-General 的呼叫器" >> "$OUTPUT"
-          echo "" >> "$OUTPUT"
-          mkdir -p "AI-General/.github/workflows"
-          
-          curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.GENERAL_REPO }}/main/.github/workflows/apply-patch.yml" -o "AI-General/.github/workflows/apply-patch.yml" || true
-          if [ -s "AI-General/.github/workflows/apply-patch.yml" ]; then
-            echo "### 📄 檔案：.github/workflows/apply-patch.yml" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-General/.github/workflows/apply-patch.yml" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          else
-            echo "> ⚠️ 找不到 \`AI-General/.github/workflows/apply-patch.yml\`" >> "$OUTPUT"
-          fi
-
-          curl -s -f -L -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" "https://raw.githubusercontent.com/${{ env.GENERAL_REPO }}/main/.github/workflows/notify.yml" -o "AI-General/.github/workflows/notify.yml" || true
-          if [ -s "AI-General/.github/workflows/notify.yml" ]; then
-            echo "### 📄 檔案：.github/workflows/notify.yml" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-General/.github/workflows/notify.yml" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          else
-            echo "> ⚠️ 找不到 \`AI-General/.github/workflows/notify.yml\`" >> "$OUTPUT"
-          fi
-
-          if [ -f "AI-General/.gitignore" ]; then 
-            echo "### 📄 檔案：.gitignore (AI-General)" >> "$OUTPUT"
-            bash .github/workflows/append_file.sh "AI-General/.gitignore" "$OUTPUT" || true
-            echo "" >> "$OUTPUT"
-          fi
-
-          jq -c '.[]' /tmp/projects.json | while read -r row; do
-            REPO=$(echo "$row" | jq -r '.repo')
-            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
-            if [ -d "external/${SAFE_NAME}/.github/workflows" ]; then
-              echo "## 🏢 專案層：${REPO} 的呼叫器" >> "$OUTPUT"
-              echo "" >> "$OUTPUT"
-              (
-                cd "external/${SAFE_NAME}" || exit 0
-                find .github/workflows -type f | sort | while read -r file; do 
-                  echo "### 📄 檔案：${file}" >> "../../$OUTPUT"
-                  echo "" >> "../../$OUTPUT"
-                  bash "../../.github/workflows/append_file.sh" "$file" "../../$OUTPUT" || true
-                  echo "" >> "../../$OUTPUT"
-                done
-              ) || true
-            fi
-            if [ -f "external/${SAFE_NAME}/.gitignore" ]; then 
-              echo "### 📄 檔案：.gitignore (${SAFE_NAME})" >> "$OUTPUT"
-              bash .github/workflows/append_file.sh "external/${SAFE_NAME}/.gitignore" "$OUTPUT" || true
-              echo "" >> "$OUTPUT"
-            fi
-          done
-
       - name: "Step 9.3: 生成歷史檔案包 (HISTORY.md)"
         run: |
           OUTPUT="build-repo/HISTORY.md"
@@ -769,9 +587,7 @@ jobs:
 
           MISSING=""
           for f in $SRC_FILES; do
-            if [ ! -f "$f" ]; then
-              MISSING="$MISSING $f"
-            fi
+            if [ ! -f "$f" ]; then MISSING="$MISSING $f"; fi
           done
 
           if [ -n "$MISSING" ]; then
@@ -790,8 +606,6 @@ jobs:
             bash .github/workflows/append_file.sh "$f" "$OUTPUT" || { rm -f "$OUTPUT"; exit 1; }
           done
 
-          echo "[OK] HISTORY.md 已生成。"
-
       - name: "Step 9.5: 生成控制台共享包 (92-Ai-github.md)"
         run: |
           OUTPUT="build-repo/92-Ai-github.md"
@@ -801,9 +615,7 @@ jobs:
           echo "" >> "$OUTPUT"
           
           for f in index.html manifest.json sw.js; do
-            if [ -f "$f" ]; then 
-              bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true
-            fi
+            if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
       - name: "Step 9.8: 交付驗證報告（report 模式，不擋）"
@@ -817,55 +629,8 @@ jobs:
           export VALIDATE_MODE=report
           python3 .github/scripts/validate_delivery.py || true
 
-      - name: "Step 10: 上傳共享包與專案索引"
+      - name: "Step 10: 上傳共享包 (僅推送到 AI-Packages)"
         run: |
-          cd AI-General
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/records/STATE-INDEX.md
-          git diff --cached --quiet || (
-            git commit -m "chore: auto-update STATE-INDEX [skip ci]" && 
-            git pull --rebase origin main || true && 
-            git push
-          )
-          cd ..
-
-          jq -c '.[]' /tmp/projects.json | while read -r row; do
-            REPO=$(echo "$row" | jq -r '.repo')
-            SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
-            
-            if [ -d "external/${SAFE_NAME}" ]; then
-              cd "external/${SAFE_NAME}"
-              git config user.name "github-actions[bot]"
-              git config user.email "github-actions[bot]@users.noreply.github.com"
-              
-              if [ -d "docs" ]; then
-                TARGET_FILES=$(find docs -name "WF-STATE-INDEX.md")
-              else
-                TARGET_FILES=""
-              fi
-
-              if [ -n "$TARGET_FILES" ]; then
-                git add $TARGET_FILES
-                if ! git diff --cached --quiet; then
-                  git commit -m "chore: auto-update WF-STATE-INDEX [skip ci]"
-                  git pull --rebase origin main || {
-                    echo "⚠️ Rebase 衝突，自動放棄遠端變更並強制合併"
-                    git rebase --abort || true
-                    git pull origin main --no-rebase -X ours || true
-                  }
-                  git push
-                  echo "Pushed WF-STATE-INDEX for $SAFE_NAME"
-                else
-                  echo "No changes in WF-STATE-INDEX for $SAFE_NAME"
-                fi
-              else
-                echo "No WF-STATE-INDEX generated for $SAFE_NAME"
-              fi
-              cd ../..
-            fi
-          done
-
           cd build-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -878,8 +643,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792714000
-# W: ai-system-20261022-009#1
+# V: 1792900070
+# W: ai-system-20261024-012#107
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -1027,6 +792,192 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 
 <!-- === FILE END: .github/workflows/append_file.sh === -->
 
+### 📄 檔案：backup.yml (infra)
+
+<!-- === FILE START: .github/workflows/backup.yml === -->
+
+## 📄 .github/workflows/backup.yml
+
+```yml
+# ============================================
+# backup.yml — 源檔自動備份腳本
+# 用途：每日定時為所有源檔倉庫打上 Git Tag，防止手動貼檔覆蓋導致資料遺失
+# ============================================
+
+name: Daily Source Backup
+
+on:
+  schedule:
+    # 每天 UTC 22:00 (即香港時間 HKT 早上 06:00) 執行
+    - cron: '0 22 * * *'
+  # 允許手動觸發，方便測試
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Create Daily Backup Tags
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          # 建立 Tag 名稱，例如 backup-20261024
+          TAG_NAME="backup-$(date +'%Y%m%d')"
+          echo "Preparing to create tag: $TAG_NAME"
+
+          # 獲取所有帶有 ai-systems 標籤的倉庫，並排除生成物倉庫 AI-packages
+          REPOS=$(gh search repos --owner tlee20860-dotcom --topic ai-systems --json name,owner --jq '.[] | select(.name != "AI-packages") | .owner.login + "/" + .name')
+          
+          # 手動加入不在 topic 中但需要備份的舊版倉庫
+          OLD_REPO="tlee20860-dotcom/old-AI-WA-FAMILY"
+          
+          for REPO in $REPOS $OLD_REPO; do
+            echo "----------------------------------------"
+            echo "Processing repository: $REPO"
+            
+            # 取得該倉庫的預設分支 (通常是 main 或 master)
+            DEFAULT_BRANCH=$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name')
+            
+            # 取得該分支最新 Commit 的 SHA
+            SHA=$(gh api "repos/$REPO/commits/$DEFAULT_BRANCH" --jq '.sha')
+            
+            if [ -z "$SHA" ]; then
+              echo "⚠️ 無法取得 $REPO 的 Commit SHA，跳過。"
+              continue
+            fi
+
+            # 檢查該 Tag 是否已存在
+            if gh api "repos/$REPO/git/ref/tags/$TAG_NAME" >/dev/null 2>&1; then
+              echo "⏭️ Tag $TAG_NAME 已存在於 $REPO，跳過。"
+            else
+              # 建立 Tag
+              gh api -X POST "repos/$REPO/git/refs" -f ref="refs/tags/$TAG_NAME" -f sha="$SHA" > /dev/null
+              echo "✅ 成功為 $REPO 建立 Tag $TAG_NAME (基於 $DEFAULT_BRANCH: $SHA)。"
+            fi
+          done
+
+          echo "========================================"
+          echo "🎉 所有源檔倉庫備份完成。"
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/backup.yml
+# V: 1792900050
+# W: ai-system-20261024-012#69
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/backup.yml === -->
+
+### 📄 檔案：copy-backup.yml (infra)
+
+<!-- === FILE START: .github/workflows/copy-backup.yml === -->
+
+## 📄 .github/workflows/copy-backup.yml
+
+```yml
+# ============================================
+# copy-backup.yml — 接收網頁指令的全量快照備份
+# 用途：手動觸發或由控制台呼叫，將指定倉庫完整複製到備份倉庫的時間戳資料夾中
+# ============================================
+
+name: Copy and Backup Repositories
+
+on:
+  workflow_dispatch:
+    inputs:
+      repos:
+        description: '要備份的倉庫名稱 (逗號分隔)'
+        required: true
+        default: 'AI-kernel,AI-General,old-AI-WA-FAMILY,AI-OS'
+      target_repo:
+        description: '備份存放的目標倉庫'
+        required: true
+        default: 'tlee20860-dotcom/AI-Backup'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Backup Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.target_repo }}
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          path: backup-repo
+
+      - name: Set Timestamp
+        id: timestamp
+        run: |
+          # 產生例如 20261024-1900 的格式
+          FOLDER_NAME="backup-$(TZ=Asia/Hong_Kong date +'%Y%m%d-%H%M')"
+          echo "FOLDER_NAME=$FOLDER_NAME" >> $GITHUB_ENV
+          echo "備份目錄: $FOLDER_NAME"
+
+      - name: Clone and Copy
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+          REPOS: ${{ github.event.inputs.repos }}
+        run: |
+          mkdir -p "backup-repo/${{ env.FOLDER_NAME }}"
+          
+          # 將逗號分隔的字串轉為陣列
+          IFS=',' read -ra REPO_ARRAY <<< "$REPOS"
+          
+          for REPO_NAME in "${REPO_ARRAY[@]}"; do
+            # 去除前後空白
+            REPO_NAME=$(echo "$REPO_NAME" | xargs)
+            if [ -z "$REPO_NAME" ]; then continue; fi
+            
+            echo "========================================"
+            echo "正在備份: $REPO_NAME"
+            
+            # 優先嘗試 main 分支，失敗則嘗試 master
+            git clone --depth 1 -b main "https://x-access-token:${GH_TOKEN}@github.com/tlee20860-dotcom/${REPO_NAME}.git" "temp-${REPO_NAME}" 2>/dev/null || \
+            git clone --depth 1 -b master "https://x-access-token:${GH_TOKEN}@github.com/tlee20860-dotcom/${REPO_NAME}.git" "temp-${REPO_NAME}" 2>/dev/null
+            
+            if [ -d "temp-${REPO_NAME}" ]; then
+              # 將整個目錄結構完整複製過去
+              cp -a "temp-${REPO_NAME}" "backup-repo/${{ env.FOLDER_NAME }}/${REPO_NAME}"
+              # 移除 .git 資料夾以節省備份倉庫空間
+              rm -rf "backup-repo/${{ env.FOLDER_NAME }}/${REPO_NAME}/.git"
+              echo "✅ ${REPO_NAME} 備份完成 (完整保留目錄結構)。"
+            else
+              echo "⚠️ ${REPO_NAME} clone 失敗，請確認名稱是否正確或權限不足，跳過。"
+            fi
+            
+            # 清理臨時目錄
+            rm -rf "temp-${REPO_NAME}"
+          done
+
+      - name: Commit and Push
+        run: |
+          cd backup-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          
+          # 檢查是否有變更
+          if git diff --cached --quiet; then
+            echo "沒有新的變更需要備份。"
+          else
+            git commit -m "chore: backup snapshot ${{ env.FOLDER_NAME }}"
+            git push
+            echo "✅ 備份已成功推送到目標倉庫。"
+          fi
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/copy-backup.yml
+# V: 1792900065
+# W: ai-system-20261024-012#100
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/copy-backup.yml === -->
+
 ### 📄 檔案：config/repos.json (infra)
 
 <!-- === FILE START: config/repos.json === -->
@@ -1065,611 +1016,4 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 ```
 
 <!-- === FILE END: config/repos.json === -->
-
-### 📄 檔案：.gitignore (infra)
-
-<!-- === FILE START: .gitignore === -->
-
-## 📄 .gitignore
-
-```gitignore
-# ============================================
-# 系統與編輯器暫存檔
-# ============================================
-.DS_Store
-Thumbs.db
-*.swp
-
-# ============================================
-# 本地環境變數與金鑰（絕對不可上傳）
-# ============================================
-.env
-.env.local
-
-# ============================================
-# Node.js / Python 依賴包
-# ============================================
-node_modules/
-__pycache__/
-*.pyc
-
-# ============================================
-# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
-# ============================================
-external/
-build-repo/
-tmp/```
-
-<!-- === FILE END: .gitignore === -->
-
-## 🏢 體系層：AI-kernel 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: AI-kernel/.github/workflows/apply-patch.yml === -->
-
-## 📄 AI-kernel/.github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (AI-kernel)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-kernel/.github/workflows/apply-patch.yml
-# V: 1792401000
-# W: ai-system-20261019-010#187
-# ═══ EOF ═══```
-
-<!-- === FILE END: AI-kernel/.github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: AI-kernel/.github/workflows/notify.yml === -->
-
-## 📄 AI-kernel/.github/workflows/notify.yml
-
-```yml
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-    paths:
-      - '**.md'
-      - '.github/workflows/notify.yml'
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"
-
-# ═══ EOF ═══
-# F: AI-kernel/.github/workflows/notify.yml
-# V: 1792401000
-# W: ai-system-20261019-010#187
-# ═══ EOF ═══```
-
-<!-- === FILE END: AI-kernel/.github/workflows/notify.yml === -->
-
-### 📄 檔案：.gitignore (AI-kernel)
-
-<!-- === FILE START: AI-kernel/.gitignore === -->
-
-## 📄 AI-kernel/.gitignore
-
-```gitignore
-# ============================================
-# 系統與編輯器暫存檔
-# ============================================
-.DS_Store
-Thumbs.db
-*.swp
-
-# ============================================
-# 本地環境變數與金鑰（絕對不可上傳）
-# ============================================
-.env
-.env.local
-
-# ============================================
-# Node.js / Python 依賴包
-# ============================================
-node_modules/
-__pycache__/
-*.pyc
-
-# ============================================
-# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
-# ============================================
-external/
-build-repo/
-tmp/```
-
-<!-- === FILE END: AI-kernel/.gitignore === -->
-
-## 🏢 體系層：AI-General 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: AI-General/.github/workflows/apply-patch.yml === -->
-
-## 📄 AI-General/.github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (AI-General)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-General/.github/workflows/apply-patch.yml
-# V: 1792401000
-# W: ai-system-20261019-010#187
-# ═══ EOF ═══```
-
-<!-- === FILE END: AI-General/.github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: AI-General/.github/workflows/notify.yml === -->
-
-## 📄 AI-General/.github/workflows/notify.yml
-
-```yml
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-    paths:
-      - '**.md'
-      - '.github/workflows/notify.yml'
-    paths-ignore:
-      - 'docs/records/STATE-INDEX.md'
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"
-
-# ═══ EOF ═══
-# F: AI-General/.github/workflows/notify.yml
-# V: 1792401000
-# W: ai-system-20261019-010#187
-# ═══ EOF ═══```
-
-<!-- === FILE END: AI-General/.github/workflows/notify.yml === -->
-
-### 📄 檔案：.gitignore (AI-General)
-
-<!-- === FILE START: AI-General/.gitignore === -->
-
-## 📄 AI-General/.gitignore
-
-```gitignore
-# 忽略 Actions 臨時 checkout 目錄
-external/
-build-repo/
-
-# 忽略系統檔案
-.DS_Store
-*.log
-```
-
-<!-- === FILE END: AI-General/.gitignore === -->
-
-## 🏢 專案層：tlee20860-dotcom/AI-WEB-APP-Family 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: .github/workflows/apply-patch.yml === -->
-
-## 📄 .github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (Project)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
-# V: 1792358000
-# W: ai-system-20261019-010#088
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: .github/workflows/notify.yml === -->
-
-## 📄 .github/workflows/notify.yml
-
-```yml
-# ============================================
-# notify.yml — 專案變更時通知 AI-infra
-# ============================================
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-    paths-ignore:
-      - '**/*.png'
-      - '**/*.jpg'
-      - '**/*.jpeg'
-      - '**/*.gif'
-      - '**/*.svg'
-      - '**/*.ico'
-      - '.gitignore'
-      - 'LICENSE'
-      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"```
-
-<!-- === FILE END: .github/workflows/notify.yml === -->
-
-### 📄 檔案：.gitignore (AI-WEB-APP-Family)
-
-<!-- === FILE START: external/AI-WEB-APP-Family/.gitignore === -->
-
-## 📄 external/AI-WEB-APP-Family/.gitignore
-
-```gitignore
-# ============================================
-# 系統與編輯器暫存檔
-# ============================================
-.DS_Store
-Thumbs.db
-*.swp
-
-# ============================================
-# 本地環境變數與金鑰（絕對不可上傳）
-# ============================================
-.env
-.env.local
-
-# ============================================
-# Node.js / Python 依賴包
-# ============================================
-node_modules/
-__pycache__/
-*.pyc
-
-# ============================================
-# AI-infra 自動化專用：避免把 clone 的專案與打包結果上傳
-# ============================================
-external/
-build-repo/
-tmp/```
-
-<!-- === FILE END: external/AI-WEB-APP-Family/.gitignore === -->
-
-## 🏢 專案層：tlee20860-dotcom/old-AI-WA-FAMILY 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: .github/workflows/apply-patch.yml === -->
-
-## 📄 .github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (Project)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
-# V: 1792358000
-# W: ai-system-20261019-010#088
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: .github/workflows/notify.yml === -->
-
-## 📄 .github/workflows/notify.yml
-
-```yml
-# ============================================
-# notify.yml — 專案變更時通知 AI-infra
-# ============================================
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-    paths-ignore:
-      - '**/*.png'
-      - '**/*.jpg'
-      - '**/*.jpeg'
-      - '**/*.gif'
-      - '**/*.svg'
-      - '**/*.ico'
-      - '.gitignore'
-      - 'LICENSE'
-      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"```
-
-<!-- === FILE END: .github/workflows/notify.yml === -->
-
-## 🏢 專案層：tlee20860-dotcom/AI-OS 的呼叫器
-
-### 📄 檔案：.github/workflows/apply-patch.yml
-
-
-<!-- === FILE START: .github/workflows/apply-patch.yml === -->
-
-## 📄 .github/workflows/apply-patch.yml
-
-```yml
-name: Apply Patch (Project)
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/PATCH.md'
-
-permissions:
-  contents: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Download central script
-        run: |
-          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
-
-      - name: Run Patch
-        run: python3 /tmp/apply_patch.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "Apply PATCH.md [skip ci]"
-          git push
-
-# ═══ EOF ═══
-# F: AI-OS/.github/workflows/apply-patch.yml
-# V: 1792358000
-# W: ai-system-20261019-010#088
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/apply-patch.yml === -->
-
-### 📄 檔案：.github/workflows/notify.yml
-
-
-<!-- === FILE START: .github/workflows/notify.yml === -->
-
-## 📄 .github/workflows/notify.yml
-
-```yml
-# ============================================
-# notify.yml — 專案變更時通知 AI-infra
-# ============================================
-name: Notify AI-infra
-
-on:
-  push:
-    branches: [main, master]
-  workflow_dispatch: # 保留手動觸發功能
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AI-infra build
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
-            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
-            -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"
-
-# ═══ EOF ═══
-# F: AI-OS/.github/workflows/notify.yml
-# V: 1792357000
-# W: ai-system-20261019-010#085
-# ═══ EOF ═══```
-
-<!-- === FILE END: .github/workflows/notify.yml === -->
 

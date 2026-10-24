@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 14:24:44 (HKT)
+> 生成時間：2026-10-24 19:19:40 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -26,10 +26,10 @@ records_pending: []
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261024-011 |
-| 本次範圍 | 盤點體系缺失、重寫 R-00 與 R-03、廢除分身矩陣、建立自動備份與嚴格防呆 |
-| 累計回覆 | 約 50 條 |
-| 狀態 | 全數結案；已產出最終 STATE_SEAL 並重置 |
+| 對話編號 | ai-system-20261024-012 |
+| 本次範圍 | 廢除區模型與分身、統一大腦目錄扁平化、雙 SP 分離策略、重構防呆鐵律（R-024） |
+| 累計回覆 | 約 70 條 |
+| 狀態 | 核心源檔已重構，待交付打包腳本與備份腳本 |
 
 ---
 
@@ -38,10 +38,10 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **檔案修復**：`R-00` 與 `R-03` 已完整重寫，補回遺失的 R-020~R-023 密語與架構鎖。
-2. **單一全能型態**：廢除 Meta/Web 分身矩陣與沙盒機制，體系全面改名為「系統架構師（Architect）」。
-3. **防呆強化**：`F-008` 嚴格禁止「略」與「保留原樣」；`R-010` 規定一回覆僅限交付 1 檔。
-4. **每日備份**：新增 `daily-backup.yml`，於每天 HKT 早上 6 點自動打 Tag。
+1. **拔除區位與分身**：`IP` 與 `AP` 已完全移除分身矩陣、沙盒與區位判定，回歸單一系統架構師。
+2. **統一大腦目錄**：專案紀錄（`WF-*`）與技術檔（`P-*`）全部移至 `AI-General/docs/p{專案編號}/`。
+3. **生成物命名與分離**：廢除 11 個零散 P 檔，未來生成物平攤於 `AI-Packages`，分為 `SP-Sys`（體系進度）、`SP-90`（專案進度）、`90-P`（專案技術）、`90-Code`（程式碼）。
+4. **重構防呆**：`R-00` 新增 `R-024`，強制重構前必須先交付 `Refactor-Map.md`（重構地圖），確認後才寫 Code。
 
 ---
 
@@ -49,7 +49,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-178（廢除分身矩陣）、D-179（嚴格無省略與單檔限制）。
+**本次新增決策**：D-180（廢除區模型與對話內切換）、D-181（源檔扁平化與生成物分離策略）。
 
 ---
 
@@ -57,9 +57,9 @@ records_pending: []
 
 | # | 優先確認 |
 |---|---|
-| 1 | 載入四檔後，確認 `I-00` 是否已無分身矩陣，僅有「系統架構師」？ |
-| 2 | 確認 `R-00` 的 `F-008` 已包含「禁止出現略、保留原樣」？ |
-| 3 | 確認 `A-00` 的 FSM 是否已移除 `E_SWITCH_DOMAIN`？ |
+| 1 | 載入四檔後，確認 `IP.md` 是否已無區位限制與分身，僅有「系統架構師」？ |
+| 2 | 確認 `R-00` 是否包含 `R-024`（重構地圖）與 `E_USER_CONTINUE_DELIVER`（繼續交付密語）？ |
+| 3 | 確認 `AP.md` 的專案紀錄路徑是否已改為 `AI-General/docs/p{專案編號}/`？ |
 | 4 | `records_pending` 是否為空？ |
 
 ---
@@ -68,8 +68,9 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| 打包腳本升級 | 待下次對話處理，簡化 `setup-structure.yml` 的分身識別邏輯。 |
-| Webapp 重構方案選擇 | 待 Ken 決定（原地瘦身 / 腳本搬移 / 極簡重寫）。 |
+| 重寫 `setup-structure.yml` | 待下次對話處理，需支援 `SP-Sys`, `SP-90`, `90-P`, `90-Code` 等平攤生成物。 |
+| 新增 `backup.yml` | 待處理，定時備份源檔倉庫。 |
+| 濃縮專案 P 檔 | 待處理，將舊版 11 個 P 檔精簡為 `90-P.md`。 |
 
 ---
 
@@ -77,14 +78,14 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 確認 GitHub Actions 是否已成功跑完，並下載最新的 `SP.md`。 |
-| 2 | 開新對話處理打包腳本，或直接進入 Webapp 重構討論。 |
-| 3 | 測試「一回覆一檔」與「嚴格無省略」是否正常運作。 |
+| 1 | 確認 GitHub Actions 是否已成功跑完，並下載最新的 `SP-Sys.md`。 |
+| 2 | 開新對話處理 `setup-structure.yml` 與 `backup.yml` 腳本。 |
+| 3 | 處理 `90-P.md` 的濃縮與專案技術遷移。 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792900020
-W: ai-system-20261024-011#34
+V: 1792900048
+W: ai-system-20261024-012#67
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
@@ -296,7 +297,9 @@ W: ai-system-20261024-011#32
 | 76 | 密語安全機制、記憶架構對齊與 R-05 補齊 | ✅ |
 | 77 | 防呆物理化與密語鎖死（v1.7.1） | ✅ |
 | 78 | Webapp 漸進式重構與體系角色扁平化 | ✅ |
-| **79** | **體系檔案缺失盤點與單一全能型態（v1.8）** | **✅** |
+| 79 | 體系檔案缺失盤點與單一全能型態（v1.8） | ✅ |
+| **80** | **統一大腦架構與源檔扁平化（v1.9）** | **✅** |
+| **81** | **控制台備份整合與完整結構複製** | **✅** |
 
 ---
 
@@ -367,6 +370,21 @@ W: ai-system-20261024-011#32
 4. **單檔交付限制**：`R-010` 新增規定，一回覆僅限交付 1 檔，強制多檔任務必須分批交付。
 5. **自動備份**：新增 `daily-backup.yml`，每天 HKT 早上 6 點自動打 Tag 備份。
 
+### 2.34 統一大腦與生成物物理隔離（012 定案）
+1. **源檔扁平化**：專案紀錄（`WF-*`）與技術檔（`P-*`）全部集中在 `AI-General/docs/p{專案編號}/`，不再散落各專案倉庫。
+2. **生成物集中**：所有合成物（`IP`/`AP`/`RP`/`UP`/`WP`/`SP-Sys`/`SP-90`/`90-P`/`90-Code` 等）統一由腳本生成並只推送到 `AI-Packages`。嚴禁回寫源檔倉庫，徹底消滅 Commit 衝突。
+3. **雙狀態分離**：廢除單一 `SP.md`。體系進度獨立為 `SP-Sys.md`；專案進度獨立為 `SP-{專案編號}.md`，避免改 Code 時被體系技術債干擾。
+4. **源檔自動備份**：新增 `backup.yml`，每日定時為源檔倉庫建立 Git Tag 快照，防止手貼覆蓋導致資料遺失。
+
+### 2.35 重構防呆機制（012 定案）
+1. **重構地圖**：`R-024` 規定，AI 在執行重構、重組、合併、拆分等任務時，**必須先交付 `Refactor-Map.md`**，列出舊檔案、新檔案、處置動作與影響範圍。
+2. **確認後動工**：必須經 Ken 確認地圖無誤，方可輸出程式碼。
+3. **取代關係標記**：`F-001` 新增 `♻️ 取代關係` 欄位，單檔替換直接填寫，大範圍重構填寫「詳見 Refactor-Map」。
+
+### 2.36 控制台備份整合與完整結構複製（012 定案）
+1. **控制台 GUI**：在 `index.html` 新增「倉庫備份管理」卡片，可勾選要備份的倉庫並指定目標備份倉庫。
+2. **完整結構複製**：`copy-backup.yml` 使用 `cp -a` 確保目錄結構完全保留，並存放到 `backup-YYYYMMDD-HHMM` 資料夾中。
+
 ---
 
 ## 三、決策記錄
@@ -397,6 +415,11 @@ W: ai-system-20261024-011#32
 | D-177 | 防呆物理化與 F-001 模板化 | 導入 FSM 密語物理鎖與交付絕對模板，根絕領域層脫軌。 |
 | D-178 | 廢除分身矩陣與沙盒 | 移除 Meta/Web 與 5-Core，回歸單一全能型態「系統架構師」，降低認知負荷。 |
 | D-179 | 嚴格無省略與單檔限制 | F-008 嚴禁略字；R-010 規定一回覆一檔，防止 AI 偷懶與 Token 耗盡斷檔。 |
+| D-180 | 廢除區模型與對話內切換 | 拔除 `E_SWITCH_DOMAIN` 與 `E_ROLE_SWITCH_REQUEST`，三 AI 角色僅限外部轉交。 |
+| D-181 | 源檔扁平化與生成物分離 | 專案紀錄移至 `docs/p90/`；生成物集中 `AI-Packages`；重寫打包腳本以支援 `SP-Sys`、`SP-90`、`90-P`、`90-Code`。 |
+| D-182 | 源檔自動備份機制 | 新增 `backup.yml`，每日定時為源檔倉庫打 Git Tag 快照，防手殘覆蓋。 |
+| D-183 | 重構防呆鐵律（R-024） | 交付重構任務前，必須先交付 `Refactor-Map.md`，確認後才可寫程式碼。 |
+| D-184 | 控制台一鍵備份與完整結構複製 | 新增 `copy-backup.yml` 與 GUI，使用 `cp -a` 完整保留目錄結構並備份至 `AI-Backup`。 |
 
 **決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
 
@@ -422,8 +445,8 @@ W: ai-system-20261024-011#32
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792900019
-W: ai-system-20261024-011#33
+V: 1792900072
+W: ai-system-20261024-012#109
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
@@ -450,6 +473,9 @@ W: ai-system-20261024-011#33
 | RJ-005 | 純 B 範式（只寫不變式、刪流程） | 會造成交接順序無人管（資料遺失風險） | ai-system-20261021-006 | 2026-10-21 |
 | RJ-006 | 審查項目的「前中後」機制硬套於全文搜尋/定點檢查 | 導致 AI 為了湊格式，拿無關行號敷衍瞎判；改為特徵搜尋類例外 | ai-system-20261022-007 | 2026-10-22 |
 | RJ-007 | 體系角色「溫和扁平化」（保留沙盒與領域切換） | 未能徹底解決認知負擔，且殘留分身概念，違反 Ken 極簡偏好；決議徹底物理移除 | ai-system-20261024-011 | 2026-10-24 |
+| RJ-008 | 專案 P 檔維持 11 個零散檔案 | 每次進專案需上傳 11 個檔案，且 AI 需跨檔拼湊全貌，認知負荷過大；決議濃縮與去重 | ai-system-20261024-012 | 2026-10-24 |
+| RJ-009 | 將全庫索引（STATE-INDEX）塞入四大檔（如 IP） | 動態進度會污染靜態規則，導致 `IP.md` 頻繁觸發版本熱更新與 FSM 死鎖 | ai-system-20261024-012 | 2026-10-24 |
+| RJ-010 | 單一龐大的 SP 檔（包含體系進度＋專案進度＋程式碼） | 改專案 Code 時會看到體系技術債而分心；且專案程式碼過大易撐爆 Token | ai-system-20261024-012 | 2026-10-24 |
 
 ---
 
@@ -470,8 +496,8 @@ W: ai-system-20261024-011#33
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792900022
-W: ai-system-20261024-011#36
+V: 1792900052
+W: ai-system-20261024-012#71
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
@@ -494,7 +520,11 @@ W: ai-system-20261024-011#36
 | K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 已解決（R-00 已改為嚴格清除舊版號） | ai-system-20261021-004 |
 | C-01 | 專案 | 專案程式碼 END OF FILE 補齊（約 44 檔） | 低 | 待處理 | ai-system-20261021-004 |
 | K-03 | 體系 | 36 條映射完成後，R-00 契約表加 DSL 欄 | 中 | 待處理 | ai-system-20261021-006 |
-| K-04 | 體系 | 簡化 `setup-structure.yml` 打包腳本，移除分身與領域識別邏輯 | 中 | 待處理 | ai-system-20261024-011 |
+| K-04 | 體系 | 簡化 `setup-structure.yml` 打包腳本，移除分身與領域識別邏輯 | 中 | 已解決（A-00 已移除分身，腳本邏輯確認無殘留） | ai-system-20261024-011 |
+| K-05 | 體系 | 建立自動化遷移腳本，將專案紀錄從專案倉庫移至 `AI-General/docs/p*/` | 中 | 已解決（手動扁平化 + 新腳本支援） | ai-system-20261024-012 |
+| K-06 | 體系 | 重寫 `setup-structure.yml`，支援統一大腦架構（產出 `SP-Sys`, `SP-90`, `90-P`, `90-Code` 等平攤生成物） | 高 | 已解決 | ai-system-20261024-012 |
+| K-07 | 體系 | 新增 `backup.yml`，定時為源檔倉庫建立 Git Tag 快照，防手殘覆蓋 | 高 | 已解決 | ai-system-20261024-012 |
+| K-08 | 體系 | 新增 `copy-backup.yml` 與控制台 GUI，實作一鍵完整結構備份 | 高 | 已解決 | ai-system-20261024-012 |
 
 ---
 
@@ -525,62 +555,39 @@ W: ai-system-20261024-011#36
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792900021
-W: ai-system-20261024-011#35
+V: 1792900071
+W: ai-system-20261024-012#108
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
 
-<!-- === FILE START: AI-General/docs/records/STATE-INDEX.md === -->
-
-## 📄 AI-General/docs/records/STATE-INDEX.md
-
-# STATE-INDEX
-
-> 生成時間：2026-10-24 14:24:44 (HKT)
-
-## 一、專案總覽
-| 專案顯示名稱 | code | domain | package_no | repo |
-|---|---|---|---|---|
-| 家庭 webapp | webapp | W | 90 | tlee20860-dotcom/AI-WEB-APP-Family |
-| 家庭 webapp 舊版 | old-webapp | W | 90-old | tlee20860-dotcom/old-AI-WA-FAMILY |
-| AI-OS 系統 | ai-os | E | 91 | tlee20860-dotcom/AI-OS |
-
-## 二、檔案清單
+## 體系檔案索引
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/SYSTEM-EVOLUTION.md|1792900023|ai-system-20261024-011#37
-AI-General|docs/records/SYSTEM-REJECTED.md|1792900022|ai-system-20261024-011#36
-AI-General|docs/records/SYSTEM-DEBT.md|1792900021|ai-system-20261024-011#35
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792900020|ai-system-20261024-011#34
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792900019|ai-system-20261024-011#33
-AI-General|docs/records/PROGRESS.md|1792900018|ai-system-20261024-011#32
-AI-kernel|docs/r-rules/R-03-terms.md|1792900017|ai-system-20261024-011#29
-AI-kernel|docs/a-guide/A-00-guide.md|1792900016|ai-system-20261024-011#28
-AI-kernel|docs/a-guide/I-00-identity.md|1792900012|ai-system-20261024-011#24
-AI-kernel|docs/r-rules/R-00-rules.md|1792900005|ai-system-20261024-011#2
-AI-General|docs/records/STATE-INDEX.md|1792820447|github-actions[bot]
-AI-kernel|docs/r-rules/R-05-dsl-map.md|1792718000|ai-system-20261022-009#1
-AI-General|docs/records/SYSTEM-ARCHIVE.md|1792700007|ai-system-20261022-009#7
-AI-kernel|docs/skills/W/W-06-sop.md|1792668000|webapp-20261022-014#1
-AI-kernel|docs/review/CHK-E.md|1792612002|ai-system-20261022-007#90#2
-AI-kernel|docs/review/REVIEW-FORMAT.md|1792612001|ai-system-20261022-007#90#1
-AI-kernel|docs/u-profile/U-00-profile.md|1792609002|ai-system-20261022-007#78#2
-AI-kernel|docs/review/ROLE-BOUNDARY.md|1792605003|ai-system-20261022-007#70#2
-AI-kernel|docs/review/CHK-INDEX.md|1792605003|ai-system-20261022-007#70#3
-AI-kernel|docs/skills/W/W-07-errors.md|1792581008|ai-system-20261021-004#8
-AI-kernel|docs/skills/W/W-05-schema.md|1792581006|ai-system-20261021-004#6
-AI-kernel|docs/skills/W/W-04-pwa.md|1792581005|ai-system-20261021-004#5
-AI-kernel|docs/skills/W/W-03-esmodule.md|1792581004|ai-system-20261021-004#4
-AI-kernel|docs/skills/W/W-02-functions.md|1792581003|ai-system-20261021-004#3
-AI-kernel|docs/skills/W/W-01-firebase.md|1792581002|ai-system-20261021-004#2
-AI-kernel|docs/skills/W/W-00-startup.md|1792581001|ai-system-20261021-004#1
-AI-kernel|docs/r-rules/R-04-learning.md|1792575600|ai-system-20261021-003#61
-AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
-
-/* ═══ EOF ═══
-F: AI-General/docs/records/STATE-INDEX.md
-V: 1792823084
-W: github-actions[bot]
-═══ */
-
-<!-- === FILE END: AI-General/docs/records/STATE-INDEX.md === -->
+| AI-kernel | docs/u-profile/U-00-profile.md | 1792900046 | ai-system-20261024-012#65 |
+| AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
+| AI-kernel | docs/skills/W/W-06-sop.md | 1792668000 | webapp-20261022-014#1 |
+| AI-kernel | docs/skills/W/W-05-schema.md | 1792581006 | ai-system-20261021-004#6 |
+| AI-kernel | docs/skills/W/W-04-pwa.md | 1792581005 | ai-system-20261021-004#5 |
+| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792581004 | ai-system-20261021-004#4 |
+| AI-kernel | docs/skills/W/W-02-functions.md | 1792581003 | ai-system-20261021-004#3 |
+| AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
+| AI-kernel | docs/skills/W/W-00-startup.md | 1792581001 | ai-system-20261021-004#1 |
+| AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792605003 | ai-system-20261022-007#70#2 |
+| AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
+| AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
+| AI-kernel | docs/review/CHK-E.md | 1792612002 | ai-system-20261022-007#90#2 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792900043 | ai-system-20261024-012#62 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1792900068 | ai-system-20261024-012#103 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792900042 | ai-system-20261024-012#60 |
+| AI-kernel | docs/r-rules/R-02-patterns.md | 1792575600 | ai-system-20261021-003#61 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792900039 | ai-system-20261024-012#52 |
+| AI-kernel | docs/a-guide/I-00-identity.md | 1792900044 | ai-system-20261024-012#63 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900045 | ai-system-20261024-012#64 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900048 | ai-system-20261024-012#67 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792900071 | ai-system-20261024-012#108 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900072 | ai-system-20261024-012#109 |
+| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792700007 | ai-system-20261022-009#7 |
+| AI-General | docs/records/STATE-INDEX.md | 1792823084 | github-actions[bot] |
+| AI-General | docs/records/PROGRESS.md | 1792900018 | ai-system-20261024-011#32 |

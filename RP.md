@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 14:24:44 (HKT)
+> 生成時間：2026-10-24 19:19:41 (HKT)
 
 # R 包：規則總覽
 
@@ -17,10 +17,10 @@
 
 | # | 詞彙 | 定義 | 指向 |
 |---|---|---|---|
-| 1 | 啟動包（A包） | 合成物 `AP.md`；源檔 `docs/a-guide/A-00-guide.md` | `AP.md` |
-| 2 | 規則包（R包） | 合成物 `RP.md`；源檔 `docs/r-rules/R-*.md`；內部順序：R-03 → R-00 → R-02 → R-04 | `RP.md` |
-| 3 | 使用者描述包（U包） | 合成物 `UP.md`；源檔 `docs/u-profile/U-00-profile.md` | `UP.md` |
-| 4 | 狀態包（S包）／專案包 | S包合成物 `SP.md`，源檔為 `docs/records/` 六檔；專案包＝各專案合併檔（9*）。**多體系時改 `SP-{專案}.md`。** | `SP.md`／9* |
+| 1 | 啟動核心 (AP) | 合成物 `AP.md`；源檔 `AI-kernel/docs/a-guide/A-00-guide.md`。 | `AP.md` |
+| 2 | 規則核心 (RP) | 合成物 `RP.md`；源檔 `AI-kernel/docs/r-rules/R-*.md`；內部順序：R-03 → R-00 → R-02 → R-04 → R-05。 | `RP.md` |
+| 3 | 使用者畫像 (UP) | 合成物 `UP.md`；源檔 `AI-kernel/docs/u-profile/U-00-profile.md`。 | `UP.md` |
+| 4 | 體系狀態 (SP-Sys)<br>專案狀態 (SP-*)<br>專案代碼 (Code) | **體系狀態**：合成物 `SP-Sys.md`，源檔為 `AI-General/docs/records/` 六檔。<br>**專案狀態**：合成物 `SP-{專案編號}.md`，源檔為 `AI-General/docs/p{專案編號}/` 下的紀錄檔。<br>**專案代碼**：合成物 `{專案編號}-Code.md`。 | `SP-Sys.md`<br>`SP-90.md`<br>`90-Code.md` |
 | 5 | 對話編號 | `{專案代碼}-{YYYYMMDD}-{序號3位}` | — |
 | 6 | 契約表 | 六欄：Level／Trigger／Requirement／Acceptance／Counter-example／Verify | R00 §零 |
 | 7 | 錨點 | 契約 ID 清單，事件觸發時貼出條文摘要 | A00 §三 |
@@ -30,11 +30,11 @@
 | 11 | 無字熱更新 | 僅上傳 A00 無文字，觸發熱更新 | A00 §2.3（`E_HOT_UPDATE` 列） |
 | 12 | 人類中介路由 | 專案需體系修改時輸出【轉交體系】 | A00 §6.1 |
 | 13 | 領域技能包 | W／V／D／M 等領域規則 | `WP.md` 等 |
-| 14 | 通用大腦 | 體系四檔合成物：`IP`／`AP`／`RP`／`UP` | A00 §1.1 |
+| 14 | 核心四檔 | 體系四檔合成物：`IP`／`AP`／`RP`／`UP`；上傳即進體系。 | A00 §1.1 |
 | 15 | 專案代碼 | 對話編號前綴英文代碼 | — |
 | 16 | 專案內序號 | 該專案第幾個對話，從 001 起 | — |
 | 17 | 生成時間戳 | 共享包頂部 `YYYY-MM-DD HH:mm:ss` | — |
-| 18 | 領域 | 專案分類（W／V／D／M／E） | — |
+| 18 | 領域 | 專案分類（W／V／D／M／E），與 AI 分身無關 | — |
 | 19 | 所屬專案 | 檔案、方案所屬專案名稱 | — |
 | 20 | 交付類型 | 新增／修改／刪除 | F-001 |
 | 21 | 檔案狀態總表 | 記錄待交付與已交付的表格 | F-006 |
@@ -56,7 +56,7 @@
 | 37 | 實質工程對抗 | 1. 拒絕儀式感。<br>2. 限定門檻：僅架構／核心變更觸發，須直指四大危機（死鎖、漏洞、遺失、崩潰）。 | R-016 |
 | 38 | 分身矩陣 | **（已廢除，全面改為單一系統架構師型態）** | — |
 | 39 | 分身隔離鎖 | **（已廢除，見詞 38）** | — |
-| 40 | 體系四檔 | 合成物 `IP.md`＋`AP.md`＋`RP.md`＋`UP.md`；上傳即進體系；`SP.md` 僅紀錄 | A00 §1.1 |
+| 40 | 體系四檔 | 同詞 14。 | 同詞 14 |
 | 41 | 啟動標籤 | **（已廢除，無需 `[身份: xxx]` 宣告）** | — |
 | 42 | 自動識別 | **（已廢除，見詞 41）** | — |
 | 43 | 元系統沙盒（Meta Sandbox） | **（已廢除，統一為系統架構師）** | — |
@@ -64,7 +64,7 @@
 | 45 | 嚴格審查沙盒（Strict Review） | **（已廢除，見詞 43）** | — |
 | 46 | 動態能力控制（CCL） | **（已廢除，見詞 43）** | — |
 | 47 | 全中文標頭 | R-014 規定的五行回覆格式，全中文呈現 | R-014 |
-| 48 | 三 AI 模式 | 系統架構師、挑戰方案對抗者、合規審判者三角色分工，取代原雙 AI 權責 | I00 §三 |
+| 48 | 三 AI 模式 | 系統架構師、挑戰方案對抗者、合規審判者三角色分工 | I00 §三 |
 | 49 | 系統架構師 | 領導大腦角色（識別碼 `Architect`）；提方案、寫程式、交付完整檔；對象為全局 | I00 §2.1、CHK.md |
 | 50 | 挑戰方案對抗者 | 對抗未落實方案；可修改、挑戰、補充；輸入為方案＋原始四檔，不含改動後檔案與 CHK | I00 §3.1、CHK.md |
 | 51 | 合規審判者 | 核已落實檔案；逐項回 PASS／FAIL，不給修改方案；輸入為原始四檔＋改動後檔案＋CHK | I00 §3.1、CHK.md |
@@ -74,15 +74,11 @@
 | 55 | 前中後 | 審判者第一回給出的三個位置選項；Ken 選 A／B／C 後，審判者才貼片段 | R00 §7.3、CHK.md |
 | 56 | 上下對比 | 審判者第二回格式：選中項最上，修改後黑字在前、修改前紅字在後；禁左右並排 | R00 §7.3、CHK.md |
 | 57 | 重複抽查 | 要求同一項再給一組前中後；第二次位置不得與第一次全同，全同則標記疑似未真讀 | R00 §7.6 |
-| 58 | 體系核心 | ＋SP 進入；可收任意包；切角色須輸入授權字串 | A00 §2.8、IP §四 |
-| 59 | 區位宣告 | 進入各區時輸出一行 `[區位] …`；四檔豁免熱更新，混合包全退回 | A00 §2.8、R-014 |
-| 60 | 上傳錯誤 | 異領域／異專案／SP 錯區；提示退出 | A00 §2.8 |
-| 61 | 領域系統開發者 | 可改該領域所有檔案；領域包須 Ken 同意 | IP §四 |
-| 62 | 體系開發者 | 可改所有檔案 | IP §四 |
-| 63 | 核心區角色授權閘 | 核心區切角色需觸發 `[授權切換：xxx]` | A00 §2.4、IP §四 |
+| 58 | 體系核心 | **（已廢除，無空間區分，體系與專案皆由單一大腦處理）** | — |
+| 59 | 區位宣告 | **（已廢除，見詞 58）** | — |
+| 60 | 上傳錯誤 | **（已廢除，見詞 58）** | — |
 | 64 | 歸檔 | 累積型檔舊資料搬至 `SYSTEM-ARCHIVE.md`，正文節尾留一行 | A00 §5.2 |
 | 65 | 交付密語 | `方案已定案可交付`，觸發 `E_USER_CONFIRM_DELIVER`，允許輸出檔案。 | R-001、A00 §2.3 |
-| 66 | 角色切換密語 | `[授權切換：{目標角色}]`，僅限核心區使用。 | A00 §2.4 |
 | 67 | 架構變更密語 | `[授權架構變更]`，允許修改 `docs/records/` 等核心目錄。 | R-019 |
 | 68 | 結束密語 | `結束對話` 或 `準備轉移`，觸發交接 SOP。 | A00 §5.1 |
 | 69 | 否決紀錄密語 | `記錄否決`，允許寫入 `SYSTEM-REJECTED.md`。 | R-00 §二 |
@@ -91,7 +87,9 @@
 | 72 | 破壞性操作密語 | `[授權執行破壞性操作]`，允許刪檔、清空。 | R-020 |
 | 73 | 全域批次密語 | `[授權全域批次修改]`，允許跨倉庫大範圍修改。 | R-021 |
 | 74 | 強制中止密語 | `[強制中止]`，立即停止當前輸出。 | R-022 |
-| 75 | 跨區操作密語 | `[授權跨區操作]`，允許繞過單區獨佔限制。 | R-023 |
+| 75 | 跨區操作密語 | **（已廢除，無跨區概念）** | — |
+| 76 | 重構地圖 | 記錄舊檔案路徑、新檔案路徑、處置動作與影響範圍的對照表，交付前必附。 | R-024 |
+| 77 | 繼續交付密語 | `[繼續交付]`，解鎖連續交付模式，免重新提方案，直接輸出下一檔。 | R-001、U00 §六 |
 
 ---
 
@@ -105,8 +103,8 @@
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-03-terms.md
-V: 1792900017
-W: ai-system-20261024-011#29
+V: 1792900042
+W: ai-system-20261024-012#60
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-03-terms.md === -->
 
@@ -251,7 +249,7 @@ W: ai-system-20261024-011#29
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 所有回覆 | 前五行（全中文）：<br>1. `# {序號}`<br>2. Code Block 包裹 `🆔 {對話編號}`<br>3. `{中文身份}`（如：體系結構師、Webapp 開發者）<br>4. `({中文權責}){中文狀態}`（如：`(審查者)討論中`、`(執行者)交付中`）<br>5. `執行：{動作描述}`<br>**體系外 NATIVE 時，第三、四行固定為 `通用助手` 與 `(審查者)原生模式`。**<br>全區交付格式一致；各區唯一差異為「區位宣告」一行 `[區位] …`。<br>**提供提示詞時，必須獨立成行並用 Code Block 包裹（方便一鍵複製），MUST NOT 將提示詞與選項合併。** | 格式完全相符；提示詞有獨立 Code Block | 未分行、夾雜英文、提示詞與選項混寫 | 檢查前五行與提示詞區塊 |
+| MUST | 所有回覆 | 前五行（全中文）：<br>1. `# {序號}`<br>2. Code Block 包裹 `🆔 {對話編號}`<br>3. `{中文身份}`（如：體系結構師、Webapp 開發者）<br>4. `({中文權責}){中文狀態}`（如：`(審查者)討論中`、`(執行者)交付中`）<br>5. `執行：{動作描述}`<br>**體系外 NATIVE 時，第三、四行固定為 `通用助手` 與 `(審查者)原生模式`。**<br>**提供提示詞時，必須獨立成行並用 Code Block 包裹（方便一鍵複製），MUST NOT 將提示詞與選項合併。** | 格式完全相符；提示詞有獨立 Code Block | 未分行、夾雜英文、提示詞與選項混寫 | 檢查前五行與提示詞區塊 |
 
 <a id="r-015"></a>
 ### R-015 原生知識與 SOP 衝突處置（含降級與溢出）
@@ -326,6 +324,13 @@ W: ai-system-20261024-011#29
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
 | MUST NOT | 試圖在未退出的情況下強行讀取或修改其他區的檔案前 | 必須等待 Ken 輸入 `[授權跨區操作]`。 | 執行前已取得密語。 | 擅自讀取其他領域或專案檔案。 | 檢查是否有密語。 |
+
+<a id="r-024"></a>
+### R-024 重構與重組防呆（重構地圖）
+
+| Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
+|---|---|---|---|---|---|
+| MUST | 需求包含「重寫、重構、重組、合併、拆分、架構升級」等關鍵字時。 | 1. **禁止直接寫 Code**：在輸出任何新程式碼之前，必須先交付一份 `Refactor-Map.md`（重構地圖）。<br>2. **地圖四要素**：該地圖必須包含以下表格：<br>　- **舊檔案路徑**（要消失或改變的檔案）<br>　- **新檔案路徑**（要產出的新檔案）<br>　- **處置動作**（合併、拆分、取代、廢棄）<br>　- **影響範圍**（列出哪些檔案 import 了舊檔案，必須同步修改）<br>3. **分階段交付**：必須等 Ken 確認這份重構地圖無誤後，才能開始進行程式碼交付。<br>4. **物理隔離**：除非取得 `[授權執行破壞性操作]`，否則重構期間不得直接刪除舊檔，必須先建立新檔，確認驗收後再清理。 | 交付摘要包含重構地圖，且確認後才產出程式碼。 | 直接給新檔案，導致舊 import 崩潰；只說「我會把 A 檔重構成 B 檔」而無對照表。 | 檢查交付紀錄是否有重構地圖且先於程式碼。 |
 
 ---
 
@@ -414,7 +419,7 @@ W: ai-system-20261024-011#29
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 交付任何檔案 | **AI MUST 逐字複製以下 Markdown 模板並填入對應值。MUST NOT 轉換為表格，MUST NOT 省略任何 Emoji 與反引號。**<br><br>📁 倉庫：`{填入}`<br>📂 路徑：`{填入}`<br>📄 `{填入}`（{填入}）<br>🔄 交付類型：{填入} (模式：完整檔，依據：{填入})<br>👤 編寫者：`{填入}#{填入}`<br>📌 基於版本：`V: {填入}`<br><br>**此區塊屬對話交付層，MUST NOT 寫入源檔內部。**<br>全區格式一致，不分區；區位宣告另起一行，不併入標頭。 | 包含完整六行、Emoji、反引號。 | 使用表格替代；漏寫基於版本；區位宣告併入標頭 | 檢查標頭位置與欄位 |
+| MUST | 交付任何檔案 | **AI MUST 逐字複製以下 Markdown 模板並填入對應值。MUST NOT 轉換為表格，MUST NOT 省略任何 Emoji 與反引號。**<br><br>📁 倉庫：`{填入}`<br>📂 路徑：`{填入}`<br>📄 `{填入}`（{填入}）<br>🔄 交付類型：{填入} (模式：完整檔，依據：{填入})<br>♻️ 取代關係：{填入被取代的舊檔路徑，若無則填「無」}<br>👤 編寫者：`{填入}#{填入}`<br>📌 基於版本：`V: {填入}`<br><br>**此區塊屬對話交付層，MUST NOT 寫入源檔內部。** | 包含完整七行、Emoji、反引號。 | 使用表格替代；漏寫基於版本或取代關係 | 檢查標頭位置與欄位 |
 
 <a id="f-002"></a>
 ### F-002 路徑顯示
@@ -463,7 +468,7 @@ W: ai-system-20261024-011#29
 
 | Level | Trigger | Requirement | Acceptance | Counter-example | Verify |
 |---|---|---|---|---|---|
-| MUST | 交付完整檔 | 1. 盤點原檔 § 章節，新檔章節數一致；貼「原檔行數」與「交付行數」對比（差異 ≤10 行）。若含重構刪除／契約化擴充／刪除內文 Version，於 F-001 標頭註明原因，行數限制豁免。<br>2. **交付完整檔案時，MUST 逐字輸出所有內容。嚴格禁止出現「略」、「保留原樣」、「同上」、「與前相同」等任何省略詞彙。** | 含章節對照與行數對比；全文無省略詞彙；豁免已註明 | 以 Token 為由刪段落；僅給修改點要求自行覆蓋；寫「保留原樣」偷懶 | 核對章節與行數，並全文搜尋省略詞 |
+| MUST | 交付完整檔 | 1. 盤點原檔 § 章節，新檔章節數一致；貼「原檔行數」與「交付行數」對比（差異 ≤10 行，除非有合理之重構增減並於標頭註明）。<br>2. **交付完整檔案時，MUST 逐字輸出所有內容。嚴格禁止出現任何省略詞彙**（包含但不限於：「略」、「保留原樣」、「同上」、「與前相同」、「內容不變」、「（省略）」、「（程式碼略）」、「...」、「…」、「參考前文」、「其餘同前」等）。 | 含章節對照與行數對比；全文無省略詞彙；豁免已註明 | 以 Token 為由刪段落；僅給修改點要求自行覆蓋；用 `...` 或 `（略）` 偷懶 | 核對章節與行數，並全文搜尋省略詞 |
 | MUST | 模式為 `APPEND_ONLY`（如 `SYSTEM-REJECTED.md`、`SYSTEM-DEBT.md` 等） | 僅檢查 ID 連續性與 EOF 存在；不檢查全文章節數與行數對比。 | 含 ID 連續性與 EOF 檢查 | 對 APPEND_ONLY 檔案硬套全文行數對比 | 檢查 APPEND_ONLY 檢查項 |
 
 ---
@@ -563,10 +568,9 @@ W: ai-system-20261024-011#29
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-00-rules.md
-V: 1792900005
-W: ai-system-20261024-011#2
+V: 1792900039
+W: ai-system-20261024-012#52
 ═══ */
-
 <!-- === FILE END: AI-kernel/docs/r-rules/R-00-rules.md === -->
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-02-patterns.md === -->
@@ -672,6 +676,10 @@ W: ai-system-20261021-003#61
 
 | 編號 | 場景 | 錯誤 | 正確 | 對應新規則 |
 |---|---|---|---|---|
+| L-035 | 大型架構重構、重組、合併 | AI 未先確認新舊檔案對應關係就直接寫 Code，導致舊 import 崩潰、遺漏檔案。 | 重構前必須先交付 `Refactor-Map.md`，列出舊檔案、新檔案、處置動作與影響範圍，確認後才動工。 | R-024 |
+| L-034 | 手動貼上覆蓋源檔 | 手殘把錯誤內容貼上，或覆蓋了重要邏輯，且沒有備份無法回溯。 | 建立每日自動備份機制，利用 GitHub API 在每天固定時間為源檔倉庫打上 Tag 快照。 | `backup.yml` |
+| L-033 | 專案檔（P檔）撰寫 | 將「通用防呆（如動態值不快照、CF Pages 限制）」寫入專案檔，導致與 W 檔重複，增加 AI 認知負荷。 | 通用防呆一律寫入 `W-07` 或 `R-00`。專案檔只保留「專案專屬」的踩坑與業務邏輯。 | W-07、R-00 |
+| L-032 | 體系架構設計 | 將「動態進度（如檔案清單、版本號）」塞入「靜態規則檔（如 IP/AP）」，導致每次更新進度就觸發規則版本熱更新，造成 FSM 死鎖。 | 動態進度與靜態規則必須物理隔離。全庫索引與進度只能存在 SP 或生成物中。 | IP/AP 分離原則 |
 | L-031 | Patch 同一檔案多個 `## FILE:` 區塊，或同檔多個 OLD/NEW 對 | `apply_patch.py` 覆蓋或錯置標記，導致 Patch 語法寫入源檔 | 同檔多處修改改用完整檔；或每檔僅一個 `## FILE:` 區塊，內含多個 OLD/NEW 對並先驗證 | F-007 |
 | L-029 | AI 估算 Token 剩餘量 | 估算嚴重失準（誤報 <1%），且引發交付焦慮 | 全面廢除 Token 機制與公式，不再顯示 Token，不再倒數，只專注任務完整性與證據。 | 無（機制已廢除） |
 | L-028 | Actions yml 使用 `set -e` 與 `&&` 或空檔案讀取 | 腳本 0 秒崩潰 | 改用 `if [ ]; then continue; fi`；讀取前檢查 | 無 |
@@ -706,8 +714,8 @@ W: ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-04-learning.md
-V: 1792575600
-W: ai-system-20261021-003#61
+V: 1792900068
+W: ai-system-20261024-012#103
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-04-learning.md === -->
 
@@ -715,14 +723,13 @@ W: ai-system-20261021-003#61
 
 ## 📄 AI-kernel/docs/r-rules/R-05-dsl-map.md
 
-
 # R-05 規則 DSL 映射表
 
-用途：將 R-00 之 40 條規則映射為結構化 DSL，或標「保留散文＋理由」；並映射 R-00 §七 審查機制。本檔為 Phase 1 前置交付物。
+用途：將 R-00 之鐵律映射為結構化 DSL，或標「保留散文＋理由」；並映射 R-00 §七 審查機制。本檔為 Phase 1 前置交付物。
 
 ---
 
-## 一、映射總表（40 條）
+## 一、映射總表
 
 | 編號 | 類別 | 映射方式 | 理由 |
 |---|---|---|---|
@@ -735,7 +742,7 @@ W: ai-system-20261021-003#61
 | R-007 | 鐵律 | 保留散文 | 判斷依結構、語氣，無 predicate 可核 |
 | R-008 | 鐵律 | DSL | 交付後禁自印 K，可判 |
 | R-009 | 鐵律 | DSL | 繁中，可掃描 |
-| R-010 | 鐵律 | DSL | 完整檔交付，可判 |
+| R-010 | 鐵律 | DSL | 完整檔交付＋單檔限制，可判 |
 | R-011 | 鐵律 | DSL | 斷路器，含輸出位置與豁免剝奪 |
 | R-012 | 鐵律 | DSL | 禁主動宣告結束，可判 |
 | R-013 | 鐵律 | DSL | 交付後四選項，可判 |
@@ -748,7 +755,7 @@ W: ai-system-20261021-003#61
 | R-020 | 鐵律 | DSL | 破壞性操作需密語，可掃描 |
 | R-021 | 鐵律 | DSL | 全域批次需密語，可掃描 |
 | R-022 | 鐵律 | DSL | 強制中止觸發，可判 |
-| R-023 | 鐵律 | DSL | 跨區操作需密語，可掃描 |
+| R-024 | 鐵律 | DSL（checklist） | 重構地圖要素可列舉；「架構升級」保留語意判斷 |
 | S-001 | 提問 | DSL（checklist） | 三欄可掃描 |
 | S-002 | 提問 | DSL（checklist） | 集中層判定 |
 | S-003 | 提問 | DSL（checklist） | 預設值判定 |
@@ -766,9 +773,9 @@ W: ai-system-20261021-003#61
 | F-005 | 格式 | DSL | EOF 三行，可掃描 |
 | F-006 | 格式 | DSL | 狀態總表位置，可判 |
 | F-007 | 格式 | DSL | Patch 廢除，可判 |
-| F-008 | 格式 | DSL | 章節數＋行數，可判；含 APPEND_ONLY |
+| F-008 | 格式 | DSL | 章節數＋行數＋嚴格無省略詞彙，可判；含 APPEND_ONLY |
 
-**統計**：DSL 化 35 條；保留散文 5 條（R-007、R-015、S-007、F-004、區模型）。
+**統計**：DSL 化 36 條；保留散文 4 條（R-007、R-015、S-007、F-004）。
 
 ### 1.1 R-00 其他區塊映射
 
@@ -785,7 +792,7 @@ W: ai-system-20261021-003#61
 | 混合包阻擋 | 規則 | DSL | input 包含合法與非法檔 → return reject |
 | 歸檔 | 流程 | DSL（checklist） | 門檻可列舉 |
 
-**詞表說明**：詞 34 名稱變更、詞 48~75 新增，SSOT 在 `R-03-terms.md`，本表不重複映射。
+**詞表說明**：詞 34 名稱變更、詞 48~77 新增，SSOT 在 `R-03-terms.md`，本表不重複映射。
 
 ---
 
@@ -794,7 +801,7 @@ W: ai-system-20261021-003#61
 ```yaml
 rules_dsl:
   # ── 行為鐵律（R）──
-  R-001: "IF state == DISCUSS AND action == OUTPUT_FILE_CONTENT AND sandbox != FastDev THEN REQUIRE(propose_before_deliver) AND REQUIRE(E_USER_CONFIRM_DELIVER_received)"
+  R-001: "IF state == DISCUSS AND action == OUTPUT_FILE_CONTENT THEN REQUIRE(propose_before_deliver) AND REQUIRE(E_USER_CONFIRM_DELIVER_received OR E_USER_CONTINUE_DELIVER_received)"
   R-002: "IF state == DISCUSS AND action == OUTPUT_FILE_CONTENT THEN FORBID(file_content) AND REQUIRE(change_list)"
   R-003: "IF target_file CONTAINS multiple_changes THEN REQUIRE(single_integrated_delivery) AND REQUIRE(section_count_match)"
   R-004: "IF project_unconfirmed THEN FORBID(emit_dialog_id)"
@@ -802,7 +809,7 @@ rules_dsl:
   R-006: "IF proposing THEN REQUIRE(declare_file_count) AND IF file_count >= 2 THEN REQUIRE(reason_not_one)"
   R-008: "IF action == AFTER_DELIVERY THEN FORBID(auto_emit_K002)"
   R-009: "IF response == ANY THEN REQUIRE(lang == ZH_TW AND no_simplified_chars)"
-  R-010: "IF action == DELIVER_FILE THEN REQUIRE(mode == FULL_FILE) AND REQUIRE(F-001_header_with_mode)"
+  R-010: "IF action == DELIVER_FILE THEN REQUIRE(mode == FULL_FILE) AND REQUIRE(one_file_per_reply) AND REQUIRE(F-001_header_with_mode)"
   R-011:
     trigger: "target_file == MISSING AND target_is_generic == false"
     generic_declaration: "MUST DECLARE domain_classification"
@@ -820,7 +827,7 @@ rules_dsl:
       revoked_if: "input_contains(ANY of keyword_list)"
   R-012: "IF any_time THEN FORBID(declare_conversation_end_unilaterally)"
   R-013: "IF action == AFTER_DELIVERY THEN REQUIRE(options_A_B_C_D_with_plain_explanation) AND PAUSE"
-  R-014: "IF response == ANY THEN ENFORCE_HEADER_FORMAT(lines=5, lang=ZH_TW) AND IF zone_declared THEN REQUIRE(zone_line_separate) AND IF prompt_word_given THEN REQUIRE(separate_code_block)"
+  R-014: "IF response == ANY THEN ENFORCE_HEADER_FORMAT(lines=5, lang=ZH_TW) AND IF prompt_word_given THEN REQUIRE(separate_code_block)"
   R-016: "IF change_type IN [architecture, core_module, fsm, automation_script] THEN REQUIRE(adversarial_review_4_categories)"
   R-017: "IF end_signal AND project.handoff_sop == false THEN REQUIRE(options_A_B_C)"
   R-018: "IF end_signal AND delivery_list_contains_system_or_project THEN REQUIRE(update_each_affected_target)"
@@ -828,7 +835,7 @@ rules_dsl:
   R-020: "IF action == DESTRUCTIVE_OPERATION THEN REQUIRE(E_USER_DESTRUCTIVE_OP_received)"
   R-021: "IF action == GLOBAL_BATCH_MODIFY THEN REQUIRE(E_USER_GLOBAL_BATCH_received)"
   R-022: "IF event == E_USER_FORCE_ABORT THEN EXECUTE(stop_all_output AND transition_to_DISCUSS)"
-  R-023: "IF action == CROSS_ZONE_ACCESS THEN REQUIRE(E_USER_CROSS_ZONE_received)"
+  R-024: "IF requirement_contains(rewrite OR refactor OR restructure OR merge OR split OR upgrade) THEN REQUIRE(deliver_refactor_map_first AND wait_for_approval) AND FORBID(code_delivery_before_approval)"
 
   # ── 事前提問（S）──
   S-001: "SHALL declare three columns: file_count, existing_rule_hit, disposition; new_addition_requires_reason"
@@ -844,26 +851,27 @@ rules_dsl:
   K-003: "IF trigger == CHECK OR START_DELIVERY THEN REQUIRE(three_checks: state_set_match, term_numbers_continuous, cross_package_refs_valid)"
 
   # ── 格式規範（F）──
-  F-001: "IF output == DELIVER THEN REQUIRE_HEADER(repo, path, type, mode, author, version) AND IF zone_declared THEN REQUIRE(zone_line_separate)"
+  F-001: "IF output == DELIVER THEN REQUIRE_HEADER(repo, path, type, mode, replace_relation, author, version)"
   F-002: "IF path_mentioned THEN REQUIRE(wrap_in_text_code_block AND relative_path AND full_filename)"
   F-003: "IF output == FILE_CONTENT THEN REQUIRE(wrap_in_backticks_with_lang) AND IF content_contains_code_block THEN REQUIRE(outer_fence == four_backticks)"
-  F-005: "IF output == FILE_DELIVERY THEN REQUIRE_EOF_TAG(pattern='/* ═══ EOF ═══ */')"
+  F-005: "IF output == FILE_DELIVERY THEN REQUIRE(EOF_TAG_and_no_duplicate_version_in_content)"
   F-006: "IF has_modifications THEN REQUIRE(status_table_at_bottom)"
   F-007: "IF action == MODIFY_FILE THEN REQUIRE(full_file_delivery) AND FORBID(patch_mode)"
   F-008:
-    rule: "IF mode == FULL_FILE THEN ENFORCE_STRUCTURAL_INTEGRITY ELSE_IF mode == APPEND_ONLY THEN ENFORCE_RANGE_CONTINUITY"
+    rule: "IF mode == FULL_FILE THEN ENFORCE_STRUCTURAL_INTEGRITY AND FORBID(forbidden_words) ELSE_IF mode == APPEND_ONLY THEN ENFORCE_RANGE_CONTINUITY"
+    forbidden_words: ["略", "保留原樣", "同上", "與前相同", "內容不變", "（省略）", "（程式碼略）", "...", "…", "參考前文", "其餘同前"]
     append_only_scope: [SYSTEM-DECISIONS.md, SYSTEM-REJECTED.md, SYSTEM-DEBT.md, SYSTEM-ARCHIVE.md]
     append_only_checks:
       - "ID 連續性：新增區段 ID 接續既有最大號"
       - "EOF 存在"
       - "不檢查全文章節數與行數對比"
 
-  # ── FSM 密語事件（本次新增）──
+  # ── FSM 密語事件 ──
   E_USER_CONFIRM_DELIVER: "觸發詞 == '方案已定案可交付'"
+  E_USER_CONTINUE_DELIVER: "觸發詞 == '[繼續交付]'"
   E_USER_DESTRUCTIVE_OP: "觸發詞 == '[授權執行破壞性操作]'"
   E_USER_GLOBAL_BATCH: "觸發詞 == '[授權全域批次修改]'"
   E_USER_FORCE_ABORT: "觸發詞 == '[強制中止]'"
-  E_USER_CROSS_ZONE: "觸發詞 == '[授權跨區操作]'"
 
   # ── R-00 §七 審查機制 ──
   R00-7.2:
@@ -905,7 +913,6 @@ rules_dsl:
 | S-007 | 防護前提確認 | 「何謂並發」「何謂必然」需人判斷，非機械可判 |
 | F-004 | 內層防呆 | 含 md 檔內 YAML 的四反引號例外，DSL 化後條件分支比原文更長 |
 | R00-7.1 | 三 AI 模式與 CHK 合成物 | 屬結構陳述，無單一 predicate；角色邊界由 CHK.md 承載 |
-| 區模型 | 流程 | 多區情境，DSL 易失真 |
 
 **另 2 條說明**：R-011 與 F-008 雖已 DSL 化，但含嵌套條件（R-011 的 keyword_list、F-008 的 APPEND_ONLY），屬「部分 DSL」，仍需散文補充邊界案例。
 
@@ -932,7 +939,7 @@ rules_dsl:
 
 /* ═══ EOF ═══
 F: AI-kernel/docs/r-rules/R-05-dsl-map.md
-V: 1792718000
-W: ai-system-20261022-009#1
+V: 1792900043
+W: ai-system-20261024-012#62
 ═══ */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-05-dsl-map.md === -->
