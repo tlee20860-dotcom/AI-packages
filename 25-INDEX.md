@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 20:43:02 (HKT)
+> 生成時間：2026-10-24 23:14:08 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,7 +21,7 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900078 | ai-system-20261024-012#124 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900074 | ai-system-20261024-012#116 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900085 | ai-system-20261024-012#138 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900077 | ai-system-20261024-012#121 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900039 | ai-system-20261024-012#52 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792575600 | ai-system-20261021-003#61 |
