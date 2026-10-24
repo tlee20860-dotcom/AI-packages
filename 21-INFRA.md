@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 20:35:05 (HKT)
+> 生成時間：2026-10-24 20:36:37 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -451,18 +451,23 @@ jobs:
             SAFE_NAME=$(echo "$REPO" | awk -F/ '{print $2}')
             
             OUTPUT="build-repo/${PKG_NO}-SP.md"
+            PROJ_DIR="AI-General/docs/p${PKG_NO}"
+
+            # 防呆：若源目錄不存在，則不產出空殼
+            if [ ! -d "$PROJ_DIR" ]; then
+              echo "⏭️ 找不到專案目錄 $PROJ_DIR，跳過 ${PKG_NO}-SP.md 生成。"
+              continue
+            fi
+
             echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
             echo "" >> "$OUTPUT"
             echo "# 專案狀態包：${SAFE_NAME}" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
 
-            PROJ_DIR="AI-General/docs/p${PKG_NO}"
-            if [ -d "$PROJ_DIR" ]; then
-              # 打包進度與技術檔
-              for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/P-*.md; do
-                if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
-              done
-            fi
+            # 打包進度與技術檔
+            for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/P-*.md; do
+              if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
+            done
           done
 
       - name: "Step 8: 生成專案技術包與代碼包 ({pkg_no}-P.md, {pkg_no}-Code.md)"
@@ -475,26 +480,26 @@ jobs:
             OUTPUT_P="build-repo/${PKG_NO}-P.md"
             OUTPUT_CODE="build-repo/${PKG_NO}-Code.md"
 
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_P"
-            echo "" >> "$OUTPUT_P"
-            echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
-            echo "" >> "$OUTPUT_P"
-
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_CODE"
-            echo "" >> "$OUTPUT_CODE"
-            echo "# 專案全程式碼包：${SAFE_NAME}" >> "$OUTPUT_CODE"
-            echo "" >> "$OUTPUT_CODE"
-
-            # 打包 P 檔至專案技術包
+            # 防呆：專案技術檔 (P)
             PROJ_DIR="AI-General/docs/p${PKG_NO}"
             if [ -d "$PROJ_DIR" ]; then
+              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_P"
+              echo "" >> "$OUTPUT_P"
+              echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
+              echo "" >> "$OUTPUT_P"
               for f in "$PROJ_DIR"/P-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT_P" || true; fi
               done
+            else
+              echo "⏭️ 找不到專案目錄 $PROJ_DIR，跳過 ${PKG_NO}-P.md 生成。"
             fi
 
-            # 打包程式碼
+            # 防呆：專案代碼 (Code)
             if [ -d "external/${SAFE_NAME}" ]; then
+              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_CODE"
+              echo "" >> "$OUTPUT_CODE"
+              echo "# 專案全程式碼包：${SAFE_NAME}" >> "$OUTPUT_CODE"
+              echo "" >> "$OUTPUT_CODE"
               (
                 cd "external/${SAFE_NAME}" || exit 0
                 find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) \
@@ -505,6 +510,8 @@ jobs:
                   if [ -f "$f" ]; then bash "../../.github/workflows/append_file.sh" "$f" "../../$OUTPUT_CODE" || true; fi
                 done
               ) || true
+            else
+              echo "⏭️ 找不到專案源碼 external/${SAFE_NAME}，跳過 ${PKG_NO}-Code.md 生成。"
             fi
           done
 
@@ -528,7 +535,7 @@ jobs:
             fi
           done
 
-          for wf in setup-structure.yml migrate.yml append_file.sh backup.yml copy-backup.yml; do
+          for wf in setup-structure.yml migrate.yml append_file.sh backup.yml copy-backup.yml cleanup-legacy.yml; do
             if [ -f ".github/workflows/$wf" ]; then 
               echo "### 📄 檔案：$wf (infra)" >> "$OUTPUT"
               bash .github/workflows/append_file.sh ".github/workflows/$wf" "$OUTPUT" || true
@@ -599,7 +606,20 @@ jobs:
           if [ -s "$TMP_TABLE" ]; then sort -t'|' -k1,1 -k2 "$TMP_TABLE" >> "$OUTPUT"; fi
           echo "" >> "$OUTPUT"
 
-          # 2. 專案索引
+          # 2. 基建索引 (AI-infra)
+          echo "## ⚙️ 基礎設施源檔 (AI-infra)" >> "$OUTPUT"
+          echo "| 目錄/路徑 | 檔案名稱 |" >> "$OUTPUT"
+          echo "|---|---|" >> "$OUTPUT"
+          find . -type f \( -name "*.yml" -o -name "*.py" -o -name "*.sh" -o -name "*.html" -o -name "*.js" -o -name "*.json" \) \
+            -not -path "./.git/*" -not -path "./build-repo/*" -not -path "./AI-*/*" -not -path "./external/*" | sort | while read -r f; do
+            CLEAN_F=${f#./}
+            DIR_NAME=$(dirname "$CLEAN_F")
+            FILE_NAME=$(basename "$CLEAN_F")
+            echo "| $DIR_NAME | $FILE_NAME |" >> "$OUTPUT"
+          done
+          echo "" >> "$OUTPUT"
+
+          # 3. 專案源碼索引
           echo "## 📦 專案源碼檔案樹 (external)" >> "$OUTPUT"
           echo "| 專案倉庫 | 檔案路徑 |" >> "$OUTPUT"
           echo "|---|---|" >> "$OUTPUT"
@@ -610,6 +630,19 @@ jobs:
               REPO_NAME=$(echo "$CLEAN_F" | awk -F/ '{print $1}')
               FILE_PATH=$(echo "$CLEAN_F" | cut -d'/' -f2-)
               echo "| $REPO_NAME | $FILE_PATH |" >> "$OUTPUT"
+            done
+          fi
+          echo "" >> "$OUTPUT"
+
+          # 4. 生成物自身索引 (build-repo)
+          echo "## 🎁 本輪生成物清單 (AI-Packages)" >> "$OUTPUT"
+          echo "| 生成物檔案 | 大小 (KB) |" >> "$OUTPUT"
+          echo "|---|---|" >> "$OUTPUT"
+          if [ -d "build-repo" ]; then
+            find build-repo -maxdepth 1 -name "*.md" -type f -not -name "25-INDEX.md" | sort | while read -r f; do
+              FNAME=$(basename "$f")
+              SIZE=$(du -k "$f" | cut -f1)
+              echo "| $FNAME | $SIZE |" >> "$OUTPUT"
             done
           fi
 
@@ -650,8 +683,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792900080
-# W: ai-system-20261024-012#130
+# V: 1792900082
+# W: ai-system-20261024-012#133
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -984,6 +1017,95 @@ jobs:
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/copy-backup.yml === -->
+
+### 📄 檔案：cleanup-legacy.yml (infra)
+
+<!-- === FILE START: .github/workflows/cleanup-legacy.yml === -->
+
+## 📄 .github/workflows/cleanup-legacy.yml
+
+```yml
+# ============================================
+# cleanup-legacy.yml — 一次性清理腳本
+# 用途：手動觸發，清理各倉庫殘留的舊檔案與空目錄，為統一大腦鋪路
+# ============================================
+
+name: Cleanup Legacy Files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Cleanup AI-General
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          echo "=== 清理 AI-General 舊檔案 ==="
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/tlee20860-dotcom/AI-General.git" AI-General
+          cd AI-General
+          
+          # 刪除 docs/p90/ 下非 90-P-*.md 且非 WF-*.md 的舊 P 檔 (包含 P-01, P-02 等)
+          find docs/p90 -type f -name "P-*.md" ! -name "90-P-*.md" -delete || true
+          
+          # 刪除舊的 STATE-INDEX
+          git rm --ignore-unmatch docs/records/STATE-INDEX.md || true
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "chore: cleanup legacy P files and STATE-INDEX [skip ci]" && git push)
+          cd ..
+
+      - name: Cleanup AI-WEB-APP-Family
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          echo "=== 清理 AI-WEB-APP-Family 舊紀錄 ==="
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/tlee20860-dotcom/AI-WEB-APP-Family.git" AI-WEB-APP-Family
+          cd AI-WEB-APP-Family
+          
+          # 強制移除專案紀錄目錄 (落實專案倉庫純化)
+          git rm -r --ignore-unmatch docs/records || true
+          git rm -r --ignore-unmatch docs/projects || true
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "chore: cleanup legacy records and projects [skip ci]" && git push)
+          cd ..
+
+      - name: Cleanup old-AI-WA-FAMILY
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          echo "=== 清理 old-AI-WA-FAMILY 舊紀錄 ==="
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/tlee20860-dotcom/old-AI-WA-FAMILY.git" old-AI-WA-FAMILY
+          cd old-AI-WA-FAMILY
+          
+          git rm -r --ignore-unmatch docs/records || true
+          git rm -r --ignore-unmatch docs/projects || true
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "chore: cleanup legacy records and projects [skip ci]" && git push)
+          cd ..
+
+          echo "🎉 所有源檔倉庫清理完成。"
+
+# ═══ EOF ═══
+# F: AI-infra/.github/workflows/cleanup-legacy.yml
+# V: 1792900081
+# W: ai-system-20261024-012#132
+# ═══ EOF ═══```
+
+<!-- === FILE END: .github/workflows/cleanup-legacy.yml === -->
 
 ### 📄 檔案：config/repos.json (infra)
 

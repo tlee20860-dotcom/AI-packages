@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 20:35:05 (HKT)
+> 生成時間：2026-10-24 20:36:37 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -41,6 +41,27 @@
 | AI-kernel | docs/skills/W/W-06-sop.md | 1792668000 | webapp-20261022-014#1 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792900046 | ai-system-20261024-012#65 |
+
+## ⚙️ 基礎設施源檔 (AI-infra)
+| 目錄/路徑 | 檔案名稱 |
+|---|---|
+| .github/scripts | apply_patch.py |
+| .github/scripts | validate_delivery.py |
+| .github/workflows | append_file.sh |
+| .github/workflows | apply-patch.yml |
+| .github/workflows | backup.yml |
+| .github/workflows | cleanup-legacy.yml |
+| .github/workflows | copy-backup.yml |
+| .github/workflows | fix-90-migration.yml |
+| .github/workflows | migrate-90-to-old.yml |
+| .github/workflows | migrate.yml |
+| .github/workflows | notify.yml |
+| .github/workflows | pages.yml |
+| .github/workflows | setup-structure.yml |
+| config | repos.json |
+| . | index.html |
+| . | manifest.json |
+| . | sw.js |
 
 ## 📦 專案源碼檔案樹 (external)
 | 專案倉庫 | 檔案路徑 |
@@ -205,3 +226,21 @@
 | old-AI-WA-FAMILY | settings.html |
 | old-AI-WA-FAMILY | settlements.html |
 | old-AI-WA-FAMILY | sw.js |
+
+## 🎁 本輪生成物清單 (AI-Packages)
+| 生成物檔案 | 大小 (KB) |
+|---|---|
+| 00-IP.md | 8 |
+| 01-AP.md | 20 |
+| 02-RP.md | 60 |
+| 03-UP.md | 8 |
+| 10-WP.md | 28 |
+| 20-SP-Sys.md | 32 |
+| 21-INFRA.md | 44 |
+| 23-CHK.md | 12 |
+| 24-HISTORY.md | 52 |
+| 90-Code.md | 276 |
+| 90-P.md | 4 |
+| 90-SP.md | 8 |
+| 90-old-Code.md | 952 |
+| 91-Code.md | 4 |
