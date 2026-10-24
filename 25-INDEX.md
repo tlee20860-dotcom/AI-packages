@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 20:26:31 (HKT)
+> 生成時間：2026-10-24 20:35:05 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -11,8 +11,6 @@
 | AI-General | docs/p90/90-P-Errors.md | 1792900063 | ai-system-20261024-012#88 |
 | AI-General | docs/p90/90-P-Map.md | 1792900060 | ai-system-20261024-012#85 |
 | AI-General | docs/p90/90-P-Rules.md | 1792900062 | ai-system-20261024-012#87 |
-| AI-General | docs/p90/P-01-core.md | 1792900057 | ai-system-20261024-012#76 |
-| AI-General | docs/p90/P-02-spec.md | 1792900058 | ai-system-20261024-012#77 |
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792900054 | ai-system-20261024-012#73 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792900055 | ai-system-20261024-012#74 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792900056 | ai-system-20261024-012#75 |
@@ -58,10 +56,6 @@
 | AI-WEB-APP-Family | .github/workflows/notify.yml |
 | AI-WEB-APP-Family | .gitignore |
 | AI-WEB-APP-Family | app.css |
-| AI-WEB-APP-Family | docs/records/WF-CONCLUSION.md |
-| AI-WEB-APP-Family | docs/records/WF-HANDOFF.md |
-| AI-WEB-APP-Family | docs/records/WF-PROGRESS.md |
-| AI-WEB-APP-Family | docs/records/WF-STATE-INDEX.md |
 | AI-WEB-APP-Family | functions/api/[[path]].js |
 | AI-WEB-APP-Family | functions/api/_api-core.js |
 | AI-WEB-APP-Family | icons/icon.svg |
@@ -109,21 +103,6 @@
 | old-AI-WA-FAMILY | css/pages/insurance.css |
 | old-AI-WA-FAMILY | css/theme.css |
 | old-AI-WA-FAMILY | css/utilities.css |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-01-index.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-04-adr-index.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-05-sop.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-06-pagemap.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-07-uispec.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-08-api.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-09-data.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-10-incident.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-14-decisions.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-15-reorg-plan.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/P-99-errors-map.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/WF-CONCLUSION.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/WF-HANDOFF.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/WF-PROGRESS.md |
-| old-AI-WA-FAMILY | docs/projects/web-app-family/WF-STATE-INDEX.md |
 | old-AI-WA-FAMILY | finance-overview.html |
 | old-AI-WA-FAMILY | functions/api/[[path]].js |
 | old-AI-WA-FAMILY | functions/api/_admin.js |
