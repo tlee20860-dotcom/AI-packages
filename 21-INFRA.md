@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 20:36:37 (HKT)
+> 生成時間：2026-10-24 20:43:02 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -464,8 +464,8 @@ jobs:
             echo "# 專案狀態包：${SAFE_NAME}" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
 
-            # 打包進度與技術檔
-            for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/P-*.md; do
+            # 打包進度與技術檔 (使用 *P-*.md 匹配)
+            for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/*P-*.md; do
               if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
             done
           done
@@ -487,7 +487,9 @@ jobs:
               echo "" >> "$OUTPUT_P"
               echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
               echo "" >> "$OUTPUT_P"
-              for f in "$PROJ_DIR"/P-*.md; do
+              
+              # 打包 P 檔至專案技術包 (使用 *P-*.md 匹配)
+              for f in "$PROJ_DIR"/*P-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT_P" || true; fi
               done
             else
@@ -683,8 +685,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792900082
-# W: ai-system-20261024-012#133
+# V: 1792900083
+# W: ai-system-20261024-012#136
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
