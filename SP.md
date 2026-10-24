@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 13:40:47 (HKT)
+> 生成時間：2026-10-24 14:24:44 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -26,10 +26,10 @@ records_pending: []
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261023-010 |
-| 本次範圍 | Webapp 新舊版狀態盤點、重構路線討論、體系角色機制檢討 |
-| 累計回覆 | 約 36 條 |
-| 狀態 | 討論中；待 Ken 決策重構路線與體系修改授權 |
+| 對話編號 | ai-system-20261024-011 |
+| 本次範圍 | 盤點體系缺失、重寫 R-00 與 R-03、廢除分身矩陣、建立自動備份與嚴格防呆 |
+| 累計回覆 | 約 50 條 |
+| 狀態 | 全數結案；已產出最終 STATE_SEAL 並重置 |
 
 ---
 
@@ -38,10 +38,10 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **舊版 (old-AI-WA-FAMILY)**：診斷出缺 `[[path]].js` 導致 API 回傳 HTML，補回後已滿血復活。
-2. **新版 (v2)**：確認為拼裝車（雙軌衝突、缺大量 export），決議廢棄不修。
-3. **重構方向**：傾向以舊版 129 檔為基礎進行瘦身，或合併為 5~7 個核心檔（不走 V2 老路）。
-4. **體系檢討**：Ken 認為現行「分角色（Meta/Web）」機制違反其極簡習慣，擬廢除或扁平化。
+1. **檔案修復**：`R-00` 與 `R-03` 已完整重寫，補回遺失的 R-020~R-023 密語與架構鎖。
+2. **單一全能型態**：廢除 Meta/Web 分身矩陣與沙盒機制，體系全面改名為「系統架構師（Architect）」。
+3. **防呆強化**：`F-008` 嚴格禁止「略」與「保留原樣」；`R-010` 規定一回覆僅限交付 1 檔。
+4. **每日備份**：新增 `daily-backup.yml`，於每天 HKT 早上 6 點自動打 Tag。
 
 ---
 
@@ -49,7 +49,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：無（尚在討論中，未定案）。
+**本次新增決策**：D-178（廢除分身矩陣）、D-179（嚴格無省略與單檔限制）。
 
 ---
 
@@ -57,9 +57,10 @@ records_pending: []
 
 | # | 優先確認 |
 |---|---|
-| 1 | 載入四檔後，確認 `A-00` 的 `T01` 包含 `received_confirm_word`？ |
-| 2 | 確認 `R-00` 的 `F-001` 已改為 Markdown 死模板？ |
-| 3 | `records_pending` 是否為空？ |
+| 1 | 載入四檔後，確認 `I-00` 是否已無分身矩陣，僅有「系統架構師」？ |
+| 2 | 確認 `R-00` 的 `F-008` 已包含「禁止出現略、保留原樣」？ |
+| 3 | 確認 `A-00` 的 FSM 是否已移除 `E_SWITCH_DOMAIN`？ |
+| 4 | `records_pending` 是否為空？ |
 
 ---
 
@@ -67,8 +68,8 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| Webapp 重構方案選擇 | 待 Ken 決定（原地瘦身 / 腳本搬移 / 極簡重寫） |
-| 體系角色矩陣修改 | 待 Ken 授權修改 IP 與 AP |
+| 打包腳本升級 | 待下次對話處理，簡化 `setup-structure.yml` 的分身識別邏輯。 |
+| Webapp 重構方案選擇 | 待 Ken 決定（原地瘦身 / 腳本搬移 / 極簡重寫）。 |
 
 ---
 
@@ -76,16 +77,15 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | Ken 回覆 Webapp 重構路線（如「路線 C，體系要改」）。 |
-| 2 | 若決定修改體系，AI 產出對應的 IP/AP 更新方案並等待密語。 |
-| 3 | 若決定重構 Webapp，AI 開始產出 FZ 功能凍結清單與第一批檔案。 |
+| 1 | 確認 GitHub Actions 是否已成功跑完，並下載最新的 `SP.md`。 |
+| 2 | 開新對話處理打包腳本，或直接進入 Webapp 重構討論。 |
+| 3 | 測試「一回覆一檔」與「嚴格無省略」是否正常運作。 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792900010
-W: ai-system-20261024-011#19
+V: 1792900020
+W: ai-system-20261024-011#34
 ═══ */
-
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
 <!-- === FILE START: AI-General/docs/records/PROGRESS.md === -->
@@ -99,6 +99,14 @@ W: ai-system-20261024-011#19
 ---
 
 ## 一、當前任務
+
+### 任務二十六：體系檔案缺失盤點與防呆強化
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 盤點體系缺失、廢除分身矩陣、建立自動備份與交付限制 |
+| 開始時間 | 2026-10-24 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
 
 ### 任務二十五：Webapp 架構重構與體系角色優化評估
 | 欄位 | 值 |
@@ -160,13 +168,26 @@ W: ai-system-20261024-011#19
 
 ## 二、步驟清單
 
+### 任務二十六：體系檔案缺失盤點與防呆強化
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 盤點所有檔案中的「略」與「保留原樣」缺失 | ✅ | 2026-10-24 |
+| 2 | 重寫 `R-00-rules.md`，補回 R-020~R-023 並加入「一回覆一檔」與「禁止省略」 | ✅ | 2026-10-24 |
+| 3 | 重寫 `R-03-terms.md`，展開詞 1~75 | ✅ | 2026-10-24 |
+| 4 | 修復 `PROGRESS.md` 與 `SYSTEM-HANDOFF.md` 的標頭錯位與雙重 EOF | ✅ | 2026-10-24 |
+| 5 | 清除 `SYSTEM-DEBT.md` 中的幻影編號 `D-342` 與雙重 EOF | ✅ | 2026-10-24 |
+| 6 | 新增 `.github/workflows/daily-backup.yml` 每日 6 點備份 | ✅ | 2026-10-24 |
+| 7 | 重構 `I-00-identity.md`，廢除分身矩陣與沙盒，統一為系統架構師 | ✅ | 2026-10-24 |
+| 8 | 重構 `A-00-guide.md`，移除 `E_SWITCH_DOMAIN` 與身分宣告 | ✅ | 2026-10-24 |
+| 9 | 更新 `SYSTEM-EVOLUTION.md`，記錄 v1.8 架構變更 | ✅ | 2026-10-24 |
+
 ### 任務二十五：Webapp 架構重構與體系角色優化評估
 | # | 步驟 | 狀態 | 完成時間 |
 |---|---|---|---|
 | 1 | 修復舊版 `[[path]].js` 缺失導致之 API 路由錯誤 | ✅ | 2026-10-23 |
 | 2 | 確認 V2 版（41 檔）狀態（雙軌並存、依賴斷裂）並決議廢棄 | ✅ | 2026-10-23 |
 | 3 | 擬定舊版（129 檔）漸進式瘦身方案或極簡重寫方案 | 💬 | - |
-| 4 | 評估廢除 Meta/Web 分角色機制，改為單一全能型態 | 💬 | - |
+| 4 | 評估廢除 Meta/Web 分角色機制，改為單一全能型態 | ✅ | 2026-10-24 |
 
 ### 任務二十四：防呆物理化與密語鎖死
 | # | 步驟 | 狀態 | 完成時間 |
@@ -243,13 +264,13 @@ W: ai-system-20261024-011#19
 | 2026-10-23 | ai-system-20261022-009 | 任務二十二（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十三（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十四（100%） |
+| 2026-10-24 | ai-system-20261024-011 | 任務二十六（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792900008
-W: ai-system-20261024-011#8
+V: 1792900018
+W: ai-system-20261024-011#32
 ═══ */
-
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
@@ -274,7 +295,8 @@ W: ai-system-20261024-011#8
 | 75 | 區模型、權限階層與歷史歸檔機制 | ✅ |
 | 76 | 密語安全機制、記憶架構對齊與 R-05 補齊 | ✅ |
 | 77 | 防呆物理化與密語鎖死（v1.7.1） | ✅ |
-| **78** | **Webapp 漸進式重構與體系角色扁平化** | **💬** |
+| 78 | Webapp 漸進式重構與體系角色扁平化 | ✅ |
+| **79** | **體系檔案缺失盤點與單一全能型態（v1.8）** | **✅** |
 
 ---
 
@@ -329,14 +351,21 @@ W: ai-system-20261024-011#8
 2. **F-001 死模板**：將交付標頭改為不可變的 Markdown 區塊，禁止 AI 使用表格或自由排版。
 3. **根源解決**：領域層 AI 的認知負荷高，純文字規則易被忽略，必須以「物理模具」與「密語鎖」進行約束。
 
-### 2.31 Webapp 重構路線（010 討論中）
+### 2.31 Webapp 重構路線（010 定案）
 1. **廢棄 V2（41 檔）**：因其雙軌並存（`app-pages` 與 `pages` 衝突）且底層依賴斷裂，修復成本過高。
 2. **保留 V1（129 檔）**：舊版已補回 `[[path]].js` 並恢復正常，功能 100% 完整。
 3. **重構方向**：傾向在舊版基礎上進行「漸進式瘦身」或「合併為 5~7 核心檔」，保留功能並降低 AI 交付負擔。
 
-### 2.32 體系角色矩陣檢討（010 討論中）
+### 2.32 體系角色矩陣扁平化（011 定案）
 1. **現狀問題**：現行 Meta/Web 分角色機制，要求使用者切換身份才能寫程式碼，嚴重違反使用者（UP）的「極簡」與「一次處理一主題」偏好。
-2. **優化方向**：擬廢除分身標籤，或允許體系結構師直接跨界撰寫程式碼，回歸單一全能型態。
+2. **定案方向**：廢除分身矩陣、5-Core、沙盒（MetaSandbox/FastDev）與隔離鎖（G1/G2/G3）。全面回歸單一全能型態。
+
+### 2.33 單一全能型態與嚴格防呆（011 定案）
+1. **唯一身份**：體系內僅保留「系統架構師（System Architect）」，不再區分領域分身。
+2. **包驅動邏輯**：做什麼事取決於上傳了什麼包（四檔＋SP＝體系；專案包＝業務），不需打 `[身份: xxx]`。
+3. **嚴格無省略**：`F-008` 新增規定，交付完整檔時 MUST 逐字輸出，禁止出現「略」、「保留原樣」等詞彙。
+4. **單檔交付限制**：`R-010` 新增規定，一回覆僅限交付 1 檔，強制多檔任務必須分批交付。
+5. **自動備份**：新增 `daily-backup.yml`，每天 HKT 早上 6 點自動打 Tag 備份。
 
 ---
 
@@ -366,6 +395,8 @@ W: ai-system-20261024-011#8
 | D-175 | 紀錄目錄架構鎖定 | 專案紀錄統一放 `docs/records/`，變更須輸入 `[授權架構變更]`。 |
 | D-176 | R-05 補齊密語映射 | 將 R-00 新增的 4 條鐵律與密語事件寫入 DSL 映射表。 |
 | D-177 | 防呆物理化與 F-001 模板化 | 導入 FSM 密語物理鎖與交付絕對模板，根絕領域層脫軌。 |
+| D-178 | 廢除分身矩陣與沙盒 | 移除 Meta/Web 與 5-Core，回歸單一全能型態「系統架構師」，降低認知負荷。 |
+| D-179 | 嚴格無省略與單檔限制 | F-008 嚴禁略字；R-010 規定一回覆一檔，防止 AI 偷懶與 Token 耗盡斷檔。 |
 
 **決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
 
@@ -391,10 +422,9 @@ W: ai-system-20261024-011#8
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792900002
-W: ai-system-20261023-010#1
+V: 1792900019
+W: ai-system-20261024-011#33
 ═══ */
-
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-REJECTED.md === -->
@@ -419,6 +449,7 @@ W: ai-system-20261023-010#1
 | RJ-004 | T99 留在 transitions 陣列 | 無法物理保證「最後才匹配」；改 fallback_handler | ai-system-20261021-006 | 2026-10-21 |
 | RJ-005 | 純 B 範式（只寫不變式、刪流程） | 會造成交接順序無人管（資料遺失風險） | ai-system-20261021-006 | 2026-10-21 |
 | RJ-006 | 審查項目的「前中後」機制硬套於全文搜尋/定點檢查 | 導致 AI 為了湊格式，拿無關行號敷衍瞎判；改為特徵搜尋類例外 | ai-system-20261022-007 | 2026-10-22 |
+| RJ-007 | 體系角色「溫和扁平化」（保留沙盒與領域切換） | 未能徹底解決認知負擔，且殘留分身概念，違反 Ken 極簡偏好；決議徹底物理移除 | ai-system-20261024-011 | 2026-10-24 |
 
 ---
 
@@ -439,8 +470,8 @@ W: ai-system-20261023-010#1
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792613004
-W: ai-system-20261022-007#93#4
+V: 1792900022
+W: ai-system-20261024-011#36
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
@@ -460,9 +491,10 @@ W: ai-system-20261022-007#93#4
 
 | 編號 | 類別 | 描述 | 優先級 | 狀態 | 來源對話 |
 |---|---|---|---|---|---|
-| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 暫不處理（漸進式收斂：改檔時順手刪檔頭三行） | ai-system-20261021-004 |
+| K-01 | 體系 | F-005 與 I／A／U／W／SP 內文 Version 矛盾 | 中 | 已解決（R-00 已改為嚴格清除舊版號） | ai-system-20261021-004 |
 | C-01 | 專案 | 專案程式碼 END OF FILE 補齊（約 44 檔） | 低 | 待處理 | ai-system-20261021-004 |
 | K-03 | 體系 | 36 條映射完成後，R-00 契約表加 DSL 欄 | 中 | 待處理 | ai-system-20261021-006 |
+| K-04 | 體系 | 簡化 `setup-structure.yml` 打包腳本，移除分身與領域識別邏輯 | 中 | 待處理 | ai-system-20261024-011 |
 
 ---
 
@@ -493,10 +525,9 @@ W: ai-system-20261022-007#93#4
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792900009
-W: ai-system-20261024-011#11
+V: 1792900021
+W: ai-system-20261024-011#35
 ═══ */
-
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
 
 <!-- === FILE START: AI-General/docs/records/STATE-INDEX.md === -->
@@ -505,7 +536,7 @@ W: ai-system-20261024-011#11
 
 # STATE-INDEX
 
-> 生成時間：2026-10-24 13:40:47 (HKT)
+> 生成時間：2026-10-24 14:24:44 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -517,20 +548,20 @@ W: ai-system-20261024-011#11
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792900010|ai-system-20261024-011#19
-AI-General|docs/records/SYSTEM-DEBT.md|1792900009|ai-system-20261024-011#11
-AI-General|docs/records/PROGRESS.md|1792900008|ai-system-20261024-011#8
-AI-kernel|docs/r-rules/R-03-terms.md|1792900006|ai-system-20261024-011#3
+AI-General|docs/records/SYSTEM-EVOLUTION.md|1792900023|ai-system-20261024-011#37
+AI-General|docs/records/SYSTEM-REJECTED.md|1792900022|ai-system-20261024-011#36
+AI-General|docs/records/SYSTEM-DEBT.md|1792900021|ai-system-20261024-011#35
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792900020|ai-system-20261024-011#34
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792900019|ai-system-20261024-011#33
+AI-General|docs/records/PROGRESS.md|1792900018|ai-system-20261024-011#32
+AI-kernel|docs/r-rules/R-03-terms.md|1792900017|ai-system-20261024-011#29
+AI-kernel|docs/a-guide/A-00-guide.md|1792900016|ai-system-20261024-011#28
+AI-kernel|docs/a-guide/I-00-identity.md|1792900012|ai-system-20261024-011#24
 AI-kernel|docs/r-rules/R-00-rules.md|1792900005|ai-system-20261024-011#2
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792900002|ai-system-20261023-010#1
-AI-General|docs/records/STATE-INDEX.md|1792817402|github-actions[bot]
-AI-General|docs/records/SYSTEM-EVOLUTION.md|1792720502|ai-system-20261022-009#3
-AI-kernel|docs/a-guide/A-00-guide.md|1792719600|ai-system-20261022-009#1
+AI-General|docs/records/STATE-INDEX.md|1792820447|github-actions[bot]
 AI-kernel|docs/r-rules/R-05-dsl-map.md|1792718000|ai-system-20261022-009#1
 AI-General|docs/records/SYSTEM-ARCHIVE.md|1792700007|ai-system-20261022-009#7
-AI-kernel|docs/a-guide/I-00-identity.md|1792700002|ai-system-20261022-009#2
 AI-kernel|docs/skills/W/W-06-sop.md|1792668000|webapp-20261022-014#1
-AI-General|docs/records/SYSTEM-REJECTED.md|1792613004|ai-system-20261022-007#93#4
 AI-kernel|docs/review/CHK-E.md|1792612002|ai-system-20261022-007#90#2
 AI-kernel|docs/review/REVIEW-FORMAT.md|1792612001|ai-system-20261022-007#90#1
 AI-kernel|docs/u-profile/U-00-profile.md|1792609002|ai-system-20261022-007#78#2
@@ -548,7 +579,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792820447
+V: 1792823084
 W: github-actions[bot]
 ═══ */
 
