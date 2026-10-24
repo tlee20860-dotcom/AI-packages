@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 19:57:01 (HKT)
+> 生成時間：2026-10-24 20:10:46 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -27,9 +27,9 @@ records_pending: []
 | 欄位 | 值 |
 |---|---|
 | 對話編號 | ai-system-20261024-012 |
-| 本次範圍 | 廢除區模型與分身、統一大腦目錄扁平化、雙 SP 分離策略、重構防呆鐵律（R-024） |
-| 累計回覆 | 約 70 條 |
-| 狀態 | 核心源檔已重構，待交付打包腳本與備份腳本 |
+| 本次範圍 | 統一大腦源檔扁平化、全數字前綴命名法、重構防呆鐵律、一鍵完整備份整合 |
+| 累計回覆 | 約 124 條 |
+| 狀態 | 全數結案；核心源檔已重構，腳本與控制台皆已升級完畢 |
 
 ---
 
@@ -39,9 +39,10 @@ records_pending: []
 
 **本對話重點結論**：
 1. **拔除區位與分身**：`IP` 與 `AP` 已完全移除分身矩陣、沙盒與區位判定，回歸單一系統架構師。
-2. **統一大腦目錄**：專案紀錄（`WF-*`）與技術檔（`P-*`）全部移至 `AI-General/docs/p{專案編號}/`。
-3. **生成物命名與分離**：廢除 11 個零散 P 檔，未來生成物平攤於 `AI-Packages`，分為 `SP-Sys`（體系進度）、`SP-90`（專案進度）、`90-P`（專案技術）、`90-Code`（程式碼）。
+2. **統一大腦與扁平化**：專案紀錄（`WF-*`）與技術檔（`P-*`）全部移至 `AI-General/docs/p{專案編號}/`，並將 11 個 P 檔濃縮為 4 個精華檔（Map, Data, Rules, Errors）。
+3. **全數字前綴命名**：所有生成物統一加上前綴（如 `00-IP`、`01-AP`、`20-SP-Sys`、`90-P`），徹底解決 GitHub 字母排序與未來擴充跳號問題。
 4. **重構防呆**：`R-00` 新增 `R-024`，強制重構前必須先交付 `Refactor-Map.md`（重構地圖），確認後才寫 Code。
+5. **一鍵備份整合**：`AI-infra` 新增 `backup.yml`（每日定時快照）與 `copy-backup.yml`（完整結構複製）；控制台 `index.html` 新增 GUI 一鍵備份功能。
 
 ---
 
@@ -49,7 +50,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-180（廢除區模型與對話內切換）、D-181（源檔扁平化與生成物分離策略）。
+**本次新增決策**：D-178 ~ D-184（含廢除分身、嚴格單檔限制、統一大腦、全數字命名、一鍵備份等）。
 
 ---
 
@@ -57,7 +58,7 @@ records_pending: []
 
 | # | 優先確認 |
 |---|---|
-| 1 | 載入四檔後，確認 `IP.md` 是否已無區位限制與分身，僅有「系統架構師」？ |
+| 1 | 載入四檔後，確認檔名是否為 `00-IP`, `01-AP`, `02-RP`, `03-UP`？ |
 | 2 | 確認 `R-00` 是否包含 `R-024`（重構地圖）與 `E_USER_CONTINUE_DELIVER`（繼續交付密語）？ |
 | 3 | 確認 `AP.md` 的專案紀錄路徑是否已改為 `AI-General/docs/p{專案編號}/`？ |
 | 4 | `records_pending` 是否為空？ |
@@ -68,9 +69,8 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| 重寫 `setup-structure.yml` | 待下次對話處理，需支援 `SP-Sys`, `SP-90`, `90-P`, `90-Code` 等平攤生成物。 |
-| 新增 `backup.yml` | 待處理，定時備份源檔倉庫。 |
-| 濃縮專案 P 檔 | 待處理，將舊版 11 個 P 檔精簡為 `90-P.md`。 |
+| 刪除舊 `STATE-INDEX.md` | 待 Ken 手動至 `AI-General/docs/records/` 刪除（已由 SP 取代）。 |
+| 觸發打包測試 | 待 Ken 至 `AI-infra` 手動觸發 `setup-structure.yml`，確認新生成物是否正確。 |
 
 ---
 
@@ -78,14 +78,15 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 確認 GitHub Actions 是否已成功跑完，並下載最新的 `SP-Sys.md`。 |
-| 2 | 開新對話處理 `setup-structure.yml` 與 `backup.yml` 腳本。 |
-| 3 | 處理 `90-P.md` 的濃縮與專案技術遷移。 |
+| 1 | 刪除 `AI-General/docs/records/STATE-INDEX.md`。 |
+| 2 | 至 `AI-infra` 的 Actions 執行手動打包。 |
+| 3 | 確認 `AI-Packages` 是否產出 `00-IP` ~ `24-HISTORY` 等新命名的檔案。 |
+| 4 | 開新對話，測試上傳 `00` 到 `20` 的檔案，確認 AI 是否正常運作且不會卡住。 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792900048
-W: ai-system-20261024-012#67
+V: 1792900078
+W: ai-system-20261024-012#124
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
@@ -100,6 +101,14 @@ W: ai-system-20261024-012#67
 ---
 
 ## 一、當前任務
+
+### 任務二十七：統一大腦架構重構與備份機制建置
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 廢除區模型、源檔扁平化、全數字前綴命名、重構防呆與一鍵備份 |
+| 開始時間 | 2026-10-24 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
 
 ### 任務二十六：體系檔案缺失盤點與防呆強化
 | 欄位 | 值 |
@@ -168,6 +177,17 @@ W: ai-system-20261024-012#67
 ---
 
 ## 二、步驟清單
+
+### 任務二十七：統一大腦架構重構與備份機制建置
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 廢除區位與對話內角色切換，回歸單一系統架構師 | ✅ | 2026-10-24 |
+| 2 | 專案紀錄（WF-*）與 P 檔扁平化至 `AI-General/docs/p90/` | ✅ | 2026-10-24 |
+| 3 | 濃縮 11 個 P 檔為 4 個精華檔（Map, Data, Rules, Errors） | ✅ | 2026-10-24 |
+| 4 | 重寫 `setup-structure.yml`，支援全數字前綴與雙 SP 分離 | ✅ | 2026-10-24 |
+| 5 | 新增 `R-024` 重構防呆鐵律與 `Refactor-Map` | ✅ | 2026-10-24 |
+| 6 | 新增 `backup.yml` 與 `copy-backup.yml`，整合控制台一鍵備份 | ✅ | 2026-10-24 |
+| 7 | 更新控制台 `index.html` 與 `sw.js` 以支援新分類與備份 GUI | ✅ | 2026-10-24 |
 
 ### 任務二十六：體系檔案缺失盤點與防呆強化
 | # | 步驟 | 狀態 | 完成時間 |
@@ -266,11 +286,12 @@ W: ai-system-20261024-012#67
 | 2026-10-23 | ai-system-20261022-009 | 任務二十三（100%） |
 | 2026-10-23 | ai-system-20261022-009 | 任務二十四（100%） |
 | 2026-10-24 | ai-system-20261024-011 | 任務二十六（100%） |
+| 2026-10-24 | ai-system-20261024-012 | 任務二十七（100%） |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792900018
-W: ai-system-20261024-011#32
+V: 1792900079
+W: ai-system-20261024-012#125
 ═══ */
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
@@ -581,13 +602,12 @@ W: ai-system-20261024-012#108
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792900042 | ai-system-20261024-012#60 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792575600 | ai-system-20261021-003#61 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900039 | ai-system-20261024-012#52 |
-| AI-kernel | docs/a-guide/I-00-identity.md | 1792900044 | ai-system-20261024-012#63 |
+| AI-kernel | docs/a-guide/I-00-identity.md | 1792900077 | ai-system-20261024-012#121 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792900074 | ai-system-20261024-012#116 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900048 | ai-system-20261024-012#67 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900078 | ai-system-20261024-012#124 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792900071 | ai-system-20261024-012#108 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900072 | ai-system-20261024-012#109 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792700007 | ai-system-20261022-009#7 |
-| AI-General | docs/records/STATE-INDEX.md | 1792823084 | github-actions[bot] |
-| AI-General | docs/records/PROGRESS.md | 1792900018 | ai-system-20261024-011#32 |
+| AI-General | docs/records/PROGRESS.md | 1792900079 | ai-system-20261024-012#125 |
