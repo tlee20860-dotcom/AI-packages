@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 22:50:47 (HKT)
+> 生成時間：2026-10-24 11:18:20 (HKT)
 
 # 專案地圖包：old-AI-WA-FAMILY
 
@@ -21,7 +21,7 @@
 
 ## 程式碼檔案樹（僅列路徑，不讀內容）
 
-總檔數：129
+總檔數：130
 
 .github/PATCH.md
 .github/workflows/apply-patch.yml
@@ -52,6 +52,7 @@ docs/projects/web-app-family/WF-HANDOFF.md
 docs/projects/web-app-family/WF-PROGRESS.md
 docs/projects/web-app-family/WF-STATE-INDEX.md
 finance-overview.html
+functions/api/[[path]].js
 functions/api/_admin.js
 functions/api/_bank.js
 functions/api/_config.js

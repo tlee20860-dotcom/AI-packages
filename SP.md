@@ -1,4 +1,4 @@
-> 生成時間：2026-10-23 22:50:46 (HKT)
+> 生成時間：2026-10-24 11:18:20 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -26,10 +26,10 @@ records_pending: []
 
 | 欄位 | 值 |
 |---|---|
-| 對話編號 | ai-system-20261022-009 |
-| 本次範圍 | 密語機制、紀錄對齊、防呆物理化（FSM 鎖與死模板） |
-| 累計回覆 | 約 126 條 |
-| 狀態 | 全數結案；已產出最終 STATE_SEAL 並重置 |
+| 對話編號 | ai-system-20261023-010 |
+| 本次範圍 | Webapp 新舊版狀態盤點、重構路線討論、體系角色機制檢討 |
+| 累計回覆 | 約 36 條 |
+| 狀態 | 討論中；待 Ken 決策重構路線與體系修改授權 |
 
 ---
 
@@ -38,9 +38,10 @@ records_pending: []
 **指向**：SYSTEM-CONCLUSION.md §一
 
 **本對話重點結論**：
-1. **密語全域鎖**：建立 11 個全域密語。未收到指定字串，AI 不得交付檔案。
-2. **架構鎖定**：紀錄統一至 `docs/records/`，未經 `[授權架構變更]` 不得搬移。
-3. **防呆物理化**：將 `T01` 轉移鎖死，並將 `F-001` 改為死模板，徹底解決領域 AI 忽略格式的問題。
+1. **舊版 (old-AI-WA-FAMILY)**：診斷出缺 `[[path]].js` 導致 API 回傳 HTML，補回後已滿血復活。
+2. **新版 (v2)**：確認為拼裝車（雙軌衝突、缺大量 export），決議廢棄不修。
+3. **重構方向**：傾向以舊版 129 檔為基礎進行瘦身，或合併為 5~7 個核心檔（不走 V2 老路）。
+4. **體系檢討**：Ken 認為現行「分角色（Meta/Web）」機制違反其極簡習慣，擬廢除或扁平化。
 
 ---
 
@@ -48,7 +49,7 @@ records_pending: []
 
 **指向**：SYSTEM-CONCLUSION.md §三
 
-**本次新增決策**：D-174 至 D-177。
+**本次新增決策**：無（尚在討論中，未定案）。
 
 ---
 
@@ -66,7 +67,8 @@ records_pending: []
 
 | 項目 | 狀態 |
 |---|---|
-| Webapp 程式碼對照重寫 | 待 Web 開發者依新規則補齊新倉 `app-*.js` |
+| Webapp 重構方案選擇 | 待 Ken 決定（原地瘦身 / 腳本搬移 / 極簡重寫） |
+| 體系角色矩陣修改 | 待 Ken 授權修改 IP 與 AP |
 
 ---
 
@@ -74,14 +76,16 @@ records_pending: []
 
 | 順序 | 動作 |
 |---|---|
-| 1 | 測試 Webapp 是否嚴格遵守密語與 F-001 模板。 |
-| 2 | 若無誤，繼續 GAP 修復。 |
+| 1 | Ken 回覆 Webapp 重構路線（如「路線 C，體系要改」）。 |
+| 2 | 若決定修改體系，AI 產出對應的 IP/AP 更新方案並等待密語。 |
+| 3 | 若決定重構 Webapp，AI 開始產出 FZ 功能凍結清單與第一批檔案。 |
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-HANDOFF.md
-V: 1792720501
-W: ai-system-20261022-009#2
+V: 1792900003
+W: ai-system-20261023-010#1
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/SYSTEM-HANDOFF.md === -->
 
 <!-- === FILE START: AI-General/docs/records/PROGRESS.md === -->
@@ -95,6 +99,14 @@ W: ai-system-20261022-009#2
 ---
 
 ## 一、當前任務
+
+### 任務二十五：Webapp 架構重構與體系角色優化評估
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | 評估 Webapp 新舊版狀態、擬定重構路線、檢討體系角色矩陣 |
+| 開始時間 | 2026-10-23 |
+| 當前階段 | 討論中 |
+| 完成度 | 20% |
 
 ### 任務二十四：防呆物理化與密語鎖死（v1.7.1）
 | 欄位 | 值 |
@@ -113,6 +125,14 @@ W: ai-system-20261022-009#2
 ---
 
 ## 二、步驟清單
+
+### 任務二十五：Webapp 架構重構與體系角色優化評估
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | 修復舊版 `[[path]].js` 缺失導致之 API 路由錯誤 | ✅ | 2026-10-23 |
+| 2 | 確認 V2 版（41 檔）狀態（雙軌並存、依賴斷裂）並決議廢棄 | ✅ | 2026-10-23 |
+| 3 | 擬定舊版（129 檔）漸進式瘦身方案或極簡重寫方案 | 💬 | - |
+| 4 | 評估廢除 Meta/Web 分角色機制，改為單一全能型態 | 💬 | - |
 
 ### 任務二十四：防呆物理化與密語鎖死
 | # | 步驟 | 狀態 | 完成時間 |
@@ -146,9 +166,10 @@ W: ai-system-20261022-009#2
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792720500
-W: ai-system-20261022-009#1
+V: 1792900001
+W: ai-system-20261023-010#1
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
@@ -172,7 +193,8 @@ W: ai-system-20261022-009#1
 | 74 | 體系進化史建立與 R-019 結構變更提示 | ✅ |
 | 75 | 區模型、權限階層與歷史歸檔機制 | ✅ |
 | 76 | 密語安全機制、記憶架構對齊與 R-05 補齊 | ✅ |
-| **77** | **防呆物理化與密語鎖死（v1.7.1）** | **✅** |
+| 77 | 防呆物理化與密語鎖死（v1.7.1） | ✅ |
+| **78** | **Webapp 漸進式重構與體系角色扁平化** | **💬** |
 
 ---
 
@@ -227,6 +249,15 @@ W: ai-system-20261022-009#1
 2. **F-001 死模板**：將交付標頭改為不可變的 Markdown 區塊，禁止 AI 使用表格或自由排版。
 3. **根源解決**：領域層 AI 的認知負荷高，純文字規則易被忽略，必須以「物理模具」與「密語鎖」進行約束。
 
+### 2.31 Webapp 重構路線（010 討論中）
+1. **廢棄 V2（41 檔）**：因其雙軌並存（`app-pages` 與 `pages` 衝突）且底層依賴斷裂，修復成本過高。
+2. **保留 V1（129 檔）**：舊版已補回 `[[path]].js` 並恢復正常，功能 100% 完整。
+3. **重構方向**：傾向在舊版基礎上進行「漸進式瘦身」或「合併為 5~7 核心檔」，保留功能並降低 AI 交付負擔。
+
+### 2.32 體系角色矩陣檢討（010 討論中）
+1. **現狀問題**：現行 Meta/Web 分角色機制，要求使用者切換身份才能寫程式碼，嚴重違反使用者（UP）的「極簡」與「一次處理一主題」偏好。
+2. **優化方向**：擬廢除分身標籤，或允許體系結構師直接跨界撰寫程式碼，回歸單一全能型態。
+
 ---
 
 ## 三、決策記錄
@@ -254,7 +285,7 @@ W: ai-system-20261022-009#1
 | D-174 | 導入 11 個密語安全機制 | 交付、換角色、改架構、刪檔、中止等皆需密語解鎖。 |
 | D-175 | 紀錄目錄架構鎖定 | 專案紀錄統一放 `docs/records/`，變更須輸入 `[授權架構變更]`。 |
 | D-176 | R-05 補齊密語映射 | 將 R-00 新增的 4 條鐵律與密語事件寫入 DSL 映射表。 |
-| **D-177** | **防呆物理化與 F-001 模板化** | **導入 FSM 密語物理鎖與交付絕對模板，根絕領域層脫軌。** |
+| D-177 | 防呆物理化與 F-001 模板化 | 導入 FSM 密語物理鎖與交付絕對模板，根絕領域層脫軌。 |
 
 **決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
 
@@ -280,9 +311,10 @@ W: ai-system-20261022-009#1
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792720503
-W: ai-system-20261022-009#4
+V: 1792900002
+W: ai-system-20261023-010#1
 ═══ */
+
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-REJECTED.md === -->
@@ -392,7 +424,7 @@ W: ai-system-20261022-009#1
 
 # STATE-INDEX
 
-> 生成時間：2026-10-23 22:50:46 (HKT)
+> 生成時間：2026-10-24 11:18:19 (HKT)
 
 ## 一、專案總覽
 | 專案顯示名稱 | code | domain | package_no | repo |
@@ -404,11 +436,11 @@ W: ai-system-20261022-009#1
 ## 二、檔案清單
 | Repo | 檔案 | Version | Writer |
 |---|---|---|---|
-AI-General|docs/records/STATE-INDEX.md|1792765640|github-actions[bot]
-AI-General|docs/records/SYSTEM-CONCLUSION.md|1792720503|ai-system-20261022-009#4
+AI-General|docs/records/SYSTEM-HANDOFF.md|1792900003|ai-system-20261023-010#1
+AI-General|docs/records/SYSTEM-CONCLUSION.md|1792900002|ai-system-20261023-010#1
+AI-General|docs/records/PROGRESS.md|1792900001|ai-system-20261023-010#1
+AI-General|docs/records/STATE-INDEX.md|1792767046|github-actions[bot]
 AI-General|docs/records/SYSTEM-EVOLUTION.md|1792720502|ai-system-20261022-009#3
-AI-General|docs/records/SYSTEM-HANDOFF.md|1792720501|ai-system-20261022-009#2
-AI-General|docs/records/PROGRESS.md|1792720500|ai-system-20261022-009#1
 AI-kernel|docs/r-rules/R-00-rules.md|1792719601|ai-system-20261022-009#2
 AI-kernel|docs/a-guide/A-00-guide.md|1792719600|ai-system-20261022-009#1
 AI-kernel|docs/r-rules/R-05-dsl-map.md|1792718000|ai-system-20261022-009#1
@@ -435,7 +467,7 @@ AI-kernel|docs/r-rules/R-02-patterns.md|1792575600|ai-system-20261021-003#61
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/STATE-INDEX.md
-V: 1792767046
+V: 1792811899
 W: github-actions[bot]
 ═══ */
 
