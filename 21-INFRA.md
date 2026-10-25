@@ -1,4 +1,5 @@
-> 生成時間：2026-10-25 21:39:48 (HKT)
+> 體系版本：SV03
+> 生成時間：2026-10-25 21:47:39 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -321,6 +322,14 @@ jobs:
           git clone --depth 1 -b main "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General || \
           git clone --depth 1 -b master "https://x-access-token:${{ secrets.CROSS_REPO_PAT }}@github.com/${{ env.GENERAL_REPO }}.git" AI-General
 
+      - name: "Step 0.5: 提取體系版本號 (Extract System Version)"
+        run: |
+          if [ -f "AI-General/docs/records/SYSTEM-HANDOFF.md" ]; then
+            SYS_VER=$(grep -E "^version:" AI-General/docs/records/SYSTEM-HANDOFF.md | head -1 | awk '{print $2}')
+          fi
+          if [ -z "$SYS_VER" ]; then SYS_VER="v0.0.0"; fi
+          echo "SYS_VER=$SYS_VER" >> $GITHUB_ENV
+
       - name: Checkout AI-packages
         uses: actions/checkout@v4
         with:
@@ -345,7 +354,8 @@ jobs:
       - name: "Step 1.5: 生成體系狀態 (20-SP-Sys.md)"
         run: |
           OUTPUT="build-repo/20-SP-Sys.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# AI 對話系統 - 體系狀態包" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -367,7 +377,8 @@ jobs:
           OUTPUT="build-repo/04-GC.md"
           SOURCE="AI-General/docs/records/GENERAL-CONCLUSION.md"
           
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# 通用對話決策總集 (GENERAL CONCLUSION)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -382,7 +393,8 @@ jobs:
       - name: "Step 1.9: 生成 I 包 (00-IP.md)"
         run: |
           OUTPUT="build-repo/00-IP.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# I 包：身份與信仰" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -391,7 +403,8 @@ jobs:
       - name: "Step 2: 生成 A 包 (01-AP.md)"
         run: |
           OUTPUT="build-repo/01-AP.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# A 包：啟動引導與角色定義" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -400,7 +413,8 @@ jobs:
       - name: "Step 3: 生成 R 包 (02-RP.md)"
         run: |
           OUTPUT="build-repo/02-RP.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# R 包：規則總覽" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -412,7 +426,8 @@ jobs:
       - name: "Step 4: 生成 U 包 (03-UP.md)"
         run: |
           OUTPUT="build-repo/03-UP.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# U 包：使用者通用描述" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -422,7 +437,8 @@ jobs:
         run: |
           OUTPUT="build-repo/10-WP.md"
           if [ -d "AI-kernel/docs/skills/W" ]; then
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+            echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
             echo "# W 包：Web App 領域技能" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
@@ -448,7 +464,8 @@ jobs:
             exit 1
           fi
 
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# CHK 審查包（合規審判者用）" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -476,7 +493,8 @@ jobs:
               continue
             fi
 
-            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+            echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+            echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
             echo "# 專案狀態包：${SAFE_NAME}" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
@@ -500,7 +518,8 @@ jobs:
             # 防呆：專案技術檔 (P)
             PROJ_DIR="AI-General/docs/p${PKG_NO}"
             if [ -d "$PROJ_DIR" ]; then
-              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_P"
+              echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT_P"
+              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT_P"
               echo "" >> "$OUTPUT_P"
               echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
               echo "" >> "$OUTPUT_P"
@@ -515,7 +534,8 @@ jobs:
 
             # 防呆：專案代碼 (Code)
             if [ -d "external/${SAFE_NAME}" ]; then
-              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT_CODE"
+              echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT_CODE"
+              echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT_CODE"
               echo "" >> "$OUTPUT_CODE"
               echo "# 專案全程式碼包：${SAFE_NAME}" >> "$OUTPUT_CODE"
               echo "" >> "$OUTPUT_CODE"
@@ -537,7 +557,8 @@ jobs:
       - name: "Step 9: 生成基礎設施總包 (21-INFRA.md)"
         run: |
           OUTPUT="build-repo/21-INFRA.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "> ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# 基礎設施總包 (INFRA)" >> "$OUTPUT"
@@ -584,7 +605,8 @@ jobs:
             exit 1
           fi
 
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "> ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# 歷史檔案包 (HISTORY)" >> "$OUTPUT"
@@ -597,7 +619,8 @@ jobs:
       - name: "Step 9.4: 生成全庫總索引 (25-INDEX.md)"
         run: |
           OUTPUT="build-repo/25-INDEX.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# 全庫檔案總索引 (GLOBAL INDEX)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -668,7 +691,8 @@ jobs:
       - name: "Step 9.5: 生成控制台共享包 (22-Console.md)"
         run: |
           OUTPUT="build-repo/22-Console.md"
-          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT"
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
           echo "# 92 包：AI 控制台原始碼" >> "$OUTPUT"
           echo "" >> "$OUTPUT"
@@ -702,8 +726,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792900108
-# W: ai-system-20261024-013#8
+# V: 1792900148
+# W: ai-system-20261024-013#7
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
