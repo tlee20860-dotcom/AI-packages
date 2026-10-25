@@ -1,5 +1,5 @@
 > 體系版本：SV04
-> 生成時間：2026-10-25 22:31:27 (HKT)
+> 生成時間：2026-10-25 23:36:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -12,18 +12,18 @@
 | AI-General | docs/p90/90-P-Errors.md | 1792900127 | ai-system-20261024-013#27 |
 | AI-General | docs/p90/90-P-Map.md | 1792900060 | ai-system-20261024-012#85 |
 | AI-General | docs/p90/90-P-Rules.md | 1792900062 | ai-system-20261024-012#87 |
-| AI-General | docs/p90/WF-CONCLUSION.md | 1792900960 | ai-system-20261024-013#24 |
-| AI-General | docs/p90/WF-HANDOFF.md | 1792900940 | ai-system-20261024-012#86 |
-| AI-General | docs/p90/WF-PROGRESS.md | 1792900950 | ai-system-20261024-013#23 |
+| AI-General | docs/p90/WF-CONCLUSION.md | 1792901100 | ai-system-20261024-012#14 |
+| AI-General | docs/p90/WF-HANDOFF.md | 1792901080 | ai-system-20261024-012#12 |
+| AI-General | docs/p90/WF-PROGRESS.md | 1792901090 | ai-system-20261024-012#13 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792900156 | ai-system-20261024-013#7 |
-| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792700007 | ai-system-20261022-009#7 |
+| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900157 | ai-system-20261024-013#8 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792900145 | ai-system-20261024-013#7 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900159 | ai-system-20261024-013#10 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900155 | ai-system-20261024-013#6 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900146 | ai-system-20261024-013#5 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900153 | ai-system-20261024-013#2 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900190 | ai-system-20261025-001#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900152 | ai-system-20261024-013#1 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
@@ -258,7 +258,7 @@
 | 21-INFRA.md | 48 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 60 |
-| 90-Code.md | 316 |
+| 90-Code.md | 320 |
 | 90-P.md | 20 |
 | 90-SP.md | 28 |
 | 90-old-Code.md | 952 |

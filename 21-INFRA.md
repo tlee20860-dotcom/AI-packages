@@ -1,5 +1,5 @@
 > 體系版本：SV04
-> 生成時間：2026-10-25 22:31:27 (HKT)
+> 生成時間：2026-10-25 23:36:51 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -592,7 +592,7 @@ jobs:
       - name: "Step 9.3: 生成歷史檔案包 (24-HISTORY.md)"
         run: |
           OUTPUT="build-repo/24-HISTORY.md"
-          SRC_FILES="AI-General/docs/records/SYSTEM-EVOLUTION.md AI-General/docs/records/SYSTEM-REJECTED.md AI-General/docs/records/SYSTEM-DEBT.md AI-kernel/docs/r-rules/R-04-learning.md"
+          SRC_FILES="AI-General/docs/records/SYSTEM-EVOLUTION.md AI-General/docs/records/SYSTEM-REJECTED.md AI-General/docs/records/SYSTEM-DEBT.md AI-General/docs/records/SYSTEM-ARCHIVE.md AI-kernel/docs/r-rules/R-04-learning.md"
 
           MISSING=""
           for f in $SRC_FILES; do
@@ -726,8 +726,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792900148
-# W: ai-system-20261024-013#7
+# V: 1792900180
+# W: ai-system-20261025-001#2
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->

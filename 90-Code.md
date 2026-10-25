@@ -1,5 +1,5 @@
 > 體系版本：SV04
-> 生成時間：2026-10-25 22:31:26 (HKT)
+> 生成時間：2026-10-25 23:36:50 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
@@ -5226,7 +5226,7 @@ W: ai-system-20261024-012#57
 
 ```js
 // ============================================
-// annual-report.js — 年度報表（V2 重構版）
+// annual-report.js — 年度報表
 // 位置：pages/annual-report.js
 // 說明：顯示全年總合與月度明細，支援匯出 CSV。
 // ============================================
@@ -5234,7 +5234,7 @@ W: ai-system-20261024-012#57
 import { AppState } from '../config/state.js';
 import { api } from '../domain/api-client.js';
 import { getYearList } from '../config/app-config.js';
-import { renderTable } from '../ui/table.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 
@@ -5243,71 +5243,77 @@ export default {
   _view: 'monthly', // monthly | summary
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    const { year } = AppState.getYearMonth();
+    const currentYear = AppState.getYearMonth().year;
     const years = getYearList();
 
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary);">年度報表</h1>
-        <button type="button" class="btn btn-primary" id="btn-export-csv">
-          <i data-lucide="file-spreadsheet" style="width:16px;height:16px;"></i> 匯出 CSV
-        </button>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <div class="flex items-center gap-8">
-          <select class="input" id="report-year" style="padding:6px 28px 6px 10px;">
-            ${years.map(y => `<option value="${y}" ${String(y) === year ? 'selected' : ''}>${y} 年</option>`).join('')}
-          </select>
-        </div>
-        <div class="flex gap-4" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:4px;">
-          <button type="button" class="btn" data-view="monthly" style="padding:6px 12px; border:none; background:var(--primary); color:#fff; border-radius:var(--radius-sm);">月度明細</button>
-          <button type="button" class="btn" data-view="summary" style="padding:6px 12px; border:none; background:transparent; color:var(--text-secondary); border-radius:var(--radius-sm);">全年總合</button>
-        </div>
-      </div>
-
-      <div id="report-stats" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;"></div>
-      
-      <div id="report-table-container"></div>
+    // 1. 準備 Header Actions
+    const headerActions = `
+      <button type="button" class="btn btn-primary" id="btn-export-csv">
+        <i data-lucide="file-spreadsheet" style="width:16px;height:16px;"></i> 匯出 CSV
+      </button>
     `;
 
-    // 綁定年份切換
+    // 2. 準備控制列 HTML
+    const controlsHtml = `
+      <div class="flex items-center gap-8">
+        <select class="input" id="report-year" style="padding:6px 28px 6px 10px;">
+          ${years.map(y => `<option value="${y}" ${String(y) === currentYear ? 'selected' : ''}>${y} 年</option>`).join('')}
+        </select>
+      </div>
+      <div class="flex gap-4" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:4px;">
+        <button type="button" class="btn" data-view="monthly" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">月度明細</button>
+        <button type="button" class="btn" data-view="summary" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">全年總合</button>
+      </div>
+    `;
+
+    // 3. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '年度報表',
+      headerActions,
+      stats: [], // 年報表不需要額外統計卡
+      controls: controlsHtml,
+      listContainerId: 'report-table-container'
+    });
+
+    // 4. 初始化 UI 狀態
+    this._updateViewButtons();
+    
+    // 5. 綁定事件
     document.getElementById('report-year')?.addEventListener('change', (e) => {
       AppState.setYearMonth(e.target.value, AppState.month);
       this._loadData(Number(e.target.value));
     });
 
-    // 綁定檢視切換
     document.querySelectorAll('button[data-view]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const v = e.target.dataset.view;
         if (this._view === v) return;
         this._view = v;
-        
-        document.querySelectorAll('button[data-view]').forEach(b => {
-          b.style.background = b.dataset.view === v ? 'var(--primary)' : 'transparent';
-          b.style.color = b.dataset.view === v ? '#fff' : 'var(--text-secondary)';
-        });
+        this._updateViewButtons();
         this._renderTable();
       });
     });
 
-    // 綁定匯出
     document.getElementById('btn-export-csv')?.addEventListener('click', () => this._exportCsv());
 
-    await this._loadData(Number(year));
+    // 6. 載入資料
+    await this._loadData(Number(currentYear));
+  },
+
+  _updateViewButtons() {
+    document.querySelectorAll('button[data-view]').forEach(b => {
+      const isActive = b.dataset.view === this._view;
+      b.style.background = isActive ? 'var(--primary)' : 'transparent';
+      b.style.color = isActive ? '#fff' : 'var(--text-secondary)';
+      b.style.fontWeight = isActive ? '600' : '500';
+    });
   },
 
   async _loadData(year) {
-    const statsRoot = document.getElementById('report-stats');
     const tableRoot = document.getElementById('report-table-container');
-    if (!statsRoot || !tableRoot) return;
+    if (!tableRoot) return;
 
-    statsRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">載入資料中…</div>';
-    tableRoot.innerHTML = '';
+    tableRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">載入資料中…</div>';
 
     try {
       const res = await api.fetchAnnualSummaryRange(year, year);
@@ -5316,30 +5322,12 @@ export default {
       }
 
       this._data = res.years[0];
-
-      // 渲染統計卡
-      const d = this._data;
-      statsRoot.innerHTML = `
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">${year} 年度總收入</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success);">${formatHKD(d.totalIncome)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">${year} 年度總支出</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger);">${formatHKD(d.totalExpense)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">${year} 年度淨餘額</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:${d.netBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'};">${formatHKD(d.netBalance)}</div>
-        </div>
-      `;
-
       this._renderTable();
 
     } catch (err) {
       console.error('[annual-report] 載入失敗：', err);
       showToast('載入報表失敗', 'error');
-      statsRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px;">載入失敗</div>';
+      tableRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; text-align:center;">載入失敗</div>';
     }
   },
 
@@ -5350,7 +5338,6 @@ export default {
     const monthlyData = this._data.monthly || [];
     
     if (this._view === 'monthly') {
-      // 月度明細表
       if (monthlyData.length === 0) {
         container.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無月度資料</div>';
         return;
@@ -5363,59 +5350,61 @@ export default {
         netBalance: m.netBalance
       }));
 
-      // 借用 codeList 的欄位來客製化（或直接手寫 HTML）
       container.innerHTML = `
         <div class="glass-card" style="padding:0; overflow:hidden;">
-          <table class="data-table" style="width:100%; border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th>月份</th>
-                <th class="num">總收入</th>
-                <th class="num">總支出</th>
-                <th class="num">淨餘額</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map(r => `
+          <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+            <table class="data-table" style="width:100%; border-collapse:collapse; min-width:500px;">
+              <thead>
                 <tr>
-                  <td>${esc(r.month)}</td>
-                  <td class="num text-emerald mono">${formatHKD(r.totalIncome)}</td>
-                  <td class="num text-red mono">${formatHKD(r.totalExpense)}</td>
-                  <td class="num mono ${r.netBalance >= 0 ? 'text-emerald' : 'text-red'}">${formatHKD(r.netBalance)}</td>
+                  <th style="white-space:nowrap;">月份</th>
+                  <th class="num" style="white-space:nowrap;">總收入</th>
+                  <th class="num" style="white-space:nowrap;">總支出</th>
+                  <th class="num" style="white-space:nowrap;">淨餘額</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${rows.map(r => `
+                  <tr>
+                    <td style="white-space:nowrap;">${esc(r.month)}</td>
+                    <td class="num text-emerald mono" style="white-space:nowrap;">${formatHKD(r.totalIncome)}</td>
+                    <td class="num text-red mono" style="white-space:nowrap;">${formatHKD(r.totalExpense)}</td>
+                    <td class="num mono ${r.netBalance >= 0 ? 'text-emerald' : 'text-red'}" style="white-space:nowrap;">${formatHKD(r.netBalance)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
     } else {
-      // 全年總合表 (只有一列)
       container.innerHTML = `
         <div class="glass-card" style="padding:0; overflow:hidden;">
-          <table class="data-table" style="width:100%; border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th>年度</th>
-                <th class="num">總收入</th>
-                <th class="num">總支出</th>
-                <th class="num">保險平攤</th>
-                <th class="num">銀行餘額</th>
-                <th class="num">基金現值</th>
-                <th class="num">淨餘額</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>${this._data.year} 年</td>
-                <td class="num text-emerald mono">${formatHKD(this._data.totalIncome)}</td>
-                <td class="num text-red mono">${formatHKD(this._data.totalExpense)}</td>
-                <td class="num text-magenta mono">${formatHKD(this._data.yearlyInsuranceTotal)}</td>
-                <td class="num mono">${formatHKD(this._data.bankBalance)}</td>
-                <td class="num mono">${formatHKD(this._data.fundValue)}</td>
-                <td class="num mono ${this._data.netBalance >= 0 ? 'text-emerald' : 'text-red'}">${formatHKD(this._data.netBalance)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+            <table class="data-table" style="width:100%; border-collapse:collapse; min-width:700px;">
+              <thead>
+                <tr>
+                  <th style="white-space:nowrap;">年度</th>
+                  <th class="num" style="white-space:nowrap;">總收入</th>
+                  <th class="num" style="white-space:nowrap;">總支出</th>
+                  <th class="num" style="white-space:nowrap;">保險平攤</th>
+                  <th class="num" style="white-space:nowrap;">銀行餘額</th>
+                  <th class="num" style="white-space:nowrap;">基金現值</th>
+                  <th class="num" style="white-space:nowrap;">淨餘額</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="white-space:nowrap;">${this._data.year} 年</td>
+                  <td class="num text-emerald mono" style="white-space:nowrap;">${formatHKD(this._data.totalIncome)}</td>
+                  <td class="num text-red mono" style="white-space:nowrap;">${formatHKD(this._data.totalExpense)}</td>
+                  <td class="num text-magenta mono" style="white-space:nowrap;">${formatHKD(this._data.yearlyInsuranceTotal)}</td>
+                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.bankBalance)}</td>
+                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.fundValue)}</td>
+                  <td class="num mono ${this._data.netBalance >= 0 ? 'text-emerald' : 'text-red'}" style="white-space:nowrap;">${formatHKD(this._data.netBalance)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
     }
@@ -5436,7 +5425,7 @@ export default {
       lines.push([`${m.monthNum}月`, m.totalIncome, m.totalExpense, m.netBalance].join(','));
     });
 
-    const csv = '\uFEFF' + lines.join('\n'); // 加入 BOM 防止 Excel 亂碼
+    const csv = '\uFEFF' + lines.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -5447,15 +5436,13 @@ export default {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('✅ 已匯出 CSV', 'success');
-  },
-
-  destroy() {}
+  }
 };
 
 /* ═══ EOF ═══
 F: pages/annual-report.js
-V: 1792900570
-W: ai-system-20261024-012#52
+V: 1792901010
+W: ai-system-20261024-012#3
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/annual-report.js === -->
@@ -5468,6 +5455,7 @@ W: ai-system-20261024-012#52
 // ============================================
 // bank.js — 銀行交易頁面
 // 位置：pages/bank.js
+// 說明：顯示銀行帳號清單、交易明細，並計算即時餘額。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -5476,6 +5464,7 @@ import { api } from '../domain/api-client.js';
 import { calcBankBalance, calcTotalBankBalance } from '../domain/bank.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { openModal, closeModal } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
@@ -5489,42 +5478,30 @@ export default {
   _txns: [],
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">銀行交易</h1>
+    // 1. 準備控制列 HTML
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" id="btn-add-txn">
+          <i data-lucide="plus" style="width:14px;height:14px;"></i> 新增交易
+        </button>
+        <button type="button" class="btn btn-ghost" id="btn-add-account">
+          <i data-lucide="plus" style="width:14px;height:14px;"></i> 新增帳號
+        </button>
+        <div id="bank-view-toggle"></div>
       </div>
-
-      <!-- 統計卡 -->
-      <div id="bank-stats" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:24px;"></div>
-
-      <!-- 控制列 -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary" id="btn-add-txn">
-            <i data-lucide="plus" style="width:14px;height:14px;"></i> 新增交易
-          </button>
-          <button type="button" class="btn btn-ghost" id="btn-add-account">
-            <i data-lucide="plus" style="width:14px;height:14px;"></i> 新增帳號
-          </button>
-          <div id="bank-view-toggle"></div>
-        </div>
-        <div id="bank-controls-period"></div>
-      </div>
-      
-      <div style="margin-bottom:24px;">
-        <h2 style="font-size:16px; margin-bottom:12px; color:var(--text-secondary);">銀行帳號清單</h2>
-        <div id="bank-accounts-list"></div>
-      </div>
-
-      <div>
-        <h2 style="font-size:16px; margin-bottom:12px; color:var(--text-secondary);">交易記錄</h2>
-        <div id="bank-txns-list"></div>
-      </div>
+      <div id="bank-controls-period"></div>
     `;
 
+    // 2. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '銀行交易',
+      stats: [],
+      controls: controlsHtml,
+      listTitle: '帳號與交易記錄',
+      listContainerId: 'bank-content-container'
+    });
+
+    // 3. 綁定控制列事件
     renderYearMonth('bank-controls-period', { includeAllMonth: true }, () => {
       this._renderData();
     });
@@ -5536,6 +5513,7 @@ export default {
     document.getElementById('btn-add-account')?.addEventListener('click', () => this._openAccountModal());
     document.getElementById('btn-add-txn')?.addEventListener('click', () => this._openTxnModal());
 
+    // 4. 監聽資料
     this._unsubAccounts = listenBankAccounts((accounts) => {
       this._accounts = accounts;
       this._renderData();
@@ -5548,10 +5526,8 @@ export default {
   },
 
   _renderData() {
-    const statsRoot = document.getElementById('bank-stats');
-    const accRoot = document.getElementById('bank-accounts-list');
-    const txnRoot = document.getElementById('bank-txns-list');
-    if (!statsRoot || !accRoot || !txnRoot) return;
+    const contentRoot = document.getElementById('bank-content-container');
+    if (!contentRoot) return;
 
     const { year, month } = AppState.getYearMonth();
     const y = year || String(new Date().getFullYear());
@@ -5568,21 +5544,56 @@ export default {
     const inTotal = monthTxns.filter(t => t.type === 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
     const outTotal = monthTxns.filter(t => t.type !== 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
-    statsRoot.innerHTML = `
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">家庭總餘額</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:${totalBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; white-space:nowrap;">${formatHKD(totalBalance)}</div>
+    // 更新統計卡
+    const statsContainer = document.getElementById('page-stats-container');
+    if (statsContainer) {
+      statsContainer.style.display = 'grid';
+      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
+      
+      statsContainer.innerHTML = `
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="landmark" style="width:14px;height:14px;"></i> 家庭總餘額
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:${totalBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; white-space:nowrap;">
+            ${formatHKD(totalBalance)}
+          </div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="arrow-down-circle" style="width:14px;height:14px;"></i> 本月入帳
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">
+            ${formatHKD(inTotal)}
+          </div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="arrow-up-circle" style="width:14px;height:14px;"></i> 本月出帳
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">
+            ${formatHKD(outTotal)}
+          </div>
+        </div>
+      `;
+    }
+
+    // 渲染清單內容
+    contentRoot.innerHTML = `
+      <div style="margin-bottom:24px;">
+        <h3 style="font-size:15px; margin-bottom:12px; color:var(--text-primary);">銀行帳號清單</h3>
+        <div id="bank-accounts-list"></div>
       </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">本月入帳</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(inTotal)}</div>
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">本月出帳</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(outTotal)}</div>
+      <div>
+        <h3 style="font-size:15px; margin-bottom:12px; color:var(--text-primary);">交易記錄</h3>
+        <div id="bank-txns-list"></div>
       </div>
     `;
 
+    const accRoot = document.getElementById('bank-accounts-list');
+    const txnRoot = document.getElementById('bank-txns-list');
+
+    // 渲染帳號 (使用動態餘額)
     const accCols = getColumns('bankAccounts');
     accCols.push({ id: 'dynamicBalance', label: '當前餘額', type: 'number' });
     const accResolvers = getResolvers('bankAccounts');
@@ -5631,10 +5642,12 @@ export default {
       `;
     }
 
+    // 渲染交易明細
+    const sortedTxns = [...monthTxns].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     if (currentView === 'card') {
-      renderCards({ container: txnRoot, rows: monthTxns.sort((a, b) => (b.date || '').localeCompare(a.date || '')), columnsKey: 'bankTransactions', emptyText: '本月尚無交易紀錄' });
+      renderCards({ container: txnRoot, rows: sortedTxns, columnsKey: 'bankTransactions', emptyText: '本月尚無交易紀錄' });
     } else {
-      renderTable({ container: txnRoot, rows: monthTxns.sort((a, b) => (b.date || '').localeCompare(a.date || '')), columnsKey: 'bankTransactions', emptyText: '本月尚無交易紀錄' });
+      renderTable({ container: txnRoot, rows: sortedTxns, columnsKey: 'bankTransactions', emptyText: '本月尚無交易紀錄' });
     }
 
     if (window.lucide) window.lucide.createIcons();
@@ -5719,8 +5732,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/bank.js
-V: 1792900860
-W: ai-system-20261024-012#77
+V: 1792901030
+W: ai-system-20261024-012#5
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/bank.js === -->
@@ -5733,6 +5746,7 @@ W: ai-system-20261024-012#77
 // ============================================
 // code-list.js — 編號對照清單
 // 位置：pages/code-list.js
+// 說明：整合所有基礎實體的編號與名稱，方便對照與搜尋。
 // ============================================
 
 import {
@@ -5742,6 +5756,7 @@ import {
 } from '../db/index.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { AppState } from '../config/state.js';
 import { showToast } from '../ui/toast.js';
 import { esc } from '../ui/format.js';
@@ -5750,41 +5765,37 @@ export default {
   _allRows: [],
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">編號對照清單</h1>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+    // 1. 準備控制列 HTML
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div id="code-view-toggle"></div>
       </div>
-
-      <div class="glass-card" style="padding:16px; margin-bottom:20px;">
-        <div style="display:grid; grid-template-columns:100px 1fr; gap:12px; align-items:center; max-width:400px;">
-          <label style="font-size:13px; color:var(--text-secondary); text-align:right;">篩選類型：</label>
-          <select class="input" id="code-filter-type" style="width:100%; padding:8px;">
-            <option value="all">全部</option>
-            <option value="member">成員</option>
-            <option value="bank">銀行</option>
-            <option value="bankAccount">銀行帳號</option>
-            <option value="category">支出類別</option>
-            <option value="item">支出項目</option>
-            <option value="payment">支付方式</option>
-            <option value="company">保險公司</option>
-            <option value="policy">保單</option>
-            <option value="fund">基金</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="code-list-container">
-        <div style="text-align:center; padding:40px; color:var(--text-muted);">載入資料中…</div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <label style="font-size:13px; color:var(--text-secondary); white-space:nowrap;">篩選類型：</label>
+        <select class="input" id="code-filter-type" style="padding:8px; min-width:120px;">
+          <option value="all">全部</option>
+          <option value="member">成員</option>
+          <option value="bank">銀行</option>
+          <option value="bankAccount">銀行帳號</option>
+          <option value="category">支出類別</option>
+          <option value="item">支出項目</option>
+          <option value="payment">支付方式</option>
+          <option value="company">保險公司</option>
+          <option value="policy">保單</option>
+          <option value="fund">基金</option>
+        </select>
       </div>
     `;
 
+    // 2. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '編號對照清單',
+      stats: [], 
+      controls: controlsHtml,
+      listContainerId: 'code-list-container'
+    });
+
+    // 3. 綁定事件
     renderViewToggle('code-view-toggle', () => {
       const filterType = document.getElementById('code-filter-type').value;
       this._renderList(filterType);
@@ -5794,10 +5805,16 @@ export default {
       this._renderList(e.target.value);
     });
 
+    // 4. 載入資料
     await this._loadData();
   },
 
   async _loadData() {
+    const listRoot = document.getElementById('code-list-container');
+    if (!listRoot) return;
+
+    listRoot.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">載入資料中…</div>';
+
     try {
       const [
         members, banks, bankAccounts, categories, items, 
@@ -5844,7 +5861,7 @@ export default {
     } catch (err) {
       console.error('[code-list] 載入失敗：', err);
       showToast('載入編號清單失敗', 'error');
-      document.getElementById('code-list-container').innerHTML = '<div style="color:var(--accent-danger); text-align:center; padding:20px;">載入失敗</div>';
+      listRoot.innerHTML = '<div style="color:var(--accent-danger); text-align:center; padding:20px;">載入失敗</div>';
     }
   },
 
@@ -5876,8 +5893,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/code-list.js
-V: 1792900870
-W: ai-system-20261024-012#78
+V: 1792901050
+W: ai-system-20261024-012#7
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/code-list.js === -->
@@ -5888,9 +5905,8 @@ W: ai-system-20261024-012#78
 
 ```js
 // ============================================
-// dashboard.js — 總覽儀表板（V2 重構版）
+// dashboard.js — 總覽儀表板
 // 位置：pages/dashboard.js
-// 說明：完全使用「年度總覽」API，確保金額與舊版一致。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -5898,34 +5914,26 @@ import { api } from '../domain/api-client.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 import { renderTable } from '../ui/table.js';
+import { renderPageLayout } from '../ui/layout.js';
 
 export default {
   _unsubYM: null,
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">總覽儀表板</h1>
-        <a href="#/annual-report" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
-          <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> 查看年度報表
-        </a>
-      </div>
-
-      <!-- 統計卡容器 -->
-      <div id="dashboard-stats" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-bottom:24px;"></div>
-      
-      <!-- 年度總覽表格 -->
-      <div class="table-container" style="margin-bottom:24px;">
-        <div style="padding:16px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="calendar" style="width:18px;height:18px;color:var(--primary);"></i>
-          <span style="font-weight:700; font-size:15px;">年度總覽（前後 2 年）</span>
-        </div>
-        <div id="dashboard-annual-table" style="padding:16px;"></div>
-      </div>
+    // 1. 繪製骨架 (標題與按鈕)
+    const headerActions = `
+      <a href="#/annual-report" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+        <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> 查看年度報表
+      </a>
     `;
+
+    renderPageLayout({
+      title: '總覽儀表板',
+      headerActions,
+      stats: [], // 稍後補上
+      listTitle: '年度總覽（前後 2 年）',
+      listContainerId: 'dashboard-annual-table'
+    });
 
     this._unsubYM = AppState.on('ym-change', () => {
       this._loadData();
@@ -5936,29 +5944,29 @@ export default {
 
   async _loadData() {
     const { year } = AppState.getYearMonth();
-    const statsRoot = document.getElementById('dashboard-stats');
+    const statsContainer = document.getElementById('page-stats-container');
     const tableRoot = document.getElementById('dashboard-annual-table');
     
-    if (!statsRoot || !tableRoot) return;
+    if (!statsContainer || !tableRoot) return;
 
-    statsRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted); grid-column:span 2;">載入統計資料…</div>';
+    statsContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted); grid-column:1/-1;">載入統計資料…</div>';
     tableRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">載入年度資料…</div>';
 
     try {
       const y = Number(year);
-      // 直接抓取年度資料 (前後 2 年)
       const annualRes = await api.fetchAnnualSummaryRange(y - 2, y + 2);
       
-      // 找出當年的資料
       const currentYearData = (annualRes.years || []).find(d => d.year === y) || {
         totalIncome: 0, totalExpense: 0, netBalance: 0, bankBalance: 0, fundValue: 0, monthly: []
       };
 
-      // 計算有紀錄的月數
       const monthCount = (currentYearData.monthly || []).filter(m => m.totalExpense > 0).length;
 
-      // 渲染統計卡 (對齊舊版：內邊距 16px，字體 20px)
-      const statsHtml = [
+      // 更新統計卡
+      statsContainer.style.display = 'grid';
+      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)';
+      
+      statsContainer.innerHTML = [
         { 
           title: '家庭總餘額', 
           val: (currentYearData.bankBalance || 0) + (currentYearData.fundValue || 0), 
@@ -5988,7 +5996,7 @@ export default {
           hint: (currentYearData.netBalance || 0) >= 0 ? '收支平衡' : '支出大於收入' 
         }
       ].map(card => `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:8px;">
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
           <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
             <i data-lucide="${card.icon}" style="width:14px;height:14px;"></i> ${esc(card.title)}
           </div>
@@ -6000,9 +6008,8 @@ export default {
           </div>
         </div>
       `).join('');
-      statsRoot.innerHTML = statsHtml;
 
-      // 渲染年度表格
+      // 渲染表格
       if (annualRes && annualRes.years) {
         const tableRows = annualRes.years.map(yData => ({
           year: yData.year,
@@ -6027,7 +6034,7 @@ export default {
     } catch (err) {
       console.error('[dashboard] 載入失敗：', err);
       showToast('載入總覽資料失敗', 'error');
-      statsRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; grid-column:span 2;">載入失敗</div>';
+      statsContainer.innerHTML = '<div style="color:var(--accent-danger); padding:20px; grid-column:1/-1;">載入失敗</div>';
       tableRoot.innerHTML = '';
     }
   },
@@ -6042,8 +6049,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/dashboard.js
-V: 1792900800
-W: ai-system-20261024-012#71
+V: 1792901000
+W: ai-system-20261024-012#2
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/dashboard.js === -->
@@ -6054,38 +6061,39 @@ W: ai-system-20261024-012#71
 
 ```js
 // ============================================
-// input-center.js — 綜合輸入中心（V2 重構版 - 補回 Tab）
+// input-center.js — 綜合輸入中心
 // 位置：pages/input-center.js
+// 說明：整合新增操作與各類別清單預覽。
 // ============================================
 
 import { AppState } from '../config/state.js';
-import { listenAllExpenses } from '../db/index.js';
+import { 
+  listenAllExpenses, 
+  getInsurancePoliciesOnce, 
+  getFundsOnce, 
+  getBankAccountsOnce 
+} from '../db/index.js';
 import { saveIncome, savePersonalIncome, addExpense, removeExpense } from '../db/write.js';
 import { getList as getMembersList } from '../config/entity-registry.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { openModal, closeModal, openConfirm } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
-import { todayISO, esc } from '../ui/format.js';
+import { todayISO, formatHKD, esc } from '../ui/format.js';
 import { RESERVED_IDS } from '../config/constants.js';
 
 export default {
   _unsubExpenses: null,
   _expenses: [],
   _activeTab: 'expense', // expense | insurance | fund | bank
+  _otherData: { insurance: [], fund: [], bank: [] },
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">綜合輸入中心</h1>
-      </div>
-
-      <!-- 第一排：操作按鈕 -->
-      <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    // 1. 準備 Header Actions (新增按鈕)
+    const headerActions = `
+      <div style="display:flex; flex-wrap:wrap; gap:12px;">
         <button type="button" class="btn btn-primary" id="btn-add-expense">
           <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增支出
         </button>
@@ -6096,108 +6104,107 @@ export default {
           <i data-lucide="wallet" style="width:16px;height:16px;"></i> 個人收入
         </button>
       </div>
-
-      <!-- 第二排：Tab 切換 -->
-      <div id="ic-tabs" class="flex items-center gap-8 mb-16" style="overflow-x:auto; padding-bottom:4px;">
-        <button type="button" class="btn" data-tab="expense" style="white-space:nowrap;">支出</button>
-        <button type="button" class="btn" data-tab="insurance" style="white-space:nowrap;">保險</button>
-        <button type="button" class="btn" data-tab="fund" style="white-space:nowrap;">基金</button>
-        <button type="button" class="btn" data-tab="bank" style="white-space:nowrap;">銀行</button>
-      </div>
-
-      <!-- 第三排：表格/卡片切換 -->
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-        <div id="ic-view-toggle"></div>
-      </div>
-
-      <!-- 第四排：年/月 與 列表 -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-        <h2 style="font-size:16px; margin:0; color:var(--text-secondary);" id="ic-list-title">最近支出紀錄</h2>
-        <div id="ic-controls-period"></div>
-      </div>
-
-      <div id="ic-expense-list"></div>
     `;
 
-    // 初始化 Tab 狀態
-    this._updateTabStyles();
+    // 2. 準備控制列 (Tab + 年月 + 檢視切換)
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:4px; width:100%;">
+        <button type="button" class="btn" data-tab="expense">支出</button>
+        <button type="button" class="btn" data-tab="insurance">保險</button>
+        <button type="button" class="btn" data-tab="fund">基金</button>
+        <button type="button" class="btn" data-tab="bank">銀行</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap;">
+        <div id="ic-view-toggle"></div>
+        <div id="ic-controls-period"></div>
+      </div>
+    `;
 
-    // 綁定 Tab 事件
+    // 3. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '綜合輸入中心',
+      headerActions,
+      stats: [],
+      controls: controlsHtml,
+      listTitle: '資料清單',
+      listContainerId: 'ic-content-container'
+    });
+
+    // 4. 初始化 Tab 與按鈕狀態
+    this._updateTabStyles();
+    
     document.getElementById('ic-tabs')?.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-tab]');
       if (!btn) return;
       this._activeTab = btn.dataset.tab;
       this._updateTabStyles();
-      
-      // 更新標題與渲染
-      const titleEl = document.getElementById('ic-list-title');
-      if (this._activeTab === 'expense') titleEl.textContent = '最近支出紀錄';
-      else if (this._activeTab === 'insurance') titleEl.textContent = '保險清單（唯讀預覽）';
-      else if (this._activeTab === 'fund') titleEl.textContent = '基金清單（唯讀預覽）';
-      else if (this._activeTab === 'bank') titleEl.textContent = '銀行帳號（唯讀預覽）';
-      
-      this._renderList();
+      this._renderCurrentTab();
     });
 
-    // 渲染年月與切換
+    // 5. 渲染年月與切換器
     renderYearMonth('ic-controls-period', { includeAllMonth: true }, () => {
-      this._renderList();
+      this._renderCurrentTab();
     });
 
     renderViewToggle('ic-view-toggle', () => {
-      this._renderList();
+      this._renderCurrentTab();
     });
 
-    // 綁定按鈕
+    // 6. 綁定操作按鈕
     document.getElementById('btn-add-expense')?.addEventListener('click', () => this._openExpenseModal());
     document.getElementById('btn-add-contribution')?.addEventListener('click', () => this._openIncomeModal('contribution'));
     document.getElementById('btn-add-income')?.addEventListener('click', () => this._openIncomeModal('personal'));
 
-    // 監聽支出資料
+    // 7. 載入資料
     const { year } = AppState.getYearMonth();
     this._unsubExpenses = listenAllExpenses((list) => {
       this._expenses = list.filter(e => e.year === String(year));
-      this._renderList();
+      if (this._activeTab === 'expense') this._renderExpenseTab();
     });
+
+    // 背景載入其他 Tab 的資料
+    this._loadOtherTabsData();
   },
 
   _updateTabStyles() {
-    const tabsRoot = document.getElementById('ic-tabs');
-    if (!tabsRoot) return;
-
-    tabsRoot.querySelectorAll('button[data-tab]').forEach(btn => {
+    const controlsRoot = document.querySelector('#app-content > div[style*="flex-wrap"]');
+    if (!controlsRoot) return;
+    controlsRoot.querySelectorAll('button[data-tab]').forEach(btn => {
       const isActive = btn.dataset.tab === this._activeTab;
-      if (isActive) {
-        btn.className = 'btn btn-primary';
-      } else {
-        btn.className = 'btn btn-ghost';
-      }
+      btn.className = isActive ? 'btn btn-primary' : 'btn btn-ghost';
     });
   },
 
-  _renderList() {
-    const listRoot = document.getElementById('ic-expense-list');
-    if (!listRoot) return;
-
-    // 這裡為了精簡，若切換到非「支出」的 Tab，我們暫時顯示提示，因為那些頁面有自己的列表
-    // 後續若要完整實作，可在此處替換成對應的清單
-    if (this._activeTab !== 'expense') {
-      listRoot.innerHTML = `
-        <div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">
-          請點擊上方按鈕切換到該頁面進行管理，或點擊「新增」直接建立資料。
-        </div>
-      `;
-      return;
+  async _loadOtherTabsData() {
+    try {
+      this._otherData.insurance = await getInsurancePoliciesOnce();
+      this._otherData.fund = await getFundsOnce();
+      this._otherData.bank = await getBankAccountsOnce();
+      if (this._activeTab !== 'expense') this._renderCurrentTab();
+    } catch (e) {
+      console.error('[input-center] 載入其他資料失敗：', e);
     }
+  },
+
+  _renderCurrentTab() {
+    if (this._activeTab === 'expense') this._renderExpenseTab();
+    else if (this._activeTab === 'insurance') this._renderInsuranceTab();
+    else if (this._activeTab === 'fund') this._renderFundTab();
+    else if (this._activeTab === 'bank') this._renderBankTab();
+  },
+
+  _renderExpenseTab() {
+    const listRoot = document.getElementById('ic-content-container');
+    if (!listRoot) return;
+    const titleEl = document.getElementById('page-list-title') || document.querySelector('h2');
+    if (titleEl) titleEl.textContent = '最近支出紀錄';
 
     const { year, month } = AppState.getYearMonth();
     let displayData = this._expenses.filter(e => e.year === String(year));
-    
     if (month !== 'all') {
       const mm = String(month).padStart(2, '0');
       displayData = displayData.filter(e => e.month === mm);
     }
-
     displayData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     if (displayData.length === 0) {
@@ -6211,7 +6218,6 @@ export default {
     `;
 
     const currentView = AppState.getCurrentView() || 'table';
-
     if (currentView === 'card') {
       renderCards({ container: listRoot, rows: displayData, columnsKey: 'recentExpense', renderActions });
     } else {
@@ -6237,6 +6243,66 @@ export default {
         showToast('編輯功能開發中', 'info');
       }
     });
+  },
+
+  _renderInsuranceTab() {
+    const listRoot = document.getElementById('ic-content-container');
+    if (!listRoot) return;
+    const titleEl = document.getElementById('page-list-title') || document.querySelector('h2');
+    if (titleEl) titleEl.textContent = '保險清單 (唯讀預覽)';
+
+    const data = this._otherData.insurance;
+    if (data.length === 0) {
+      listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無保險資料</div>';
+      return;
+    }
+
+    const currentView = AppState.getCurrentView() || 'table';
+    if (currentView === 'card') {
+      renderCards({ container: listRoot, rows: data, columnsKey: 'insurancePolicies' });
+    } else {
+      renderTable({ container: listRoot, rows: data, columnsKey: 'insurancePolicies' });
+    }
+  },
+
+  _renderFundTab() {
+    const listRoot = document.getElementById('ic-content-container');
+    if (!listRoot) return;
+    const titleEl = document.getElementById('page-list-title') || document.querySelector('h2');
+    if (titleEl) titleEl.textContent = '基金清單 (唯讀預覽)';
+
+    const data = this._otherData.fund;
+    if (data.length === 0) {
+      listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無基金資料</div>';
+      return;
+    }
+
+    const currentView = AppState.getCurrentView() || 'table';
+    if (currentView === 'card') {
+      renderCards({ container: listRoot, rows: data, columnsKey: 'funds' });
+    } else {
+      renderTable({ container: listRoot, rows: data, columnsKey: 'funds' });
+    }
+  },
+
+  _renderBankTab() {
+    const listRoot = document.getElementById('ic-content-container');
+    if (!listRoot) return;
+    const titleEl = document.getElementById('page-list-title') || document.querySelector('h2');
+    if (titleEl) titleEl.textContent = '銀行帳號 (唯讀預覽)';
+
+    const data = this._otherData.bank;
+    if (data.length === 0) {
+      listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無銀行帳號</div>';
+      return;
+    }
+
+    const currentView = AppState.getCurrentView() || 'table';
+    if (currentView === 'card') {
+      renderCards({ container: listRoot, rows: data, columnsKey: 'bankAccounts' });
+    } else {
+      renderTable({ container: listRoot, rows: data, columnsKey: 'bankAccounts' });
+    }
   },
 
   _openExpenseModal() {
@@ -6335,8 +6401,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/input-center.js
-V: 1792900890
-W: ai-system-20261024-012#80
+V: 1792901070
+W: ai-system-20261024-012#9
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/input-center.js === -->
@@ -6694,6 +6760,7 @@ W: ai-system-20261024-012#57
 // ============================================
 // member-report.js — 成員收支明細
 // 位置：pages/member-report.js
+// 說明：顯示各成員的收支與保險平攤狀況。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -6701,31 +6768,34 @@ import { api } from '../domain/api-client.js';
 import { getMembersOnce } from '../db/index.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 import { RESERVED_IDS } from '../config/constants.js';
 
 export default {
   _data: [],
+  _unsubYM: null,
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">成員收支明細</h1>
-      </div>
-
-      <div id="mr-stats" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px;"></div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+    // 1. 準備控制列 HTML
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div id="mr-view-toggle"></div>
-        <div id="mr-controls-period"></div>
       </div>
-      
-      <div id="mr-list-container"></div>
+      <div id="mr-controls-period"></div>
     `;
+
+    // 2. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '成員收支明細',
+      stats: [], 
+      controls: controlsHtml,
+      listContainerId: 'mr-list-container'
+    });
+
+    // 3. 綁定控制列事件
+    this._unsubYM = AppState.on('ym-change', () => this._loadData());
 
     renderYearMonth('mr-controls-period', { includeAllMonth: true }, () => {
       this._loadData();
@@ -6735,22 +6805,30 @@ export default {
       this._renderList();
     });
 
+    // 4. 載入資料
     await this._loadData();
   },
 
   async _loadData() {
-    const statsRoot = document.getElementById('mr-stats');
-    if (!statsRoot) return;
+    const listRoot = document.getElementById('mr-list-container');
+    if (!listRoot) return;
+
+    listRoot.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">載入資料中…</div>';
 
     const { year, month } = AppState.getYearMonth();
-    statsRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted); grid-column:span 4;">載入資料中…</div>';
 
     try {
+      // 取得當月（或全年）的 summary
       const s = await api.summary(year, month);
+      
+      // 取得成員列表
       const members = await getMembersOnce();
 
+      // 處理每位成員的資料
       const rows = members.map(m => {
         const mData = s.perMember[m.id] || { sum: 0, items: [] };
+        
+        // 計算該成員的保險平攤與一般支出
         let insurance = 0;
         let expense = 0;
         mData.items.forEach(item => {
@@ -6758,13 +6836,24 @@ export default {
           else expense += item.amount;
         });
 
+        // 取得該成員的收入與個人收入
         const income = Number(s.incomeBreakdown?.[m.id]) || 0;
         const personalIncome = Number(s.personalIncomeBreakdown?.[m.id]) || 0;
+        
         const net = income + personalIncome - expense - insurance;
 
-        return { id: m.id, name: m.name, income, personalIncome, expense, insurance, net };
+        return {
+          id: m.id,
+          name: m.name,
+          income,
+          personalIncome,
+          expense,
+          insurance,
+          net
+        };
       });
 
+      // 加入「家庭共用」 (如果有支出)
       const sharedData = s.perMember[RESERVED_IDS.SHARED_MEMBER] || { sum: 0, items: [] };
       let sharedIns = 0, sharedExp = 0;
       sharedData.items.forEach(item => {
@@ -6773,41 +6862,64 @@ export default {
       });
       
       if (sharedExp > 0 || sharedIns > 0) {
-        rows.push({ id: RESERVED_IDS.SHARED_MEMBER, name: '🏠 家庭共用', income: 0, personalIncome: 0, expense: sharedExp, insurance: sharedIns, net: -(sharedExp + sharedIns) });
+        rows.push({
+          id: RESERVED_IDS.SHARED_MEMBER,
+          name: '🏠 家庭共用',
+          income: 0,
+          personalIncome: 0,
+          expense: sharedExp,
+          insurance: sharedIns,
+          net: -(sharedExp + sharedIns)
+        });
       }
 
       this._data = rows;
 
-      const tIncome = rows.reduce((sum, r) => sum + r.income, 0);
-      const tPersonal = rows.reduce((sum, r) => sum + r.personalIncome, 0);
-      const tExpense = rows.reduce((sum, r) => sum + r.expense, 0);
-      const tIns = rows.reduce((sum, r) => sum + r.insurance, 0);
+      // 更新統計卡
+      const statsContainer = document.getElementById('page-stats-container');
+      if (statsContainer) {
+        statsContainer.style.display = 'grid';
+        statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)';
+        
+        const tIncome = rows.reduce((sum, r) => sum + r.income, 0);
+        const tPersonal = rows.reduce((sum, r) => sum + r.personalIncome, 0);
+        const tExpense = rows.reduce((sum, r) => sum + r.expense, 0);
+        const tIns = rows.reduce((sum, r) => sum + r.insurance, 0);
 
-      statsRoot.innerHTML = `
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">家用轉入</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(tIncome)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">個人收入</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(tPersonal)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">總支出</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(tExpense)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">保險平攤</div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-warm); white-space:nowrap;">${formatHKD(tIns)}</div>
-        </div>
-      `;
+        statsContainer.innerHTML = `
+          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="trending-up" style="width:14px;height:14px;"></i> 家用轉入
+            </div>
+            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(tIncome)}</div>
+          </div>
+          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="wallet" style="width:14px;height:14px;"></i> 個人收入
+            </div>
+            <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(tPersonal)}</div>
+          </div>
+          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="trending-down" style="width:14px;height:14px;"></i> 總支出
+            </div>
+            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(tExpense)}</div>
+          </div>
+          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="shield" style="width:14px;height:14px;"></i> 保險平攤
+            </div>
+            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-warm); white-space:nowrap;">${formatHKD(tIns)}</div>
+          </div>
+        `;
+      }
 
       this._renderList();
 
     } catch (err) {
       console.error('[member-report] 載入失敗：', err);
       showToast('載入成員報表失敗', 'error');
-      statsRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; grid-column:span 4;">載入失敗</div>';
+      listRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; text-align:center;">載入失敗</div>';
     }
   },
 
@@ -6829,13 +6941,15 @@ export default {
     }
   },
 
-  destroy() {}
+  destroy() {
+    if (this._unsubYM) { try { this._unsubYM(); } catch (e) {} this._unsubYM = null; }
+  }
 };
 
 /* ═══ EOF ═══
 F: pages/member-report.js
-V: 1792900870
-W: ai-system-20261024-012#78
+V: 1792901060
+W: ai-system-20261024-012#8
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/member-report.js === -->
@@ -6847,6 +6961,8 @@ W: ai-system-20261024-012#78
 ```js
 // ============================================
 // portfolio.js — 基金投資表
+// 位置：pages/portfolio.js
+// 說明：顯示基金持倉與盈虧。整合保險基金的成本估算。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -6855,6 +6971,7 @@ import { api } from '../domain/api-client.js';
 import { findPolicyByFund, getCostMapForPolicy, calcFundPnl } from '../domain/fund.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { openModal, closeModal, openConfirm } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
@@ -6868,29 +6985,26 @@ export default {
   _snapshots: {},
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">基金投資表</h1>
+    // 1. 準備控制列 HTML
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" id="btn-add-fund">
+          <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增基金
+        </button>
+        <div id="portfolio-controls-view"></div>
       </div>
-
-      <div id="portfolio-stats" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:24px;"></div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary" id="btn-add-fund">
-            <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增基金
-          </button>
-          <div id="portfolio-controls-view"></div>
-        </div>
-        <div id="portfolio-controls-period"></div>
-      </div>
-
-      <div id="portfolio-list-container"></div>
+      <div id="portfolio-controls-period"></div>
     `;
 
+    // 2. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '基金投資表',
+      stats: [],
+      controls: controlsHtml,
+      listContainerId: 'portfolio-list-container'
+    });
+
+    // 3. 綁定控制列事件
     renderYearMonth('portfolio-controls-period', { includeAllMonth: false }, () => {
       this._renderListAndStats();
     });
@@ -6903,6 +7017,7 @@ export default {
       this._openFundModal();
     });
 
+    // 4. 監聽資料
     this._unsubFunds = listenFunds((funds) => {
       this._funds = funds;
       this._loadSnapshotsAndRender();
@@ -6927,9 +7042,8 @@ export default {
   },
 
   _renderListAndStats() {
-    const statsRoot = document.getElementById('portfolio-stats');
     const listRoot = document.getElementById('portfolio-list-container');
-    if (!statsRoot || !listRoot) return;
+    if (!listRoot) return;
 
     const { year, month } = AppState.getYearMonth();
     const y = year || String(new Date().getFullYear());
@@ -6946,6 +7060,7 @@ export default {
       const snap = this._snapshots[f.id];
       const currentValue = snap ? (Number(snap.shares) * Number(snap.nav) * 7.8) : (Number(f.currentValue) || 0);
       let estimatedCost = 0;
+      
       if (f.type === 'insurance') {
         const policy = findPolicyByFund(f, this._policies);
         if (policy && costMaps[policy.id]) estimatedCost = costMaps[policy.id][f.id] || 0;
@@ -6953,9 +7068,11 @@ export default {
       } else {
         estimatedCost = Number(f.cost) || 0;
       }
+      
       const pnlInfo = calcFundPnl({ currentValue }, estimatedCost);
       totalCost += estimatedCost;
       totalValue += currentValue;
+      
       return { ...f, currentValue: Math.round(currentValue), cost: estimatedCost, pnl: Math.round(pnlInfo.pnl) };
     });
 
@@ -6963,21 +7080,35 @@ export default {
     const pnlCls = totalPnl >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
     const pnlPct = totalCost > 0 ? ((totalPnl / totalCost) * 100).toFixed(2) : '0.00';
 
-    statsRoot.innerHTML = `
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">總投入成本</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--text-primary); white-space:nowrap;">${formatHKD(totalCost)}</div>
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">總現時價值 (HKD)</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(totalValue)}</div>
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">總帳面盈虧</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:${pnlCls}; white-space:nowrap;">${totalPnl >= 0 ? '+' : ''}${formatHKD(totalPnl)} (${pnlPct}%)</div>
-      </div>
-    `;
+    // 更新統計卡 (使用 layout.js 建立的固定容器)
+    const statsContainer = document.getElementById('page-stats-container');
+    if (statsContainer) {
+      statsContainer.style.display = 'grid';
+      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
+      
+      statsContainer.innerHTML = `
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="wallet" style="width:14px;height:14px;"></i> 總投入成本
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--text-primary); white-space:nowrap;">${formatHKD(totalCost)}</div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="line-chart" style="width:14px;height:14px;"></i> 總現時價值 (HKD)
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(totalValue)}</div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="trending-up" style="width:14px;height:14px;"></i> 總帳面盈虧
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:${pnlCls}; white-space:nowrap;">${totalPnl >= 0 ? '+' : ''}${formatHKD(totalPnl)} (${pnlPct}%)</div>
+        </div>
+      `;
+    }
 
+    // 渲染列表
     if (displayFunds.length === 0) {
       listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無基金資料</div>';
       return;
@@ -7067,8 +7198,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/portfolio.js
-V: 1792900850
-W: ai-system-20261024-012#76
+V: 1792901020
+W: ai-system-20261024-012#4
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/portfolio.js === -->
@@ -7216,6 +7347,7 @@ W: ai-system-20261024-012#54
 // ============================================
 // settlements.js — 結算清單
 // 位置：pages/settlements.js
+// 說明：整合一般支出與保險扣款，提供確認與取消功能。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -7223,6 +7355,7 @@ import { api } from '../domain/api-client.js';
 import { mergeSettlementData } from '../domain/settlement.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { openConfirm, openModal, closeModal } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
@@ -7232,33 +7365,31 @@ export default {
   _currentYear: '',
   _currentMonth: '',
   _data: [],
+  _unsubYM: null,
 
   async render() {
-    const content = document.getElementById('app-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">結算清單</h1>
-      </div>
-
-      <div id="settle-stats" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:24px;"></div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="settle-hide-done" style="cursor:pointer;">
-            <label for="settle-hide-done" style="font-size:13px; color:var(--text-secondary); cursor:pointer;">隱藏已處理</label>
-          </div>
-          <div id="settle-view-toggle"></div>
+    // 1. 準備控制列 HTML
+    const controlsHtml = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="settle-hide-done" style="cursor:pointer;">
+          <label for="settle-hide-done" style="font-size:13px; color:var(--text-secondary); cursor:pointer;">隱藏已處理</label>
         </div>
-        <div id="settle-controls-period"></div>
+        <div id="settle-view-toggle"></div>
       </div>
-      
-      <div id="settle-list-container"></div>
+      <div id="settle-controls-period"></div>
     `;
 
-    AppState.on('ym-change', () => this._loadData());
+    // 2. 呼叫統一引擎繪製骨架
+    renderPageLayout({
+      title: '結算清單',
+      stats: [],
+      controls: controlsHtml,
+      listContainerId: 'settle-list-container'
+    });
+
+    // 3. 綁定控制列事件
+    this._unsubYM = AppState.on('ym-change', () => this._loadData());
 
     renderYearMonth('settle-controls-period', { includeAllMonth: true }, () => {
       this._loadData();
@@ -7272,6 +7403,7 @@ export default {
       this._renderListAndStats();
     });
 
+    // 4. 載入資料
     await this._loadData();
   },
 
@@ -7288,6 +7420,7 @@ export default {
     try {
       const res = await api.fetchSettlementsYear(year);
       const memberExpenses = [];
+      
       if (month !== 'all') {
         const mm = String(month).padStart(2, '0');
         (res.memberExpensesByMonth[mm] || []).forEach(e => memberExpenses.push({ ...e, year, month: mm }));
@@ -7317,14 +7450,13 @@ export default {
     } catch (err) {
       console.error('[settlements] 載入失敗：', err);
       showToast('載入結算資料失敗', 'error');
-      listRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px;">載入失敗</div>';
+      listRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; text-align:center;">載入失敗</div>';
     }
   },
 
   _renderListAndStats() {
-    const statsRoot = document.getElementById('settle-stats');
     const listRoot = document.getElementById('settle-list-container');
-    if (!statsRoot || !listRoot || !this._data) return;
+    if (!listRoot || !this._data) return;
 
     const hideDone = document.getElementById('settle-hide-done')?.checked;
     const currentView = AppState.getCurrentView() || 'table';
@@ -7337,23 +7469,36 @@ export default {
     const pt = pending.reduce((s, r) => s + (Number(r.amount) || 0), 0);
     const dt = done.reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-    statsRoot.innerHTML = `
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">待處理金額</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(pt)}</div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${pending.length} 筆</div>
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">已處理金額</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(dt)}</div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${done.length} 筆</div>
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">總計</div>
-        <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(pt + dt)}</div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${displayData.length} 筆</div>
-      </div>
-    `;
+    // 更新統計卡 (使用 layout.js 建立的固定容器)
+    const statsContainer = document.getElementById('page-stats-container');
+    if (statsContainer) {
+      statsContainer.style.display = 'grid';
+      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
+      
+      statsContainer.innerHTML = `
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="clock" style="width:14px;height:14px;"></i> 待處理金額
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(pt)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${pending.length} 筆</div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="check-circle" style="width:14px;height:14px;"></i> 已處理金額
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(dt)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${done.length} 筆</div>
+        </div>
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="calculator" style="width:14px;height:14px;"></i> 總計
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(pt + dt)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${displayData.length} 筆</div>
+        </div>
+      `;
+    }
 
     if (displayData.length === 0) {
       listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">此條件下無資料</div>';
@@ -7387,6 +7532,8 @@ export default {
       else if (action === 'ins-unsync') this._handleInsuranceUnsync(row);
       else if (action === 'settle') this._handleSettle(row);
     });
+
+    if (window.lucide) window.lucide.createIcons();
   },
 
   async _handleInsuranceSync(row) {
@@ -7435,13 +7582,15 @@ export default {
     });
   },
 
-  destroy() {}
+  destroy() {
+    if (this._unsubYM) { try { this._unsubYM(); } catch (e) {} this._unsubYM = null; }
+  }
 };
 
 /* ═══ EOF ═══
 F: pages/settlements.js
-V: 1792900860
-W: ai-system-20261024-012#77
+V: 1792901040
+W: ai-system-20261024-012#6
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./pages/settlements.js === -->
@@ -8269,7 +8418,7 @@ export function setPageTitle(title) {
 }
 
 /* ============================================
-   統一頁面排版引擎 (取代原本的 page-layout.js)
+   統一頁面排版引擎
    ============================================ */
 export function renderPageLayout(config) {
   const content = document.getElementById('app-content');
@@ -8289,7 +8438,7 @@ export function renderPageLayout(config) {
   if (stats && stats.length > 0) {
     const gridCols = window.innerWidth < 768 ? 2 : statsCols;
     statsHtml = `
-      <div style="display:grid; grid-template-columns:repeat(${gridCols}, 1fr); gap:16px; margin-bottom:24px;">
+      <div id="page-stats-container" style="display:grid; grid-template-columns:repeat(${gridCols}, 1fr); gap:16px; margin-bottom:24px;">
         ${stats.map(card => `
           <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
             <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
@@ -8303,6 +8452,9 @@ export function renderPageLayout(config) {
         `).join('')}
       </div>
     `;
+  } else {
+    // 若無統計卡，依然保留一個隱藏的容器，方便後續動態塞入
+    statsHtml = `<div id="page-stats-container" style="display:none;"></div>`;
   }
 
   const controlsHtml = controls ? `
@@ -8371,8 +8523,8 @@ function _toggleSidebar(open) {
 
 /* ═══ EOF ═══
 F: ui/layout.js
-V: 1792900910
-W: ai-system-20261024-012#82
+V: 1792901000
+W: ai-system-20261024-012#2
 ═══ EOF ═══ */```
 
 <!-- === FILE END: ./ui/layout.js === -->
