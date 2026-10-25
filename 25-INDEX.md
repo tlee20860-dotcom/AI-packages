@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 23:14:08 (HKT)
+> 生成時間：2026-10-25 08:56:11 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,13 +21,13 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900078 | ai-system-20261024-012#124 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900085 | ai-system-20261024-012#138 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900101 | ai-system-20261024-013#2 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900077 | ai-system-20261024-012#121 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792900039 | ai-system-20261024-012#52 |
-| AI-kernel | docs/r-rules/R-02-patterns.md | 1792575600 | ai-system-20261021-003#61 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792900042 | ai-system-20261024-012#60 |
-| AI-kernel | docs/r-rules/R-04-learning.md | 1792900068 | ai-system-20261024-012#103 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792900043 | ai-system-20261024-012#62 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792900100 | ai-system-20261024-013#1 |
+| AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792900103 | ai-system-20261024-013#4 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1792900106 | ai-system-20261024-013#6 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792900107 | ai-system-20261024-013#7 |
 | AI-kernel | docs/review/CHK-E.md | 1792612002 | ai-system-20261022-007#90#2 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -40,7 +40,7 @@
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792581006 | ai-system-20261021-004#6 |
 | AI-kernel | docs/skills/W/W-06-sop.md | 1792668000 | webapp-20261022-014#1 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
-| AI-kernel | docs/u-profile/U-00-profile.md | 1792900046 | ai-system-20261024-012#65 |
+| AI-kernel | docs/u-profile/U-00-profile.md | 1792900104 | ai-system-20261024-013#4 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
 | 目錄/路徑 | 檔案名稱 |
@@ -74,43 +74,12 @@
 | AI-OS | meta.json |
 | AI-WEB-APP-Family | .github/PATCH.md |
 | AI-WEB-APP-Family | .github/workflows/apply-patch.yml |
+| AI-WEB-APP-Family | .github/workflows/cleanup.yml |
 | AI-WEB-APP-Family | .github/workflows/notify.yml |
-| AI-WEB-APP-Family | .gitignore |
-| AI-WEB-APP-Family | app.css |
-| AI-WEB-APP-Family | functions/api/[[path]].js |
-| AI-WEB-APP-Family | functions/api/_api-core.js |
-| AI-WEB-APP-Family | icons/icon.svg |
 | AI-WEB-APP-Family | index.html |
-| AI-WEB-APP-Family | js/app-core.js |
-| AI-WEB-APP-Family | js/app-data.js |
-| AI-WEB-APP-Family | js/app-domain.js |
-| AI-WEB-APP-Family | js/app-entities.js |
-| AI-WEB-APP-Family | js/app-pages-core.js |
-| AI-WEB-APP-Family | js/app-pages-loader.js |
-| AI-WEB-APP-Family | js/app-pages-reports.js |
-| AI-WEB-APP-Family | js/app-ui.js |
-| AI-WEB-APP-Family | js/app-widgets.js |
-| AI-WEB-APP-Family | js/components/data-card.js |
-| AI-WEB-APP-Family | js/components/data-table.js |
-| AI-WEB-APP-Family | js/components/page-controls.js |
-| AI-WEB-APP-Family | js/components/stats-cards.js |
-| AI-WEB-APP-Family | js/entity/entity-defs.js |
-| AI-WEB-APP-Family | js/entity/entity-helpers.js |
-| AI-WEB-APP-Family | js/entity/entity-modal.js |
-| AI-WEB-APP-Family | js/entity/funds-allocation.js |
-| AI-WEB-APP-Family | js/pages/admin.js |
-| AI-WEB-APP-Family | js/pages/annual-report.js |
-| AI-WEB-APP-Family | js/pages/code-list.js |
-| AI-WEB-APP-Family | js/pages/dashboard.js |
-| AI-WEB-APP-Family | js/pages/finance.js |
-| AI-WEB-APP-Family | js/pages/input-center.js |
-| AI-WEB-APP-Family | js/pages/member-report.js |
-| AI-WEB-APP-Family | js/pages/portfolio.js |
-| AI-WEB-APP-Family | js/pages/settings.js |
-| AI-WEB-APP-Family | js/pages/settlements.js |
-| AI-WEB-APP-Family | manifest-app.json |
+| AI-WEB-APP-Family | manifest.json |
 | AI-WEB-APP-Family | meta.json |
-| AI-WEB-APP-Family | sw-app.js |
+| AI-WEB-APP-Family | sw.js |
 | old-AI-WA-FAMILY | .github/PATCH.md |
 | old-AI-WA-FAMILY | .github/workflows/apply-patch.yml |
 | old-AI-WA-FAMILY | .github/workflows/notify.yml |
@@ -234,12 +203,13 @@
 | 01-AP.md | 20 |
 | 02-RP.md | 60 |
 | 03-UP.md | 8 |
+| 04-GC.md | 4 |
 | 10-WP.md | 28 |
 | 20-SP-Sys.md | 32 |
 | 21-INFRA.md | 44 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 52 |
-| 90-Code.md | 276 |
+| 90-Code.md | 8 |
 | 90-P.md | 20 |
 | 90-SP.md | 24 |
 | 90-old-Code.md | 952 |

@@ -1,4 +1,4 @@
-> 生成時間：2026-10-24 23:14:08 (HKT)
+> 生成時間：2026-10-25 08:56:10 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -362,6 +362,23 @@ jobs:
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
+      - name: "Step 1.8: 生成通用決策包 (04-GC.md)"
+        run: |
+          OUTPUT="build-repo/04-GC.md"
+          SOURCE="AI-General/docs/records/GENERAL-CONCLUSION.md"
+          
+          echo "> 生成時間：$(TZ=Asia/Hong_Kong date '+%Y-%m-%d %H:%M:%S') (HKT)" > "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          echo "# 通用對話決策總集 (GENERAL CONCLUSION)" >> "$OUTPUT"
+          echo "" >> "$OUTPUT"
+          
+          if [ -f "$SOURCE" ]; then
+            bash .github/workflows/append_file.sh "$SOURCE" "$OUTPUT" || true
+          else
+            echo "⚠️ 找不到 $SOURCE，生成空包。" >> "$OUTPUT"
+            echo "<!-- 無通用決策紀錄 -->" >> "$OUTPUT"
+          fi
+
       - name: "Step 1.9: 生成 I 包 (00-IP.md)"
         run: |
           OUTPUT="build-repo/00-IP.md"
@@ -685,8 +702,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792900083
-# W: ai-system-20261024-012#136
+# V: 1792900108
+# W: ai-system-20261024-013#8
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
