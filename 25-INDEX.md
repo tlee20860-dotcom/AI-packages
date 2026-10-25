@@ -1,4 +1,4 @@
-> 生成時間：2026-10-25 08:56:11 (HKT)
+> 生成時間：2026-10-25 09:14:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -14,14 +14,15 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792900054 | ai-system-20261024-012#73 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792900055 | ai-system-20261024-012#74 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792900056 | ai-system-20261024-012#75 |
+| AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900109 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792900079 | ai-system-20261024-012#125 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792700007 | ai-system-20261022-009#7 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900072 | ai-system-20261024-012#109 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792900071 | ai-system-20261024-012#108 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900053 | ai-system-20261024-012#72 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900078 | ai-system-20261024-012#124 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900110 | ai-system-20261024-013#10 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792900114 | ai-system-20261024-013#18 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900115 | ai-system-20261024-013#21 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900111 | ai-system-20261024-013#11 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900101 | ai-system-20261024-013#2 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900113 | ai-system-20261024-013#17 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900077 | ai-system-20261024-012#121 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900100 | ai-system-20261024-013#1 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
@@ -208,7 +209,7 @@
 | 20-SP-Sys.md | 32 |
 | 21-INFRA.md | 44 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 52 |
+| 24-HISTORY.md | 56 |
 | 90-Code.md | 8 |
 | 90-P.md | 20 |
 | 90-SP.md | 24 |
