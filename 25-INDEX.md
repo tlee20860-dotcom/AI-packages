@@ -1,4 +1,4 @@
-> 生成時間：2026-10-25 18:39:21 (HKT)
+> 生成時間：2026-10-25 19:00:06 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -17,16 +17,16 @@
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900109 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792900079 | ai-system-20261024-012#125 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792700007 | ai-system-20261022-009#7 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900110 | ai-system-20261024-013#10 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900130 | ai-system-20261024-013#3 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792900114 | ai-system-20261024-013#18 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900115 | ai-system-20261024-013#21 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900125 | ai-system-20261024-013#25 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792900052 | ai-system-20261024-012#71 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900124 | ai-system-20261024-013#19 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792900128 | ai-system-20261024-013#1 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900123 | ai-system-20261024-013#18 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792900117 | ai-system-20261024-013#2 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792900129 | ai-system-20261024-013#2 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792900126 | ai-system-20261024-013#26 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792900121 | ai-system-20261024-013#13 |
 | AI-kernel | docs/review/CHK-E.md | 1792612002 | ai-system-20261022-007#90#2 |
@@ -253,7 +253,7 @@
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 28 |
-| 20-SP-Sys.md | 32 |
+| 20-SP-Sys.md | 36 |
 | 21-INFRA.md | 44 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 56 |
