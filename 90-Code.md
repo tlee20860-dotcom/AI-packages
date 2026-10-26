@@ -1,5 +1,5 @@
 > 體系版本：SV04
-> 生成時間：2026-10-25 23:36:50 (HKT)
+> 生成時間：2026-10-26 09:14:36 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
@@ -609,6 +609,16 @@ export const COLUMNS = {
     { id: 'amount', label: '金額', defaultVisible: true, defaultWidth: 110, type: 'number', sortable: true },
     { id: 'status', label: '狀態', defaultVisible: true, defaultWidth: 120, sortable: true, filterable: true },
   ],
+
+  /* 🆕 成員收支明細 (Member Report) */
+  memberReport: [
+    { id: 'name', label: '成員', defaultVisible: true, defaultWidth: 140, sortable: true },
+    { id: 'income', label: '家用轉入', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'personalIncome', label: '個人收入', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'expense', label: '一般支出', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'insurance', label: '保險平攤', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'net', label: '淨結餘', defaultVisible: true, defaultWidth: 140, type: 'number', sortable: true },
+  ],
 };
 
 /* ============================================
@@ -709,6 +719,18 @@ export const RESOLVERS = {
     amount: (v) => formatHKD(v),
     status: (v) => `<span class="badge ${statusBadgeClass(v)}">${esc(statusLabel(v))}</span>`,
   },
+
+  /* 🆕 成員收支明細 */
+  memberReport: {
+    name: (v, r) => r.id === RESERVED_IDS.SHARED_MEMBER
+      ? '🏠 家庭共用'
+      : esc(v || '（未知成員）'),
+    income: (v) => `<span class="mono text-emerald">${formatHKD(v)}</span>`,
+    personalIncome: (v) => `<span class="mono text-primary">${formatHKD(v)}</span>`,
+    expense: (v) => `<span class="mono text-red">${formatHKD(v)}</span>`,
+    insurance: (v) => `<span class="mono text-magenta">${formatHKD(v)}</span>`,
+    net: (v) => `<span class="mono ${v >= 0 ? 'text-emerald' : 'text-red'}" style="font-weight:700;">${formatHKD(v)}</span>`,
+  },
 };
 
 /* ============================================
@@ -727,9 +749,9 @@ export function getResolvers(key) {
 
 /* ═══ EOF ═══
 F: config/columns.js
-V: 1792900550
-W: ai-system-20261024-012#50
-═══ EOF ═══ */```
+V: 1792901230
+W: webapp-20261025-001#4
+═══ */```
 
 <!-- === FILE END: ./config/columns.js === -->
 
@@ -1132,6 +1154,7 @@ export const AppState = {
   currentFamilyId: '',
   currentFamilyName: '',
   memberAccount: null,
+  currentMemberId: '', // 🆕 補齊 V1 狀態
   
   role: '',
   canInput: false,
@@ -1177,6 +1200,7 @@ export const AppState = {
     this.currentFamilyId = '';
     this.currentFamilyName = '';
     this.memberAccount = null;
+    this.currentMemberId = ''; // 🆕 重置
     this.role = '';
     this.canInput = false;
     this.displayName = '';
@@ -1252,15 +1276,31 @@ export const AppState = {
       this.role = account.role || this.role;
       this.canInput = account.canInput !== false;
       this.displayName = account.displayName || this.displayName;
+      if (account.memberId) {
+        this.currentMemberId = account.memberId;
+      }
     } else {
       this.role = '';
       this.canInput = false;
       this.displayName = '';
+      this.currentMemberId = '';
     }
     this.emit('member-account-change', this.memberAccount);
   },
 
   getMemberAccount() { return this.memberAccount; },
+
+  /* 🆕 補齊 Member ID 相關 API */
+  getCurrentMemberId() {
+    if (this.currentMemberId) return this.currentMemberId;
+    if (this.memberAccount && this.memberAccount.memberId) return this.memberAccount.memberId;
+    return '';
+  },
+
+  setCurrentMemberId(memberId) {
+    this.currentMemberId = memberId || '';
+    this.emit('current-member-change', this.currentMemberId);
+  },
 
   /* ============================================
      家庭資訊
@@ -1338,9 +1378,9 @@ export const AppState = {
 
 /* ═══ EOF ═══
 F: config/state.js
-V: 1792900180
-W: ai-system-20261024-012#13
-═══ EOF ═══ */```
+V: 1792901760
+W: webapp-20261025-001#26
+═══ */```
 
 <!-- === FILE END: ./config/state.js === -->
 
@@ -1703,7 +1743,52 @@ W: ai-system-20261024-012#12
 .mono { font-family: var(--font-mono); }
 
 /* ============================================
-   6. 響應式 (Mobile)
+   6. Modal (彈出視窗) - 本次新增修復
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.2s ease;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0);
+}
+
+/* ============================================
+   7. 響應式 (Mobile)
    ============================================ */
 @media (max-width: 768px) {
   .sidebar { position: fixed; top: 0; left: 0; height: 100vh; transform: translateX(-100%); }
@@ -1746,9 +1831,9 @@ W: ai-system-20261024-012#12
 
 /* ═══ EOF ═══
 F: css/app.css
-V: 1792900780
-W: ai-system-20261024-012#69
-═══ EOF ═══ */```
+V: 1792901300
+W: webapp-20261025-001#11
+═══ */```
 
 <!-- === FILE END: ./css/app.css === -->
 
@@ -3460,7 +3545,7 @@ W: ai-system-20261024-012#24
 
 import { auth } from '../config/firebase.js';
 import { AppState } from '../config/state.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { initAppConfig, watchConfigChanges } from '../config/app-config.js';
 import { initEntityRegistry } from '../config/entity-registry.js';
 import { isSuperAdmin } from '../domain/auth.js';
@@ -3489,63 +3574,76 @@ async function bootstrap() {
       const superAdmin = isSuperAdmin(user);
       AppState.setSuperAdmin(superAdmin);
 
-      let hasFamily = false;
-
-      if (!superAdmin) {
-        try {
-          const token = await user.getIdToken();
-          const res = await fetch('/api/lookup-family', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({})
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            if (data.familyId) {
-              AppState.setFamily(data.familyId, data.familyName || '我的家庭');
-              AppState.setMemberAccount(data.memberAccount);
-              hasFamily = true;
-            }
-          } else {
-            showToast(`載入家庭失敗 (${res.status})`, 'error');
-          }
-        } catch (err) {
-          console.error('[main] 取得家庭資訊失敗：', err);
-          showToast('網路異常，無法載入家庭資訊', 'error');
-        }
-
-        if (!hasFamily) {
-          window.location.hash = ROUTES.LOGIN;
-          if (loadingEl) loadingEl.style.display = 'none';
-          initRouter(ROUTES.LOGIN);
-          return;
-        }
-      } else {
+      // 超級管理員登入：不查家庭，不載入家庭設定，直接去管理頁
+      if (superAdmin) {
         AppState.setRole(ROLES.SUPERADMIN);
         AppState.setDisplayName('超級管理員');
+        updateNavbar();
+        
+        let initialPath = window.location.hash.replace('#', '');
+        // 若超管當前不在 admin 路由，強制轉向 admin
+        if (!initialPath || initialPath === ROUTES.LOGIN || initialPath === ROUTES.DASHBOARD) {
+          window.location.hash = ROUTES.ADMIN;
+          initialPath = ROUTES.ADMIN;
+        }
+        if (loadingEl) loadingEl.style.display = 'none';
+        initRouter(initialPath);
+        return;
       }
 
-      if (AppState.getFamilyId()) {
-        try {
-          await initAppConfig();
-          watchConfigChanges();
-          initEntityRegistry();
-        } catch (initErr) {
-          console.error('[main] 設定初始化失敗：', initErr);
+      // 一般成員登入：查詢家庭
+      let hasFamily = false;
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch('/api/lookup-family', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({})
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.familyId) {
+            AppState.setFamily(data.familyId, data.familyName || '我的家庭');
+            AppState.setMemberAccount(data.memberAccount);
+            hasFamily = true;
+          }
+        } else {
+          showToast(`載入家庭失敗 (${res.status})`, 'error');
         }
+      } catch (err) {
+        console.error('[main] 取得家庭資訊失敗：', err);
+        showToast('網路異常，無法載入家庭資訊', 'error');
+      }
+
+      // 若一般成員無家庭，退回登入頁
+      if (!hasFamily) {
+        window.location.hash = ROUTES.LOGIN;
+        if (loadingEl) loadingEl.style.display = 'none';
+        initRouter(ROUTES.LOGIN);
+        return;
+      }
+
+      // 初始化家庭相關配置與實體快取
+      try {
+        await initAppConfig();
+        watchConfigChanges();
+        initEntityRegistry();
+      } catch (initErr) {
+        console.error('[main] 設定初始化失敗：', initErr);
       }
 
       updateNavbar();
       
-      // 2. 決定初始路徑 (修正黑屏核心)
+      // 一般成員決定初始路徑
       let initialPath = window.location.hash.replace('#', '');
-      if (!initialPath || initialPath === ROUTES.LOGIN) {
+      // 若一般成員誤入 admin 頁，強制轉向 dashboard
+      if (!initialPath || initialPath === ROUTES.LOGIN || initialPath === ROUTES.ADMIN) {
         initialPath = ROUTES.DASHBOARD;
         window.location.hash = initialPath;
       }
       
-      // 3. 啟動路由並強制執行
+      if (loadingEl) loadingEl.style.display = 'none';
       initRouter(initialPath);
 
     } else {
@@ -3557,10 +3655,9 @@ async function bootstrap() {
         initialPath = ROUTES.LOGIN;
         window.location.hash = initialPath;
       }
+      if (loadingEl) loadingEl.style.display = 'none';
       initRouter(initialPath);
     }
-
-    if (loadingEl) loadingEl.style.display = 'none';
   });
 }
 
@@ -3571,9 +3668,9 @@ bootstrap().catch(err => {
 
 /* ═══ EOF ═══
 F: engine/main.js
-V: 1792900810
-W: ai-system-20261024-012#72
-═══ EOF ═══ */```
+V: 1792901800
+W: webapp-20261025-001#28
+═══ */```
 
 <!-- === FILE END: ./engine/main.js === -->
 
@@ -3585,9 +3682,10 @@ W: ai-system-20261024-012#72
 // ============================================
 // router.js — SPA 前端路由（V2 重構版）
 // 位置：engine/router.js
+// 說明：負責頁面載入、路由守衛（權限/登入判定）與頁面生命週期管理。
 // ============================================
 
-import { ROUTES } from '../config/constants.js';
+import { ROUTES, ROLES } from '../config/constants.js';
 import { AppState } from '../config/state.js';
 import { setContent, setPageTitle, updateSidebarActive } from '../ui/layout.js';
 
@@ -3602,7 +3700,7 @@ const ROUTES_MAP = {
   [ROUTES.ANNUAL_REPORT]:{ module: () => import('../pages/annual-report.js'),title: '年度報表', auth: true, family: true },
   [ROUTES.MEMBER_REPORT]:{ module: () => import('../pages/member-report.js'),title: '成員收支明細', auth: true, family: true },
   [ROUTES.SETTINGS]:     { module: () => import('../pages/settings.js'),     title: '系統設定', auth: true, family: false },
-  [ROUTES.ADMIN]:        { module: () => import('../admin/admin.js'),        title: '平台管理', auth: true, family: false, role: 'superadmin' },
+  [ROUTES.ADMIN]:        { module: () => import('../admin/admin.js'),        title: '平台管理', auth: true, family: false, role: ROLES.SUPERADMIN },
   [ROUTES.LOGIN]:        { module: () => import('../pages/login.js'),        title: '登入', auth: false, family: false },
 };
 
@@ -3647,34 +3745,64 @@ async function _handleRoute(targetPath = null) {
     return;
   }
 
-  // 路由守衛
-  if (routeConfig.auth && !AppState.currentUser) {
+  // ============================================
+  // 路由守衛 (Route Guards)
+  // ============================================
+  
+  const isLoggedIn = !!AppState.currentUser;
+  const isSuper = AppState.getRole() === ROLES.SUPERADMIN;
+  const hasFamily = !!AppState.getFamilyId();
+
+  // 1. 若目標是登入頁，但已登入：直接踢回對應的首頁
+  if (path === ROUTES.LOGIN && isLoggedIn) {
+    window.location.hash = isSuper ? ROUTES.ADMIN : ROUTES.DASHBOARD;
+    return;
+  }
+
+  // 2. 需要登入，但未登入
+  if (routeConfig.auth && !isLoggedIn) {
     window.location.hash = ROUTES.LOGIN;
     return;
   }
-  
-  if (routeConfig.family && !AppState.getFamilyId()) {
-    window.location.hash = ROUTES.LOGIN;
-    return;
-  }
-  
+
+  // 3. 需要特定角色 (如超級管理員)，但權限不符
   if (routeConfig.role && AppState.getRole() !== routeConfig.role) {
+    // 不是超管卻想進 admin，踢回 dashboard
     window.location.hash = ROUTES.DASHBOARD;
     return;
   }
 
+  // 4. 需要家庭，但沒有家庭 (且不是超管)
+  if (routeConfig.family && !hasFamily) {
+    if (isSuper) {
+      // 超管沒有家庭是正常的，若超管誤入家庭頁面，導向管理頁
+      window.location.hash = ROUTES.ADMIN;
+    } else {
+      // 一般成員沒有家庭，退回登入
+      window.location.hash = ROUTES.LOGIN;
+    }
+    return;
+  }
+
+  // ============================================
+  // 執行頁面切換
+  // ============================================
+
   setPageTitle(routeConfig.title);
   updateSidebarActive(path);
 
+  // 銷毀上一個頁面
   if (_currentPage && typeof _currentPage.destroy === 'function') {
     try { _currentPage.destroy(); } catch (e) { console.error('[router] 頁面銷毀失敗：', e); }
     _currentPage = null;
   }
 
+  // 顯示載入中 (登入頁除外，避免閃爍)
   if (path !== ROUTES.LOGIN) {
     setContent('<div style="text-align:center; padding:40px; color:var(--text-muted);">載入中…</div>');
   }
 
+  // 動態載入模組並渲染
   try {
     const module = await routeConfig.module();
     const page = module.default;
@@ -3693,6 +3821,7 @@ async function _handleRoute(targetPath = null) {
         <h2 style="color:var(--accent-danger); margin-bottom:12px;">載入失敗</h2>
         <p class="text-muted">${err.message}</p>
         <p style="font-size:12px; margin-top:8px;">請檢查 Console 或重新整理頁面。</p>
+        <button type="button" class="btn btn-ghost" style="margin-top:16px;" onclick="window.location.reload()">重新整理</button>
       </div>
     `);
   }
@@ -3711,9 +3840,9 @@ function _render404(path) {
 
 /* ═══ EOF ═══
 F: engine/router.js
-V: 1792900830
-W: ai-system-20261024-012#74
-═══ EOF ═══ */```
+V: 1792901810
+W: webapp-20261025-001#29
+═══ */```
 
 <!-- === FILE END: ./engine/router.js === -->
 
@@ -4304,6 +4433,45 @@ export async function handleEntityPost(context) {
     if (auth instanceof Response) return auth;
     const { token } = auth;
 
+    // 特殊處理：expense 路徑含年 / 月 / 成員三層，非 ENTITY_PATH 單層列表
+    if (entityType === 'expense') {
+      if (action !== 'update') {
+        return errorResponse('INVALID_BODY', 'expense 僅支援 update（新增請走 db/write 的 addExpense）');
+      }
+      if (!id) return errorResponse('MISSING_FIELDS', '缺少 id');
+
+      const year = String(extra?.year || '');
+      const month = String(extra?.month || '').padStart(2, '0');
+      const memberId = String(extra?.memberId || '');
+
+      if (!year || !month || month === '00' || !memberId) {
+        return errorResponse('MISSING_FIELDS', 'expense 更新需 year / month / memberId');
+      }
+      if (!/^\d{4}$/.test(year)) {
+        return errorResponse('INVALID_BODY', 'year 需為四位數字');
+      }
+      if (!/^(0[1-9]|1[0-2])$/.test(month)) {
+        return errorResponse('INVALID_BODY', 'month 需為 01~12');
+      }
+
+      const expensePath = `families/${familyId}/expenses/${year}/${month}/member_expenses/${memberId}/${id}`;
+      const existing = await dbGet(expensePath, token);
+      if (!existing) return errorResponse('NOT_FOUND', `找不到支出：${id}`);
+
+      const patch = {};
+      if (extra.status !== undefined) patch.status = extra.status;
+      if (extra.name !== undefined) patch.name = String(extra.name);
+      if (extra.amount !== undefined) patch.amount = roundInt(extra.amount);
+      if (extra.date !== undefined) patch.date = String(extra.date);
+      if (!Object.keys(patch).length) {
+        return errorResponse('INVALID_BODY', '無可更新欄位');
+      }
+      patch.updatedAt = Date.now();
+
+      await dbPatch(expensePath, patch, token);
+      return successResponse({ id });
+    }
+
     if (!entityType || !ENTITY_PATH[entityType]) return errorResponse('INVALID_BODY', `未知的 entityType：${entityType}`);
     const listPath = `families/${familyId}/${ENTITY_PATH[entityType]}`;
 
@@ -4547,9 +4715,9 @@ function _findDoneStatus(statuses, category) {
 
 /* ═══ EOF ═══
 F: api/handlers-core.js
-V: 1792900370
-W: ai-system-20261024-012#32
-═══ EOF ═══ */```
+V: 1792901200
+W: webapp-20261025-001#1
+═══ */```
 
 <!-- === FILE END: ./functions/api/handlers-core.js === -->
 
@@ -5177,6 +5345,260 @@ W: ai-system-20261024-012#57
 
 <!-- === FILE END: ./index.html === -->
 
+<!-- === FILE START: ./lib/expense-modal.js === -->
+
+## 📄 ./lib/expense-modal.js
+
+```js
+// ============================================
+// expense-modal.js — 支出編輯 Modal
+// 位置：lib/expense-modal.js
+// 說明：處理「新增支出」與「編輯支出」的完整表單。
+//       包含類別與項目聯動、成員/類別/支付方式的「+」快速新增。
+// ============================================
+
+import { createForm } from '../ui/form.js';
+import { openModal, closeModal } from '../ui/modal.js';
+import { showToast } from '../ui/toast.js';
+import { getList } from '../config/entity-registry.js';
+import { addExpense, updateExpense, removeExpense } from '../db/write.js';
+import { AppState } from '../config/state.js';
+import { RESERVED_IDS } from '../config/constants.js';
+import { todayISO } from '../ui/format.js';
+
+const MODAL_ID = 'app-expense-modal';
+
+/**
+ * 開啟支出 Modal
+ * @param {Object} opts
+ * @param {Object} [opts.row] - 若為編輯模式，傳入現有資料
+ * @param {Function} [opts.onSuccess] - 成功後的回呼
+ */
+export async function openExpenseModal(opts = {}) {
+  try {
+    const { row = null, onSuccess } = opts;
+    const isEdit = !!row;
+
+    const existingModal = document.getElementById(MODAL_ID);
+    if (existingModal) existingModal.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = MODAL_ID;
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:560px; max-height:90vh; overflow-y:auto;">
+        <h2 class="modal-title" style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary); border-left:4px solid var(--primary); padding-left:12px;">
+          ${isEdit ? '編輯支出' : '新增支出'}
+        </h2>
+        <div id="${MODAL_ID}-form-root"></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) { closeModal(MODAL_ID); overlay.remove(); }
+    });
+
+    // 準備選項資料（加入防呆，確保拿到的是陣列）
+    const members = getList('members') || [];
+    const memberOpts = members.map(m => ({ value: m.id, label: m.name }));
+    memberOpts.push({ value: RESERVED_IDS.SHARED_MEMBER, label: '🏠 家庭共用' });
+
+    const categories = getList('categories') || [];
+    const catOpts = categories.map(c => ({ value: c.id, label: c.name }));
+
+    const payments = getList('payments') || [];
+    const payOpts = payments.map(p => ({ value: p.id, label: p.name }));
+
+    const banks = getList('bank_accounts') || [];
+    const bankOpts = banks.map(b => ({ value: b.id, label: b.name }));
+
+    // 初始項目選項
+    const items = getList('items') || [];
+    let initialItemOpts = [];
+    if (isEdit && row.categoryId) {
+      initialItemOpts = items.filter(i => i.categoryId === row.categoryId).map(i => ({ value: i.id, label: i.name }));
+    }
+
+    // 表單欄位定義
+    const fields = [
+      { 
+        id: 'memberId', 
+        label: '成員', 
+        type: 'select', 
+        required: true, 
+        options: memberOpts,
+        plusEntity: 'member',
+        onPlusReload: (result, formEl) => _reloadSelect(formEl, 'memberId', 'members', '請選擇成員', result)
+      },
+      { id: 'name', label: '項目名稱', type: 'text', required: true, placeholder: '例如：買書、看醫生' },
+      { id: 'amount', label: '金額 (HK$)', type: 'number', required: true, min: 0, step: 1 },
+      { id: 'date', label: '日期 (YYYY-MM-DD)', type: 'date', required: false },
+      { 
+        id: 'categoryId', 
+        label: '類別', 
+        type: 'select', 
+        required: false, 
+        options: catOpts,
+        plusEntity: 'category',
+        onPlusReload: (result, formEl) => _reloadSelect(formEl, 'categoryId', 'categories', '請選擇類別', result)
+      },
+      { 
+        id: 'itemId', 
+        label: '項目', 
+        type: 'select', 
+        required: false, 
+        options: initialItemOpts
+      },
+      { 
+        id: 'paymentMethodId', 
+        label: '支付方式', 
+        type: 'select', 
+        required: false, 
+        options: payOpts,
+        plusEntity: 'payment',
+        onPlusReload: (result, formEl) => _reloadSelect(formEl, 'paymentMethodId', 'payments', '請選擇支付方式', result)
+      },
+      { 
+        id: 'bankId', 
+        label: '出帳銀行 (可選)', 
+        type: 'select', 
+        required: false, 
+        options: bankOpts 
+      }
+    ];
+
+    // 取得預設成員 ID（相容 V1/V2 寫法）
+    const defaultMemberId = AppState.getCurrentMemberId 
+      ? AppState.getCurrentMemberId() 
+      : (AppState.getMemberAccount() ? AppState.getMemberAccount().memberId : '');
+
+    // 預設值
+    const initialData = isEdit ? {
+      memberId: row.memberId || '',
+      name: row.name || '',
+      amount: row.amount || 0,
+      date: row.date || '',
+      categoryId: row.categoryId || '',
+      itemId: row.itemId || '',
+      paymentMethodId: row.paymentMethodId || '',
+      bankId: row.bankId || '',
+    } : {
+      memberId: defaultMemberId || (memberOpts.length > 0 ? memberOpts[0].value : ''),
+      amount: 0,
+      date: todayISO(),
+    };
+
+    createForm({
+      container: `${MODAL_ID}-form-root`,
+      fields,
+      initialData,
+      submitText: isEdit ? '儲存' : '新增',
+      onCancel: () => { closeModal(MODAL_ID); overlay.remove(); },
+      onSubmit: async (data) => {
+        try {
+          const payload = {
+            ...data,
+            amount: Math.round(Number(data.amount) || 0), // 金額防呆
+          };
+
+          const { year, month } = AppState.getYearMonth();
+          const y = year || String(new Date().getFullYear());
+          const m = month === 'all' ? String(new Date().getMonth() + 1).padStart(2, '0') : month;
+
+          if (isEdit) {
+            if (payload.memberId !== row.memberId) {
+              await removeExpense(row.year, row.month, row.memberId, row.id);
+              await addExpense(row.year, row.month, payload.memberId, payload);
+            } else {
+              await updateExpense(row.year, row.month, row.memberId, row.id, payload);
+            }
+            showToast('✅ 已更新支出', 'success');
+          } else {
+            await addExpense(y, m, payload.memberId, payload);
+            showToast('✅ 已新增支出', 'success');
+          }
+
+          closeModal(MODAL_ID);
+          overlay.remove();
+          if (typeof onSuccess === 'function') onSuccess();
+        } catch (err) {
+          console.error('[expense-modal] 儲存失敗：', err);
+          showToast('儲存失敗：' + err.message, 'error');
+        }
+      }
+    });
+
+    // 綁定類別與項目的聯動邏輯
+    const catEl = document.getElementById('field-categoryId');
+    const itemEl = document.getElementById('field-itemId');
+    if (catEl && itemEl) {
+      catEl.addEventListener('change', () => {
+        const catId = catEl.value;
+        const currentItems = getList('items') || [];
+        const filtered = catId ? currentItems.filter(i => i.categoryId === catId) : [];
+        
+        itemEl.innerHTML = '<option value="">— 請選擇項目 —</option>' +
+          filtered.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+        
+        itemEl.value = '';
+      });
+    }
+
+    openModal(MODAL_ID);
+    if (window.lucide) window.lucide.createIcons();
+    
+  } catch (err) {
+    console.error('[expense-modal] 初始化失敗：', err);
+    // 將錯誤往外拋，讓呼叫端 (input-center.js) 的 try-catch 捕捉並 alert
+    throw err;
+  }
+}
+
+/* ============================================
+   內部輔助：重新載入下拉選單（供 + 號使用）
+   ============================================ */
+function _reloadSelect(formEl, fieldId, listType, defaultLabel, result) {
+  const el = formEl.querySelector(`#field-${fieldId}`);
+  if (!el) return;
+
+  // 從 registry 拿取當下快取
+  const list = getList(listType) || [];
+  const opts = list.map(x => ({ value: x.id, label: x.name }));
+  
+  if (fieldId === 'memberId') {
+    opts.push({ value: RESERVED_IDS.SHARED_MEMBER, label: '🏠 家庭共用' });
+  }
+
+  // 將剛新增的 result 補進去，避免 Firebase 非同步延遲導致看不到
+  if (result && result.id && !opts.some(o => o.value === result.id)) {
+    opts.push({ value: result.id, label: result.name });
+  }
+
+  const curVal = el.value;
+  let html = `<option value="">— ${defaultLabel} —</option>`;
+  html += opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+  
+  el.innerHTML = html;
+  
+  // 如果原本沒選，或有新加入的，直接選中新加入的
+  if (result && result.id) {
+    el.value = result.id;
+  } else if (!curVal && opts.length > 0) {
+    el.value = opts[opts.length - 1].value;
+  } else {
+    el.value = curVal;
+  }
+}
+
+/* ═══ EOF ═══
+F: lib/expense-modal.js
+V: 1792901770
+W: webapp-20261025-001#27
+═══ */```
+
+<!-- === FILE END: ./lib/expense-modal.js === -->
+
 <!-- === FILE START: ./manifest.json === -->
 
 ## 📄 ./manifest.json
@@ -5229,12 +5651,14 @@ W: ai-system-20261024-012#57
 // annual-report.js — 年度報表
 // 位置：pages/annual-report.js
 // 說明：顯示全年總合與月度明細，支援匯出 CSV。
+//       使用 renderPageLayout 統一排版。
 // ============================================
 
 import { AppState } from '../config/state.js';
 import { api } from '../domain/api-client.js';
 import { getYearList } from '../config/app-config.js';
 import { renderPageLayout } from '../ui/layout.js';
+import { renderTable } from '../ui/table.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 
@@ -5255,22 +5679,22 @@ export default {
 
     // 2. 準備控制列 HTML
     const controlsHtml = `
-      <div class="flex items-center gap-8">
-        <select class="input" id="report-year" style="padding:6px 28px 6px 10px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <select class="input" id="report-year" style="padding:6px 28px 6px 10px; width:auto;">
           ${years.map(y => `<option value="${y}" ${String(y) === currentYear ? 'selected' : ''}>${y} 年</option>`).join('')}
         </select>
-      </div>
-      <div class="flex gap-4" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:4px;">
-        <button type="button" class="btn" data-view="monthly" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">月度明細</button>
-        <button type="button" class="btn" data-view="summary" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">全年總合</button>
+        <div style="display:flex; gap:4px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:4px;">
+          <button type="button" class="btn" data-view="monthly" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">月度明細</button>
+          <button type="button" class="btn" data-view="summary" style="padding:6px 12px; border:none; border-radius:var(--radius-sm); transition:all 0.2s;">全年總合</button>
+        </div>
       </div>
     `;
 
-    // 3. 呼叫統一引擎繪製骨架
+    // 3. 繪製骨架
     renderPageLayout({
       title: '年度報表',
       headerActions,
-      stats: [], // 年報表不需要額外統計卡
+      stats: [],
       controls: controlsHtml,
       listContainerId: 'report-table-container'
     });
@@ -5280,8 +5704,9 @@ export default {
     
     // 5. 綁定事件
     document.getElementById('report-year')?.addEventListener('change', (e) => {
-      AppState.setYearMonth(e.target.value, AppState.month);
-      this._loadData(Number(e.target.value));
+      const y = e.target.value;
+      AppState.setYearMonth(y, AppState.month);
+      this._loadData(Number(y));
     });
 
     document.querySelectorAll('button[data-view]').forEach(btn => {
@@ -5322,6 +5747,7 @@ export default {
       }
 
       this._data = res.years[0];
+      this._updateStats();
       this._renderTable();
 
     } catch (err) {
@@ -5329,6 +5755,34 @@ export default {
       showToast('載入報表失敗', 'error');
       tableRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; text-align:center;">載入失敗</div>';
     }
+  },
+
+  _updateStats() {
+    const statsRoot = document.getElementById('page-stats-container');
+    if (!statsRoot || !this._data) return;
+
+    statsRoot.style.display = 'grid';
+    const d = this._data;
+    const pnlCls = d.netBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
+
+    statsRoot.innerHTML = [
+      { title: '年度總收入', val: formatHKD(d.totalIncome), color: 'var(--accent-success)', icon: 'trending-up' },
+      { title: '年度總支出', val: formatHKD(d.totalExpense), color: 'var(--accent-danger)', icon: 'trending-down' },
+      { title: '年度保險平攤', val: formatHKD(d.yearlyInsuranceTotal || 0), color: 'var(--accent-warm)', icon: 'shield' },
+      { title: '年度淨餘額', val: formatHKD(d.netBalance), color: pnlCls, icon: 'wallet' }
+    ].map(card => `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
+        </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${card.val}
+        </div>
+      </div>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
   },
 
   _renderTable() {
@@ -5342,7 +5796,7 @@ export default {
         container.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無月度資料</div>';
         return;
       }
-      
+
       const rows = monthlyData.map(m => ({
         month: `${m.monthNum} 月`,
         totalIncome: m.totalIncome,
@@ -5350,9 +5804,10 @@ export default {
         netBalance: m.netBalance
       }));
 
+      // 使用手寫表格（因為欄位是動態的，不適合用通用的 renderTable）
       container.innerHTML = `
         <div class="glass-card" style="padding:0; overflow:hidden;">
-          <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+          <div style="overflow-x:auto;">
             <table class="data-table" style="width:100%; border-collapse:collapse; min-width:500px;">
               <thead>
                 <tr>
@@ -5379,7 +5834,7 @@ export default {
     } else {
       container.innerHTML = `
         <div class="glass-card" style="padding:0; overflow:hidden;">
-          <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+          <div style="overflow-x:auto;">
             <table class="data-table" style="width:100%; border-collapse:collapse; min-width:700px;">
               <thead>
                 <tr>
@@ -5397,9 +5852,9 @@ export default {
                   <td style="white-space:nowrap;">${this._data.year} 年</td>
                   <td class="num text-emerald mono" style="white-space:nowrap;">${formatHKD(this._data.totalIncome)}</td>
                   <td class="num text-red mono" style="white-space:nowrap;">${formatHKD(this._data.totalExpense)}</td>
-                  <td class="num text-magenta mono" style="white-space:nowrap;">${formatHKD(this._data.yearlyInsuranceTotal)}</td>
-                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.bankBalance)}</td>
-                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.fundValue)}</td>
+                  <td class="num text-magenta mono" style="white-space:nowrap;">${formatHKD(this._data.yearlyInsuranceTotal || 0)}</td>
+                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.bankBalance || 0)}</td>
+                  <td class="num mono" style="white-space:nowrap;">${formatHKD(this._data.fundValue || 0)}</td>
                   <td class="num mono ${this._data.netBalance >= 0 ? 'text-emerald' : 'text-red'}" style="white-space:nowrap;">${formatHKD(this._data.netBalance)}</td>
                 </tr>
               </tbody>
@@ -5436,14 +5891,16 @@ export default {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('✅ 已匯出 CSV', 'success');
-  }
+  },
+
+  destroy() {}
 };
 
 /* ═══ EOF ═══
 F: pages/annual-report.js
-V: 1792901010
-W: ai-system-20261024-012#3
-═══ EOF ═══ */```
+V: 1792901870
+W: webapp-20261025-001#35
+═══ */```
 
 <!-- === FILE END: ./pages/annual-report.js === -->
 
@@ -5456,6 +5913,7 @@ W: ai-system-20261024-012#3
 // bank.js — 銀行交易頁面
 // 位置：pages/bank.js
 // 說明：顯示銀行帳號清單、交易明細，並計算即時餘額。
+//       已完全套用 renderPageLayout 解決排版問題。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -5465,7 +5923,7 @@ import { calcBankBalance, calcTotalBankBalance } from '../domain/bank.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
 import { renderPageLayout } from '../ui/layout.js';
-import { openModal, closeModal } from '../ui/modal.js';
+import { openModal, closeModal, openConfirm } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
@@ -5492,12 +5950,11 @@ export default {
       <div id="bank-controls-period"></div>
     `;
 
-    // 2. 呼叫統一引擎繪製骨架
+    // 2. 繪製骨架
     renderPageLayout({
       title: '銀行交易',
       stats: [],
       controls: controlsHtml,
-      listTitle: '帳號與交易記錄',
       listContainerId: 'bank-content-container'
     });
 
@@ -5510,8 +5967,8 @@ export default {
       this._renderData();
     });
 
-    document.getElementById('btn-add-account')?.addEventListener('click', () => this._openAccountModal());
-    document.getElementById('btn-add-txn')?.addEventListener('click', () => this._openTxnModal());
+    document.getElementById('btn-add-account').onclick = () => this._openAccountModal();
+    document.getElementById('btn-add-txn').onclick = () => this._openTxnModal();
 
     // 4. 監聽資料
     this._unsubAccounts = listenBankAccounts((accounts) => {
@@ -5527,7 +5984,8 @@ export default {
 
   _renderData() {
     const contentRoot = document.getElementById('bank-content-container');
-    if (!contentRoot) return;
+    const statsRoot = document.getElementById('page-stats-container');
+    if (!contentRoot || !statsRoot) return;
 
     const { year, month } = AppState.getYearMonth();
     const y = year || String(new Date().getFullYear());
@@ -5543,40 +6001,27 @@ export default {
 
     const inTotal = monthTxns.filter(t => t.type === 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
     const outTotal = monthTxns.filter(t => t.type !== 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const netChange = inTotal - outTotal;
 
     // 更新統計卡
-    const statsContainer = document.getElementById('page-stats-container');
-    if (statsContainer) {
-      statsContainer.style.display = 'grid';
-      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
-      
-      statsContainer.innerHTML = `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="landmark" style="width:14px;height:14px;"></i> 家庭總餘額
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:${totalBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; white-space:nowrap;">
-            ${formatHKD(totalBalance)}
-          </div>
+    statsRoot.style.display = 'grid';
+    statsRoot.innerHTML = [
+      { title: '家庭總餘額', val: formatHKD(totalBalance), color: totalBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', icon: 'landmark', hint: '所有帳號加總' },
+      { title: '本月入帳', val: formatHKD(inTotal), color: 'var(--accent-success)', icon: 'arrow-down-circle', hint: `${monthTxns.filter(t => t.type === 'in').length} 筆` },
+      { title: '本月出帳', val: formatHKD(outTotal), color: 'var(--accent-danger)', icon: 'arrow-up-circle', hint: `${monthTxns.filter(t => t.type !== 'in').length} 筆` },
+      { title: '本月淨變動', val: formatHKD(netChange), color: netChange >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', icon: 'trending-up', hint: '入帳 - 出帳' }
+    ].map(card => `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
         </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="arrow-down-circle" style="width:14px;height:14px;"></i> 本月入帳
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">
-            ${formatHKD(inTotal)}
-          </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${card.val}
         </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="arrow-up-circle" style="width:14px;height:14px;"></i> 本月出帳
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">
-            ${formatHKD(outTotal)}
-          </div>
-        </div>
-      `;
-    }
+        <div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(card.hint)}</div>
+      </div>
+    `).join('');
 
     // 渲染清單內容
     contentRoot.innerHTML = `
@@ -5595,7 +6040,7 @@ export default {
 
     // 渲染帳號 (使用動態餘額)
     const accCols = getColumns('bankAccounts');
-    accCols.push({ id: 'dynamicBalance', label: '當前餘額', type: 'number' });
+    accCols.push({ id: 'dynamicBalance', label: '當前餘額', type: 'number', sortable: true });
     const accResolvers = getResolvers('bankAccounts');
     accResolvers.dynamicBalance = (_, row) => {
       const bal = calcBankBalance(row, this._txns.filter(t => t.bankId === row.id), y, tM);
@@ -5603,43 +6048,9 @@ export default {
     };
 
     if (currentView === 'card') {
-      accRoot.innerHTML = `
-        <div class="data-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
-          ${this._accounts.map(row => {
-            const bal = calcBankBalance(row, this._txns.filter(t => t.bankId === row.id), y, tM);
-            return `
-              <div class="glass-card" style="padding:16px;">
-                <div style="font-size:16px; font-weight:700; color:var(--primary); margin-bottom:8px;">${esc(row.name)}</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;"><span style="color:var(--text-muted);">類型</span><span>${row.type === 'personal' ? '個人' : '家庭'}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;"><span style="color:var(--text-muted);">初始餘額</span><span class="mono">${formatHKD(row.initialBalance)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:14px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);"><span style="color:var(--text-muted);">當前餘額</span><span class="mono" style="font-weight:700; color:${bal >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'};">${formatHKD(bal)}</span></div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
+      renderCards({ container: accRoot, rows: this._accounts, columnsKey: 'bankAccounts', customResolvers: accResolvers, customColumns: accCols });
     } else {
-      accRoot.innerHTML = `
-        <div class="glass-card" style="padding:0; overflow:hidden;">
-          <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-            <table class="data-table" style="width:100%; border-collapse:collapse; min-width:600px;">
-              <thead><tr>${accCols.map(c => `<th class="${c.type === 'number' ? 'num' : ''}" style="white-space:nowrap;">${esc(c.label)}</th>`).join('')}</tr></thead>
-              <tbody>
-                ${this._accounts.map(row => `
-                  <tr>
-                    ${accCols.map(col => {
-                      const val = row[col.id];
-                      const resolver = accResolvers[col.id];
-                      const content = resolver ? resolver(val, row) : esc(val);
-                      return `<td class="${col.type === 'number' ? 'num' : ''}" style="white-space:nowrap;">${content}</td>`;
-                    }).join('')}
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
+      renderTable({ container: accRoot, rows: this._accounts, columnsKey: 'bankAccounts', customResolvers: accResolvers, customColumns: accCols });
     }
 
     // 渲染交易明細
@@ -5659,7 +6070,7 @@ export default {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = modalId;
-    overlay.innerHTML = `<div class="modal" style="max-width:400px; background:var(--bg-surface);"><h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">新增銀行帳號</h2><div id="account-form-root"></div></div>`;
+    overlay.innerHTML = `<div class="modal" style="max-width:400px; background:var(--bg-surface);"><h2 class="modal-title">新增銀行帳號</h2><div id="account-form-root"></div></div>`;
     document.body.appendChild(overlay);
     openModal(modalId);
 
@@ -5695,7 +6106,7 @@ export default {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = modalId;
-    overlay.innerHTML = `<div class="modal" style="max-width:450px; background:var(--bg-surface);"><h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">新增交易</h2><div id="txn-form-root"></div></div>`;
+    overlay.innerHTML = `<div class="modal" style="max-width:450px; background:var(--bg-surface);"><h2 class="modal-title">新增交易</h2><div id="txn-form-root"></div></div>`;
     document.body.appendChild(overlay);
     openModal(modalId);
 
@@ -5732,9 +6143,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/bank.js
-V: 1792901030
-W: ai-system-20261024-012#5
-═══ EOF ═══ */```
+V: 1792901920
+W: webapp-20261025-001#40
+═══ */```
 
 <!-- === FILE END: ./pages/bank.js === -->
 
@@ -5907,6 +6318,8 @@ W: ai-system-20261024-012#7
 // ============================================
 // dashboard.js — 總覽儀表板
 // 位置：pages/dashboard.js
+// 說明：顯示年度統計與前後 2 年的總覽表格。
+//       已完全套用 renderPageLayout 解決排版問題。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -5920,17 +6333,18 @@ export default {
   _unsubYM: null,
 
   async render() {
-    // 1. 繪製骨架 (標題與按鈕)
+    // 1. 準備 Header Actions
     const headerActions = `
       <a href="#/annual-report" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
         <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> 查看年度報表
       </a>
     `;
 
+    // 2. 呼叫統一引擎繪製骨架 (先傳入空 stats，載入後再更新)
     renderPageLayout({
       title: '總覽儀表板',
       headerActions,
-      stats: [], // 稍後補上
+      stats: [],
       listTitle: '年度總覽（前後 2 年）',
       listContainerId: 'dashboard-annual-table'
     });
@@ -5944,12 +6358,11 @@ export default {
 
   async _loadData() {
     const { year } = AppState.getYearMonth();
-    const statsContainer = document.getElementById('page-stats-container');
+    const statsRoot = document.getElementById('page-stats-container');
     const tableRoot = document.getElementById('dashboard-annual-table');
     
-    if (!statsContainer || !tableRoot) return;
+    if (!statsRoot || !tableRoot) return;
 
-    statsContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted); grid-column:1/-1;">載入統計資料…</div>';
     tableRoot.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">載入年度資料…</div>';
 
     try {
@@ -5962,52 +6375,8 @@ export default {
 
       const monthCount = (currentYearData.monthly || []).filter(m => m.totalExpense > 0).length;
 
-      // 更新統計卡
-      statsContainer.style.display = 'grid';
-      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)';
-      
-      statsContainer.innerHTML = [
-        { 
-          title: '家庭總餘額', 
-          val: (currentYearData.bankBalance || 0) + (currentYearData.fundValue || 0), 
-          color: ((currentYearData.bankBalance || 0) + (currentYearData.fundValue || 0)) >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', 
-          icon: 'landmark', 
-          hint: `共 1 個銀行帳號` 
-        },
-        { 
-          title: `${year} 家庭收入`, 
-          val: currentYearData.totalIncome || 0, 
-          color: 'var(--accent-success)', 
-          icon: 'trending-up', 
-          hint: '家用轉入 + 額外收入' 
-        },
-        { 
-          title: `${year} 年度總支出`, 
-          val: currentYearData.totalExpense || 0, 
-          color: 'var(--accent-danger)', 
-          icon: 'trending-down', 
-          hint: `${monthCount} 個月有紀錄` 
-        },
-        { 
-          title: `${year} 年度淨餘額`, 
-          val: currentYearData.netBalance || 0, 
-          color: (currentYearData.netBalance || 0) >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', 
-          icon: 'wallet', 
-          hint: (currentYearData.netBalance || 0) >= 0 ? '收支平衡' : '支出大於收入' 
-        }
-      ].map(card => `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="${card.icon}" style="width:14px;height:14px;"></i> ${esc(card.title)}
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap;">
-            ${formatHKD(card.val)}
-          </div>
-          <div style="font-size:11px; color:var(--text-muted);">
-            ${esc(card.hint)}
-          </div>
-        </div>
-      `).join('');
+      // 更新統計卡 (使用統一引擎結構)
+      this._updateStats(statsRoot, currentYearData, year, monthCount);
 
       // 渲染表格
       if (annualRes && annualRes.years) {
@@ -6027,16 +6396,66 @@ export default {
           emptyText: '無年度資料'
         });
       } else {
-        tableRoot.innerHTML = '<div style="color:var(--text-muted);">無年度資料</div>';
+        tableRoot.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">無年度資料</div>';
       }
 
       if (window.lucide) window.lucide.createIcons();
     } catch (err) {
       console.error('[dashboard] 載入失敗：', err);
       showToast('載入總覽資料失敗', 'error');
-      statsContainer.innerHTML = '<div style="color:var(--accent-danger); padding:20px; grid-column:1/-1;">載入失敗</div>';
+      statsRoot.innerHTML = '<div style="color:var(--accent-danger); padding:20px; grid-column:1/-1; text-align:center;">載入失敗</div>';
       tableRoot.innerHTML = '';
     }
+  },
+
+  _updateStats(statsRoot, data, year, monthCount) {
+    statsRoot.style.display = 'grid';
+    // 由於 layout.js 已經設定了 grid，這裡只需塞入子元素
+    const totalAssets = (data.bankBalance || 0) + (data.fundValue || 0);
+
+    statsRoot.innerHTML = [
+      { 
+        title: '家庭總餘額', 
+        val: totalAssets, 
+        color: totalAssets >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', 
+        icon: 'landmark', 
+        hint: `共 1 個銀行帳號` // 假設性提示
+      },
+      { 
+        title: `${year} 家庭收入`, 
+        val: data.totalIncome || 0, 
+        color: 'var(--accent-success)', 
+        icon: 'trending-up', 
+        hint: '家用轉入 + 額外收入' 
+      },
+      { 
+        title: `${year} 年度總支出`, 
+        val: data.totalExpense || 0, 
+        color: 'var(--accent-danger)', 
+        icon: 'trending-down', 
+        hint: `${monthCount} 個月有紀錄` 
+      },
+      { 
+        title: `${year} 年度淨餘額`, 
+        val: data.netBalance || 0, 
+        color: (data.netBalance || 0) >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', 
+        icon: 'wallet', 
+        hint: (data.netBalance || 0) >= 0 ? '收支平衡' : '支出大於收入' 
+      }
+    ].map(card => `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
+        </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${formatHKD(card.val)}
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ${esc(card.hint)}
+        </div>
+      </div>
+    `).join('');
   },
 
   destroy() {
@@ -6049,9 +6468,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/dashboard.js
-V: 1792901000
-W: ai-system-20261024-012#2
-═══ EOF ═══ */```
+V: 1792901890
+W: webapp-20261025-001#37
+═══ */```
 
 <!-- === FILE END: ./pages/dashboard.js === -->
 
@@ -6073,7 +6492,7 @@ import {
   getFundsOnce, 
   getBankAccountsOnce 
 } from '../db/index.js';
-import { saveIncome, savePersonalIncome, addExpense, removeExpense } from '../db/write.js';
+import { saveIncome, savePersonalIncome, removeExpense } from '../db/write.js';
 import { getList as getMembersList } from '../config/entity-registry.js';
 import { renderTable, renderCards } from '../ui/table.js';
 import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
@@ -6083,6 +6502,7 @@ import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
 import { todayISO, formatHKD, esc } from '../ui/format.js';
 import { RESERVED_IDS } from '../config/constants.js';
+import { openExpenseModal } from '../lib/expense-modal.js';
 
 export default {
   _unsubExpenses: null,
@@ -6108,7 +6528,7 @@ export default {
 
     // 2. 準備控制列 (Tab + 年月 + 檢視切換)
     const controlsHtml = `
-      <div style="display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:4px; width:100%;">
+      <div id="ic-tabs" style="display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:4px; width:100%;">
         <button type="button" class="btn" data-tab="expense">支出</button>
         <button type="button" class="btn" data-tab="insurance">保險</button>
         <button type="button" class="btn" data-tab="fund">基金</button>
@@ -6133,6 +6553,7 @@ export default {
     // 4. 初始化 Tab 與按鈕狀態
     this._updateTabStyles();
     
+    // 綁定 Tab 事件
     document.getElementById('ic-tabs')?.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-tab]');
       if (!btn) return;
@@ -6150,10 +6571,28 @@ export default {
       this._renderCurrentTab();
     });
 
-    // 6. 綁定操作按鈕
-    document.getElementById('btn-add-expense')?.addEventListener('click', () => this._openExpenseModal());
-    document.getElementById('btn-add-contribution')?.addEventListener('click', () => this._openIncomeModal('contribution'));
-    document.getElementById('btn-add-income')?.addEventListener('click', () => this._openIncomeModal('personal'));
+    // 6. 綁定操作按鈕（加入 try-catch 以捕捉報錯）
+    const btnExpense = document.getElementById('btn-add-expense');
+    if (btnExpense) {
+      btnExpense.onclick = async () => {
+        try {
+          await openExpenseModal({ onSuccess: () => this._renderExpenseTab() });
+        } catch (err) {
+          console.error(err);
+          alert('開啟新增支出失敗，錯誤訊息：\n' + err.message + '\n\n請將此訊息截圖回報。');
+        }
+      };
+    }
+
+    const btnContrib = document.getElementById('btn-add-contribution');
+    if (btnContrib) {
+      btnContrib.onclick = () => this._openIncomeModal('contribution');
+    }
+
+    const btnIncome = document.getElementById('btn-add-income');
+    if (btnIncome) {
+      btnIncome.onclick = () => this._openIncomeModal('personal');
+    }
 
     // 7. 載入資料
     const { year } = AppState.getYearMonth();
@@ -6167,9 +6606,10 @@ export default {
   },
 
   _updateTabStyles() {
-    const controlsRoot = document.querySelector('#app-content > div[style*="flex-wrap"]');
-    if (!controlsRoot) return;
-    controlsRoot.querySelectorAll('button[data-tab]').forEach(btn => {
+    const tabsRoot = document.getElementById('ic-tabs');
+    if (!tabsRoot) return;
+    
+    tabsRoot.querySelectorAll('button[data-tab]').forEach(btn => {
       const isActive = btn.dataset.tab === this._activeTab;
       btn.className = isActive ? 'btn btn-primary' : 'btn btn-ghost';
     });
@@ -6224,7 +6664,8 @@ export default {
       renderTable({ container: listRoot, rows: displayData, columnsKey: 'recentExpense', renderActions });
     }
 
-    listRoot.addEventListener('click', async (e) => {
+    // 改用 onclick 屬性賦值，覆蓋舊監聽，避免多次切換 Tab 時累積事件
+    listRoot.onclick = async (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
       const id = btn.dataset.id;
@@ -6240,9 +6681,14 @@ export default {
           showToast('✅ 已刪除支出', 'success');
         } catch (err) { showToast('刪除失敗：' + err.message, 'error'); }
       } else if (btn.dataset.action === 'edit') {
-        showToast('編輯功能開發中', 'info');
+        try {
+          await openExpenseModal({ row: expense, onSuccess: () => this._renderExpenseTab() });
+        } catch (err) {
+          console.error(err);
+          alert('開啟編輯支出失敗，錯誤訊息：\n' + err.message);
+        }
       }
-    });
+    };
   },
 
   _renderInsuranceTab() {
@@ -6305,51 +6751,6 @@ export default {
     }
   },
 
-  _openExpenseModal() {
-    const modalId = 'add-expense-modal';
-    document.getElementById(modalId)?.remove();
-
-    const members = getMembersList('members');
-    const memberOpts = members.map(m => ({ value: m.id, label: m.name }));
-    memberOpts.push({ value: RESERVED_IDS.SHARED_MEMBER, label: '🏠 家庭共用' });
-
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = modalId;
-    overlay.innerHTML = `
-      <div class="modal" style="max-width:450px; background:var(--bg-surface);">
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">新增支出</h2>
-        <div id="expense-form-root"></div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    openModal(modalId);
-
-    createForm({
-      container: 'expense-form-root',
-      fields: [
-        { id: 'memberId', label: '成員', type: 'select', required: true, options: memberOpts },
-        { id: 'name', label: '項目名稱', type: 'text', required: true },
-        { id: 'amount', label: '金額', type: 'number', required: true },
-        { id: 'date', label: '日期', type: 'date', required: true }
-      ],
-      initialData: { date: todayISO() },
-      submitText: '儲存',
-      onCancel: () => { closeModal(modalId); overlay.remove(); },
-      onSubmit: async (data) => {
-        try {
-          const { year, month } = AppState.getYearMonth();
-          const y = year;
-          const m = month === 'all' ? String(new Date().getMonth() + 1).padStart(2, '0') : month;
-          await addExpense(y, m, data.memberId, { name: data.name, amount: Number(data.amount), date: data.date, status: 'pending' });
-          showToast('✅ 已新增支出', 'success');
-          closeModal(modalId);
-          overlay.remove();
-        } catch (err) { showToast('新增失敗：' + err.message, 'error'); }
-      }
-    });
-  },
-
   _openIncomeModal(type) {
     const modalId = 'add-income-modal';
     document.getElementById(modalId)?.remove();
@@ -6401,9 +6802,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/input-center.js
-V: 1792901070
-W: ai-system-20261024-012#9
-═══ EOF ═══ */```
+V: 1792901740
+W: webapp-20261025-001#24
+═══ */```
 
 <!-- === FILE END: ./pages/input-center.js === -->
 
@@ -6415,6 +6816,8 @@ W: ai-system-20261024-012#9
 // ============================================
 // insurance.js — 保險清單表
 // 位置：pages/insurance.js
+// 說明：顯示保單清單與明細，包含已供滿區塊。
+//       已完全套用 renderPageLayout 解決排版問題。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -6429,6 +6832,8 @@ import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 import { getMembersOnce } from '../db/index.js';
+import { resolveName } from '../config/entity-registry.js';
+import { deleteEntity } from '../entity/entity-helpers.js';
 
 export default {
   _unsubPolicies: null,
@@ -6436,37 +6841,44 @@ export default {
   _payments: {},
 
   async render() {
-    // 1. 準備控制列 HTML
+    // 1. 準備 Header Actions
+    const headerActions = `
+      <button type="button" class="btn btn-primary" id="btn-add-policy">
+        <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增保單
+      </button>
+    `;
+
+    // 2. 準備控制列
     const controlsHtml = `
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-primary" id="btn-add-policy">
-          <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增保單
-        </button>
         <div id="insurance-controls-view"></div>
       </div>
       <div id="insurance-controls-period"></div>
     `;
 
-    // 2. 呼叫統一引擎繪製骨架
+    // 3. 繪製骨架
     renderPageLayout({
       title: '保險清單表',
+      headerActions,
       stats: [], 
       controls: controlsHtml,
       listContainerId: 'insurance-list-container'
     });
 
-    // 3. 渲染控制列事件
+    // 4. 渲染控制列事件
     renderYearMonth('insurance-controls-period', { includeAllMonth: false }, () => {
       this._renderListAndStats();
     });
+    
     renderViewToggle('insurance-controls-view', () => {
       this._renderListAndStats();
     });
+    
     document.getElementById('btn-add-policy')?.addEventListener('click', () => {
       this._openPolicyModal();
     });
 
-    // 4. 監聽資料
+    // 5. 監聽資料
     this._unsubPolicies = listenInsurancePolicies(async (policies) => {
       this._policies = policies;
       await this._loadPaymentsAndRender();
@@ -6484,6 +6896,7 @@ export default {
 
   _renderListAndStats() {
     const listRoot = document.getElementById('insurance-list-container');
+    const statsRoot = document.getElementById('page-stats-container');
     if (!listRoot) return;
 
     const { year } = AppState.getYearMonth();
@@ -6497,52 +6910,145 @@ export default {
     const totalAnnual = enriched.reduce((s, p) => s + (p._currentAnnualPremium || 0), 0);
     const totalPaid = enriched.reduce((s, p) => s + (p._paidTotal || 0), 0);
 
-    // 更新統計卡 (透過 layout.js 繪製的結構，尋找 grid 容器)
-    const statsContainer = document.querySelector('#app-content > div[style*="grid"]');
-    if (statsContainer) {
-      statsContainer.innerHTML = [
-        { title: `${targetYear} 年度總供款`, val: formatHKD(totalAnnual), color: 'var(--primary)', icon: 'calendar', hint: `共 ${enriched.length} 張` },
-        { title: '累計已供款', val: formatHKD(totalPaid), color: 'var(--accent-success)', icon: 'check-circle', hint: '已扣款總和' },
+    // 更新統計卡 (防破版樣式)
+    if (statsRoot) {
+      statsRoot.style.display = 'grid';
+      statsRoot.innerHTML = [
+        { title: `${targetYear} 年度保單總供款`, val: formatHKD(totalAnnual), color: 'var(--primary)', icon: 'calendar', hint: `共 ${enriched.length} 張` },
+        { title: '累計已供款總額', val: formatHKD(totalPaid), color: 'var(--accent-success)', icon: 'check-circle', hint: '已扣款總和' },
         { title: '供款中保單', val: `${active.length} 張`, color: 'var(--text-primary)', icon: 'shield', hint: '未供滿' },
         { title: '已供滿保單', val: `${completed.length} 張`, color: 'var(--accent-success)', icon: 'check-circle', hint: '已完成' }
       ].map(card => `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
           <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="${card.icon}" style="width:14px;height:14px;"></i> ${esc(card.title)}
+            <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
           </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap;">${esc(card.val)}</div>
-          ${card.hint ? `<div style="font-size:11px; color:var(--text-muted);">${esc(card.hint)}</div>` : ''}
+          <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${esc(card.val)}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(card.hint)}</div>
         </div>
       `).join('');
-      if (window.lucide) window.lucide.createIcons();
     }
 
-    // 渲染列表
-    if (enriched.length === 0) {
-      listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無保單資料</div>';
-      return;
+    // 組合：已供滿區塊 + 列表區塊
+    let html = '';
+
+    if (completed.length > 0) {
+      html += `
+        <div class="glass-card" style="margin-bottom:20px; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.04);">
+          <div style="padding:14px 20px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" id="completed-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="check-circle" style="width:18px;height:18px;color:var(--accent-success);"></i>
+              <span style="font-weight:700; color:var(--accent-success);">已供滿保單</span>
+              <span class="badge badge-success">${completed.length}</span>
+            </div>
+            <i data-lucide="chevron-down" id="completed-arrow" style="transition:transform 0.3s;"></i>
+          </div>
+          <div id="completed-body" style="display:none; padding:0 20px 20px; border-top:1px dashed rgba(16,185,129,0.2);">
+            <div class="data-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; padding-top:16px;">
+              ${completed.map(p => this._cardHtml(p)).join('')}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    const renderActions = (row) => `
-      <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${row.id}">編輯</button>
-      <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row.id}">刪除</button>
+    html += `
+      <div style="margin-bottom:16px;">
+        <h2 style="font-size:16px; color:var(--text-secondary);">供款中保單 (${active.length})</h2>
+      </div>
+      <div id="active-list-container"></div>
     `;
+    
+    listRoot.innerHTML = html;
 
-    if (currentView === 'card') {
-      renderCards({ container: listRoot, rows: enriched, columnsKey: 'insurancePolicies', renderActions });
-    } else {
-      renderTable({ container: listRoot, rows: enriched, columnsKey: 'insurancePolicies', renderActions });
+    // 綁定折疊事件
+    const header = document.getElementById('completed-header');
+    const body = document.getElementById('completed-body');
+    const arrow = document.getElementById('completed-arrow');
+    if (header && body) {
+      header.onclick = () => {
+        const isOpen = body.style.display === 'block';
+        body.style.display = isOpen ? 'none' : 'block';
+        if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      };
     }
 
-    listRoot.addEventListener('click', (e) => {
+    // 渲染供款中列表
+    const activeRoot = document.getElementById('active-list-container');
+    if (activeRoot) {
+      if (active.length === 0) {
+        activeRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">所有保單均已供滿</div>';
+      } else {
+        const renderActions = (row) => `
+          <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${row.id}">編輯</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row.id}">刪除</button>
+        `;
+
+        if (currentView === 'card') {
+          renderCards({ container: activeRoot, rows: active, columnsKey: 'insurancePolicies', renderActions });
+        } else {
+          renderTable({ container: activeRoot, rows: active, columnsKey: 'insurancePolicies', renderActions });
+        }
+
+        activeRoot.onclick = (e) => {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const id = btn.dataset.id;
+          const policy = this._policies.find(p => p.id === id);
+          if (!policy) return;
+          if (btn.dataset.action === 'edit') this._openPolicyModal(policy);
+          else if (btn.dataset.action === 'delete') this._deletePolicy(policy);
+        };
+      }
+    }
+
+    // 綁定已供滿卡片的事件
+    listRoot.onclick = (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
+      if (btn.closest('#active-list-container')) return; // 避開供款中列表
+      
       const id = btn.dataset.id;
       const policy = this._policies.find(p => p.id === id);
       if (!policy) return;
       if (btn.dataset.action === 'edit') this._openPolicyModal(policy);
       else if (btn.dataset.action === 'delete') this._deletePolicy(policy);
-    });
+    };
+
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  _cardHtml(p) {
+    const holderId = getPolicyHolderId(p);
+    const holder = resolveName('members', holderId) || holderId || '—';
+    const insured = resolveName('members', p.memberId) || p.memberId || '—';
+    const isFund = p.type === 'fund_insurance';
+    
+    const actions = `
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+        <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${p.id}">編輯</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${p.id}">刪除</button>
+      </div>
+    `;
+
+    return `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div style="font-size:15px; font-weight:700; color:var(--primary); line-height:1.3;">${esc(p.name)}</div>
+          <div style="font-size:11px; color:var(--accent-warm); margin-top:4px;">${esc(p.company || '')} · ${isFund ? '基金保險' : '普通保險'}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">持有人</span><span>${esc(holder)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">受保人</span><span>${esc(insured)}</span></div>
+          <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:6px;"><span style="color:var(--text-muted);">本期年繳</span><span class="mono text-primary">${formatHKD(p._currentAnnualPremium)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">已供款</span><span class="mono text-emerald">${formatHKD(p._paidTotal)}</span></div>
+        </div>
+        ${actions}
+      </div>
+    `;
   },
 
   async _openPolicyModal(policy = null) {
@@ -6550,7 +7056,6 @@ export default {
     const modalId = 'policy-modal';
     document.getElementById(modalId)?.remove();
 
-    // 取得成員列表
     const members = await getMembersOnce();
     const memberOpts = members.map(m => ({ value: m.id, label: m.name }));
 
@@ -6559,7 +7064,7 @@ export default {
     overlay.id = modalId;
     overlay.innerHTML = `
       <div class="modal" style="max-width:600px; background:var(--bg-surface); max-height:90vh; overflow-y:auto;">
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">${isEdit ? '編輯' : '新增'}保單</h2>
+        <h2 class="modal-title">${isEdit ? '編輯' : '新增'}保單</h2>
         <div id="policy-form-root"></div>
       </div>
     `;
@@ -6574,7 +7079,7 @@ export default {
         { value: 'fund_insurance', label: '基金保險' }
       ]},
       { id: 'memberId', label: '受保人', type: 'select', required: true, options: memberOpts },
-      { id: 'policyHolderId', label: '持有人 (留空同受保人)', type: 'select', options: memberOpts, includeEmpty: true },
+      { id: 'policyHolderId', label: '持有人 (留空同受保人)', type: 'select', options: memberOpts },
       { id: 'firstStartYear', label: '開始年份', type: 'number', required: true },
       { id: 'firstStartMonth', label: '開始月份', type: 'number', required: true, min: 1, max: 12 },
       { id: 'totalPolicyYears', label: '總供款年期', type: 'number', required: true },
@@ -6591,10 +7096,7 @@ export default {
       fields,
       initialData: isEdit ? { ...policy } : { type: 'normal', firstStartYear: new Date().getFullYear(), firstStartMonth: 1, paymentMode: 'direct' },
       submitText: isEdit ? '儲存' : '新增',
-      onCancel: () => {
-        closeModal(modalId);
-        overlay.remove();
-      },
+      onCancel: () => { closeModal(modalId); overlay.remove(); },
       onSubmit: async (data) => {
         try {
           const payload = {
@@ -6628,7 +7130,7 @@ export default {
     const ok = await openConfirm(`⚠️ 確定要刪除保單「${policy.name}」嗎？`, { title: '刪除保單', okText: '刪除', okClass: 'btn-danger' });
     if (!ok) return;
     try {
-      await api.entityCreate({ action: 'delete', entityType: 'policy', id: policy.id });
+      await deleteEntity('policy', policy.id, getPolicyHolderId(policy));
       showToast('✅ 已刪除保單', 'success');
     } catch (err) {
       showToast('刪除失敗：' + err.message, 'error');
@@ -6642,9 +7144,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/insurance.js
-V: 1792900930
-W: ai-system-20261024-012#84
-═══ EOF ═══ */```
+V: 1792901900
+W: webapp-20261025-001#38
+═══ */```
 
 <!-- === FILE END: ./pages/insurance.js === -->
 
@@ -6761,6 +7263,7 @@ W: ai-system-20261024-012#57
 // member-report.js — 成員收支明細
 // 位置：pages/member-report.js
 // 說明：顯示各成員的收支與保險平攤狀況。
+//       已完全套用 renderPageLayout 解決排版問題。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -6802,7 +7305,7 @@ export default {
     });
 
     renderViewToggle('mr-view-toggle', () => {
-      this._renderList();
+      this._renderListAndStats();
     });
 
     // 4. 載入資料
@@ -6874,47 +7377,7 @@ export default {
       }
 
       this._data = rows;
-
-      // 更新統計卡
-      const statsContainer = document.getElementById('page-stats-container');
-      if (statsContainer) {
-        statsContainer.style.display = 'grid';
-        statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)';
-        
-        const tIncome = rows.reduce((sum, r) => sum + r.income, 0);
-        const tPersonal = rows.reduce((sum, r) => sum + r.personalIncome, 0);
-        const tExpense = rows.reduce((sum, r) => sum + r.expense, 0);
-        const tIns = rows.reduce((sum, r) => sum + r.insurance, 0);
-
-        statsContainer.innerHTML = `
-          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-              <i data-lucide="trending-up" style="width:14px;height:14px;"></i> 家用轉入
-            </div>
-            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(tIncome)}</div>
-          </div>
-          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-              <i data-lucide="wallet" style="width:14px;height:14px;"></i> 個人收入
-            </div>
-            <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(tPersonal)}</div>
-          </div>
-          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-              <i data-lucide="trending-down" style="width:14px;height:14px;"></i> 總支出
-            </div>
-            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(tExpense)}</div>
-          </div>
-          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-              <i data-lucide="shield" style="width:14px;height:14px;"></i> 保險平攤
-            </div>
-            <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-warm); white-space:nowrap;">${formatHKD(tIns)}</div>
-          </div>
-        `;
-      }
-
-      this._renderList();
+      this._renderListAndStats();
 
     } catch (err) {
       console.error('[member-report] 載入失敗：', err);
@@ -6923,21 +7386,55 @@ export default {
     }
   },
 
-  _renderList() {
+  _renderListAndStats() {
     const listRoot = document.getElementById('mr-list-container');
+    const statsRoot = document.getElementById('page-stats-container');
     if (!listRoot || !this._data) return;
 
-    if (this._data.length === 0) {
+    const currentView = AppState.getCurrentView() || 'table';
+    const rows = this._data;
+
+    // 更新統計卡 (防破版樣式)
+    if (statsRoot) {
+      statsRoot.style.display = 'grid';
+      
+      const tIncome = rows.reduce((sum, r) => sum + r.income, 0);
+      const tPersonal = rows.reduce((sum, r) => sum + r.personalIncome, 0);
+      const tExpense = rows.reduce((sum, r) => sum + r.expense, 0);
+      const tIns = rows.reduce((sum, r) => sum + r.insurance, 0);
+
+      statsRoot.innerHTML = [
+        { title: '家庭收入', val: tIncome, color: 'var(--accent-success)', icon: 'trending-up', hint: '家用轉入' },
+        { title: '個人收入', val: tPersonal, color: 'var(--primary)', icon: 'wallet', hint: '成員個人' },
+        { title: '一般支出', val: tExpense, color: 'var(--accent-danger)', icon: 'trending-down', hint: '包含家庭共用' },
+        { title: '保險平攤', val: tIns, color: 'var(--accent-warm)', icon: 'shield', hint: '自動扣款' },
+        { title: '淨結餘', val: tIncome + tPersonal - tExpense - tIns, color: (tIncome + tPersonal - tExpense - tIns) >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', icon: 'calculator', hint: '收入 - 支出' }
+      ].map(card => `
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
+          </div>
+          <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${formatHKD(card.val)}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(card.hint)}</div>
+        </div>
+      `).join('');
+      
+      // 如果有 5 張卡片，在手機版上可能 2x3 或 1x5，在桌面版上預設 grid 會自動排。這裡不強制改 grid-template。
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    if (rows.length === 0) {
       listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無資料</div>';
       return;
     }
 
-    const currentView = AppState.getCurrentView() || 'table';
-
     if (currentView === 'card') {
-      renderCards({ container: listRoot, rows: this._data, columnsKey: 'memberReport', emptyText: '尚無資料' });
+      renderCards({ container: listRoot, rows, columnsKey: 'memberReport', emptyText: '尚無資料' });
     } else {
-      renderTable({ container: listRoot, rows: this._data, columnsKey: 'memberReport', emptyText: '尚無資料' });
+      renderTable({ container: listRoot, rows, columnsKey: 'memberReport', emptyText: '尚無資料' });
     }
   },
 
@@ -6948,9 +7445,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/member-report.js
-V: 1792901060
-W: ai-system-20261024-012#8
-═══ EOF ═══ */```
+V: 1792901910
+W: webapp-20261025-001#39
+═══ */```
 
 <!-- === FILE END: ./pages/member-report.js === -->
 
@@ -6960,22 +7457,24 @@ W: ai-system-20261024-012#8
 
 ```js
 // ============================================
-// portfolio.js — 基金投資表
+// portfolio.js — 基金投資表（V2 引擎版）
 // 位置：pages/portfolio.js
-// 說明：顯示基金持倉與盈虧。整合保險基金的成本估算。
+// 說明：整合保險基金與獨立基金，支援歷史快照與對比。
+//       已套用 renderPageLayout 解決統計卡破版問題。
 // ============================================
 
 import { AppState } from '../config/state.js';
-import { listenFunds, listenInsurancePolicies, getFundSnapshotListOnce } from '../db/index.js';
-import { api } from '../domain/api-client.js';
-import { findPolicyByFund, getCostMapForPolicy, calcFundPnl } from '../domain/fund.js';
-import { renderTable, renderCards } from '../ui/table.js';
-import { renderViewToggle, renderYearMonth } from '../ui/controls.js';
-import { renderPageLayout } from '../ui/layout.js';
-import { openModal, closeModal, openConfirm } from '../ui/modal.js';
+import { listenFunds, listenInsurancePolicies, getFundSnapshotListOnce, saveFundSnapshot, removeFundSnapshot } from '../db/index.js';
+import { openModal, closeModal, openConfirm, destroyModal } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
+import { renderPageLayout } from '../ui/layout.js';
 import { formatHKD, esc } from '../ui/format.js';
+import { openEntityModal } from '../ui/entity-modal.js'; // 假設有通用實體 Modal，若無則用 createForm
+import { ENTITY_KEYS } from '../config/constants.js';
+import { calcFundCostEstimate } from '../domain/insurance.js';
+
+const DEFAULT_FX = 7.8;
 
 export default {
   _unsubFunds: null,
@@ -6985,39 +7484,42 @@ export default {
   _snapshots: {},
 
   async render() {
-    // 1. 準備控制列 HTML
-    const controlsHtml = `
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    // 1. 準備 Header Actions
+    const headerActions = `
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <button type="button" class="btn btn-primary" id="btn-add-fund">
           <i data-lucide="plus" style="width:16px;height:16px;"></i> 新增基金
         </button>
-        <div id="portfolio-controls-view"></div>
+        <button type="button" class="btn btn-magenta" id="btn-import-snap">
+          <i data-lucide="upload" style="width:16px;height:16px;"></i> 導入快照
+        </button>
       </div>
-      <div id="portfolio-controls-period"></div>
     `;
 
-    // 2. 呼叫統一引擎繪製骨架
+    // 2. 準備控制列（年月）
+    const controlsHtml = `<div id="portfolio-controls-period"></div>`;
+
+    // 3. 呼叫統一引擎繪製骨架 (stats 先給空，載入後由 _updateStats 填入)
     renderPageLayout({
       title: '基金投資表',
+      headerActions,
       stats: [],
       controls: controlsHtml,
-      listContainerId: 'portfolio-list-container'
+      listContainerId: 'portfolio-content-container'
     });
 
-    // 3. 綁定控制列事件
-    renderYearMonth('portfolio-controls-period', { includeAllMonth: false }, () => {
-      this._renderListAndStats();
-    });
-    
-    renderViewToggle('portfolio-controls-view', () => {
-      this._renderListAndStats();
-    });
+    // 4. 綁定按鈕
+    document.getElementById('btn-add-fund').onclick = () => this._openFundModal();
+    document.getElementById('btn-import-snap').onclick = () => this._openImportSnapshotModal();
 
-    document.getElementById('btn-add-fund')?.addEventListener('click', () => {
-      this._openFundModal();
-    });
+    // 5. 初始化年月（僅作顯示用，若無需切換可移除）
+    const periodRoot = document.getElementById('portfolio-controls-period');
+    if (periodRoot) {
+      const ym = AppState.getYearMonth();
+      periodRoot.innerHTML = `<span class="badge badge-info">估值基準：${ym.year} 年 ${ym.month === 'all' ? '12' : ym.month} 月</span>`;
+    }
 
-    // 4. 監聽資料
+    // 6. 訂閱資料
     this._unsubFunds = listenFunds((funds) => {
       this._funds = funds;
       this._loadSnapshotsAndRender();
@@ -7025,7 +7527,7 @@ export default {
 
     this._unsubPolicies = listenInsurancePolicies((policies) => {
       this._policies = policies;
-      this._renderListAndStats();
+      this._renderContent();
     });
   },
 
@@ -7038,104 +7540,163 @@ export default {
       } catch (e) { snapMap[f.id] = null; }
     }
     this._snapshots = snapMap;
-    this._renderListAndStats();
+    this._renderContent();
   },
 
-  _renderListAndStats() {
-    const listRoot = document.getElementById('portfolio-list-container');
-    if (!listRoot) return;
+  _renderContent() {
+    const container = document.getElementById('portfolio-content-container');
+    if (!container) return;
 
     const { year, month } = AppState.getYearMonth();
     const y = year || String(new Date().getFullYear());
     const m = month === 'all' ? String(new Date().getMonth() + 1).padStart(2, '0') : month;
-    const currentView = AppState.getCurrentView() || 'table';
 
     const costMaps = {};
-    this._policies.forEach(p => { costMaps[p.id] = getCostMapForPolicy(p, this._funds, y, m); });
+    this._policies.forEach(p => { costMaps[p.id] = _getCostMapForPolicy(p, this._funds, y, m); });
 
     let totalCost = 0;
     let totalValue = 0;
 
     const displayFunds = this._funds.map(f => {
       const snap = this._snapshots[f.id];
-      const currentValue = snap ? (Number(snap.shares) * Number(snap.nav) * 7.8) : (Number(f.currentValue) || 0);
+      const currentValue = snap ? (Number(snap.shares) * Number(snap.nav) * DEFAULT_FX) : (Number(f.currentValue) || 0);
       let estimatedCost = 0;
       
       if (f.type === 'insurance') {
-        const policy = findPolicyByFund(f, this._policies);
+        const policy = _findPolicyByFund(f, this._policies);
         if (policy && costMaps[policy.id]) estimatedCost = costMaps[policy.id][f.id] || 0;
         else estimatedCost = Number(f.cost) || 0;
       } else {
         estimatedCost = Number(f.cost) || 0;
       }
       
-      const pnlInfo = calcFundPnl({ currentValue }, estimatedCost);
       totalCost += estimatedCost;
       totalValue += currentValue;
       
-      return { ...f, currentValue: Math.round(currentValue), cost: estimatedCost, pnl: Math.round(pnlInfo.pnl) };
+      return { ...f, currentValue: Math.round(currentValue), cost: estimatedCost };
     });
 
     const totalPnl = totalValue - totalCost;
-    const pnlCls = totalPnl >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
-    const pnlPct = totalCost > 0 ? ((totalPnl / totalCost) * 100).toFixed(2) : '0.00';
 
-    // 更新統計卡 (使用 layout.js 建立的固定容器)
-    const statsContainer = document.getElementById('page-stats-container');
-    if (statsContainer) {
-      statsContainer.style.display = 'grid';
-      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
-      
-      statsContainer.innerHTML = `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="wallet" style="width:14px;height:14px;"></i> 總投入成本
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--text-primary); white-space:nowrap;">${formatHKD(totalCost)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="line-chart" style="width:14px;height:14px;"></i> 總現時價值 (HKD)
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(totalValue)}</div>
-        </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="trending-up" style="width:14px;height:14px;"></i> 總帳面盈虧
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:${pnlCls}; white-space:nowrap;">${totalPnl >= 0 ? '+' : ''}${formatHKD(totalPnl)} (${pnlPct}%)</div>
-        </div>
-      `;
-    }
+    // 更新統計卡 (使用 layout.js 建立的容器)
+    this._updateStats(totalCost, totalValue, totalPnl);
 
-    // 渲染列表
-    if (displayFunds.length === 0) {
-      listRoot.innerHTML = '<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">尚無基金資料</div>';
-      return;
-    }
+    const insFunds = displayFunds.filter(f => f.type === 'insurance');
+    const standaloneFunds = displayFunds.filter(f => f.type !== 'insurance');
 
-    const renderActions = (row) => `
-      <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${row.id}">編輯</button>
-      <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row.id}">刪除</button>
+    container.innerHTML = `
+      <div style="margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <i data-lucide="shield" style="width:16px;height:16px;color:var(--accent-danger);"></i>
+          <span style="font-weight:700;color:var(--accent-danger);font-size:14px;">保險基金</span>
+          <span class="text-muted" style="font-size:12px;">（掛於基金保險保單，每月自動累積供款）</span>
+        </div>
+        <div id="ins-funds-list" class="data-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+          ${insFunds.length ? insFunds.map(f => this._cardHtml(f, _findPolicyByFund(f, this._policies))).join('') : '<div class="text-muted" style="padding:20px;">尚無保險基金</div>'}
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <i data-lucide="line-chart" style="width:16px;height:16px;color:var(--primary);"></i>
+          <span style="font-weight:700;color:var(--primary);font-size:14px;">獨立基金</span>
+        </div>
+        <div id="std-funds-list" class="data-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+          ${standaloneFunds.length ? standaloneFunds.map(f => this._cardHtml(f, null)).join('') : '<div class="text-muted" style="padding:20px;">尚無獨立基金</div>'}
+        </div>
+      </div>
     `;
 
-    if (currentView === 'card') {
-      renderCards({ container: listRoot, rows: displayFunds, columnsKey: 'funds', renderActions });
-    } else {
-      renderTable({ container: listRoot, rows: displayFunds, columnsKey: 'funds', renderActions });
-    }
+    this._bindCardEvents(container);
+    if (window.lucide) window.lucide.createIcons();
+  },
 
-    listRoot.addEventListener('click', (e) => {
+  _updateStats(cost, value, pnl) {
+    const statsRoot = document.getElementById('page-stats-container');
+    if (!statsRoot) return;
+    statsRoot.style.display = 'grid';
+    
+    // 依照 layout.js 的結構直接替換內容
+    statsRoot.innerHTML = `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="wallet" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">總投入成本</span>
+        </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${formatHKD(cost)}
+        </div>
+      </div>
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="line-chart" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">總現時價值</span>
+        </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${formatHKD(value)}
+        </div>
+      </div>
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="trending-up" style="width:14px;height:14px; flex-shrink:0;"></i> 
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">總帳面盈虧</span>
+        </div>
+        <div class="mono" style="font-size:20px; font-weight:700; color:${pnl >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${pnl >= 0 ? '+' : ''}${formatHKD(pnl)}
+        </div>
+      </div>
+    `;
+  },
+
+  _cardHtml(f, policy) {
+    const pnl = f.currentValue - f.cost;
+    const pnlCls = pnl >= 0 ? 'text-emerald' : 'text-red';
+    const pnlSign = pnl >= 0 ? '+' : '';
+    const pnlPct = f.cost > 0 ? ((pnl / f.cost) * 100).toFixed(2) : '0.00';
+    
+    const meta = policy ? `<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">關聯保單：${esc(policy.name)}</div>` : '';
+
+    return `
+      <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div style="font-size:15px; font-weight:700; color:var(--primary); line-height:1.3;">${esc(f.name)}</div>
+          ${meta}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">投入成本</span><span class="mono">${formatHKD(f.cost)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">現時價值</span><span class="mono text-emerald">${formatHKD(f.currentValue)}</span></div>
+          <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:6px;"><span style="color:var(--text-muted);">盈虧</span><span class="mono ${pnlCls}">${pnlSign}${formatHKD(pnl)} (${pnlPct}%)</span></div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn btn-sm btn-primary" data-action="snap" data-id="${f.id}" data-name="${esc(f.name)}">記錄快照</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-action="history" data-id="${f.id}" data-name="${esc(f.name)}">歷史</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${f.id}">編輯</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${f.id}">刪除</button>
+        </div>
+      </div>
+    `;
+  },
+
+  _bindCardEvents(container) {
+    container.onclick = async (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
       const id = btn.dataset.id;
-      const fund = this._funds.find(f => f.id === id);
-      if (!fund) return;
-      if (btn.dataset.action === 'edit') this._openFundModal(fund);
-      else if (btn.dataset.action === 'delete') this._deleteFund(fund);
-    });
+      const name = btn.dataset.name || '';
+      const action = btn.dataset.action;
 
-    if (window.lucide) window.lucide.createIcons();
+      if (action === 'snap') await this._openSnapshotModal(id, name);
+      else if (action === 'history') await this._openHistoryModal(id, name);
+      else if (action === 'edit') this._openFundModal(this._funds.find(f => f.id === id));
+      else if (action === 'delete') {
+        const ok = await openConfirm(`確定要刪除基金「${name}」嗎？`, { okClass: 'btn-danger' });
+        if (ok) {
+          const { removeObject } = await import('../db/write.js');
+          await removeObject(`funds/${id}`);
+          showToast('✅ 已刪除基金', 'success');
+        }
+      }
+    };
   },
 
   _openFundModal(fund = null) {
@@ -7146,48 +7707,245 @@ export default {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = modalId;
+    overlay.innerHTML = `<div class="modal" style="max-width:500px; background:var(--bg-surface);"><h2 class="modal-title">${isEdit ? '編輯' : '新增'}基金</h2><div id="${modalId}-root"></div></div>`;
+    document.body.appendChild(overlay);
+    openModal(modalId);
+
+    createForm({
+      container: `${modalId}-root`,
+      fields: [
+        { id: 'name', label: '基金名稱', type: 'text', required: true },
+        { id: 'type', label: '類型', type: 'select', required: true, options: [{ value: 'standalone', label: '獨立基金' }, { value: 'insurance', label: '保險基金' }] },
+        { id: 'cost', label: '手動投入成本 (保險基金填0)', type: 'number', required: true },
+        { id: 'currentValue', label: '目前現值 (若無快照則用此)', type: 'number' }
+      ],
+      initialData: isEdit ? fund : { type: 'standalone', cost: 0, currentValue: 0 },
+      submitText: isEdit ? '儲存' : '新增',
+      onCancel: () => { closeModal(modalId); overlay.remove(); },
+      onSubmit: async (data) => {
+        const { saveObject } = await import('../db/write.js');
+        if (isEdit) await saveObject(`funds/${fund.id}`, { ...fund, ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0 });
+        else {
+          const { pushObject } = await import('../db/write.js');
+          await pushObject('funds', { ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0, createdAt: Date.now() });
+        }
+        showToast('✅ 基金已儲存', 'success');
+        closeModal(modalId); overlay.remove();
+      }
+    });
+  },
+
+  async _openSnapshotModal(fundId, fundName) {
+    const modalId = 'snap-modal';
+    document.getElementById(modalId)?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = modalId;
+    overlay.innerHTML = `<div class="modal" style="max-width:500px; background:var(--bg-surface);"><h2 class="modal-title">輸入快照 — ${esc(fundName)}</h2><div id="${modalId}-root"></div></div>`;
+    document.body.appendChild(overlay);
+    openModal(modalId);
+
+    createForm({
+      container: `${modalId}-root`,
+      fields: [
+        { id: 'dateKey', label: '估值日 (YYYY-MM-DD)', type: 'date', required: true },
+        { id: 'shares', label: '單位數目', type: 'number', required: true, step: 0.0001 },
+        { id: 'nav', label: '基金價格 (USD)', type: 'number', required: true, step: 0.0001 },
+        { id: 'totalUsd', label: '總價值 (USD，自動計算)', type: 'number', disabled: true },
+        { id: 'totalHkd', label: '保單價值 (HKD，自動計算)', type: 'number', disabled: true }
+      ],
+      initialData: { dateKey: new Date().toISOString().slice(0,10), shares: 0, nav: 0 },
+      submitText: '儲存快照',
+      onCancel: () => { closeModal(modalId); overlay.remove(); },
+      onSubmit: async (data) => {
+        await saveFundSnapshot(fundId, data.dateKey, { shares: Number(data.shares), nav: Number(data.nav) });
+        showToast(`✅ 已儲存 ${data.dateKey} 快照`, 'success');
+        closeModal(modalId); overlay.remove();
+        this._loadSnapshotsAndRender();
+      }
+    });
+
+    // 自動計算綁定
+    const formEl = document.querySelector(`#${modalId}-root form`);
+    const sEl = formEl.querySelector('#field-shares');
+    const nEl = formEl.querySelector('#field-nav');
+    const calc = () => {
+      const usd = (Number(sEl.value)||0) * (Number(nEl.value)||0);
+      formEl.querySelector('#field-totalUsd').value = usd.toFixed(2);
+      formEl.querySelector('#field-totalHkd').value = (usd * DEFAULT_FX).toFixed(2);
+    };
+    sEl.addEventListener('input', calc);
+    nEl.addEventListener('input', calc);
+  },
+
+  async _openHistoryModal(fundId, fundName) {
+    const snaps = await getFundSnapshotListOnce(fundId);
+    const modalId = 'history-modal';
+    document.getElementById(modalId)?.remove();
+
+    const rows = snaps.length === 0 ? '<tr><td colspan="6" style="text-align:center;">尚無快照</td></tr>' : snaps.map(s => {
+      const usd = s.shares * s.nav;
+      const hkd = usd * DEFAULT_FX;
+      return `<tr>
+        <td><input type="checkbox" class="hist-cb" data-date="${s.dateKey}"></td>
+        <td>${s.dateKey}</td>
+        <td>${s.shares}</td>
+        <td>USD ${s.nav}</td>
+        <td>HKD ${hkd.toFixed(2)}</td>
+        <td><button type="button" class="btn btn-sm btn-danger" data-del="${s.dateKey}" data-raw="${s._rawPath}">刪除</button></td>
+      </tr>`;
+    }).join('');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = modalId;
     overlay.innerHTML = `
-      <div class="modal" style="max-width:500px; background:var(--bg-surface);">
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">${isEdit ? '編輯' : '新增'}基金</h2>
-        <div id="fund-form-root"></div>
+      <div class="modal" style="max-width:700px; background:var(--bg-surface);">
+        <h2 class="modal-title">歷史快照 — ${esc(fundName)}</h2>
+        <div style="margin-bottom:12px;"><button type="button" class="btn btn-sm btn-primary" id="btn-compare" disabled>對比勾選的兩筆</button></div>
+        <table class="data-table" style="width:100%; font-size:12px;">
+          <thead><tr><th></th><th>日期</th><th>單位數</th><th>價格</th><th>總值(HKD)</th><th>操作</th></tr></thead>
+          <tbody id="hist-body">${rows}</tbody>
+        </table>
+        <div id="compare-result" style="margin-top:16px;"></div>
+        <div style="text-align:right; margin-top:16px;"><button type="button" class="btn btn-ghost" id="btn-close-hist">關閉</button></div>
       </div>
     `;
     document.body.appendChild(overlay);
     openModal(modalId);
 
-    createForm({
-      container: 'fund-form-root',
-      fields: [
-        { id: 'name', label: '基金名稱', type: 'text', required: true },
-        { id: 'type', label: '類型', type: 'select', required: true, options: [{ value: 'standalone', label: '獨立基金' }, { value: 'insurance', label: '保險基金' }] },
-        { id: 'cost', label: '手動投入成本 (若為保險基金，此處填 0)', type: 'number', required: true },
-        { id: 'currentValue', label: '目前現值 (若無快照則用此)', type: 'number' },
-        { id: 'units', label: '單位數', type: 'number' },
-        { id: 'note', label: '備註', type: 'text' }
-      ],
-      initialData: isEdit ? { ...fund } : { type: 'standalone', cost: 0, currentValue: 0, units: 0 },
-      submitText: isEdit ? '儲存' : '新增',
-      onCancel: () => { closeModal(modalId); overlay.remove(); },
-      onSubmit: async (data) => {
-        try {
-          const payload = { ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0, units: Number(data.units) || 0 };
-          if (isEdit) await api.entityCreate({ action: 'update', entityType: 'fund', id: fund.id, name: data.name, extra: payload });
-          else await api.entityCreate({ action: 'create', entityType: 'fund', code: 'FUND-TEMP', name: data.name, extra: payload });
-          showToast(`✅ 基金已${isEdit ? '更新' : '新增'}`, 'success');
-          closeModal(modalId);
-          overlay.remove();
-        } catch (err) { showToast('操作失敗：' + err.message, 'error'); }
+    const body = document.getElementById('hist-body');
+    const btnCompare = document.getElementById('btn-compare');
+    const resultEl = document.getElementById('compare-result');
+
+    body.addEventListener('change', () => {
+      const checked = body.querySelectorAll('.hist-cb:checked');
+      if (checked.length > 2) { event.target.checked = false; return; }
+      btnCompare.disabled = checked.length !== 2;
+    });
+
+    body.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-del]');
+      if (!btn) return;
+      if (await openConfirm(`確定刪除 ${btn.dataset.del} 的快照？`, { okClass: 'btn-danger' })) {
+        await removeFundSnapshot(fundId, btn.dataset.del, btn.dataset.raw);
+        showToast('✅ 已刪除', 'success');
+        closeModal(modalId); overlay.remove();
+        this._loadSnapshotsAndRender();
       }
     });
+
+    btnCompare.onclick = () => {
+      const dates = Array.from(body.querySelectorAll('.hist-cb:checked')).map(cb => cb.dataset.date).sort();
+      const a = snaps.find(s => s.dateKey === dates[0]);
+      const b = snaps.find(s => s.dateKey === dates[1]);
+      if (!a || !b) return;
+      
+      const aHkd = a.shares * a.nav * DEFAULT_FX;
+      const bHkd = b.shares * b.nav * DEFAULT_FX;
+      const diffHkd = bHkd - aHkd;
+      const pct = aHkd > 0 ? (diffHkd / aHkd * 100).toFixed(2) : 0;
+      
+      resultEl.innerHTML = `
+        <div class="glass-card" style="padding:12px; background:var(--bg-deep);">
+          <div style="font-weight:700; margin-bottom:8px;">對比：${a.dateKey} ➜ ${b.dateKey}</div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>單位數</span><span>${a.shares} ➜ ${b.shares}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>價格</span><span>USD ${a.nav} ➜ USD ${b.nav}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; border-top:1px dashed var(--border-color); padding-top:4px;">
+            <span>總值 (HKD)</span>
+            <span class="${diffHkd >= 0 ? 'text-emerald' : 'text-red'}">
+              ${aHkd.toFixed(2)} ➜ ${bHkd.toFixed(2)} (${diffHkd >= 0 ? '+' : ''}${diffHkd.toFixed(2)}, ${pct}%)
+            </span>
+          </div>
+        </div>
+      `;
+    };
+
+    document.getElementById('btn-close-hist').onclick = () => { closeModal(modalId); overlay.remove(); };
   },
 
-  async _deleteFund(fund) {
-    const ok = await openConfirm(`⚠️ 確定要刪除基金「${fund.name}」嗎？`, { title: '刪除基金', okText: '刪除', okClass: 'btn-danger' });
-    if (!ok) return;
-    try {
-      await api.entityCreate({ action: 'delete', entityType: 'fund', id: fund.id });
-      showToast('✅ 已刪除基金', 'success');
-    } catch (err) { showToast('刪除失敗：' + err.message, 'error'); }
+  _openImportSnapshotModal() {
+    const modalId = 'import-snap-modal';
+    document.getElementById(modalId)?.remove();
+    const funds = this._funds;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = modalId;
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:600px; background:var(--bg-surface);">
+        <h2 class="modal-title">導入基金快照</h2>
+        <div class="form-stack">
+          <div class="field">
+            <label class="field-label">目標基金</label>
+            <select class="input" id="imp-fund">
+              <option value="">— 請選擇 —</option>
+              ${funds.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">上傳 JSON (格式：[{"dateKey":"2024-01-01","shares":100,"nav":12.5}])</label>
+            <input type="file" id="imp-file" accept=".json" class="input">
+          </div>
+          <div class="field">
+            <label class="field-label">或直接貼上 JSON</label>
+            <textarea class="input" id="imp-text" rows="6" style="font-family:monospace; font-size:12px;"></textarea>
+          </div>
+          <div id="imp-status" style="font-size:12px; color:var(--text-muted);"></div>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+            <button type="button" class="btn btn-ghost" id="imp-cancel">取消</button>
+            <button type="button" class="btn btn-primary" id="imp-submit">開始導入</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    openModal(modalId);
+
+    const fileInput = document.getElementById('imp-file');
+    const textArea = document.getElementById('imp-text');
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
+      if (file) textArea.value = await file.text();
+    };
+
+    document.getElementById('imp-cancel').onclick = () => { closeModal(modalId); overlay.remove(); };
+
+    document.getElementById('imp-submit').onclick = async () => {
+      const fundId = document.getElementById('imp-fund').value;
+      if (!fundId) { showToast('請選擇基金', 'warning'); return; }
+      const text = textArea.value.trim();
+      if (!text) { showToast('請貼上 JSON', 'warning'); return; }
+
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('JSON 必須是陣列');
+        
+        let ok = 0, fail = 0;
+        const statusEl = document.getElementById('imp-status');
+        statusEl.textContent = '導入中…';
+        
+        for (const item of data) {
+          if (!item.dateKey || item.shares === undefined || item.nav === undefined) { fail++; continue; }
+          try {
+            await saveFundSnapshot(fundId, item.dateKey, { shares: Number(item.shares), nav: Number(item.nav) });
+            ok++;
+          } catch (e) { fail++; }
+        }
+        
+        statusEl.innerHTML = `<span class="text-emerald">✅ 成功 ${ok} 筆</span>${fail > 0 ? `, <span class="text-red">失敗 ${fail} 筆</span>` : ''}`;
+        showToast('✅ 導入完成', 'success');
+        this._loadSnapshotsAndRender();
+      } catch (err) {
+        showToast('JSON 解析失敗：' + err.message, 'error');
+      }
+    };
   },
 
   destroy() {
@@ -7196,11 +7954,51 @@ export default {
   }
 };
 
+/* ============================================
+   輔助邏輯
+   ============================================ */
+function _findPolicyByFund(fund, policies) {
+  if (fund.policyId) {
+    const p = (policies || []).find((x) => x.id === fund.policyId);
+    if (p) return p;
+  }
+  return (policies || []).find((p) => (p.fundsAllocation || []).some((a) => a.fundId === fund.id)) || null;
+}
+
+function _getCostMapForPolicy(policy, allFunds, targetYear, targetMonth) {
+  const costMap = {};
+  if (!policy) return costMap;
+  const policyFunds = (allFunds || []).filter((f) => f.type === 'insurance' && _findPolicyByFund(f, [policy]) !== null);
+  if (policyFunds.length === 0) return costMap;
+
+  const totalPolicyCost = calcFundCostEstimate(policy, targetYear, targetMonth);
+  
+  const manualFunds = policyFunds.filter((f) => Number(f.cost) > 0);
+  const manualTotal = manualFunds.reduce((s, f) => s + Number(f.cost), 0);
+  manualFunds.forEach((f) => { costMap[f.id] = Number(f.cost); });
+
+  const remainingCost = Math.max(0, totalPolicyCost - manualTotal);
+  const dynamicFunds = policyFunds.filter((f) => Number(f.cost) <= 0);
+  
+  const dynamicTotalPct = dynamicFunds.reduce((s, f) => {
+    const alloc = (policy.fundsAllocation || []).find((a) => a.fundId === f.id);
+    return s + (alloc ? Number(alloc.pct) : 0);
+  }, 0);
+
+  dynamicFunds.forEach((f) => {
+    const alloc = (policy.fundsAllocation || []).find((a) => a.fundId === f.id);
+    const pct = alloc ? Number(alloc.pct) : 0;
+    costMap[f.id] = dynamicTotalPct > 0 ? Math.round(remainingCost * (pct / dynamicTotalPct)) : 0;
+  });
+
+  return costMap;
+}
+
 /* ═══ EOF ═══
 F: pages/portfolio.js
-V: 1792901020
-W: ai-system-20261024-012#4
-═══ EOF ═══ */```
+V: 1792901860
+W: webapp-20261025-001#34
+═══ */```
 
 <!-- === FILE END: ./pages/portfolio.js === -->
 
@@ -7210,9 +8008,9 @@ W: ai-system-20261024-012#4
 
 ```js
 // ============================================
-// settings.js — 系統設定頁面（V2 重構版）
+// settings.js — 系統設定頁面（V2 引擎版）
 // 位置：pages/settings.js
-// 說明：提供帳號資訊、系統偏好與登出功能。
+// 說明：整合帳號資訊、統計模式、成員管理、年份範圍、頁面標題與除錯工具。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -7220,122 +8018,323 @@ import { logout } from '../domain/auth.js';
 import { openConfirm } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
 import { esc } from '../ui/format.js';
-import { ROLES } from '../config/constants.js';
+import { ROLES, STORAGE_KEYS, ENTITY_KEYS } from '../config/constants.js';
+import { initTabPanel } from '../ui/tab-panel.js';
+import { initEntityListPage } from '../shared/entity-list-page.js';
+import { initBankAccountManager } from '../shared/bank-account-manager.js';
+import { createForm } from '../ui/form.js';
+import { listen, saveObject } from '../db/index.js';
+import { listPages, getDefaultMetadata } from '../config/page-metadata-registry.js';
 
 export default {
+  _unsubMeta: null,
+  _unsubYear: null,
+  _memberList: null,
+  _bankMgr: null,
+
   async render() {
     const content = document.getElementById('app-content');
     if (!content) return;
 
-    const user = AppState.currentUser;
-    const name = AppState.getDisplayName() || '訪客';
-    const role = AppState.getRole();
-    const family = AppState.getFamilyName() || '無';
-    
-    let roleLabel = '成員';
-    if (role === ROLES.SUPERADMIN) roleLabel = '超級管理員';
-    else if (role === ROLES.OWNER) roleLabel = '家庭擁有者';
+    // 1. 建立 Tab 骨架
+    const isSuper = AppState.isSuperAdmin;
+    const tabs = [];
+    if (isSuper) tabs.push({ key: 'platform', label: '平台設定', icon: 'settings', panelId: 'settings-panel-platform' });
+    tabs.push({ key: 'banks', label: '銀行帳號', icon: 'landmark', panelId: 'settings-panel-banks' });
+    tabs.push({ key: 'personal', label: '個人化', icon: 'user', panelId: 'settings-panel-personal' });
 
     content.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
         <h1 style="font-size:24px; font-weight:700; color:var(--primary);">系統設定</h1>
       </div>
+      <div id="settings-tabs"></div>
+      
+      <div id="settings-panel-platform" class="tab-panel" style="display:none;">
+        <div class="banner mb-16">ℹ️ 平台 UI 常數為全站預設值，家庭可在「預設資料庫」中覆蓋。</div>
+      </div>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-        
-        <!-- 帳號資訊卡 -->
-        <div class="glass-card" style="padding:20px;">
-          <h2 style="font-size:16px; font-weight:700; margin-bottom:16px; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
-            <i data-lucide="user" style="width:18px;height:18px;color:var(--primary);"></i> 帳號資訊
-          </h2>
-          
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div>
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">登入帳號</div>
-              <div class="mono" style="font-size:14px; color:var(--text-primary);">${esc(user?.email || '')}</div>
+      <div id="settings-panel-banks" class="tab-panel" style="display:none;">
+        <div class="banner mb-16">ℹ️ 管理家庭的銀行帳號。每個帳號有「初始餘額」與「初始年月」。</div>
+        <div id="bank-account-manager-root"></div>
+      </div>
+
+      <div id="settings-panel-personal" class="tab-panel" style="display:none;">
+        <div class="settings-personal-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+          <!-- 帳號資訊 -->
+          <div class="glass-card">
+            <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="user" style="width:16px;height:16px;color:var(--primary);"></i> 帳號資訊
             </div>
-            <div>
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">顯示名稱</div>
-              <div style="font-size:14px; color:var(--text-primary);">${esc(name)}</div>
+            <div class="form-stack">
+              <div class="field"><label class="field-label">登入帳號</label><input class="input mono" id="settings-account" disabled></div>
+              <div class="field"><label class="field-label">角色</label><input class="input mono" id="settings-role" disabled></div>
+              <div class="field"><label class="field-label">家庭名稱</label><input class="input" id="settings-family" disabled></div>
             </div>
-            <div>
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">角色權限</div>
-              <div><span class="badge ${role === ROLES.SUPERADMIN ? 'badge-magenta' : (role === ROLES.OWNER ? 'badge-info' : 'badge-muted')}">${roleLabel}</span></div>
-            </div>
-            <div>
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">所屬家庭</div>
-              <div style="font-size:14px; color:var(--text-primary);">${esc(family)}</div>
+            <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border-color); text-align:right;">
+              <button type="button" class="btn btn-danger" id="settings-logout-btn"><i data-lucide="log-out" style="width:14px;height:14px;"></i> 登出</button>
             </div>
           </div>
-        </div>
 
-        <!-- 系統偏好卡 -->
-        <div class="glass-card" style="padding:20px;">
-          <h2 style="font-size:16px; font-weight:700; margin-bottom:16px; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
-            <i data-lucide="settings" style="width:18px;height:18px;color:var(--primary);"></i> 系統偏好
-          </h2>
-          
-          <div style="display:flex; flex-direction:column; gap:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:14px;">深色模式</span>
-              <button type="button" class="btn ${AppState.getTheme() === 'dark' ? 'btn-primary' : 'btn-ghost'}" id="btn-toggle-theme">
-                ${AppState.getTheme() === 'dark' ? '已開啟' : '已關閉'}
-              </button>
+          <!-- 統計卡顯示模式 -->
+          <div class="glass-card">
+            <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="bar-chart-2" style="width:16px;height:16px;color:var(--primary);"></i> 統計卡顯示模式
             </div>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:14px;">清除本地快取</span>
-              <button type="button" class="btn btn-ghost" id="btn-clear-cache">清除</button>
+            <div id="stats-mode-options" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border-color); text-align:right;">
+              <button type="button" class="btn btn-primary" id="save-stats-mode-btn"><i data-lucide="check" style="width:14px;height:14px;"></i> 儲存模式</button>
             </div>
           </div>
-        </div>
 
-        <!-- 危險區域 -->
-        <div class="glass-card" style="padding:20px; grid-column:1 / -1; border-color:rgba(244,63,94,0.3);">
-          <h2 style="font-size:16px; font-weight:700; margin-bottom:16px; color:var(--accent-danger); display:flex; align-items:center; gap:8px;">
-            <i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> 危險區域
-          </h2>
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-            登出後將清除本地登入狀態，需要重新輸入帳號密碼。
-          </p>
-          <button type="button" class="btn btn-danger" id="btn-logout">
-            <i data-lucide="log-out" style="width:16px;height:16px;"></i> 登出系統
-          </button>
-        </div>
+          <!-- 年份範圍 -->
+          <div class="glass-card" style="grid-column: 1 / -1;">
+            <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="calendar" style="width:16px;height:16px;color:var(--primary);"></i> 年份範圍設定
+            </div>
+            <div id="yearrange-form-root"></div>
+          </div>
 
+          <!-- 頁面標題 -->
+          <div class="glass-card" style="grid-column: 1 / -1;">
+            <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="type" style="width:16px;height:16px;color:var(--primary);"></i> 頁面標題客製化
+            </div>
+            <div id="pagemeta-form-root"></div>
+          </div>
+
+          <!-- 除錯工具 -->
+          <div class="glass-card" style="grid-column: 1 / -1;">
+            <div class="glass-card-title" style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="bug" style="width:16px;height:16px;color:var(--primary);"></i> 除錯工具 (vConsole)
+            </div>
+            <p class="glass-card-hint mb-12">手機若無 DevTools，可手動開啟 vConsole 檢視日誌。</p>
+            <div id="debug-status" style="margin-bottom:12px; font-size:13px;"></div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-primary" id="debug-enable-btn">開啟 vConsole</button>
+              <button type="button" class="btn btn-ghost" id="debug-disable-btn">關閉</button>
+            </div>
+          </div>
+
+          <!-- 家庭成員 -->
+          <div class="glass-card" style="grid-column: 1 / -1;">
+            <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="users" style="width:16px;height:16px;color:var(--primary);"></i> 家庭成員
+            </div>
+            <div id="family-members-root"></div>
+          </div>
+        </div>
       </div>
     `;
 
-    if (window.lucide) window.lucide.createIcons();
-
-    // 事件綁定
-    document.getElementById('btn-toggle-theme')?.addEventListener('click', () => {
-      AppState.toggleTheme();
-      this.render(); // 重新渲染以更新按鈕狀態
+    // 2. 初始化 Tab 切換
+    const tabPanel = initTabPanel({
+      containerId: 'settings-tabs',
+      tabs,
+      defaultKey: isSuper ? 'platform' : 'banks',
+      storageKey: 'settings-tab',
+      onChange: (key) => {
+        if (key === 'banks' && !this._bankMgr) {
+          this._bankMgr = initBankAccountManager('bank-account-manager-root', { canInput: AppState.getCanInput() });
+        }
+        if (key === 'personal') {
+          this._initPersonalTab();
+        }
+      }
     });
 
-    document.getElementById('btn-clear-cache')?.addEventListener('click', async () => {
-      const ok = await openConfirm('確定要清除本地快取嗎？這會重新載入系統。', { title: '清除快取' });
-      if (!ok) return;
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.reload();
-    });
-
-    document.getElementById('btn-logout')?.addEventListener('click', async () => {
-      const ok = await openConfirm('確定要登出嗎？', { title: '登出', okClass: 'btn-danger' });
-      if (ok) logout();
-    });
+    // 3. 若預設為個人化，直接初始化
+    if (tabPanel.getCurrent() === 'personal') {
+      this._initPersonalTab();
+    }
   },
 
-  destroy() {}
+  _initPersonalTab() {
+    // 3.1 帳號資訊
+    const accEl = document.getElementById('settings-account');
+    const roleEl = document.getElementById('settings-role');
+    const famEl = document.getElementById('settings-family');
+    const memberAcc = AppState.getMemberAccount() || {};
+
+    if (accEl) accEl.value = memberAcc.account || (AppState.currentUser?.email ? AppState.currentUser.email.split('@')[0] : '—');
+    if (roleEl) roleEl.value = AppState.getRole() === ROLES.SUPERADMIN ? '超級管理員' : (AppState.getRole() === ROLES.OWNER ? '擁有者' : '成員');
+    if (famEl) famEl.value = AppState.getFamilyName() || '—';
+
+    document.getElementById('settings-logout-btn')?.addEventListener('click', async () => {
+      if (await openConfirm('確定要登出嗎？', { title: '登出', okClass: 'btn-danger' })) logout();
+    });
+
+    // 3.2 統計模式
+    const statsRoot = document.getElementById('stats-mode-options');
+    if (statsRoot) {
+      let curMode = 'auto';
+      try { curMode = localStorage.getItem(STORAGE_KEYS.STATS_MODE) || 'auto'; } catch (e) {}
+      const modes = [
+        { value: 'auto', label: '自動（依裝置 / 檢視模式）' },
+        { value: 'integrated', label: '整合卡（單一大卡）' },
+        { value: 'compact', label: '緊湊卡（多個小卡）' }
+      ];
+      statsRoot.innerHTML = modes.map(m => `
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px; background:var(--bg-deep); border-radius:6px;">
+          <input type="radio" name="stats-mode" value="${m.value}" ${m.value === curMode ? 'checked' : ''} style="cursor:pointer;">
+          <span style="font-size:13px;">${m.label}</span>
+        </label>
+      `).join('');
+
+      document.getElementById('save-stats-mode-btn')?.addEventListener('click', () => {
+        const selected = document.querySelector('input[name="stats-mode"]:checked');
+        if (selected) {
+          localStorage.setItem(STORAGE_KEYS.STATS_MODE, selected.value);
+          showToast('✅ 已儲存顯示模式', 'success');
+        }
+      });
+    }
+
+    // 3.3 年份範圍
+    const yearFormRoot = document.getElementById('yearrange-form-root');
+    if (yearFormRoot) {
+      let startYear = '', futureYears = 5;
+      if (this._unsubYear) this._unsubYear();
+      this._unsubYear = listen('settings/year_range', (snap) => {
+        const data = snap.val() || {};
+        startYear = data.startYear || '';
+        futureYears = data.futureYears || 5;
+        if (yearFormRoot.querySelector('form')) {
+          yearFormRoot.querySelector('#yr-start').value = startYear;
+          yearFormRoot.querySelector('#yr-future').value = futureYears;
+        }
+      });
+
+      createForm({
+        container: yearFormRoot,
+        fields: [
+          { id: 'yr-start', label: '起始年份 (留空=當前-3)', type: 'number', min: 1900, max: 2200 },
+          { id: 'yr-future', label: '往後顯示年數', type: 'number', required: true, min: 0, max: 20 }
+        ],
+        submitText: '儲存年份範圍',
+        onCancel: null,
+        onSubmit: async (data) => {
+          const sy = data['yr-start'] === '' ? null : Number(data['yr-start']);
+          const fy = Number(data['yr-future']) || 5;
+          await saveObject('settings/year_range', { startYear: sy, futureYears: fy });
+          showToast('✅ 年份範圍已更新', 'success');
+        }
+      });
+    }
+
+    // 3.4 頁面標題
+    const pageFormRoot = document.getElementById('pagemeta-form-root');
+    if (pageFormRoot) {
+      const pages = listPages();
+      let allMeta = {};
+      
+      if (this._unsubMeta) this._unsubMeta();
+      this._unsubMeta = listen('settings/page_metadata', (snap) => {
+        allMeta = snap.val() || {};
+        const pageSel = pageFormRoot.querySelector('#pm-page');
+        if (pageSel) {
+          _applyPageMeta(pageFormRoot, pageSel.value, allMeta, pages);
+        }
+      });
+
+      // 構建自訂 HTML 表單
+      pageFormRoot.innerHTML = `
+        <div class="form-stack">
+          <div class="field">
+            <label class="field-label">選擇頁面</label>
+            <select class="input" id="pm-page">
+              ${pages.map(p => `<option value="${esc(p.key)}">${esc(p.title)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label class="field-label">頁面標題</label><input class="input" id="pm-title" type="text" maxlength="40"></div>
+          <div class="field"><label class="field-label">副標題 (靜態段)</label><input class="input" id="pm-sub" type="text" maxlength="60"></div>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" class="btn btn-ghost" id="pm-reset">恢復預設</button>
+            <button type="button" class="btn btn-primary" id="pm-save">儲存標題</button>
+          </div>
+        </div>
+      `;
+
+      pageFormRoot.querySelector('#pm-page').addEventListener('change', (e) => {
+        _applyPageMeta(pageFormRoot, e.target.value, allMeta, pages);
+      });
+
+      pageFormRoot.querySelector('#pm-save').addEventListener('click', async () => {
+        const pk = pageFormRoot.querySelector('#pm-page').value;
+        const title = pageFormRoot.querySelector('#pm-title').value.trim();
+        const sub = pageFormRoot.querySelector('#pm-sub').value;
+        if (!title) { showToast('標題不可為空', 'warning'); return; }
+        
+        const next = { ...allMeta, [pk]: { title, subtitleStatic: sub } };
+        await saveObject('settings/page_metadata', next);
+        showToast('✅ 頁面標題已更新', 'success');
+      });
+
+      pageFormRoot.querySelector('#pm-reset').addEventListener('click', async () => {
+        const pk = pageFormRoot.querySelector('#pm-page').value;
+        const next = { ...allMeta };
+        delete next[pk];
+        await saveObject('settings/page_metadata', next);
+        _applyPageMeta(pageFormRoot, pk, next, pages);
+        showToast('✅ 已恢復預設', 'success');
+      });
+    }
+
+    // 3.5 vConsole 除錯工具
+    const debugStatus = document.getElementById('debug-status');
+    const updateDebugUI = async () => {
+      try {
+        const mod = await import('../core/debug.js');
+        debugStatus.innerHTML = mod.isDebugEnabled() ? '<span class="badge badge-success">● 已開啟</span>' : '<span class="badge badge-muted">● 已關閉</span>';
+      } catch (e) { debugStatus.innerHTML = '載入失敗'; }
+    };
+    updateDebugUI();
+
+    document.getElementById('debug-enable-btn')?.addEventListener('click', async () => {
+      const mod = await import('../core/debug.js');
+      await mod.forceEnableDebug();
+      updateDebugUI();
+    });
+    document.getElementById('debug-disable-btn')?.addEventListener('click', async () => {
+      const mod = await import('../core/debug.js');
+      mod.forceDisableDebug();
+      updateDebugUI();
+    });
+
+    // 3.6 家庭成員
+    if (!this._memberList) {
+      this._memberList = initEntityListPage({
+        entity: ENTITY_KEYS.MEMBER,
+        containerId: 'family-members-root',
+        options: { defaultView: 'table', showViewToggle: false }
+      });
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  destroy() {
+    if (this._unsubMeta) { try { this._unsubMeta(); } catch (e) {} this._unsubMeta = null; }
+    if (this._unsubYear) { try { this._unsubYear(); } catch (e) {} this._unsubYear = null; }
+    if (this._memberList) { try { this._memberList.destroy(); } catch (e) {} this._memberList = null; }
+    if (this._bankMgr) { try { this._bankMgr.destroy(); } catch (e) {} this._bankMgr = null; }
+  }
 };
+
+/* ============================================
+   內部輔助：套用頁面標題
+   ============================================ */
+function _applyPageMeta(formRoot, pageKey, allMeta, pages) {
+  const custom = allMeta[pageKey] || {};
+  const def = getDefaultMetadata(pageKey);
+  formRoot.querySelector('#pm-title').value = custom.title || def.title;
+  formRoot.querySelector('#pm-sub').value = custom.subtitleStatic !== undefined ? custom.subtitleStatic : (def.subtitleStatic || '');
+}
 
 /* ═══ EOF ═══
 F: pages/settings.js
-V: 1792900590
-W: ai-system-20261024-012#54
-═══ EOF ═══ */```
+V: 1792901850
+W: webapp-20261025-001#33
+═══ */```
 
 <!-- === FILE END: ./pages/settings.js === -->
 
@@ -7345,9 +8344,10 @@ W: ai-system-20261024-012#54
 
 ```js
 // ============================================
-// settlements.js — 結算清單
+// settlements.js — 結算清單（V2 引擎版）
 // 位置：pages/settlements.js
 // 說明：整合一般支出與保險扣款，提供確認與取消功能。
+//       使用 renderPageLayout 統一排版，恢復 V1 的結算模式。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -7360,6 +8360,10 @@ import { openConfirm, openModal, closeModal } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
+import { removeExpense, updateExpense } from '../db/write.js';
+import { getBankAccountsOnce } from '../db/index.js';
+
+const HIDE_COMPLETED_KEY = 'fin_ui_settle_hide_completed';
 
 export default {
   _currentYear: '',
@@ -7456,6 +8460,7 @@ export default {
 
   _renderListAndStats() {
     const listRoot = document.getElementById('settle-list-container');
+    const statsRoot = document.getElementById('page-stats-container');
     if (!listRoot || !this._data) return;
 
     const hideDone = document.getElementById('settle-hide-done')?.checked;
@@ -7469,35 +8474,25 @@ export default {
     const pt = pending.reduce((s, r) => s + (Number(r.amount) || 0), 0);
     const dt = done.reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-    // 更新統計卡 (使用 layout.js 建立的固定容器)
-    const statsContainer = document.getElementById('page-stats-container');
-    if (statsContainer) {
-      statsContainer.style.display = 'grid';
-      statsContainer.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
-      
-      statsContainer.innerHTML = `
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+    // 更新統計卡
+    if (statsRoot) {
+      statsRoot.style.display = 'grid';
+      statsRoot.innerHTML = [
+        { title: '待處理金額', val: formatHKD(pt), color: 'var(--accent-danger)', hint: `${pending.length} 筆`, icon: 'clock' },
+        { title: '已處理金額', val: formatHKD(dt), color: 'var(--accent-success)', hint: `${done.length} 筆`, icon: 'check-circle' },
+        { title: '總計', val: formatHKD(pt + dt), color: 'var(--primary)', hint: `${displayData.length} 筆`, icon: 'calculator' }
+      ].map(card => `
+        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
           <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="clock" style="width:14px;height:14px;"></i> 待處理金額
+            <i data-lucide="${card.icon}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.title}</span>
           </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-danger); white-space:nowrap;">${formatHKD(pt)}</div>
-          <div style="font-size:11px; color:var(--text-muted);">${pending.length} 筆</div>
-        </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="check-circle" style="width:14px;height:14px;"></i> 已處理金額
+          <div class="mono" style="font-size:20px; font-weight:700; color:${card.color}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${card.val}
           </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--accent-success); white-space:nowrap;">${formatHKD(dt)}</div>
-          <div style="font-size:11px; color:var(--text-muted);">${done.length} 筆</div>
+          <div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${card.hint}</div>
         </div>
-        <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
-          <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="calculator" style="width:14px;height:14px;"></i> 總計
-          </div>
-          <div class="mono" style="font-size:20px; font-weight:700; color:var(--primary); white-space:nowrap;">${formatHKD(pt + dt)}</div>
-          <div style="font-size:11px; color:var(--text-muted);">${displayData.length} 筆</div>
-        </div>
-      `;
+      `).join('');
     }
 
     if (displayData.length === 0) {
@@ -7511,7 +8506,10 @@ export default {
           ? `<button type="button" class="btn btn-sm btn-ghost" data-action="ins-unsync" data-id="${row._ref.policyId}">取消扣款</button>`
           : `<button type="button" class="btn btn-sm btn-primary" data-action="ins-sync" data-id="${row._ref.policyId}">確認扣款</button>`;
       }
-      return `<button type="button" class="btn btn-sm btn-ghost" data-action="settle" data-id="${row._ref.expenseId}" data-member="${row.memberId}">結算</button>`;
+      return `
+        <button type="button" class="btn btn-sm btn-ghost" data-action="settle" data-id="${row._ref.expenseId}" data-member="${row.memberId}">結算</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row._ref.expenseId}" data-member="${row.memberId}">刪除</button>
+      `;
     };
 
     if (currentView === 'card') {
@@ -7520,25 +8518,34 @@ export default {
       renderTable({ container: listRoot, rows: displayData, columnsKey: 'settlements', renderActions });
     }
 
-    listRoot.addEventListener('click', (e) => {
+    // 綁定事件（使用 onclick 防重複綁定）
+    listRoot.onclick = async (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
       const action = btn.dataset.action;
       const id = btn.dataset.id;
-      const row = displayData.find(r => r._ref.policyId === id || r._ref.expenseId === id);
+      const row = displayData.find(r => (r._ref && (r._ref.policyId === id || r._ref.expenseId === id)));
       if (!row) return;
 
       if (action === 'ins-sync') this._handleInsuranceSync(row);
       else if (action === 'ins-unsync') this._handleInsuranceUnsync(row);
       else if (action === 'settle') this._handleSettle(row);
-    });
+      else if (action === 'delete') this._handleDelete(row);
+    };
 
     if (window.lucide) window.lucide.createIcons();
   },
 
   async _handleInsuranceSync(row) {
+    const bankId = await this._openBankPickerModal(row);
+    if (bankId === undefined) return; // 使用者取消
+
     try {
-      await api.insuranceSync({ policyId: row._ref.policyId, memberId: row.memberId, policyName: row.name, monthlyAverage: row.amount, year: row.year, month: row.month, paymentMode: row.paymentMode || 'direct', advanceHolderId: row.advanceHolderId || '' });
+      await api.insuranceSync({
+        policyId: row._ref.policyId, memberId: row.memberId, policyName: row.name,
+        monthlyAverage: row.amount, year: row.year, month: row.month,
+        bankId: bankId || '', paymentMode: row.paymentMode || 'direct', advanceHolderId: row.advanceHolderId || ''
+      });
       showToast('✅ 已確認扣款', 'success');
       this._loadData();
     } catch (err) { showToast('失敗：' + err.message, 'error'); }
@@ -7548,7 +8555,10 @@ export default {
     const ok = await openConfirm(`確定要取消「${row.name}」的扣款嗎？`, { title: '取消扣款', okClass: 'btn-danger' });
     if (!ok) return;
     try {
-      await api.insuranceUnsync({ policyId: row._ref.policyId, memberId: row.memberId, year: row.year, month: row.month, amount: row.amount, paymentMode: row.paymentMode || 'direct', advanceHolderId: row.advanceHolderId || '' });
+      await api.insuranceUnsync({
+        policyId: row._ref.policyId, memberId: row.memberId, year: row.year, month: row.month,
+        amount: row.amount, paymentMode: row.paymentMode || 'direct', advanceHolderId: row.advanceHolderId || ''
+      });
       showToast('✅ 已取消扣款', 'success');
       this._loadData();
     } catch (err) { showToast('失敗：' + err.message, 'error'); }
@@ -7560,25 +8570,87 @@ export default {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = modalId;
-    overlay.innerHTML = `<div class="modal" style="max-width:400px; background:var(--bg-surface);"><h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">結算支出 — ${esc(row.name)}</h2><div id="settle-form-root"></div></div>`;
+    overlay.innerHTML = `<div class="modal" style="max-width:400px; background:var(--bg-surface);"><h2 class="modal-title">結算 — ${esc(row.name)}</h2><div id="settle-form-root"></div></div>`;
     document.body.appendChild(overlay);
     openModal(modalId);
 
     createForm({
       container: 'settle-form-root',
-      fields: [{ id: 'status', label: '狀態', type: 'select', required: true, options: [{ value: 'done', label: '已處理' }, { value: 'pending', label: '未處理' }] }],
+      fields: [
+        { id: 'status', label: '狀態', type: 'select', required: true, options: [
+          { value: 'done', label: '已處理' },
+          { value: 'pending', label: '未處理' }
+        ]}
+      ],
       initialData: { status: row.isDone ? 'done' : 'pending' },
       submitText: '儲存',
       onCancel: () => { closeModal(modalId); overlay.remove(); },
       onSubmit: async (data) => {
         try {
-          await api.entityCreate({ action: 'update', entityType: 'expense', id: row._ref.expenseId, extra: { status: data.status } });
+          await updateExpense(row.year, row.month, row.memberId, row._ref.expenseId, { status: data.status });
           showToast('✅ 結算狀態已更新', 'success');
           closeModal(modalId);
           overlay.remove();
           this._loadData();
         } catch (err) { showToast('更新失敗：' + err.message, 'error'); }
       }
+    });
+  },
+
+  async _handleDelete(row) {
+    const ok = await openConfirm(`確定要刪除「${row.name}」嗎？`, { okClass: 'btn-danger' });
+    if (!ok) return;
+    try {
+      await removeExpense(row.year, row.month, row.memberId, row._ref.expenseId);
+      showToast('✅ 已刪除', 'success');
+      this._loadData();
+    } catch (err) { showToast('刪除失敗：' + err.message, 'error'); }
+  },
+
+  _openBankPickerModal(row) {
+    return new Promise(async (resolve) => {
+      const modalId = 'bank-picker-modal';
+      document.getElementById(modalId)?.remove();
+      
+      let banks = [];
+      try { banks = await getBankAccountsOnce(); } catch (e) {}
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = modalId;
+      overlay.innerHTML = `
+        <div class="modal" style="max-width:400px; background:var(--bg-surface);">
+          <h2 class="modal-title">確認扣款 — ${esc(row.name)}</h2>
+          <div style="padding:12px; background:var(--bg-deep); border-radius:var(--radius-sm); margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+              <span class="text-muted">金額</span><span class="mono text-primary font-weight-bold">${formatHKD(row.amount)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;">
+              <span class="text-muted">所屬年月</span><span class="mono">${esc(row.year)}-${esc(row.month)}</span>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">出帳銀行 (可選)</label>
+            <select class="input" id="${modalId}-bank">
+              <option value="">— 不指定 —</option>
+              ${banks.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button type="button" class="btn btn-ghost" id="${modalId}-cancel">取消</button>
+            <button type="button" class="btn btn-primary" id="${modalId}-ok">確認扣款</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      openModal(modalId);
+
+      const close = (val) => { closeModal(modalId); overlay.remove(); resolve(val); };
+      overlay.querySelector(`#${modalId}-cancel`).onclick = () => close(undefined);
+      overlay.querySelector(`#${modalId}-ok`).onclick = () => {
+        const sel = overlay.querySelector(`#${modalId}-bank`);
+        close(sel.value);
+      };
     });
   },
 
@@ -7589,9 +8661,9 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/settlements.js
-V: 1792901040
-W: ai-system-20261024-012#6
-═══ EOF ═══ */```
+V: 1792901880
+W: webapp-20261025-001#36
+═══ */```
 
 <!-- === FILE END: ./pages/settlements.js === -->
 
@@ -7611,6 +8683,7 @@ const CACHE_NAME = 'family-fin-v2-v1';
 
 const STATIC_ASSETS = [
   './manifest.json',
+  './meta.json',
   // 後續階段會加入 css、js 等檔案
 ];
 
@@ -7692,9 +8765,9 @@ async function _networkFirst(request) {
 
 /* ═══ EOF ═══
 F: sw.js
-V: 1792900120
-W: ai-system-20261024-012#4
-═══ EOF ═══ */```
+V: 1792901730
+W: webapp-20261025-001#23
+═══ */```
 
 <!-- === FILE END: ./sw.js === -->
 
@@ -7880,19 +8953,105 @@ W: ai-system-20261024-012#79
 
 <!-- === FILE END: ./ui/controls.js === -->
 
+<!-- === FILE START: ./ui/dropdown-plus.js === -->
+
+## 📄 ./ui/dropdown-plus.js
+
+```js
+// ============================================
+// dropdown-plus.js — 下拉旁「+ 號」按鈕邏輯
+// 位置：ui/dropdown-plus.js
+// 說明：處理簡單實體（只需名稱）的快速新增。
+//       複雜實體（如保單、基金）目前不在此處理，交由專屬頁面。
+// ============================================
+
+import { openPrompt } from './modal.js';
+import { showToast } from './toast.js';
+import { api } from '../domain/api-client.js';
+
+/* ============================================
+   1. 簡單實體分類
+   ============================================ */
+const SIMPLE_ENTITIES = {
+  member:   { label: '成員', prefix: 'MEM' },
+  category: { label: '類別', prefix: 'CAT' },
+  payment:  { label: '支付方式', prefix: 'PAY' },
+  company:  { label: '保險公司', prefix: 'COMP' },
+};
+
+export function isSimpleEntity(entityType) {
+  return !!SIMPLE_ENTITIES[entityType];
+}
+
+/* ============================================
+   2. 主入口
+   ============================================ */
+export async function handlePlusClick(entityType) {
+  const def = SIMPLE_ENTITIES[entityType];
+  
+  if (!def) {
+    showToast(`此功能暫不支援快速新增「${entityType}」，請至對應頁面新增`, 'info');
+    return null;
+  }
+
+  // 1. 彈出輸入框
+  const name = await openPrompt({
+    title: `新增${def.label}`,
+    label: `${def.label}名稱`,
+    placeholder: `請輸入${def.label}名稱`,
+    maxlength: 20,
+  });
+
+  if (!name) return null; // 使用者取消
+
+  // 2. 生成臨時 code（格式：PREFIX-時間戳）
+  const code = `${def.prefix}-${Date.now().toString(36).toUpperCase()}`;
+
+  // 3. 呼叫 API 新增
+  try {
+    const res = await api.entityCreate({
+      entityType,
+      action: 'create',
+      code,
+      name,
+      extra: {},
+    });
+
+    if (res && res.ok) {
+      showToast(`✅ 已新增${def.label}`, 'success');
+      return { id: res.id, name, code };
+    } else {
+      throw new Error(res?.message || '未知錯誤');
+    }
+  } catch (err) {
+    console.error(`[dropdown-plus] 新增 ${entityType} 失敗：`, err);
+    showToast(`新增失敗：${err.message}`, 'error');
+    return null;
+  }
+}
+
+/* ═══ EOF ═══
+F: ui/dropdown-plus.js
+V: 1792901510
+W: webapp-20261025-001#13
+═══ */```
+
+<!-- === FILE END: ./ui/dropdown-plus.js === -->
+
 <!-- === FILE START: ./ui/form.js === -->
 
 ## 📄 ./ui/form.js
 
 ```js
 // ============================================
-// form.js — 通用動態表單建構器（V2 重構版）
+// form.js — 通用動態表單建構器（V2 引擎版）
 // 位置：ui/form.js
-// 說明：根據傳入的 fields 陣列，自動生成 HTML 表單。
-//       負責收集資料、基本驗證與回呼。
+// 說明：支援 dependsOn 聯動、custom 自訂區塊、plusEntity。
+//       徹底取代 V1 破碎的表單邏輯。
 // ============================================
 
 import { esc } from './format.js';
+import { handlePlusClick } from './dropdown-plus.js';
 
 /**
  * 建立並渲染表單
@@ -7944,6 +9103,12 @@ export function createForm(options) {
 
   let _isSubmitting = false;
 
+  // 綁定「+」按鈕事件
+  _bindPlusEvents(fields, formEl);
+  
+  // 綁定聯動事件 (dependsOn)
+  _bindDependencies(fields, formEl);
+
   // 表單送出
   formEl.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -7968,7 +9133,6 @@ export function createForm(options) {
         await onSubmit(data);
       } catch (err) {
         console.error('[ui/form] 送出失敗：', err);
-        // 這裡可以選擇是否要顯示全域 Toast，通常呼叫端會處理
       } finally {
         _isSubmitting = false;
         submitBtn.disabled = false;
@@ -7998,7 +9162,17 @@ export function createForm(options) {
    內部實作：渲染欄位
    ============================================ */
 function _renderField(f, value) {
-  const { id, label, type = 'text', required, placeholder = '', options = [], min, max, step } = f;
+  // 支援自訂區塊 (如基金分配器)
+  if (f.type === 'custom') {
+    const html = typeof f.html === 'function' ? f.html(value) : (f.html || '');
+    return `
+      <div class="field" id="field-wrapper-${f.id || 'custom'}">
+        ${html}
+      </div>
+    `;
+  }
+
+  const { id, label, type = 'text', required, placeholder = '', options = [], min, max, step, plusEntity } = f;
   const reqMark = required ? '<span style="color:var(--accent-danger); margin-left:4px;">*</span>' : '';
   const valStr = value != null ? String(value) : '';
 
@@ -8038,6 +9212,18 @@ function _renderField(f, value) {
       inputHtml = `<input class="input" type="text" id="field-${id}" name="${id}" value="${esc(valStr)}" placeholder="${esc(placeholder)}" ${required ? 'required' : ''}>`;
   }
 
+  // 若需要「+」按鈕，包裝成 flex 容器
+  if (plusEntity) {
+    inputHtml = `
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div style="flex:1;">${inputHtml}</div>
+        <button type="button" class="btn btn-ghost" id="plus-btn-${id}" style="padding:0 12px; height:42px; flex-shrink:0;">
+          <i data-lucide="plus" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <div class="field" style="display:flex; flex-direction:column; gap:6px; border:1px solid transparent; border-radius:var(--radius-sm);">
       <label for="field-${id}" style="font-size:12px; color:var(--text-secondary); font-weight:500;">${esc(label)}${reqMark}</label>
@@ -8047,11 +9233,71 @@ function _renderField(f, value) {
 }
 
 /* ============================================
+   內部實作：綁定「+」按鈕事件
+   ============================================ */
+function _bindPlusEvents(fields, formEl) {
+  fields.forEach(f => {
+    if (!f.plusEntity) return;
+    const btn = formEl.querySelector(`#plus-btn-${f.id}`);
+    if (!btn) return;
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.disabled) return;
+      btn.disabled = true;
+
+      try {
+        const result = await handlePlusClick(f.plusEntity);
+        if (!result) return;
+
+        if (typeof f.onPlusReload === 'function') {
+          await f.onPlusReload(result, formEl);
+        }
+      } catch (err) {
+        console.error('[ui/form] 快速新增失敗：', err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+/* ============================================
+   內部實作：綁定聯動事件 (dependsOn)
+   ============================================ */
+function _bindDependencies(fields, formEl) {
+  fields.forEach(f => {
+    if (!f.dependsOn) return;
+    
+    const targetEl = formEl.querySelector(`#field-${f.id}`);
+    const sourceEl = formEl.querySelector(`#field-${f.dependsOn}`);
+    
+    if (!targetEl || !sourceEl) return;
+
+    sourceEl.addEventListener('change', () => {
+      const sourceVal = sourceEl.value;
+      
+      // 清空當前選項
+      targetEl.innerHTML = '<option value="">— 請先選擇上層項目 —</option>';
+      targetEl.value = '';
+
+      // 若有傳入動態載入回呼，則觸發
+      if (typeof f.onDependsChange === 'function') {
+        f.onDependsChange(sourceVal, targetEl, formEl);
+      }
+    });
+  });
+}
+
+/* ============================================
    內部實作：收集資料
    ============================================ */
 function _collectData(fields, formEl) {
   const data = {};
   fields.forEach(f => {
+    if (f.type === 'custom') return;
+    
     const el = formEl.querySelector(`#field-${f.id}`);
     if (!el) return;
 
@@ -8071,7 +9317,7 @@ function _collectData(fields, formEl) {
    ============================================ */
 function _validate(fields, data, formEl) {
   for (const f of fields) {
-    if (!f.required) continue;
+    if (!f.required || f.type === 'custom') continue;
 
     const val = data[f.id];
     const isEmpty = val === '' || val === null || val === undefined;
@@ -8100,9 +9346,9 @@ function _resolveEl(target) {
 
 /* ═══ EOF ═══
 F: ui/form.js
-V: 1792900460
-W: ai-system-20261024-012#41
-═══ EOF ═══ */```
+V: 1792901830
+W: webapp-20261025-001#31
+═══ */```
 
 <!-- === FILE END: ./ui/form.js === -->
 
@@ -8239,10 +9485,11 @@ W: ai-system-20261024-012#23
 // ============================================
 // layout.js — SPA 骨架與導覽（V2 重構版）
 // 位置：ui/layout.js
+// 說明：統一頁面骨架、導覽列、側邊欄與防破版佈局引擎。
 // ============================================
 
 import { AppState } from '../config/state.js';
-import { getSidebarGroupsByRole, ROLES } from '../config/constants.js';
+import { getSidebarGroupsByRole, ROLES, ROUTES } from '../config/constants.js';
 import { logout } from '../domain/auth.js';
 import { esc } from './format.js';
 
@@ -8257,7 +9504,7 @@ export function initLayout(containerId = 'app-root') {
   _renderShell(root);
   _bindGlobalEvents();
   updateNavbar();
-  updateSidebarActive(window.location.hash.replace('#', '') || '/dashboard');
+  updateSidebarActive(window.location.hash.replace('#', '') || ROUTES.DASHBOARD);
 
   const loading = document.getElementById('app-loading');
   if (loading) loading.style.display = 'none';
@@ -8285,7 +9532,6 @@ function _renderShell(root) {
           <div class="navbar-title" id="app-navbar-title"></div>
           
           <div class="navbar-right">
-            <span class="navbar-db-tag" id="app-navbar-db" style="display:none;">DB: 2026-10-12-fam</span>
             <button type="button" class="navbar-theme-btn" id="app-theme-toggle">
               <i data-lucide="moon" style="width:18px;height:18px;"></i>
             </button>
@@ -8293,7 +9539,7 @@ function _renderShell(root) {
           </div>
         </header>
 
-        <main class="content" id="app-content"></main>
+        <main class="content" id="app-content" style="width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box;"></main>
       </div>
     </div>
   `;
@@ -8305,17 +9551,12 @@ function _renderShell(root) {
 export function updateNavbar() {
   const titleEl = document.getElementById('app-navbar-title');
   const userEl = document.getElementById('app-user-info');
-  const dbEl = document.getElementById('app-navbar-db');
   const themeBtn = document.getElementById('app-theme-toggle');
 
   if (titleEl && AppState.currentFamilyName) {
     titleEl.textContent = AppState.currentFamilyName;
-  }
-
-  if (dbEl) {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('debug') === '1') dbEl.style.display = 'inline-block';
-    else dbEl.style.display = 'none';
+  } else if (titleEl && AppState.isSuperAdmin) {
+    titleEl.textContent = '系統管理後台';
   }
 
   if (userEl) {
@@ -8397,7 +9638,7 @@ function _updateSidebarNav() {
 export function updateSidebarActive(currentPath) {
   document.querySelectorAll('.sidebar-nav .nav-item').forEach((el) => {
     const path = el.getAttribute('data-path');
-    if (currentPath === path || (currentPath === '/' && path === '/dashboard')) {
+    if (currentPath === path || (currentPath === '/' && path === ROUTES.DASHBOARD)) {
       el.classList.add('active');
     } else {
       el.classList.remove('active');
@@ -8418,7 +9659,7 @@ export function setPageTitle(title) {
 }
 
 /* ============================================
-   統一頁面排版引擎
+   統一頁面排版引擎（防破版核心）
    ============================================ */
 export function renderPageLayout(config) {
   const content = document.getElementById('app-content');
@@ -8438,27 +9679,27 @@ export function renderPageLayout(config) {
   if (stats && stats.length > 0) {
     const gridCols = window.innerWidth < 768 ? 2 : statsCols;
     statsHtml = `
-      <div id="page-stats-container" style="display:grid; grid-template-columns:repeat(${gridCols}, 1fr); gap:16px; margin-bottom:24px;">
+      <div id="page-stats-container" style="display:grid; grid-template-columns:repeat(${gridCols}, 1fr); gap:16px; margin-bottom:24px; width:100%;">
         ${stats.map(card => `
-          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px;">
+          <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
             <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-              <i data-lucide="${card.icon || 'info'}" style="width:14px;height:14px;"></i> ${esc(card.title)}
+              <i data-lucide="${card.icon || 'info'}" style="width:14px;height:14px; flex-shrink:0;"></i> 
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(card.title)}</span>
             </div>
-            <div class="mono" style="font-size:20px; font-weight:700; color:${card.color || 'var(--text-primary)'}; white-space:nowrap;">
+            <div class="mono" style="font-size:20px; font-weight:700; color:${card.color || 'var(--text-primary)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               ${esc(card.val)}
             </div>
-            ${card.hint ? `<div style="font-size:11px; color:var(--text-muted);">${esc(card.hint)}</div>` : ''}
+            ${card.hint ? `<div style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(card.hint)}</div>` : ''}
           </div>
         `).join('')}
       </div>
     `;
   } else {
-    // 若無統計卡，依然保留一個隱藏的容器，方便後續動態塞入
     statsHtml = `<div id="page-stats-container" style="display:none;"></div>`;
   }
 
   const controlsHtml = controls ? `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; flex-wrap:wrap; gap:12px; width:100%;">
       ${controls}
     </div>
   ` : '';
@@ -8467,17 +9708,20 @@ export function renderPageLayout(config) {
     <h2 style="font-size:16px; margin-bottom:12px; color:var(--text-secondary);">${esc(listTitle)}</h2>
   ` : '';
 
+  // 約束最外層寬度，防止內部 table 撐破版面
   content.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-      <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">${esc(title)}</h1>
-      <div>${headerActions}</div>
-    </div>
+    <div style="width:100%; max-width:100%; overflow-x:hidden; display:flex; flex-direction:column; box-sizing:border-box;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; width:100%;">
+        <h1 style="font-size:24px; font-weight:700; color:var(--primary); margin:0;">${esc(title)}</h1>
+        <div style="flex-shrink:0;">${headerActions}</div>
+      </div>
 
-    ${statsHtml}
-    ${controlsHtml}
-    ${listTitleHtml}
-    <div id="${listContainerId}">
-      <div style="text-align:center; padding:40px; color:var(--text-muted);">載入資料中…</div>
+      ${statsHtml}
+      ${controlsHtml}
+      ${listTitleHtml}
+      <div id="${listContainerId}" style="width:100%; max-width:100%;">
+        <div style="text-align:center; padding:40px; color:var(--text-muted);">載入資料中…</div>
+      </div>
     </div>
   `;
 
@@ -8523,9 +9767,9 @@ function _toggleSidebar(open) {
 
 /* ═══ EOF ═══
 F: ui/layout.js
-V: 1792901000
-W: ai-system-20261024-012#2
-═══ EOF ═══ */```
+V: 1792901820
+W: webapp-20261025-001#30
+═══ */```
 
 <!-- === FILE END: ./ui/layout.js === -->
 
@@ -8796,9 +10040,9 @@ function _bindEscClose() {
 
 /* ═══ EOF ═══
 F: ui/modal.js
-V: 1792900410
-W: ai-system-20261024-012#36
-═══ EOF ═══ */```
+V: 1792901700
+W: webapp-20261025-001#20
+═══ */```
 
 <!-- === FILE END: ./ui/modal.js === -->
 
@@ -8808,67 +10052,126 @@ W: ai-system-20261024-012#36
 
 ```js
 // ============================================
-// table.js — 通用資料表格（V2 重構版）
+// table.js — 通用資料表格引擎（V2 引擎版）
 // 位置：ui/table.js
+// 說明：支援表頭排序（3態）、表頭下拉篩選、欄位顯示設定。
+//       包含表格與卡片兩種渲染模式，並具備防破版樣式。
 // ============================================
 
 import { getColumns, getResolvers } from '../config/columns.js';
 import { esc } from './format.js';
+import { openModal, closeModal, destroyModal } from './modal.js';
 
-/**
- * 渲染資料表格
- */
+/* ============================================
+   狀態儲存（每個表格獨立）
+   ============================================ */
+const _tableStates = {};
+
+function _getTableState(key) {
+  if (!_tableStates[key]) {
+    _tableStates[key] = {
+      sortCol: null,
+      sortDir: null, // 'asc' | 'desc' | null
+      filters: {},   // { colId: value }
+      visibleCols: null // 若為 null 表示全顯示
+    };
+  }
+  return _tableStates[key];
+}
+
+/* ============================================
+   1. 渲染表格 (Table)
+   ============================================ */
 export function renderTable(options) {
   const root = _resolveEl(options.container);
   if (!root) return;
 
   const { rows = [], columnsKey, renderActions, onRowClick, emptyText = '尚無資料' } = options;
+  const state = _getTableState(columnsKey);
 
+  const allColumns = getColumns(columnsKey);
+  const resolvers = getResolvers(columnsKey);
+  const hasActions = typeof renderActions === 'function';
+
+  // 初始化可見欄位
+  if (!state.visibleCols) {
+    state.visibleCols = allColumns.map(c => c.id);
+  }
+
+  // 1. 篩選
+  let displayRows = [...rows];
+  Object.entries(state.filters).forEach(([colId, val]) => {
+    if (!val) return;
+    displayRows = displayRows.filter(r => String(r[colId] ?? '') === String(val));
+  });
+
+  // 2. 排序
+  if (state.sortCol && state.sortDir) {
+    const dir = state.sortDir === 'asc' ? 1 : -1;
+    const colDef = allColumns.find(c => c.id === state.sortCol);
+    const isNum = colDef && colDef.type === 'number';
+
+    displayRows.sort((a, b) => {
+      const va = a[state.sortCol];
+      const vb = b[state.sortCol];
+      if (isNum) return ((Number(va) || 0) - (Number(vb) || 0)) * dir;
+      return String(va ?? '').localeCompare(String(vb ?? ''), 'zh-HK') * dir;
+    });
+  }
+
+  // 渲染骨架
   if (rows.length === 0) {
     root.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px; color:var(--text-muted);">${esc(emptyText)}</div>`;
     return;
   }
 
-  const columns = getColumns(columnsKey);
-  const resolvers = getResolvers(columnsKey);
-  const hasActions = typeof renderActions === 'function';
+  const finalCols = allColumns.filter(c => state.visibleCols.includes(c.id));
+  if (hasActions) finalCols.push({ id: '__actions__', label: '操作', type: 'actions' });
 
+  // 渲染表頭
   const theadHtml = `
     <thead>
       <tr>
-        ${columns.map((c) => `<th class="${c.type === 'number' ? 'num' : ''}" style="white-space:nowrap;">${esc(c.label)}</th>`).join('')}
-        ${hasActions ? '<th style="width:150px; text-align:right; white-space:nowrap;">操作</th>' : ''}
+        ${finalCols.map(c => _renderTh(c, allColumns, state)).join('')}
       </tr>
     </thead>
   `;
 
+  // 渲染資料列
   const tbodyHtml = `
     <tbody>
-      ${rows.map((row, index) => {
-        const tds = columns.map((col) => {
+      ${displayRows.map((row, index) => {
+        const tds = finalCols.map(col => {
+          if (col.id === '__actions__') {
+            return `<td style="text-align:right; white-space:nowrap;">${renderActions(row)}</td>`;
+          }
           const val = row[col.id];
           const resolver = resolvers[col.id];
-          // 如果沒有 resolver，就防呆轉字串
           let content = resolver ? resolver(val, row) : esc(val);
-          
-          // 如果是空值，給個破折號
           if (content === undefined || content === null || content === '') content = '<span class="text-muted">—</span>';
-
-          // 針對數字欄位，避免「今年」這種標籤導致換行
+          
           const isNum = col.type === 'number';
           return `<td class="${isNum ? 'num' : ''}" style="white-space:nowrap;">${content}</td>`;
         }).join('');
 
-        const actionsHtml = hasActions ? `<td style="text-align:right; white-space:nowrap;">${renderActions(row)}</td>` : '';
-
-        return `<tr data-index="${index}" ${onRowClick ? 'style="cursor:pointer;"' : ''}>${tds}${actionsHtml}</tr>`;
+        return `<tr data-index="${index}" ${onRowClick ? 'style="cursor:pointer;"' : ''}>${tds}</tr>`;
       }).join('')}
     </tbody>
   `;
 
-  // 加上 min-width 確保表格不會被過度擠壓
+  // 工具列 (顯示筆數 + 欄位設定)
+  const toolbarHtml = `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border-color); background:var(--bg-surface);">
+      <div style="font-size:13px; color:var(--text-muted);">共 ${displayRows.length} 筆</div>
+      <button type="button" class="btn btn-sm btn-ghost" id="btn-col-settings-${columnsKey}">
+        <i data-lucide="settings" style="width:14px;height:14px;"></i> 欄位設定
+      </button>
+    </div>
+  `;
+
   root.innerHTML = `
-    <div class="glass-card" style="padding:0; overflow:hidden;">
+    <div class="glass-card" style="padding:0; overflow:hidden; width:100%; max-width:100%;">
+      ${toolbarHtml}
       <div class="data-table-scroll-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
         <table class="data-table" style="width:100%; border-collapse:collapse; min-width:600px;">
           ${theadHtml}
@@ -8878,12 +10181,13 @@ export function renderTable(options) {
     </div>
   `;
 
-  _bindRowClick(root, onRowClick, rows);
+  // 綁定事件
+  _bindTableEvents(root, state, allColumns, columnsKey, options);
 }
 
-/**
- * 渲染卡片列表
- */
+/* ============================================
+   2. 渲染卡片 (Cards)
+   ============================================ */
 export function renderCards(options) {
   const root = _resolveEl(options.container);
   if (!root) return;
@@ -8926,7 +10230,7 @@ export function renderCards(options) {
       : '';
 
     return `
-      <div class="glass-card" data-index="${index}" style="padding:16px; margin-bottom:12px; ${onRowClick ? 'cursor:pointer;' : ''}">
+      <div class="glass-card" data-index="${index}" style="padding:16px; margin-bottom:12px; width:100%; max-width:100%; ${onRowClick ? 'cursor:pointer;' : ''}">
         <div style="font-size:16px; font-weight:700; color:var(--primary); margin-bottom:12px; word-break:break-word;">${primaryContent}</div>
         <div>${fieldsHtml}</div>
         ${actionsHtml}
@@ -8934,13 +10238,194 @@ export function renderCards(options) {
     `;
   }).join('');
 
-  root.innerHTML = `<div class="mobile-card-list">${cardsHtml}</div>`;
+  root.innerHTML = `<div class="mobile-card-list" style="width:100%; max-width:100%;">${cardsHtml}</div>`;
 
   _bindRowClick(root, onRowClick, rows);
 }
 
 /* ============================================
-   內部工具
+   3. 內部工具：渲染表頭
+   ============================================ */
+function _renderTh(col, allColumns, state) {
+  if (col.id === '__actions__') {
+    return `<th style="width:150px; text-align:right; white-space:nowrap;">操作</th>`;
+  }
+
+  const isSorted = state.sortCol === col.id;
+  const sortIcon = isSorted ? (state.sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrow-up-down';
+  const isFiltered = state.filters[col.id] != null && state.filters[col.id] !== '';
+  
+  // 判斷是否支援排序與篩選（根據 col 設定）
+  const sortable = col.sortable !== false; // 預設允許
+  const filterable = !!col.filterOptions; // 有選項才顯示漏斗
+
+  return `
+    <th class="${col.type === 'number' ? 'num' : ''}" style="white-space:nowrap;" data-col-id="${col.id}">
+      <div style="display:flex; align-items:center; gap:4px; ${col.type === 'number' ? 'justify-content:flex-end;' : ''}">
+        <span>${esc(col.label)}</span>
+        ${sortable ? `
+          <button type="button" class="btn-icon btn-sort ${isSorted ? 'text-primary' : 'text-muted'}" data-sort="${col.id}">
+            <i data-lucide="${sortIcon}" style="width:12px;height:12px;"></i>
+          </button>
+        ` : ''}
+        ${filterable ? `
+          <button type="button" class="btn-icon btn-filter ${isFiltered ? 'text-primary' : 'text-muted'}" data-filter="${col.id}">
+            <i data-lucide="filter" style="width:12px;height:12px;"></i>
+          </button>
+        ` : ''}
+      </div>
+    </th>
+  `;
+}
+
+/* ============================================
+   4. 內部工具：事件綁定
+   ============================================ */
+function _bindTableEvents(root, state, allColumns, columnsKey, options) {
+  const { rows, columnsKey: key, onRowClick } = options;
+  
+  // 排序 / 篩選按鈕
+  root.querySelectorAll('.btn-sort').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const colId = btn.dataset.sort;
+      if (state.sortCol !== colId) {
+        state.sortCol = colId; state.sortDir = 'asc';
+      } else if (state.sortDir === 'asc') {
+        state.sortDir = 'desc';
+      } else {
+        state.sortCol = null; state.sortDir = null; // 恢復原狀
+      }
+      renderTable(options); // 重新渲染
+    };
+  });
+
+  root.querySelectorAll('.btn-filter').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      _openFilterMenu(btn, allColumns.find(c => c.id === btn.dataset.filter), state, options);
+    };
+  });
+
+  // 欄位設定
+  const colBtn = root.querySelector(`#btn-col-settings-${key}`);
+  if (colBtn) {
+    colBtn.onclick = () => _openColumnSettings(allColumns, state, options);
+  }
+
+  // 列點擊
+  if (onRowClick) {
+    root.querySelectorAll('tbody tr[data-index]').forEach(tr => {
+      tr.onclick = (e) => {
+        if (e.target.closest('button')) return;
+        const idx = Number(tr.dataset.index);
+        const displayRows = _getDisplayRows(rows, state);
+        onRowClick(displayRows[idx]);
+      };
+    });
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+/* ============================================
+   5. 內部工具：篩選選單與欄位設定
+   ============================================ */
+function _getDisplayRows(rows, state) {
+  let display = [...rows];
+  Object.entries(state.filters).forEach(([colId, val]) => {
+    if (val) display = display.filter(r => String(r[colId] ?? '') === String(val));
+  });
+  if (state.sortCol && state.sortDir) {
+    const dir = state.sortDir === 'asc' ? 1 : -1;
+    display.sort((a, b) => String(a[state.sortCol] ?? '').localeCompare(String(b[state.sortCol] ?? '')) * dir);
+  }
+  return display;
+}
+
+function _openFilterMenu(btnEl, colDef, state, options) {
+  document.getElementById('__table-filter-menu')?.remove();
+  const rect = btnEl.getBoundingClientRect();
+  const curVal = state.filters[colDef.id] || '';
+
+  const menu = document.createElement('div');
+  menu.id = '__table-filter-menu';
+  menu.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left - 100}px; z-index:9999; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-sm); box-shadow:var(--shadow-md); padding:12px; min-width:200px;`;
+  
+  menu.innerHTML = `
+    <div style="font-size:12px; font-weight:600; margin-bottom:8px; color:var(--text-primary);">篩選：${esc(colDef.label)}</div>
+    <select class="input" style="width:100%; margin-bottom:12px; padding:6px;" id="__filter-select">
+      <option value="">— 全部 —</option>
+      ${colDef.filterOptions.map(o => `<option value="${esc(o.value)}" ${String(o.value) === curVal ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+    </select>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button type="button" class="btn btn-sm btn-ghost" id="__filter-clear">清除</button>
+      <button type="button" class="btn btn-sm btn-primary" id="__filter-apply">套用</button>
+    </div>
+  `;
+  document.body.appendChild(menu);
+
+  const closeMenu = () => menu.remove();
+  document.addEventListener('mousedown', function closeHandler(e) {
+    if (!menu.contains(e.target)) { closeMenu(); document.removeEventListener('mousedown', closeHandler); }
+  });
+
+  menu.querySelector('#__filter-apply').onclick = () => {
+    const val = menu.querySelector('#__filter-select').value;
+    if (val) state.filters[colDef.id] = val;
+    else delete state.filters[colDef.id];
+    closeMenu();
+    renderTable(options);
+  };
+  menu.querySelector('#__filter-clear').onclick = () => {
+    delete state.filters[colDef.id];
+    closeMenu();
+    renderTable(options);
+  };
+}
+
+function _openColumnSettings(allColumns, state, options) {
+  const modalId = '__col-settings-modal';
+  document.getElementById(modalId)?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = modalId;
+  
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:400px; background:var(--bg-surface);">
+      <h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">欄位顯示設定</h2>
+      <div style="max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+        ${allColumns.map(c => `
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px; border-radius:6px; background:var(--bg-deep);">
+            <input type="checkbox" data-col="${c.id}" ${state.visibleCols.includes(c.id) ? 'checked' : ''} style="width:16px;height:16px;">
+            <span style="font-size:14px; color:var(--text-primary);">${esc(c.label)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+        <button type="button" class="btn btn-ghost" id="__col-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="__col-save">儲存</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  openModal(modalId);
+
+  overlay.querySelector('#__col-cancel').onclick = () => { closeModal(modalId); overlay.remove(); };
+  overlay.querySelector('#__col-save').onclick = () => {
+    const checked = Array.from(overlay.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.dataset.col);
+    if (checked.length === 0) {
+      alert('至少需保留一個欄位'); return;
+    }
+    state.visibleCols = checked;
+    closeModal(modalId); overlay.remove();
+    renderTable(options);
+  };
+}
+
+/* ============================================
+   輔助函式
    ============================================ */
 function _resolveEl(target) {
   if (typeof target === 'string') return document.getElementById(target);
@@ -8962,9 +10447,9 @@ function _bindRowClick(root, onRowClick, rows) {
 
 /* ═══ EOF ═══
 F: ui/table.js
-V: 1792900820
-W: ai-system-20261024-012#73
-═══ EOF ═══ */```
+V: 1792901840
+W: webapp-20261025-001#32
+═══ */```
 
 <!-- === FILE END: ./ui/table.js === -->
 

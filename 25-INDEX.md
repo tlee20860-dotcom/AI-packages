@@ -1,5 +1,5 @@
 > 體系版本：SV04
-> 生成時間：2026-10-25 23:36:51 (HKT)
+> 生成時間：2026-10-26 09:14:37 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | AI-General | docs/p90/90-P-Data.md | 1792900061 | ai-system-20261024-012#86 |
 | AI-General | docs/p90/90-P-Errors.md | 1792900127 | ai-system-20261024-013#27 |
-| AI-General | docs/p90/90-P-Map.md | 1792900060 | ai-system-20261024-012#85 |
+| AI-General | docs/p90/90-P-Map.md | 1792901610 | webapp-20261025-001#17 |
 | AI-General | docs/p90/90-P-Rules.md | 1792900062 | ai-system-20261024-012#87 |
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792901100 | ai-system-20261024-012#14 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901080 | ai-system-20261024-012#12 |
@@ -34,13 +34,13 @@
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
 | AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792605003 | ai-system-20261022-007#70#2 |
-| AI-kernel | docs/skills/W/W-00-startup.md | 1792581001 | ai-system-20261021-004#1 |
+| AI-kernel | docs/skills/W/W-00-startup.md | 1792901630 | webapp-20261025-001#19 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
-| AI-kernel | docs/skills/W/W-02-functions.md | 1792581003 | ai-system-20261021-004#3 |
-| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792581004 | ai-system-20261021-004#4 |
+| AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
+| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792901600 | webapp-20261025-001#16 |
 | AI-kernel | docs/skills/W/W-04-pwa.md | 1792581005 | ai-system-20261021-004#5 |
-| AI-kernel | docs/skills/W/W-05-schema.md | 1792581006 | ai-system-20261021-004#6 |
-| AI-kernel | docs/skills/W/W-06-sop.md | 1792668000 | webapp-20261022-014#1 |
+| AI-kernel | docs/skills/W/W-05-schema.md | 1792901260 | webapp-20261025-001#7 |
+| AI-kernel | docs/skills/W/W-06-sop.md | 1792901400 | webapp-20261025-001#11 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792900120 | ai-system-20261024-013#12 |
 
@@ -108,6 +108,7 @@
 | AI-WEB-APP-Family | functions/api/handlers.js |
 | AI-WEB-APP-Family | functions/api/helpers.js |
 | AI-WEB-APP-Family | index.html |
+| AI-WEB-APP-Family | lib/expense-modal.js |
 | AI-WEB-APP-Family | manifest.json |
 | AI-WEB-APP-Family | meta.json |
 | AI-WEB-APP-Family | pages/annual-report.js |
@@ -123,6 +124,7 @@
 | AI-WEB-APP-Family | pages/settlements.js |
 | AI-WEB-APP-Family | sw.js |
 | AI-WEB-APP-Family | ui/controls.js |
+| AI-WEB-APP-Family | ui/dropdown-plus.js |
 | AI-WEB-APP-Family | ui/form.js |
 | AI-WEB-APP-Family | ui/format.js |
 | AI-WEB-APP-Family | ui/layout.js |
@@ -253,13 +255,13 @@
 | 02-RP.md | 64 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
-| 10-WP.md | 28 |
+| 10-WP.md | 44 |
 | 20-SP-Sys.md | 36 |
 | 21-INFRA.md | 48 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 60 |
-| 90-Code.md | 320 |
-| 90-P.md | 20 |
-| 90-SP.md | 28 |
+| 90-Code.md | 380 |
+| 90-P.md | 24 |
+| 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
