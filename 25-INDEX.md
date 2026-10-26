@@ -1,5 +1,5 @@
 > 體系版本：SV05
-> 生成時間：2026-10-26 09:59:51 (HKT)
+> 生成時間：2026-10-26 13:52:46 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -19,21 +19,21 @@
 | AI-General | docs/records/PROGRESS.md | 1792902110 | ai-system-20261025-001#5 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792902120 | ai-system-20261025-001#6 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792902140 | ai-system-20261025-001#8 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792903000 | ai-system-20261026-001#10 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900159 | ai-system-20261024-013#10 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792902100 | ai-system-20261025-001#4 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792902130 | ai-system-20261025-001#7 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792900190 | ai-system-20261025-001#3 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792902700 | ai-system-20261026-001#7 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792900152 | ai-system-20261024-013#1 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792902500 | ai-system-20261026-001#4 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792900141 | ai-system-20261024-013#2 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792902400 | ai-system-20261026-001#3 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792900147 | ai-system-20261024-013#6 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792900138 | ai-system-20261024-013#7 |
-| AI-kernel | docs/review/CHK-E.md | 1792612002 | ai-system-20261022-007#90#2 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
+| AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
-| AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792605003 | ai-system-20261022-007#70#2 |
+| AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792902800 | ai-system-20261026-001#8 |
 | AI-kernel | docs/skills/W/W-00-startup.md | 1792901630 | webapp-20261025-001#19 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
 | AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
@@ -252,7 +252,7 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 24 |
-| 02-RP.md | 64 |
+| 02-RP.md | 68 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
