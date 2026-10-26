@@ -1,5 +1,5 @@
-> 體系版本：SV04
-> 生成時間：2026-10-26 09:14:37 (HKT)
+> 體系版本：SV05
+> 生成時間：2026-10-26 09:59:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -12,17 +12,17 @@
 | AI-General | docs/p90/90-P-Errors.md | 1792900127 | ai-system-20261024-013#27 |
 | AI-General | docs/p90/90-P-Map.md | 1792901610 | webapp-20261025-001#17 |
 | AI-General | docs/p90/90-P-Rules.md | 1792900062 | ai-system-20261024-012#87 |
-| AI-General | docs/p90/WF-CONCLUSION.md | 1792901100 | ai-system-20261024-012#14 |
-| AI-General | docs/p90/WF-HANDOFF.md | 1792901080 | ai-system-20261024-012#12 |
-| AI-General | docs/p90/WF-PROGRESS.md | 1792901090 | ai-system-20261024-012#13 |
+| AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
+| AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
+| AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1792900156 | ai-system-20261024-013#7 |
+| AI-General | docs/records/PROGRESS.md | 1792902110 | ai-system-20261025-001#5 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792900157 | ai-system-20261024-013#8 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792900145 | ai-system-20261024-013#7 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792902120 | ai-system-20261025-001#6 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792902140 | ai-system-20261025-001#8 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900159 | ai-system-20261024-013#10 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792900155 | ai-system-20261024-013#6 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1792900146 | ai-system-20261024-013#5 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792902100 | ai-system-20261025-001#4 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1792902130 | ai-system-20261025-001#7 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792900190 | ai-system-20261025-001#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792900152 | ai-system-20261024-013#1 |
@@ -256,11 +256,11 @@
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
-| 20-SP-Sys.md | 36 |
+| 20-SP-Sys.md | 40 |
 | 21-INFRA.md | 48 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 60 |
-| 90-Code.md | 380 |
+| 24-HISTORY.md | 64 |
+| 90-Code.md | 384 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |

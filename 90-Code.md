@@ -1,5 +1,5 @@
-> 體系版本：SV04
-> 生成時間：2026-10-26 09:14:36 (HKT)
+> 體系版本：SV05
+> 生成時間：2026-10-26 09:59:50 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
@@ -13,6 +13,7 @@
 // admin.js — 平台管理（V2 重構版）
 // 位置：admin/admin.js
 // 說明：供超級管理員管理家庭清單與平台預設資料。
+//       已移除手寫表格，全面改用 renderTable 引擎。
 // ============================================
 
 import { api } from '../domain/api-client.js';
@@ -97,48 +98,16 @@ export default {
         <button type="button" class="btn btn-sm btn-danger" data-action="remove" data-uid="${row.uid}">刪除</button>
       `;
 
+      // 使用引擎渲染表格
       renderTable({
         container: listRoot,
         rows: this._families,
-        columnsKey: 'adminFamilies', // 需手動補一個 key 或直接手刻
+        columnsKey: 'adminFamilies',
         renderActions
       });
 
-      // 因為 adminFamilies 沒有預設的 columnsKey，這裡直接手刻表格
-      listRoot.innerHTML = `
-        <div class="glass-card" style="padding:0; overflow:hidden;">
-          <div style="overflow-x:auto;">
-            <table class="data-table" style="width:100%; border-collapse:collapse;">
-              <thead>
-                <tr>
-                  <th>UID</th>
-                  <th>名稱</th>
-                  <th>擁有者 Email</th>
-                  <th>建立時間</th>
-                  <th style="text-align:right;">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this._families.map(f => `
-                  <tr>
-                    <td><span class="mono" style="font-size:12px;">${esc(f.uid)}</span></td>
-                    <td>${esc(f.name || '—')}</td>
-                    <td><span class="mono" style="font-size:12px;">${esc(f.ownerEmail || '—')}</span></td>
-                    <td><span class="mono" style="font-size:12px; color:var(--text-muted);">${f.createdAt ? new Date(f.createdAt).toLocaleString() : '—'}</span></td>
-                    <td style="text-align:right;">
-                      <button type="button" class="btn btn-sm btn-ghost" data-action="init" data-uid="${esc(f.uid)}">初始化</button>
-                      <button type="button" class="btn btn-sm btn-danger" data-action="remove" data-uid="${esc(f.uid)}">刪除</button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-
-      // 綁定操作
-      listRoot.addEventListener('click', async (e) => {
+      // 改用 onclick 屬性賦值，覆蓋舊監聽，避免累積事件
+      listRoot.onclick = async (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const uid = btn.dataset.uid;
@@ -150,7 +119,7 @@ export default {
         } else if (btn.dataset.action === 'remove') {
           await this._handleRemove(uid, family.name);
         }
-      });
+      };
 
     } catch (err) {
       console.error('[admin] 載入家庭失敗：', err);
@@ -167,7 +136,7 @@ export default {
     overlay.id = modalId;
     overlay.innerHTML = `
       <div class="modal" style="max-width:450px; background:var(--bg-surface);">
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px; color:var(--text-primary);">新增家庭</h2>
+        <h2 class="modal-title">新增家庭</h2>
         <div id="family-form-root"></div>
       </div>
     `;
@@ -260,9 +229,9 @@ export default {
 
 /* ═══ EOF ═══
 F: admin/admin.js
-V: 1792900600
-W: ai-system-20261024-012#55
-═══ EOF ═══ */```
+V: 1792901940
+W: webapp-20261025-001#42
+═══ */```
 
 <!-- === FILE END: ./admin/admin.js === -->
 
@@ -601,7 +570,6 @@ export const COLUMNS = {
     { id: 'net', label: '淨餘額', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
   ],
 
-  /* 🆕 最近支出 (Input Center) */
   recentExpense: [
     { id: 'date', label: '日期', defaultVisible: true, defaultWidth: 100, sortable: true },
     { id: 'memberName', label: '成員', defaultVisible: true, defaultWidth: 100, sortable: true, filterable: true },
@@ -610,7 +578,6 @@ export const COLUMNS = {
     { id: 'status', label: '狀態', defaultVisible: true, defaultWidth: 120, sortable: true, filterable: true },
   ],
 
-  /* 🆕 成員收支明細 (Member Report) */
   memberReport: [
     { id: 'name', label: '成員', defaultVisible: true, defaultWidth: 140, sortable: true },
     { id: 'income', label: '家用轉入', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
@@ -618,6 +585,22 @@ export const COLUMNS = {
     { id: 'expense', label: '一般支出', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
     { id: 'insurance', label: '保險平攤', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
     { id: 'net', label: '淨結餘', defaultVisible: true, defaultWidth: 140, type: 'number', sortable: true },
+  ],
+
+  /* 🆕 管理員家庭列表 */
+  adminFamilies: [
+    { id: 'uid', label: 'UID', defaultVisible: true, defaultWidth: 220, sortable: true },
+    { id: 'name', label: '名稱', defaultVisible: true, defaultWidth: 160, sortable: true },
+    { id: 'ownerEmail', label: '擁有者 Email', defaultVisible: true, defaultWidth: 200, sortable: true },
+    { id: 'createdAt', label: '建立時間', defaultVisible: true, defaultWidth: 170, sortable: true },
+  ],
+
+  /* 🆕 年度報表月度明細 */
+  annualMonthly: [
+    { id: 'month', label: '月份', defaultVisible: true, defaultWidth: 100, sortable: true },
+    { id: 'totalIncome', label: '總收入', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'totalExpense', label: '總支出', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
+    { id: 'netBalance', label: '淨餘額', defaultVisible: true, defaultWidth: 130, type: 'number', sortable: true },
   ],
 };
 
@@ -720,7 +703,6 @@ export const RESOLVERS = {
     status: (v) => `<span class="badge ${statusBadgeClass(v)}">${esc(statusLabel(v))}</span>`,
   },
 
-  /* 🆕 成員收支明細 */
   memberReport: {
     name: (v, r) => r.id === RESERVED_IDS.SHARED_MEMBER
       ? '🏠 家庭共用'
@@ -730,6 +712,22 @@ export const RESOLVERS = {
     expense: (v) => `<span class="mono text-red">${formatHKD(v)}</span>`,
     insurance: (v) => `<span class="mono text-magenta">${formatHKD(v)}</span>`,
     net: (v) => `<span class="mono ${v >= 0 ? 'text-emerald' : 'text-red'}" style="font-weight:700;">${formatHKD(v)}</span>`,
+  },
+
+  /* 🆕 管理員家庭列表 */
+  adminFamilies: {
+    uid: (v) => `<span class="mono" style="font-size:12px;">${esc(v)}</span>`,
+    name: (v) => esc(v || '（未命名）'),
+    ownerEmail: (v) => `<span class="mono" style="font-size:12px; color:var(--text-muted);">${esc(v || '—')}</span>`,
+    createdAt: (v) => `<span class="mono" style="font-size:12px; color:var(--text-muted);">${v ? new Date(v).toLocaleString('zh-HK') : '—'}</span>`,
+  },
+
+  /* 🆕 年度報表月度明細 */
+  annualMonthly: {
+    month: (v) => esc(v),
+    totalIncome: (v) => `<span class="mono text-emerald">${formatHKD(v)}</span>`,
+    totalExpense: (v) => `<span class="mono text-red">${formatHKD(v)}</span>`,
+    netBalance: (v) => `<span class="mono ${v >= 0 ? 'text-emerald' : 'text-red'}">${formatHKD(v)}</span>`,
   },
 };
 
@@ -749,8 +747,8 @@ export function getResolvers(key) {
 
 /* ═══ EOF ═══
 F: config/columns.js
-V: 1792901230
-W: webapp-20261025-001#4
+V: 1792901930
+W: webapp-20261025-001#41
 ═══ */```
 
 <!-- === FILE END: ./config/columns.js === -->
@@ -5651,7 +5649,7 @@ W: webapp-20261025-001#27
 // annual-report.js — 年度報表
 // 位置：pages/annual-report.js
 // 說明：顯示全年總合與月度明細，支援匯出 CSV。
-//       使用 renderPageLayout 統一排版。
+//       使用 renderPageLayout 統一排版，並將月度明細改為引擎渲染。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -5804,34 +5802,16 @@ export default {
         netBalance: m.netBalance
       }));
 
-      // 使用手寫表格（因為欄位是動態的，不適合用通用的 renderTable）
-      container.innerHTML = `
-        <div class="glass-card" style="padding:0; overflow:hidden;">
-          <div style="overflow-x:auto;">
-            <table class="data-table" style="width:100%; border-collapse:collapse; min-width:500px;">
-              <thead>
-                <tr>
-                  <th style="white-space:nowrap;">月份</th>
-                  <th class="num" style="white-space:nowrap;">總收入</th>
-                  <th class="num" style="white-space:nowrap;">總支出</th>
-                  <th class="num" style="white-space:nowrap;">淨餘額</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows.map(r => `
-                  <tr>
-                    <td style="white-space:nowrap;">${esc(r.month)}</td>
-                    <td class="num text-emerald mono" style="white-space:nowrap;">${formatHKD(r.totalIncome)}</td>
-                    <td class="num text-red mono" style="white-space:nowrap;">${formatHKD(r.totalExpense)}</td>
-                    <td class="num mono ${r.netBalance >= 0 ? 'text-emerald' : 'text-red'}" style="white-space:nowrap;">${formatHKD(r.netBalance)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
+      // 🆕 改用引擎渲染
+      renderTable({
+        container,
+        rows,
+        columnsKey: 'annualMonthly',
+        emptyText: '尚無月度資料'
+      });
+
     } else {
+      // 全年總合（單行統計表，保留手寫結構，因為它是特殊報表而非列表）
       container.innerHTML = `
         <div class="glass-card" style="padding:0; overflow:hidden;">
           <div style="overflow-x:auto;">
@@ -5898,8 +5878,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/annual-report.js
-V: 1792901870
-W: webapp-20261025-001#35
+V: 1792901950
+W: webapp-20261025-001#43
 ═══ */```
 
 <!-- === FILE END: ./pages/annual-report.js === -->
@@ -6817,7 +6797,7 @@ W: webapp-20261025-001#24
 // insurance.js — 保險清單表
 // 位置：pages/insurance.js
 // 說明：顯示保單清單與明細，包含已供滿區塊。
-//       已完全套用 renderPageLayout 解決排版問題。
+//       已移除 entity-helpers 幽靈依賴，全面使用 V2 API。
 // ============================================
 
 import { AppState } from '../config/state.js';
@@ -6833,7 +6813,6 @@ import { showToast } from '../ui/toast.js';
 import { formatHKD, esc } from '../ui/format.js';
 import { getMembersOnce } from '../db/index.js';
 import { resolveName } from '../config/entity-registry.js';
-import { deleteEntity } from '../entity/entity-helpers.js';
 
 export default {
   _unsubPolicies: null,
@@ -7130,7 +7109,8 @@ export default {
     const ok = await openConfirm(`⚠️ 確定要刪除保單「${policy.name}」嗎？`, { title: '刪除保單', okText: '刪除', okClass: 'btn-danger' });
     if (!ok) return;
     try {
-      await deleteEntity('policy', policy.id, getPolicyHolderId(policy));
+      // 🆕 移除 entity-helpers，改用 API
+      await api.entityCreate({ action: 'delete', entityType: 'policy', id: policy.id });
       showToast('✅ 已刪除保單', 'success');
     } catch (err) {
       showToast('刪除失敗：' + err.message, 'error');
@@ -7144,8 +7124,8 @@ export default {
 
 /* ═══ EOF ═══
 F: pages/insurance.js
-V: 1792901900
-W: webapp-20261025-001#38
+V: 1792901960
+W: webapp-20261025-001#44
 ═══ */```
 
 <!-- === FILE END: ./pages/insurance.js === -->
@@ -7460,18 +7440,25 @@ W: webapp-20261025-001#39
 // portfolio.js — 基金投資表（V2 引擎版）
 // 位置：pages/portfolio.js
 // 說明：整合保險基金與獨立基金，支援歷史快照與對比。
-//       已套用 renderPageLayout 解決統計卡破版問題。
+//       已移除 entity-modal 幽靈依賴，並將動態 import 改為靜態引入。
 // ============================================
 
 import { AppState } from '../config/state.js';
-import { listenFunds, listenInsurancePolicies, getFundSnapshotListOnce, saveFundSnapshot, removeFundSnapshot } from '../db/index.js';
-import { openModal, closeModal, openConfirm, destroyModal } from '../ui/modal.js';
+import { 
+  listenFunds, 
+  listenInsurancePolicies, 
+  getFundSnapshotListOnce, 
+  saveFundSnapshot, 
+  removeFundSnapshot,
+  saveObject,
+  pushObject,
+  removeObject
+} from '../db/index.js';
+import { openModal, closeModal, openConfirm } from '../ui/modal.js';
 import { createForm } from '../ui/form.js';
 import { showToast } from '../ui/toast.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { formatHKD, esc } from '../ui/format.js';
-import { openEntityModal } from '../ui/entity-modal.js'; // 假設有通用實體 Modal，若無則用 createForm
-import { ENTITY_KEYS } from '../config/constants.js';
 import { calcFundCostEstimate } from '../domain/insurance.js';
 
 const DEFAULT_FX = 7.8;
@@ -7499,7 +7486,7 @@ export default {
     // 2. 準備控制列（年月）
     const controlsHtml = `<div id="portfolio-controls-period"></div>`;
 
-    // 3. 呼叫統一引擎繪製骨架 (stats 先給空，載入後由 _updateStats 填入)
+    // 3. 呼叫統一引擎繪製骨架
     renderPageLayout({
       title: '基金投資表',
       headerActions,
@@ -7512,7 +7499,7 @@ export default {
     document.getElementById('btn-add-fund').onclick = () => this._openFundModal();
     document.getElementById('btn-import-snap').onclick = () => this._openImportSnapshotModal();
 
-    // 5. 初始化年月（僅作顯示用，若無需切換可移除）
+    // 5. 初始化年月（僅作顯示用）
     const periodRoot = document.getElementById('portfolio-controls-period');
     if (periodRoot) {
       const ym = AppState.getYearMonth();
@@ -7578,7 +7565,7 @@ export default {
 
     const totalPnl = totalValue - totalCost;
 
-    // 更新統計卡 (使用 layout.js 建立的容器)
+    // 更新統計卡
     this._updateStats(totalCost, totalValue, totalPnl);
 
     const insFunds = displayFunds.filter(f => f.type === 'insurance');
@@ -7616,7 +7603,6 @@ export default {
     if (!statsRoot) return;
     statsRoot.style.display = 'grid';
     
-    // 依照 layout.js 的結構直接替換內容
     statsRoot.innerHTML = `
       <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden;">
         <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
@@ -7691,7 +7677,6 @@ export default {
       else if (action === 'delete') {
         const ok = await openConfirm(`確定要刪除基金「${name}」嗎？`, { okClass: 'btn-danger' });
         if (ok) {
-          const { removeObject } = await import('../db/write.js');
           await removeObject(`funds/${id}`);
           showToast('✅ 已刪除基金', 'success');
         }
@@ -7723,10 +7708,9 @@ export default {
       submitText: isEdit ? '儲存' : '新增',
       onCancel: () => { closeModal(modalId); overlay.remove(); },
       onSubmit: async (data) => {
-        const { saveObject } = await import('../db/write.js');
-        if (isEdit) await saveObject(`funds/${fund.id}`, { ...fund, ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0 });
-        else {
-          const { pushObject } = await import('../db/write.js');
+        if (isEdit) {
+          await saveObject(`funds/${fund.id}`, { ...fund, ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0 });
+        } else {
           await pushObject('funds', { ...data, cost: Number(data.cost) || 0, currentValue: Number(data.currentValue) || 0, createdAt: Date.now() });
         }
         showToast('✅ 基金已儲存', 'success');
@@ -7766,7 +7750,6 @@ export default {
       }
     });
 
-    // 自動計算綁定
     const formEl = document.querySelector(`#${modalId}-root form`);
     const sEl = formEl.querySelector('#field-shares');
     const nEl = formEl.querySelector('#field-nav');
@@ -7996,8 +7979,8 @@ function _getCostMapForPolicy(policy, allFunds, targetYear, targetMonth) {
 
 /* ═══ EOF ═══
 F: pages/portfolio.js
-V: 1792901860
-W: webapp-20261025-001#34
+V: 1792901980
+W: webapp-20261025-001#46
 ═══ */```
 
 <!-- === FILE END: ./pages/portfolio.js === -->
@@ -8011,26 +7994,27 @@ W: webapp-20261025-001#34
 // settings.js — 系統設定頁面（V2 引擎版）
 // 位置：pages/settings.js
 // 說明：整合帳號資訊、統計模式、成員管理、年份範圍、頁面標題與除錯工具。
+//       已完全拔除 shared/ 依賴，改用原生引擎。
 // ============================================
 
 import { AppState } from '../config/state.js';
 import { logout } from '../domain/auth.js';
-import { openConfirm } from '../ui/modal.js';
+import { openConfirm, openModal, closeModal } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
-import { esc } from '../ui/format.js';
+import { esc, formatHKD } from '../ui/format.js';
 import { ROLES, STORAGE_KEYS, ENTITY_KEYS } from '../config/constants.js';
 import { initTabPanel } from '../ui/tab-panel.js';
-import { initEntityListPage } from '../shared/entity-list-page.js';
-import { initBankAccountManager } from '../shared/bank-account-manager.js';
 import { createForm } from '../ui/form.js';
-import { listen, saveObject } from '../db/index.js';
+import { renderTable } from '../ui/table.js';
+import { listen, saveObject, listenMembers, listenBankAccounts, removeObject } from '../db/index.js';
 import { listPages, getDefaultMetadata } from '../config/page-metadata-registry.js';
+import { api } from '../domain/api-client.js';
 
 export default {
   _unsubMeta: null,
   _unsubYear: null,
-  _memberList: null,
-  _bankMgr: null,
+  _unsubMembers: null,
+  _unsubBanks: null,
 
   async render() {
     const content = document.getElementById('app-content');
@@ -8055,7 +8039,10 @@ export default {
 
       <div id="settings-panel-banks" class="tab-panel" style="display:none;">
         <div class="banner mb-16">ℹ️ 管理家庭的銀行帳號。每個帳號有「初始餘額」與「初始年月」。</div>
-        <div id="bank-account-manager-root"></div>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+          <button type="button" class="btn btn-primary" id="btn-add-bank"><i data-lucide="plus" style="width:14px;height:14px;"></i> 新增銀行</button>
+        </div>
+        <div id="settings-banks-list"></div>
       </div>
 
       <div id="settings-panel-personal" class="tab-panel" style="display:none;">
@@ -8120,6 +8107,9 @@ export default {
             <div class="glass-card-title" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
               <i data-lucide="users" style="width:16px;height:16px;color:var(--primary);"></i> 家庭成員
             </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+              <button type="button" class="btn btn-primary" id="btn-add-member"><i data-lucide="plus" style="width:14px;height:14px;"></i> 新增成員</button>
+            </div>
             <div id="family-members-root"></div>
           </div>
         </div>
@@ -8133,23 +8123,103 @@ export default {
       defaultKey: isSuper ? 'platform' : 'banks',
       storageKey: 'settings-tab',
       onChange: (key) => {
-        if (key === 'banks' && !this._bankMgr) {
-          this._bankMgr = initBankAccountManager('bank-account-manager-root', { canInput: AppState.getCanInput() });
-        }
-        if (key === 'personal') {
-          this._initPersonalTab();
-        }
+        if (key === 'banks') this._renderBanksTab();
+        if (key === 'personal') this._initPersonalTab();
       }
     });
 
-    // 3. 若預設為個人化，直接初始化
-    if (tabPanel.getCurrent() === 'personal') {
-      this._initPersonalTab();
-    }
+    // 3. 若預設為個人化或銀行，直接初始化
+    if (tabPanel.getCurrent() === 'personal') this._initPersonalTab();
+    if (tabPanel.getCurrent() === 'banks') this._renderBanksTab();
   },
 
+  /* ============================================
+     銀行帳號管理 (拔除 initBankAccountManager)
+     ============================================ */
+  _renderBanksTab() {
+    const root = document.getElementById('settings-banks-list');
+    if (!root) return;
+
+    if (this._unsubBanks) this._unsubBanks();
+    this._unsubBanks = listenBankAccounts((accounts) => {
+      const renderActions = (row) => `
+        <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${row.id}">編輯</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row.id}">刪除</button>
+      `;
+      
+      renderTable({
+        container: root,
+        rows: accounts,
+        columnsKey: 'bankAccounts',
+        renderActions
+      });
+
+      root.onclick = async (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const row = accounts.find(a => a.id === id);
+        if (!row) return;
+
+        if (btn.dataset.action === 'delete') {
+          const ok = await openConfirm(`確定要刪除「${row.name}」嗎？`, { okClass: 'btn-danger' });
+          if (ok) {
+            await removeObject(`bank_accounts/${id}`);
+            showToast('✅ 已刪除帳號', 'success');
+          }
+        } else if (btn.dataset.action === 'edit') {
+          this._openBankModal(row);
+        }
+      };
+    });
+
+    document.getElementById('btn-add-bank').onclick = () => this._openBankModal();
+  },
+
+  _openBankModal(bank = null) {
+    const isEdit = !!bank;
+    const modalId = 'bank-modal-settings';
+    document.getElementById(modalId)?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = modalId;
+    overlay.innerHTML = `<div class="modal" style="max-width:400px;"><h2 class="modal-title">${isEdit ? '編輯' : '新增'}銀行</h2><div id="${modalId}-form"></div></div>`;
+    document.body.appendChild(overlay);
+    openModal(modalId);
+
+    createForm({
+      container: `${modalId}-form`,
+      fields: [
+        { id: 'name', label: '帳號名稱', type: 'text', required: true },
+        { id: 'type', label: '類型', type: 'select', required: true, options: [{ value: 'family', label: '家庭' }, { value: 'personal', label: '個人' }] },
+        { id: 'initialBalance', label: '初始餘額', type: 'number', required: true },
+        { id: 'initialYear', label: '初始年份', type: 'number', required: true },
+        { id: 'initialMonth', label: '初始月份', type: 'number', required: true, min: 1, max: 12 }
+      ],
+      initialData: isEdit ? bank : { type: 'family', initialBalance: 0, initialYear: new Date().getFullYear(), initialMonth: 1 },
+      submitText: isEdit ? '儲存' : '新增',
+      onCancel: () => { closeModal(modalId); overlay.remove(); },
+      onSubmit: async (data) => {
+        try {
+          if (isEdit) {
+            await saveObject(`bank_accounts/${bank.id}`, { ...bank, ...data });
+          } else {
+            const { pushObject } = await import('../db/write.js');
+            await pushObject('bank_accounts', { ...data, createdAt: Date.now() });
+          }
+          showToast('✅ 已儲存', 'success');
+          closeModal(modalId); overlay.remove();
+        } catch (err) { showToast('錯誤：' + err.message, 'error'); }
+      }
+    });
+  },
+
+  /* ============================================
+     個人化 Tab
+     ============================================ */
   _initPersonalTab() {
-    // 3.1 帳號資訊
+    // 1. 帳號資訊
     const accEl = document.getElementById('settings-account');
     const roleEl = document.getElementById('settings-role');
     const famEl = document.getElementById('settings-family');
@@ -8159,11 +8229,12 @@ export default {
     if (roleEl) roleEl.value = AppState.getRole() === ROLES.SUPERADMIN ? '超級管理員' : (AppState.getRole() === ROLES.OWNER ? '擁有者' : '成員');
     if (famEl) famEl.value = AppState.getFamilyName() || '—';
 
-    document.getElementById('settings-logout-btn')?.addEventListener('click', async () => {
+    const logoutBtn = document.getElementById('settings-logout-btn');
+    logoutBtn.onclick = async () => {
       if (await openConfirm('確定要登出嗎？', { title: '登出', okClass: 'btn-danger' })) logout();
-    });
+    };
 
-    // 3.2 統計模式
+    // 2. 統計模式
     const statsRoot = document.getElementById('stats-mode-options');
     if (statsRoot) {
       let curMode = 'auto';
@@ -8180,27 +8251,24 @@ export default {
         </label>
       `).join('');
 
-      document.getElementById('save-stats-mode-btn')?.addEventListener('click', () => {
+      document.getElementById('save-stats-mode-btn').onclick = () => {
         const selected = document.querySelector('input[name="stats-mode"]:checked');
         if (selected) {
           localStorage.setItem(STORAGE_KEYS.STATS_MODE, selected.value);
           showToast('✅ 已儲存顯示模式', 'success');
         }
-      });
+      };
     }
 
-    // 3.3 年份範圍
+    // 3. 年份範圍
     const yearFormRoot = document.getElementById('yearrange-form-root');
     if (yearFormRoot) {
-      let startYear = '', futureYears = 5;
       if (this._unsubYear) this._unsubYear();
       this._unsubYear = listen('settings/year_range', (snap) => {
         const data = snap.val() || {};
-        startYear = data.startYear || '';
-        futureYears = data.futureYears || 5;
         if (yearFormRoot.querySelector('form')) {
-          yearFormRoot.querySelector('#yr-start').value = startYear;
-          yearFormRoot.querySelector('#yr-future').value = futureYears;
+          yearFormRoot.querySelector('#yr-start').value = data.startYear || '';
+          yearFormRoot.querySelector('#yr-future').value = data.futureYears || 5;
         }
       });
 
@@ -8221,7 +8289,7 @@ export default {
       });
     }
 
-    // 3.4 頁面標題
+    // 4. 頁面標題
     const pageFormRoot = document.getElementById('pagemeta-form-root');
     if (pageFormRoot) {
       const pages = listPages();
@@ -8231,12 +8299,9 @@ export default {
       this._unsubMeta = listen('settings/page_metadata', (snap) => {
         allMeta = snap.val() || {};
         const pageSel = pageFormRoot.querySelector('#pm-page');
-        if (pageSel) {
-          _applyPageMeta(pageFormRoot, pageSel.value, allMeta, pages);
-        }
+        if (pageSel) _applyPageMeta(pageFormRoot, pageSel.value, allMeta, pages);
       });
 
-      // 構建自訂 HTML 表單
       pageFormRoot.innerHTML = `
         <div class="form-stack">
           <div class="field">
@@ -8254,11 +8319,11 @@ export default {
         </div>
       `;
 
-      pageFormRoot.querySelector('#pm-page').addEventListener('change', (e) => {
+      pageFormRoot.querySelector('#pm-page').onchange = (e) => {
         _applyPageMeta(pageFormRoot, e.target.value, allMeta, pages);
-      });
+      };
 
-      pageFormRoot.querySelector('#pm-save').addEventListener('click', async () => {
+      pageFormRoot.querySelector('#pm-save').onclick = async () => {
         const pk = pageFormRoot.querySelector('#pm-page').value;
         const title = pageFormRoot.querySelector('#pm-title').value.trim();
         const sub = pageFormRoot.querySelector('#pm-sub').value;
@@ -8267,19 +8332,19 @@ export default {
         const next = { ...allMeta, [pk]: { title, subtitleStatic: sub } };
         await saveObject('settings/page_metadata', next);
         showToast('✅ 頁面標題已更新', 'success');
-      });
+      };
 
-      pageFormRoot.querySelector('#pm-reset').addEventListener('click', async () => {
+      pageFormRoot.querySelector('#pm-reset').onclick = async () => {
         const pk = pageFormRoot.querySelector('#pm-page').value;
         const next = { ...allMeta };
         delete next[pk];
         await saveObject('settings/page_metadata', next);
         _applyPageMeta(pageFormRoot, pk, next, pages);
         showToast('✅ 已恢復預設', 'success');
-      });
+      };
     }
 
-    // 3.5 vConsole 除錯工具
+    // 5. vConsole 除錯工具
     const debugStatus = document.getElementById('debug-status');
     const updateDebugUI = async () => {
       try {
@@ -8289,34 +8354,110 @@ export default {
     };
     updateDebugUI();
 
-    document.getElementById('debug-enable-btn')?.addEventListener('click', async () => {
+    document.getElementById('debug-enable-btn').onclick = async () => {
       const mod = await import('../core/debug.js');
       await mod.forceEnableDebug();
       updateDebugUI();
-    });
-    document.getElementById('debug-disable-btn')?.addEventListener('click', async () => {
+    };
+    document.getElementById('debug-disable-btn').onclick = async () => {
       const mod = await import('../core/debug.js');
       mod.forceDisableDebug();
       updateDebugUI();
-    });
+    };
 
-    // 3.6 家庭成員
-    if (!this._memberList) {
-      this._memberList = initEntityListPage({
-        entity: ENTITY_KEYS.MEMBER,
-        containerId: 'family-members-root',
-        options: { defaultView: 'table', showViewToggle: false }
+    // 6. 家庭成員 (拔除 initEntityListPage)
+    const memberRoot = document.getElementById('family-members-root');
+    if (memberRoot) {
+      if (this._unsubMembers) this._unsubMembers();
+      this._unsubMembers = listenMembers((members) => {
+        const renderActions = (row) => `
+          <button type="button" class="btn btn-sm btn-ghost" data-action="edit" data-id="${row.id}">編輯</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${row.id}">刪除</button>
+        `;
+        renderTable({
+          container: memberRoot,
+          rows: members,
+          columnsKey: 'memberReport', // 借用 memberReport 的欄位定義（name, net...），或自訂
+          customColumns: [
+            { id: 'name', label: '名稱' },
+            { id: 'role', label: '角色' },
+            { id: 'order', label: '排序' }
+          ],
+          customResolvers: {
+            name: (v) => esc(v),
+            role: (v) => esc(v),
+            order: (v) => `<span class="mono">${v || 0}</span>`
+          },
+          renderActions
+        });
+
+        memberRoot.onclick = async (e) => {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const id = btn.dataset.id;
+          const row = members.find(m => m.id === id);
+          if (!row) return;
+
+          if (btn.dataset.action === 'delete') {
+            const ok = await openConfirm(`確定要刪除成員「${row.name}」嗎？`, { okClass: 'btn-danger' });
+            if (ok) {
+              await removeObject(`members/${id}`);
+              showToast('✅ 已刪除成員', 'success');
+            }
+          } else if (btn.dataset.action === 'edit') {
+            this._openMemberModal(row);
+          }
+        };
       });
+
+      document.getElementById('btn-add-member').onclick = () => this._openMemberModal();
     }
 
     if (window.lucide) window.lucide.createIcons();
   },
 
+  _openMemberModal(member = null) {
+    const isEdit = !!member;
+    const modalId = 'member-modal-settings';
+    document.getElementById(modalId)?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = modalId;
+    overlay.innerHTML = `<div class="modal" style="max-width:400px;"><h2 class="modal-title">${isEdit ? '編輯' : '新增'}成員</h2><div id="${modalId}-form"></div></div>`;
+    document.body.appendChild(overlay);
+    openModal(modalId);
+
+    createForm({
+      container: `${modalId}-form`,
+      fields: [
+        { id: 'name', label: '成員名稱', type: 'text', required: true },
+        { id: 'role', label: '角色', type: 'text', required: false, placeholder: '例如：husband' },
+        { id: 'order', label: '排序', type: 'number', required: false }
+      ],
+      initialData: isEdit ? member : { order: 0 },
+      submitText: isEdit ? '儲存' : '新增',
+      onCancel: () => { closeModal(modalId); overlay.remove(); },
+      onSubmit: async (data) => {
+        try {
+          if (isEdit) {
+            await saveObject(`members/${member.id}`, { ...member, ...data });
+          } else {
+            const { pushObject } = await import('../db/write.js');
+            await pushObject('members', { ...data, createdAt: Date.now() });
+          }
+          showToast('✅ 已儲存', 'success');
+          closeModal(modalId); overlay.remove();
+        } catch (err) { showToast('錯誤：' + err.message, 'error'); }
+      }
+    });
+  },
+
   destroy() {
     if (this._unsubMeta) { try { this._unsubMeta(); } catch (e) {} this._unsubMeta = null; }
     if (this._unsubYear) { try { this._unsubYear(); } catch (e) {} this._unsubYear = null; }
-    if (this._memberList) { try { this._memberList.destroy(); } catch (e) {} this._memberList = null; }
-    if (this._bankMgr) { try { this._bankMgr.destroy(); } catch (e) {} this._bankMgr = null; }
+    if (this._unsubMembers) { try { this._unsubMembers(); } catch (e) {} this._unsubMembers = null; }
+    if (this._unsubBanks) { try { this._unsubBanks(); } catch (e) {} this._unsubBanks = null; }
   }
 };
 
@@ -8332,8 +8473,8 @@ function _applyPageMeta(formRoot, pageKey, allMeta, pages) {
 
 /* ═══ EOF ═══
 F: pages/settings.js
-V: 1792901850
-W: webapp-20261025-001#33
+V: 1792901970
+W: webapp-20261025-001#45
 ═══ */```
 
 <!-- === FILE END: ./pages/settings.js === -->
