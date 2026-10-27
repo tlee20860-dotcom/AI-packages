@@ -1,5 +1,5 @@
-> 體系版本：SV07
-> 生成時間：2026-10-27 11:57:00 (HKT)
+> 體系版本：SV08
+> 生成時間：2026-10-27 12:02:02 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,7 +21,7 @@
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792908300 | ai-system-003#33 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792908700 | ai-system-003#37 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792908800 | ai-system-003#38 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792906300 | ai-system-003#12 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792907700 | ai-system-003#27 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792908500 | ai-system-003#35 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
