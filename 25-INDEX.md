@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 16:39:45 (HKT)
+> 生成時間：2026-10-27 20:12:14 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -31,7 +31,7 @@
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792905300 | ai-system-003#2 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792909300 | ai-system-004 |
-| AI-kernel | docs/r-rules/R-04-learning.md | 1792900147 | ai-system-20261024-013#6 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1792909600 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
@@ -79,9 +79,10 @@
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
 | AI-WA-UPWO | .env.example |
+| AI-WA-UPWO | .github/workflows/deploy.yml |
+| AI-WA-UPWO | .github/workflows/notify.yml |
 | AI-WA-UPWO | .gitignore |
 | AI-WA-UPWO | README.md |
-| AI-WA-UPWO | github/workflows/notify.yml |
 | AI-WA-UPWO | index.html |
 | AI-WA-UPWO | meta.json |
 | AI-WA-UPWO | package.json |
@@ -97,6 +98,7 @@
 | AI-WA-UPWO | src/engine/main.js |
 | AI-WA-UPWO | src/engine/router.js |
 | AI-WA-UPWO | src/lib/io.js |
+| AI-WA-UPWO | src/pages/category.js |
 | AI-WA-UPWO | src/pages/kanban.js |
 | AI-WA-UPWO | src/pages/login.js |
 | AI-WA-UPWO | src/pages/overview.js |
@@ -281,14 +283,13 @@
 | old-AI-WA-FAMILY | settings.html |
 | old-AI-WA-FAMILY | settlements.html |
 | old-AI-WA-FAMILY | sw.js |
-| 📄 notify.yml | 📄 notify.yml |
 
 ## 🎁 本輪生成物清單 (AI-Packages)
 | 生成物檔案 | 大小 (KB) |
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 24 |
-| 02-RP.md | 68 |
+| 02-RP.md | 72 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 48 |
@@ -301,6 +302,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 104 |
+| 92-Code.md | 180 |
 | 92-P.md | 4 |
 | 92-SP.md | 8 |

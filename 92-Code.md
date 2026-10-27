@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 16:39:45 (HKT)
+> 生成時間：2026-10-27 20:12:14 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -10,38 +10,642 @@
 
 ```html
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UPGRADE-WO | 流水線進度控制台</title>
-  <meta name="description" content="先鋒印刷 - 流水線進度控制台">
-  
-  <!-- 引入全域樣式 (由 Vite 處理) -->
-  <link rel="stylesheet" href="/src/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 控制台 - 管理中心</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-hover: #4f46e5; --bg: #f8fafc;
+            --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b;
+            --success: #10b981; --danger: #ef4444; --border: #e2e8f0;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        .card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid var(--border); }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        .subtitle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
+        
+        .sticky-header { 
+            position: sticky; 
+            top: 0; 
+            background: var(--bg); 
+            z-index: 100; 
+            padding-top: 15px; 
+            margin-top: -15px;
+            margin-bottom: 15px; 
+        }
+        
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; font-family: inherit; }
+        textarea { resize: vertical; min-height: 120px; font-family: monospace; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-small { width: auto; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; }
+        
+        .status-box { padding: 10px; border-radius: 8px; background-color: #f1f5f9; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; width: 100%; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--text-muted); flex-shrink: 0; }
+        .status-dot.running { background-color: var(--warning); animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: var(--success); }
+        .status-dot.failure { background-color: var(--danger); }
+        @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.7; } }
+
+        .error-panel, .success-panel { display: none; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .error-panel { background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .success-panel { background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+        .error-list { font-size: 0.85rem; margin-bottom: 10px; white-space: pre-wrap; font-family: monospace; }
+        
+        details { margin-bottom: 15px; }
+        summary { cursor: pointer; font-weight: bold; padding: 12px 15px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); outline: none; display: flex; align-items: center; gap: 8px; }
+    </style>
+    
+    <script>
+        const OWNER = 'tlee20860-dotcom';
+        const INFRA_REPO = 'AI-infra';
+        const WORKFLOW_ID = 'setup-structure.yml';
+        const CONFIG_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/validate-config.json`;
+        const FORBIDDEN_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt`;
+        const REPOS_URL = `https://raw.githubusercontent.com/${OWNER}/AI-infra/main/config/repos.json`;
+
+        let currentToken = '';
+        let tokenList = [];
+        let triggerTime = 0;
+        let pollInterval = null;
+        let hasUnpackedChanges = false;
+
+        let globalForbiddenWords = [];
+        let globalConfig = { console_rules: {}, file_specific_rules: {} };
+        let allowedRepos = [];
+
+        window.onload = async () => {
+            loadTokens(); 
+            await loadDictionaries();
+            if (currentToken) checkBuildStatus();
+            else updateStatus('build-status', '', '等待操作');
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
+            }
+        };
+
+        async function loadDictionaries() {
+            try {
+                const txtRes = await fetch(`${FORBIDDEN_URL}?t=${Date.now()}`);
+                if (txtRes.ok) {
+                    const text = await txtRes.text();
+                    globalForbiddenWords = text.split('\n').map(w => w.trim()).filter(w => w && !w.startsWith('#'));
+                }
+                
+                const jsonRes = await fetch(`${CONFIG_URL}?t=${Date.now()}`);
+                if (jsonRes.ok) {
+                    globalConfig = await jsonRes.json();
+                    if (globalConfig.console_rules && globalConfig.console_rules.base_system_repos) {
+                        allowedRepos = [...globalConfig.console_rules.base_system_repos];
+                    }
+                }
+
+                const reposRes = await fetch(`${REPOS_URL}?t=${Date.now()}`);
+                if (reposRes.ok) {
+                    const reposData = await reposRes.json();
+                    if (reposData.projects) {
+                        reposData.projects.forEach(p => {
+                            const repoName = p.repo.split('/')[1];
+                            if (repoName && !allowedRepos.includes(repoName)) {
+                                allowedRepos.push(repoName);
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn("⚠️ 無法載入遠端配置，將使用預設值。", e);
+            }
+        }
+
+        function loadTokens() {
+            const stored = localStorage.getItem('gh_token_list');
+            if (stored) {
+                try {
+                    tokenList = JSON.parse(stored);
+                    if (tokenList.length > 0) {
+                        const active = tokenList.find(t => t.isActive);
+                        currentToken = active ? active.token.trim() : tokenList[0].token.trim();
+                    }
+                } catch (e) { console.error(e); }
+            }
+            renderTokens();
+        }
+        function saveTokensToLocal() { localStorage.setItem('gh_token_list', JSON.stringify(tokenList)); }
+        function addToken() {
+            const name = document.getElementById('new-token-name').value.trim();
+            const tokenStr = document.getElementById('new-token-value').value.trim();
+            if (!name || !tokenStr) return alert('請填寫名稱與 Token');
+            const newToken = { id: Date.now().toString(), name, token: tokenStr, isActive: tokenList.length === 0 };
+            tokenList.push(newToken); saveTokensToLocal();
+            if (newToken.isActive) currentToken = newToken.token;
+            document.getElementById('new-token-name').value = ''; document.getElementById('new-token-value').value = '';
+            renderTokens(); checkBuildStatus();
+        }
+        function setActive(id) {
+            tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token.trim(); });
+            saveTokensToLocal(); renderTokens(); checkBuildStatus();
+        }
+        function deleteToken(id) {
+            if (!confirm('確定刪除？')) return;
+            tokenList = tokenList.filter(t => t.id !== id);
+            if (tokenList.length > 0) { setActive(tokenList[0].id); } else { currentToken = ''; saveTokensToLocal(); renderTokens(); updateStatus('build-status', '', '等待操作'); }
+        }
+        function copyToken(tokenStr) { navigator.clipboard.writeText(tokenStr).then(() => alert('已複製 Token')); }
+        function renderTokens() {
+            const listEl = document.getElementById('token-list');
+            listEl.innerHTML = tokenList.length === 0 ? '<div style="text-align:center;color:#999;font-size:0.8rem; padding:10px;">無 Token</div>' : '';
+            tokenList.forEach(t => {
+                const item = document.createElement('div');
+                item.style = "display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;";
+                const masked = t.token.substring(0, 4) + '****' + t.token.substring(t.token.length - 4);
+                item.innerHTML = `
+                    <div><span style="font-weight:bold; font-size:0.9rem;">${t.name} ${t.isActive ? '✅' : ''}</span><br><span style="font-size:0.75rem;color:#666;">${masked}</span></div>
+                    <div style="display:flex; gap:5px;">
+                        ${!t.isActive ? `<button class="btn-primary btn-small" onclick="setActive('${t.id}')">啟用</button>` : ''}
+                        <button class="btn-primary btn-small" style="background:#64748b;" onclick="copyToken('${t.token}')">複製</button>
+                        <button class="btn-danger btn-small" onclick="deleteToken('${t.id}')">刪除</button>
+                    </div>`;
+                listEl.appendChild(item);
+            });
+        }
+
+        async function githubAPI(url, options = {}) {
+            if (!currentToken) throw new Error("未啟用 GitHub Token");
+            const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `token ${currentToken.trim()}`, ...options.headers };
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+            let res;
+            try {
+                res = await fetch(`https://api.github.com${url}?t=${Date.now()}`, { ...options, headers, signal: controller.signal });
+            } catch (fetchError) {
+                if (fetchError.name === 'AbortError') {
+                    throw new Error("連線超時（15秒），請檢查手機網路或稍後重試。");
+                }
+                throw new Error("無法連線至 GitHub（請確認 Token 無多餘空白，或關閉廣告攔截器）");
+            } finally {
+                clearTimeout(timeoutId);
+            }
+
+            if (!res.ok) {
+                let errMsg = `API 錯誤: ${res.status}`;
+                try { const errData = await res.json(); if (errData.message) errMsg += ` - ${errData.message}`; } catch(e) {}
+                if (res.status === 401) throw new Error('Token 無效或過期');
+                if (res.status === 403) throw new Error('Token 權限不足');
+                if (res.status === 404) throw new Error('找不到資源');
+                throw new Error(errMsg);
+            }
+            return res.status === 204 ? null : await res.json();
+        }
+
+        async function triggerBuild() {
+            if (!currentToken) return alert('請先設定 Token');
+            const btn = document.getElementById('btn-trigger');
+            btn.disabled = true; triggerTime = Date.now();
+            updateStatus('build-status', 'running', '發送指令...');
+            
+            hasUnpackedChanges = false;
+
+            try {
+                await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: 'main' })
+                });
+                updateStatus('build-status', 'running', '等待排隊...');
+                if (pollInterval) clearInterval(pollInterval);
+                setTimeout(checkBuildStatus, 3000);
+                pollInterval = setInterval(checkBuildStatus, 8000);
+            } catch (error) { updateStatus('build-status', 'failure', error.message); btn.disabled = false; }
+        }
+
+        async function checkBuildStatus() {
+            if (!currentToken) return;
+            try {
+                const data = await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`);
+                if (data.workflow_runs && data.workflow_runs.length > 0) {
+                    const run = data.workflow_runs[0];
+                    const runTime = new Date(run.created_at).getTime();
+                    const createdAt = new Date(run.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' });
+                    if (triggerTime > 0 && runTime < triggerTime - 10000) {
+                        updateStatus('build-status', 'running', '排隊中...'); return;
+                    }
+                    if (run.status === 'in_progress' || run.status === 'queued') {
+                        updateStatus('build-status', 'running', `打包中...`);
+                    } else if (run.conclusion === 'success') {
+                        updateStatus('build-status', 'success', `上次成功 (${createdAt})`);
+                        document.getElementById('btn-trigger').disabled = false; triggerTime = 0;
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                    } else {
+                        updateStatus('build-status', 'failure', `上次失敗 (${createdAt})`);
+                        document.getElementById('btn-trigger').disabled = false; triggerTime = 0;
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                    }
+                } else { updateStatus('build-status', '', '尚無紀錄'); document.getElementById('btn-trigger').disabled = false; }
+            } catch (error) { updateStatus('build-status', 'failure', error.message); document.getElementById('btn-trigger').disabled = false; }
+        }
+
+        function updateStatus(prefix, status, msg) {
+            const dot = document.getElementById(`${prefix}-dot`); const text = document.getElementById(`${prefix}-text`);
+            if(dot) dot.className = `status-dot ${status}`; if(text) text.textContent = msg;
+        }
+
+        function processFile() {
+            const content = document.getElementById('file-input').value;
+            const errorPanel = document.getElementById('error-panel');
+            const successPanel = document.getElementById('success-panel');
+            const inputArea = document.getElementById('input-area');
+            const forceBtn = document.getElementById('btn-force-publish');
+            
+            errorPanel.style.display = 'none';
+            successPanel.style.display = 'none';
+            forceBtn.style.display = 'none';
+
+            if (!content.trim()) return alert('請先貼上內容');
+
+            let errors = [];
+            let repo = "", filePath = "", fullPath = "未知路徑";
+            const rules = globalConfig.console_rules || {};
+
+            // 優先匹配標準的 EOF 結構 (F, V, W)
+            let eofMatch = content.match(/F:\s*([^\s\n]+)\s*\nV:\s*\d+\s*\nW:\s*[^\s\n]+/);
+            let pathMatch = null;
+            
+            if (eofMatch) {
+                pathMatch = eofMatch[0].match(/F:\s*([^\s\n]+)/);
+            } else {
+                pathMatch = content.match(/(?:F:|"F":)\s*"?([^\s"\n]+)"?/);
+            }
+            
+            if (!pathMatch) {
+                errors.push("找不到 F: 路徑標記。請確認 AI 是否漏寫 EOF。");
+            } else {
+                fullPath = pathMatch[1];
+                const pathParts = fullPath.split('/');
+                if (pathParts.length < 2) {
+                    errors.push(`路徑格式錯誤：${fullPath}。必須包含倉庫名。`);
+                } else {
+                    repo = pathParts[0];
+                    filePath = pathParts.slice(1).join('/');
+                    
+                    if (!allowedRepos.includes(repo)) {
+                        if (repo === 'src' || repo === 'public' || repo === 'functions') {
+                            errors.push(`路徑缺少倉庫前綴：${fullPath}。請確認 AI 是否漏寫了專案倉庫名（如 AI-WA-UPWO/src/...）。`);
+                        } else {
+                            errors.push(`未知的倉庫目標：${repo}。請確認是否已在 config/repos.json 中註冊。`);
+                        }
+                    }
+                    document.getElementById('target-path-display').textContent = `目標：${repo} / ${filePath}`;
+                    document.getElementById('target-repo').value = repo;
+                    document.getElementById('target-file-path').value = filePath;
+                }
+            }
+
+            let specificRule = (globalConfig.file_specific_rules && globalConfig.file_specific_rules[`${repo}/${filePath}`]) || {};
+
+            let isRecordFile = false;
+            if (rules.record_auto_exempt !== false && repo === rules.record_exempt_repo) {
+                const exemptPaths = rules.record_exempt_paths || [];
+                isRecordFile = exemptPaths.some(p => filePath.includes(p));
+            }
+
+            const isCodeFile = filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('.html') || filePath.endsWith('.py') || filePath.endsWith('.sh') || filePath.endsWith('.json');
+
+            let cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
+            cleanContent = cleanContent.replace(/「[^」]*」/g, '').replace(/`[^`]*`/g, '');
+
+            if (isCodeFile) {
+                const lazyPatterns = [
+                    { regex: /\/\/\s*\.\.\./, msg: "發現偷懶省略：// ..." },
+                    { regex: /\/\*\s*\.\.\./, msg: "發現偷懶省略：/* ..." },
+                    { regex: /<!--\s*\.\.\./, msg: "發現偷懶省略：<!-- ..." },
+                    { regex: /\/\/\s*(其餘|以下|中間|其他).{0,5}(不變|省略|同上)/, msg: "發現偷懶省略：// 其餘不變" },
+                    { regex: /<!--\s*(其餘|以下|中間|其他).{0,5}(不變|省略|同上)/, msg: "發現偷懶省略：<!-- 其餘不變" }
+                ];
+
+                lazyPatterns.forEach(p => {
+                    if (p.regex.test(cleanContent)) errors.push(p.msg);
+                });
+
+                // 安全檢查「省略」或「略」（替代 Lookbehind，避免舊手機 JS 崩潰）
+                let hasLue = false;
+                let matchIdx = cleanContent.indexOf('略');
+                while (matchIdx !== -1) {
+                    let prefix = cleanContent[matchIdx - 1];
+                    if (!['忽', '省', '策', '戰', '大', '方', '概'].includes(prefix)) {
+                        hasLue = true;
+                        break;
+                    }
+                    matchIdx = cleanContent.indexOf('略', matchIdx + 1);
+                }
+                
+                if (cleanContent.includes("省略") || hasLue) {
+                    errors.push("發現禁用詞彙：程式碼中不允許出現「省略」或「略」字");
+                }
+
+            } else {
+                if (specificRule.check_forbidden_words !== false && !isRecordFile) {
+                    globalForbiddenWords.forEach(word => {
+                        let isViolation = false;
+                        if (word === '略') {
+                            let matchIdx = cleanContent.indexOf('略');
+                            while (matchIdx !== -1) {
+                                let prefix = cleanContent[matchIdx - 1];
+                                if (!['忽', '省', '策', '戰', '大', '方', '概'].includes(prefix)) {
+                                    isViolation = true;
+                                    break;
+                                }
+                                matchIdx = cleanContent.indexOf('略', matchIdx + 1);
+                            }
+                        } else {
+                            if (cleanContent.includes(word)) {
+                                isViolation = true;
+                            }
+                        }
+                        if (isViolation) {
+                            errors.push(`發現禁用詞彙：「${word}」`);
+                        }
+                    });
+                }
+
+                if (specificRule.check_simplified !== false) {
+                    const simplified = globalConfig.simplified_chars || [];
+                    simplified.forEach(word => {
+                        if (cleanContent.includes(word)) errors.push(`發現簡體字：「${word}」`);
+                    });
+                }
+            }
+
+            if (errors.length > 0) {
+                errorPanel.style.display = 'block';
+                inputArea.style.display = 'none';
+                
+                let header = "";
+                if (rules.show_file_path_in_error !== false) {
+                    header = (rules.error_header_format || "📄 檔案：{path}\n------------------------\n").replace("{path}", fullPath);
+                }
+                document.getElementById('error-list').textContent = header + errors.join('\n');
+
+                if (repo && filePath) {
+                    forceBtn.style.display = 'block';
+                }
+            } else {
+                successPanel.style.display = 'block';
+                document.getElementById('success-message').textContent = '✅ 體檢通過！請點擊下方按鈕發布。';
+                document.getElementById('btn-publish').style.display = 'block';
+                forceBtn.style.display = 'none';
+            }
+        }
+
+        function resetUI() {
+            document.getElementById('file-input').value = '';
+            document.getElementById('error-panel').style.display = 'none';
+            document.getElementById('success-panel').style.display = 'none';
+            document.getElementById('input-area').style.display = 'block';
+            document.getElementById('btn-publish').style.display = 'none';
+            document.getElementById('btn-reset-next').style.display = 'none';
+            
+            const btn = document.getElementById('btn-publish');
+            btn.disabled = false; 
+            btn.textContent = '🚀 確認發布到倉庫';
+
+            const forceBtn = document.getElementById('btn-force-publish');
+            forceBtn.style.display = 'none';
+            forceBtn.disabled = false;
+            forceBtn.textContent = '🚨 強制發布（忽略錯誤）';
+        }
+
+        function copyError() {
+            const errorText = document.getElementById('error-list').textContent;
+            navigator.clipboard.writeText(`網頁體檢報錯：\n${errorText}`).then(() => alert('已複製錯誤訊息，請貼回對話框。'));
+        }
+
+        async function publishFile(isForce = false) {
+            if (!currentToken) return alert('請先設定 Token');
+            
+            let targetBtn = isForce ? document.getElementById('btn-force-publish') : document.getElementById('btn-publish');
+            const originalText = targetBtn.textContent;
+            targetBtn.disabled = true; targetBtn.textContent = '處理中...';
+            
+            let content = document.getElementById('file-input').value;
+            const repo = document.getElementById('target-repo').value;
+            const filePath = document.getElementById('target-file-path').value;
+
+            try {
+                let sha = null;
+                let originalContent = "";
+                try {
+                    const existing = await githubAPI(`/repos/${OWNER}/${repo}/contents/${filePath}`);
+                    if (existing && existing.sha) {
+                        sha = existing.sha;
+                        originalContent = decodeURIComponent(escape(atob(existing.content.replace(/\n/g, ''))));
+                    }
+                } catch (e) {
+                    if (!e.message.includes('404')) throw e;
+                }
+
+                let finalContent = content;
+
+                const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
+                const patchMatch = content.match(patchRegex);
+                
+                if (patchMatch && originalContent) {
+                    const oldStr = patchMatch[1];
+                    const newStr = patchMatch[2];
+                    if (!originalContent.includes(oldStr)) {
+                        throw new Error(`找不到要替換的目標字串。`);
+                    }
+                    finalContent = originalContent.replace(oldStr, newStr);
+                } 
+                else if (content.includes("[APPEND]") && originalContent) {
+                    let base = originalContent;
+                    const eofIndex = base.lastIndexOf("/* ═══ EOF ═══");
+                    const mdEofIndex = base.lastIndexOf("F:");
+                    
+                    if (eofIndex > 0) base = base.substring(0, eofIndex).trim();
+                    else if (mdEofIndex > 0) {
+                        const lineStart = base.lastIndexOf("\n", mdEofIndex);
+                        if (lineStart > 0) base = base.substring(0, lineStart).trim();
+                    }
+
+                    let appendContent = content.replace("[APPEND]", "").trim();
+                    finalContent = base + "\n\n" + appendContent;
+                }
+
+                const base64Content = btoa(unescape(encodeURIComponent(finalContent)));
+
+                const body = { message: `Update ${filePath} via Console`, content: base64Content };
+                if (sha) body.sha = sha;
+
+                await githubAPI(`/repos/${OWNER}/${repo}/contents/${filePath}`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                });
+
+                const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+                
+                document.getElementById('success-message').innerHTML = `🎉 已成功寫入：<br><b>${repo}/${filePath}</b><br><span style="font-size:0.85rem; color:#047857; font-weight:normal;">⏱️ 寫入時間：${timeStr}</span>`;
+                targetBtn.style.display = 'none';
+                document.getElementById('error-panel').style.display = 'none';
+                document.getElementById('success-panel').style.display = 'block';
+                document.getElementById('btn-reset-next').style.display = 'block';
+
+                hasUnpackedChanges = true;
+                updateStatus('build-status', 'running', '有新檔案！請點擊打包');
+
+            } catch (error) {
+                alert(`發布失敗：${error.message}`);
+                targetBtn.disabled = false; 
+                targetBtn.textContent = originalText;
+            }
+        }
+
+        async function createNewProject() {
+            if (!currentToken) return alert('請先設定 Token');
+            const name = document.getElementById('new-repo-name').value.trim();
+            const domain = document.getElementById('new-repo-domain').value;
+            const pkgNo = document.getElementById('new-repo-pkg').value.trim();
+            const code = document.getElementById('new-repo-code').value.trim();
+            const display = document.getElementById('new-repo-display').value.trim();
+
+            if (!name || !pkgNo || !code) return alert('請填寫完整資訊');
+            
+            const btn = document.getElementById('btn-create-repo');
+            btn.disabled = true; btn.textContent = '建立中...';
+
+            try {
+                await githubAPI(`/user/repos`, {
+                    method: 'POST', body: JSON.stringify({ name: name, private: false, auto_init: true })
+                });
+
+                await new Promise(r => setTimeout(r, 2000));
+                const v = Math.floor(Date.now() / 1000).toString();
+
+                const metaContent = JSON.stringify({
+                    domain: domain, pkg_no: pkgNo, code: code, display: display,
+                    _EOF: { F: `${name}/meta.json`, V: v, W: `init-${pkgNo}#1` }
+                }, null, 2);
+                
+                await githubAPI(`/repos/${OWNER}/${name}/contents/meta.json`, {
+                    method: 'PUT', body: JSON.stringify({ message: 'Init meta.json', content: btoa(unescape(encodeURIComponent(metaContent))) })
+                });
+
+                const wfContent = `# WF-HANDOFF (${display})\n\n## 專案基礎資訊\n\n- 專案編號：${pkgNo}\n- 領域代碼：${domain}\n\n/* ═══ EOF ═══\nF: AI-General/docs/p${pkgNo}/WF-HANDOFF.md\nV: ${v}\nW: init-${pkgNo}#1\n═══ */`;
+                
+                let wfSha = null;
+                try {
+                    const existWf = await githubAPI(`/repos/${OWNER}/AI-General/contents/docs/p${pkgNo}/WF-HANDOFF.md`);
+                    wfSha = existWf.sha;
+                } catch(e) {}
+
+                const wfBody = { message: 'Init WF-HANDOFF', content: btoa(unescape(encodeURIComponent(wfContent))) };
+                if (wfSha) wfBody.sha = wfSha;
+
+                await githubAPI(`/repos/${OWNER}/AI-General/contents/docs/p${pkgNo}/WF-HANDOFF.md`, {
+                    method: 'PUT', body: JSON.stringify(wfBody)
+                });
+
+                alert(`✅ 專案 ${name} 建立成功！`);
+                document.getElementById('new-repo-name').value = '';
+                document.getElementById('new-repo-pkg').value = '';
+                document.getElementById('new-repo-code').value = '';
+                document.getElementById('new-repo-display').value = '';
+            } catch (error) {
+                alert(`建庫失敗：${error.message}`);
+            } finally {
+                btn.disabled = false; btn.textContent = '🚀 一鍵建立專案';
+            }
+        }
+    </script>
 </head>
-<body class="bg-[#F4F7FB] text-slate-800 font-sans min-h-screen antialiased overflow-hidden">
-
-  <!-- 初始載入畫面 -->
-  <div id="app-loading" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#F4F7FB] transition-opacity duration-300">
-    <div class="w-12 h-12 rounded-xl bg-[#6366F1] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4 animate-bounce">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+<body>
+<div class="container">
+    
+    <div class="sticky-header">
+        <div class="card">
+            <div class="card-title">🚀 AI 控制台</div>
+            <div class="subtitle">極簡發布與打包中心</div>
+            <button class="btn-primary" id="btn-trigger" onclick="triggerBuild()">▶️ 打包</button>
+            <div class="status-box">
+                <div class="status-dot" id="build-status-dot"></div>
+                <div id="build-status-text">等待操作</div>
+            </div>
+        </div>
     </div>
-    <div class="text-sm font-medium text-slate-500 animate-pulse">系統載入中...</div>
-  </div>
 
-  <!-- 系統掛載點 -->
-  <div id="app-root" class="w-full h-full"></div>
+    <div class="card">
+        <div class="card-title">📦 檔案體檢與發布</div>
+        
+        <div id="input-area">
+            <textarea id="file-input" placeholder="請在此貼上 AI 交付的完整內容..."></textarea>
+            <button class="btn-primary" onclick="processFile()">🔍 檢查並準備發布</button>
+        </div>
 
-  <!-- 系統啟動入口 (Vite 會自動處理 Module 依賴) -->
-  <script type="module" src="/src/engine/main.js"></script>
+        <div class="error-panel" id="error-panel">
+            <div style="font-weight:bold; margin-bottom:10px;">❌ 檢查未通過</div>
+            <div class="error-list" id="error-list"></div>
+            <button class="btn-primary" style="background:#ef4444; margin-bottom:10px;" onclick="copyError()">📋 一鍵複製錯誤訊息</button>
+            <button class="btn-primary" style="background:#64748b;" onclick="resetUI()">🔄 清除並重新貼上</button>
+            <button class="btn-danger" id="btn-force-publish" style="display:none; margin-top:10px; background:#991b1b;" onclick="publishFile(true)">🚨 強制發布（忽略錯誤）</button>
+        </div>
+
+        <div class="success-panel" id="success-panel">
+            <div style="font-weight:bold; margin-bottom:10px;" id="success-message">✅ 體檢通過！</div>
+            <div style="font-size:0.85rem; margin-bottom:15px; font-family:monospace; background:#fff; padding:8px; border-radius:5px;" id="target-path-display"></div>
+            <input type="hidden" id="target-repo">
+            <input type="hidden" id="target-file-path">
+            
+            <button class="btn-success" id="btn-publish" onclick="publishFile(false)">🚀 確認發布到倉庫</button>
+            <button class="btn-primary" id="btn-reset-next" style="display:none; margin-top:10px;" onclick="resetUI()">📝 繼續貼上下一個檔案</button>
+            <button class="btn-primary" style="background:#64748b; margin-top:10px;" onclick="resetUI()">取消</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🏗️ 建立新專案</div>
+        <input type="text" id="new-repo-name" placeholder="Repo 名稱 (如 AI-WA-NEW)">
+        <div style="display:flex; gap:10px;">
+            <select id="new-repo-domain" style="width:30%; padding:12px; border:1px solid #ccc; border-radius:8px;">
+                <option value="W">W (Web)</option>
+                <option value="V">V (VBA)</option>
+                <option value="D">D (Data)</option>
+                <option value="M">M (Mobile)</option>
+                <option value="E">E (Engine)</option>
+            </select>
+            <input type="text" id="new-repo-pkg" placeholder="編號 (如 92)" style="width:30%; margin-bottom:0;">
+            <input type="text" id="new-repo-code" placeholder="代碼 (如 UPGRADE)" style="width:40%; margin-bottom:0;">
+        </div>
+        <input type="text" id="new-repo-display" placeholder="顯示名稱 (如 升級系統)" style="margin-top:10px;">
+        <button class="btn-primary" id="btn-create-repo" onclick="createNewProject()">🚀 一鍵建立專案</button>
+    </div>
+
+    <details>
+        <summary>🔑 憑證管理中心 (Token)</summary>
+        <div class="card" style="box-shadow:none; border:none; padding:0; margin-top:10px;">
+            <input type="text" id="new-token-name" placeholder="名稱 (如：主要 GitHub)">
+            <input type="password" id="new-token-value" placeholder="Token 字串">
+            <button class="btn-primary" onclick="addToken()">➕ 新增 Token</button>
+            <div style="margin-top: 15px; border-top: 1px solid var(--border);" id="token-list"></div>
+        </div>
+    </details>
+
+</div>
 </body>
 </html>
-
 <!-- ═══ EOF ═══
-F: index.html
-V: 1792903519
-W: webapp-20261026-001#31
+F: AI-infra/index.html
+V: 1792910200
+W: ai-system-004
 ═══ -->```
 
 <!-- === FILE END: ./index.html === -->
@@ -465,11 +1069,11 @@ W: webapp-20261026-001#16
  * @returns {Array<string>} 標準化後的銷售員名稱陣列
  */
 export function normalizeSalesRep(repString, salesMapping) {
-  if (!repString) return ["未知銷售員"];
+  if (!repString || String(repString).trim() === "") return ["未填寫"];
   
   // 依 "/" 分割並去除空白
-  const rawNames = repString.split('/').map(s => s.trim()).filter(Boolean);
-  if (rawNames.length === 0) return ["未知銷售員"];
+  const rawNames = String(repString).split('/').map(s => s.trim()).filter(Boolean);
+  if (rawNames.length === 0) return ["未填寫"];
 
   const resultSet = new Set();
 
@@ -488,9 +1092,9 @@ export function normalizeSalesRep(repString, salesMapping) {
       }
     }
 
-    // 若無對應，則歸為未知
+    // 若無對應，則直接使用原名
     if (!matched) {
-      resultSet.add("未知銷售員");
+      resultSet.add(rawName);
     }
   }
 
@@ -498,50 +1102,102 @@ export function normalizeSalesRep(repString, salesMapping) {
 }
 
 /**
- * 解析 Excel 匯入的資料列
+ * 將 Excel 日期序列號轉換為 YYYY-MM-DD 格式
+ * @param {any} val 原始數值或字串
+ * @returns {string} 格式化後的日期字串
+ */
+function formatExcelDate(val) {
+  if (!val) return "";
+  
+  // 如果已經是正常的日期字串 (包含 - 或 /)
+  if (typeof val === 'string' && (val.includes('-') || val.includes('/'))) {
+    return val.trim();
+  }
+
+  // 處理 Excel 序列號 (通常介於 20000 到 60000 之間)
+  const num = Number(val);
+  if (!isNaN(num) && num > 20000 && num < 80000) {
+    // Excel 起始日為 1899-12-30
+    const date = new Date((num - 25569) * 86400 * 1000);
+    // 檢查是否為有效日期
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  }
+
+  // 其他無法解析的，直接轉字串回傳
+  return String(val).trim();
+}
+
+/**
+ * 解析 Excel 匯入的資料列（動態 Schema 版）
  * @param {Array<string>} headers Excel 第一列的標題
  * @param {Array<Array<any>>} rows Excel 的資料列（不含標題）
  * @param {Array} salesMapping 銷售員對照表
  * @param {string} defaultStatus 預設狀態 (如 "排產中")
+ * @param {Array} schema 系統欄位定義
  * @returns {Array<Object>} 標準化後的工單物件陣列
  */
-export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中") {
+export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中", schema = []) {
   const nowStr = new Date().toISOString();
   const parsedOrders = [];
 
-  // 建立表頭索引映射，方便尋找交貨日等欄位
-  // 假設 Excel 欄位：A(0) 工單、B(1) 客戶、C(2) 品名、D(3) 數量、E(4) 單價、F(5) 金額、G(6) 銷售員、H(7) 交貨日
-  // 這裡我們不寫死交貨日是哪一欄，而是讓 AI 或使用者自己決定，但預設我們可以找包含「交期」或「交貨」的欄位。
-  const dueDateIndex = headers.findIndex(h => h && (h.includes('交期') || h.includes('交貨')));
-  const salesRepIndex = 6; // 依據需求，G 欄固定為銷售員 (索引 6)
-  const orderIdIndex = 0;  // 依據需求，A 欄固定為工單號 (索引 0)
+  // 1. 建立表頭索引映射：強制清洗表頭的空白、換行與全形空白
+  const cleanStr = (s) => String(s || '').replace(/[\s\u3000]+/g, '').trim();
+  const cleanHeaders = headers.map(cleanStr);
 
+  const columnMap = {};
+  schema.forEach(field => {
+    const targetLabel = cleanStr(field.label);
+    const idx = cleanHeaders.findIndex(h => h === targetLabel);
+    if (idx !== -1) {
+      columnMap[field.key] = idx;
+    }
+  });
+
+  // 2. 檢查必要的系統核心欄位是否存在
+  if (columnMap['id'] === undefined) {
+    throw new Error('找不到「工單號碼 (發票)」欄位，請確認 Excel 表頭或欄位設定。');
+  }
+
+  // 3. 逐列解析
   for (const row of rows) {
-    // 跳過空行
+    // 跳過完全空白的列（防呆）
     if (!row || row.length === 0) continue;
 
-    const orderId = String(row[orderIdIndex] || '').trim();
+    const rawIdVal = row[columnMap['id']];
+    const orderId = rawIdVal !== undefined && rawIdVal !== null ? String(rawIdVal).trim() : "";
     
-    // 跳過沒有工單號的行
-    if (!orderId) continue;
-
-    // 解析銷售員
-    const rawSalesRep = row[salesRepIndex] ? String(row[salesRepIndex]) : "";
-    const normalizedReps = normalizeSalesRep(rawSalesRep, salesMapping);
-
-    // 解析交貨日 (如果有找到對應欄位且該格有值)
-    let dueDate = "";
-    if (dueDateIndex !== -1 && row[dueDateIndex]) {
-      // 如果是 Excel 日期序列號，可以在此轉換，或交給上層處理
-      dueDate = String(row[dueDateIndex]).trim();
+    // 💡 核心邏輯：遇到 A 欄（工單號碼）為空，直接中斷迴圈（完美剔除尾部的總計與備註）
+    if (!orderId) {
+      break;
     }
 
-    // 將其他欄位存入 details
-    const details = {};
-    headers.forEach((header, index) => {
-      // 排除 A 欄(工單號) 與 G 欄(銷售員)，避免重複
-      if (index !== orderIdIndex && index !== salesRepIndex && header) {
-        details[header] = row[index] !== undefined ? row[index] : "";
+    // 解析日期（轉換 Excel 序列號）
+    let uploadDate = nowStr;
+    if (columnMap['uploadDate'] !== undefined && row[columnMap['uploadDate']] !== undefined) {
+      uploadDate = formatExcelDate(row[columnMap['uploadDate']]);
+    }
+
+    // 解析銷售員
+    let rawSalesRep = "";
+    if (columnMap['salesRep'] !== undefined && row[columnMap['salesRep']] !== undefined) {
+      rawSalesRep = String(row[columnMap['salesRep']]);
+    }
+    const normalizedReps = normalizeSalesRep(rawSalesRep, salesMapping);
+
+    // 收集動態欄位資料 (非系統核心欄位)
+    const data = {};
+    
+    // 💡 自動擷取工單號前兩碼英文作為類別
+    const categoryMatch = orderId.match(/^[a-zA-Z]+/);
+    data['category'] = categoryMatch ? categoryMatch[0].toUpperCase() : '其他';
+
+    schema.forEach(field => {
+      // 排除系統核心欄位 (id, uploadDate, salesRep 等)
+      if (!field.isSystem && columnMap[field.key] !== undefined) {
+        const val = row[columnMap[field.key]];
+        data[field.key] = val !== undefined && val !== null ? val : "";
       }
     });
 
@@ -549,10 +1205,10 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       id: orderId,
       status: defaultStatus,
       salesReps: normalizedReps,
-      uploadDate: nowStr,
-      statusUpdateDate: nowStr,
-      dueDate: dueDate,
-      details: details
+      uploadDate: uploadDate,
+      statusUpdateDate: nowStr.split('T')[0], // 狀態更新日預設為今天
+      dueDate: "", // 交期依需求為匯入後手動輸入
+      data: data   // 動態欄位資料
     });
   }
 
@@ -560,9 +1216,9 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
 }
 
 /* ═══ EOF ═══
-F: src/domain/parser.js
-V: 1792903505
-W: webapp-20261026-001#17
+F: AI-WA-UPWO/src/domain/parser.js
+V: 1792911500
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/domain/parser.js === -->
@@ -607,13 +1263,39 @@ export function groupBySalesRep(orders) {
   const grouped = {};
 
   orders.forEach(order => {
-    const reps = order.salesReps || ['未知銷售員'];
+    const reps = order.salesReps || ['未填寫'];
     reps.forEach(rep => {
       if (!grouped[rep]) {
         grouped[rep] = [];
       }
       grouped[rep].push(order);
     });
+  });
+
+  return grouped;
+}
+
+/**
+ * 將工單陣列依「類別 (發票前兩碼)」分組
+ * @param {Array<Object>} orders 工單陣列
+ * @returns {Object} 以類別為 key 的物件，value 為該類別的工單陣列
+ */
+export function groupByCategory(orders) {
+  const grouped = {};
+
+  orders.forEach(order => {
+    // 優先從 data.category 抓取，若無則嘗試從 id 擷取
+    let category = order.data && order.data['category'];
+    
+    if (!category) {
+      const match = String(order.id).match(/^[a-zA-Z]+/);
+      category = match ? match[0].toUpperCase() : '其他';
+    }
+
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+    grouped[category].push(order);
   });
 
   return grouped;
@@ -668,7 +1350,7 @@ export function generatePivotTable(orders, statuses = [], salesReps = []) {
   // 填充數據
   orders.forEach(order => {
     const status = order.status || '未知狀態';
-    const reps = order.salesReps || ['未知銷售員'];
+    const reps = order.salesReps || ['未填寫'];
     
     reps.forEach(rep => {
       // 如果該銷售員不在表頭清單中，動態加入
@@ -686,9 +1368,9 @@ export function generatePivotTable(orders, statuses = [], salesReps = []) {
 }
 
 /* ═══ EOF ═══
-F: src/domain/stats.js
-V: 1792903506
-W: webapp-20261026-001#18
+F: AI-WA-UPWO/src/domain/stats.js
+V: 1792911600
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/domain/stats.js === -->
@@ -699,11 +1381,10 @@ W: webapp-20261026-001#18
 
 ```js
 import { initRouter } from './router.js';
-import { createIcons } from 'lucide';
 
 /**
  * 系統啟動入口
- * 負責等待 DOM 載入完成後，初始化路由與圖示
+ * 負責等待 DOM 載入完成後，初始化路由
  */
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('app-root');
@@ -713,17 +1394,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // 顯示初始載入動畫 (可選，這裡假設 index.html 有預設的 loading 遮罩)
+  // 隱藏初始載入動畫
   const loadingEl = document.getElementById('app-loading');
   if (loadingEl) {
     loadingEl.classList.add('hidden');
   }
 
   try {
-    // 初始化 Lucide 圖示
-    createIcons();
-
     // 啟動路由系統
+    // 註：全域 createIcons 已移除，圖示由各頁面或佈局元件自行呼叫 createIcons 處理
     initRouter();
     
     console.log('[System] UPGRADE-WO 系統啟動成功。');
@@ -741,9 +1420,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ═══ EOF ═══
-F: src/engine/main.js
-V: 1792903518
-W: webapp-20261026-001#30
+F: AI-WA-UPWO/src/engine/main.js
+V: 1792909601
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/engine/main.js === -->
@@ -764,6 +1443,7 @@ import TablePage from '../pages/table.js';
 import OverviewPage from '../pages/overview.js';
 import SalespersonPage from '../pages/salesperson.js';
 import SettingsPage from '../pages/settings.js';
+import CategoryPage from '../pages/category.js';
 
 const routes = {
   login: LoginPage,
@@ -771,7 +1451,8 @@ const routes = {
   table: TablePage,
   overview: OverviewPage,
   salesperson: SalespersonPage,
-  settings: SettingsPage
+  settings: SettingsPage,
+  category: CategoryPage
 };
 
 let currentPageInstance = null;
@@ -873,9 +1554,9 @@ export function initRouter() {
 }
 
 /* ═══ EOF ═══
-F: src/engine/router.js
-V: 1792903517
-W: webapp-20261026-001#29
+F: AI-WA-UPWO/src/engine/router.js
+V: 1792912200
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/engine/router.js === -->
@@ -890,12 +1571,13 @@ import { jsPDF } from 'jspdf';
 import { groupByStatus } from '../domain/stats.js';
 
 /**
- * 將工單資料匯出為 Excel 檔案 (依狀態分 Sheet)
+ * 將工單資料匯出為 Excel 檔案 (依狀態分 Sheet，包含動態欄位)
  * @param {Array<Object>} orders 工單陣列
  * @param {Array<string>} statuses 狀態清單
  * @param {string} filename 檔案名稱 (不含副檔名)
+ * @param {Array} schema 系統欄位設定 (用於抓取自訂欄位)
  */
-export function exportToExcel(orders, statuses, filename = '工單清單') {
+export function exportToExcel(orders, statuses, filename = '工單清單', schema = []) {
   if (!orders || orders.length === 0) {
     throw new Error('無資料可匯出');
   }
@@ -903,21 +1585,33 @@ export function exportToExcel(orders, statuses, filename = '工單清單') {
   const groupedData = groupByStatus(orders, statuses);
   const wb = XLSX.utils.book_new();
 
+  // 過濾出非系統的自訂欄位
+  const customFields = schema.filter(f => !f.isSystem);
+
   for (const status of statuses) {
     const statusOrders = groupedData[status] || [];
     if (statusOrders.length === 0) continue;
 
     // 整理要輸出的欄位
-    const dataToExport = statusOrders.map(order => ({
-      '工單號碼': order.id,
-      '狀態': order.status,
-      '銷售員': (order.salesReps || []).join(', '),
-      '上傳日期': order.uploadDate || '',
-      '狀態更新日': order.statusUpdateDate || '',
-      '交貨日期': order.dueDate || '',
-      // 將 details 展開
-      ...order.details
-    }));
+    const dataToExport = statusOrders.map(order => {
+      // 基礎固定欄位
+      const row = {
+        '工單號碼': order.id,
+        '類別': order.data?.category || '其他',
+        '狀態': order.status,
+        '銷售員': (order.salesReps || []).join(', '),
+        '上傳日期': order.uploadDate || '',
+        '狀態更新日': order.statusUpdateDate || '',
+        '交貨日期': order.dueDate || ''
+      };
+
+      // 動態加入自訂欄位
+      customFields.forEach(field => {
+        row[field.label] = order.data && order.data[field.key] !== undefined ? order.data[field.key] : '';
+      });
+
+      return row;
+    });
 
     // 建立工作表
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -930,12 +1624,13 @@ export function exportToExcel(orders, statuses, filename = '工單清單') {
 }
 
 /**
- * 將工單資料匯出為 PDF 檔案 (依狀態分頁或分區塊)
+ * 將工單資料匯出為 PDF 檔案 (依狀態分頁，包含動態欄位)
  * @param {Array<Object>} orders 工單陣列
  * @param {Array<string>} statuses 狀態清單
  * @param {string} filename 檔案名稱 (不含副檔名)
+ * @param {Array} schema 系統欄位設定
  */
-export function exportToPDF(orders, statuses, filename = '工單清單') {
+export function exportToPDF(orders, statuses, filename = '工單清單', schema = []) {
   if (!orders || orders.length === 0) {
     throw new Error('無資料可匯出');
   }
@@ -966,9 +1661,9 @@ export function exportToPDF(orders, statuses, filename = '工單清單') {
 
     // 表頭
     doc.text('工單號碼', 14, yPos);
-    doc.text('銷售員', 60, yPos);
+    doc.text('類別', 50, yPos);
+    doc.text('銷售員', 70, yPos);
     doc.text('交貨日', 120, yPos);
-    doc.text('上傳日', 160, yPos);
     
     yPos += 5;
     doc.setLineWidth(0.5);
@@ -983,23 +1678,39 @@ export function exportToPDF(orders, statuses, filename = '工單清單') {
         yPos = 20;
         // 重新繪製表頭
         doc.text('工單號碼', 14, yPos);
-        doc.text('銷售員', 60, yPos);
+        doc.text('類別', 50, yPos);
+        doc.text('銷售員', 70, yPos);
         doc.text('交貨日', 120, yPos);
-        doc.text('上傳日', 160, yPos);
         yPos += 5;
         doc.line(14, yPos, 196, yPos);
         yPos += 5;
       }
 
       const orderId = String(order.id).substring(0, 20);
-      const salesRep = (order.salesReps || []).join(', ').substring(0, 20);
-      const dueDate = String(order.dueDate || '').substring(0, 15);
-      const uploadDate = String(order.uploadDate || '').split('T')[0];
+      const cat = String(order.data?.category || '其他').substring(0, 10);
+      const salesRep = (order.salesReps || []).join(', ').substring(0, 25);
+      const dueDate = String(order.dueDate || '-').substring(0, 15);
 
       doc.text(orderId, 14, yPos);
-      doc.text(salesRep, 60, yPos);
+      doc.text(cat, 50, yPos);
+      doc.text(salesRep, 70, yPos);
       doc.text(dueDate, 120, yPos);
-      doc.text(uploadDate, 160, yPos);
+
+      // 如果有自訂欄位，可以在下方印出（避免版面太擠）
+      const customFields = schema.filter(f => !f.isSystem);
+      if (customFields.length > 0) {
+        yPos += 5;
+        const extraInfo = customFields.map(f => {
+          const val = order.data && order.data[f.key] !== undefined ? order.data[f.key] : '-';
+          return `${f.label}: ${val}`;
+        }).join(' | ');
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(extraInfo.substring(0, 100), 14, yPos);
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        yPos += 5; // 多佔用一行
+      }
 
       yPos += lineHeight;
     }
@@ -1010,16 +1721,16 @@ export function exportToPDF(orders, statuses, filename = '工單清單') {
 }
 
 /* ═══ EOF ═══
-F: src/lib/io.js
-V: 1792903507
-W: webapp-20261026-001#19
+F: AI-WA-UPWO/src/lib/io.js
+V: 1792912500
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/lib/io.js === -->
 
-<!-- === FILE START: ./src/pages/kanban.js === -->
+<!-- === FILE START: ./src/pages/category.js === -->
 
-## 📄 ./src/pages/kanban.js
+## 📄 ./src/pages/category.js
 
 ```js
 import { AppState } from '../config/state.js';
@@ -1027,40 +1738,27 @@ import { listenCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
-import { groupByStatus, calculateStats } from '../domain/stats.js';
-import { createIcons, MoreVertical, ChevronDown, User, Calendar, Upload, CheckCircle2, AlertCircle } from 'lucide';
+import { groupByStatus, groupByCategory } from '../domain/stats.js';
+import { createIcons, Layers, Inbox, ChevronDown, User, Calendar } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
+let allCategories = [];
+let currentCategory = null;
 
 export default {
   async render() {
     const user = AppState.getUser();
     if (!user) return;
 
-    // 1. 渲染頁面骨架與統計卡片
+    // 1. 渲染頁面骨架
     renderPageLayout({
-      title: '流水線進度控制台',
-      subtitle: '即時追蹤工單狀態與生產進度',
-      headerActions: `
-        <button id="btn-import-excel" class="bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
-          <i data-lucide="upload" class="w-4 h-4"></i>
-          匯入 Excel
-        </button>
-      `,
-      stats: [], // 初始為空，等資料載入後更新
+      title: '類別視圖',
+      subtitle: '依發票前兩碼檢視工單狀態',
+      headerActions: '',
+      stats: [],
       controls: '',
-      listContainerId: 'kanban-container'
-    });
-
-    createIcons({
-      icons: { Upload },
-      attrs: { class: 'w-4 h-4' }
-    });
-
-    // 匯入按鈕事件（交由外部處理，或後續實作）
-    document.getElementById('btn-import-excel')?.addEventListener('click', () => {
-      showToast('請至「系統設定」頁面進行匯入，或使用專屬匯入元件', 'info');
+      listContainerId: 'category-container'
     });
 
     // 2. 初始化資料監聽
@@ -1068,31 +1766,393 @@ export default {
   },
 
   initDataListener() {
-    // 監聽 settings 取得狀態清單
-    // 監聽 work_orders 取得工單資料
-    // 為了簡化，這裡先監聽 work_orders，狀態清單我們從 settings 讀取（或使用預設）
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.extractCategoriesAndRender();
+    });
+  },
+
+  extractCategoriesAndRender() {
+    const grouped = groupByCategory(currentOrders);
+    allCategories = Object.keys(grouped).sort();
+
+    // 預設選中第一個類別（若還沒選過或選中的被刪除了）
+    if (allCategories.length > 0 && (!currentCategory || !allCategories.includes(currentCategory))) {
+      currentCategory = allCategories[0];
+    }
+
+    this.renderLayout();
+  },
+
+  renderLayout() {
+    const container = document.getElementById('category-container');
+    if (!container) return;
+
+    if (allCategories.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">目前尚無任何類別或工單</span>
+        </div>
+      `;
+      createIcons({ icons: { Inbox }, attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)]">
+        
+        <!-- 左側：類別清單 -->
+        <div class="w-full md:w-64 flex-shrink-0 flex flex-col bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <i data-lucide="layers" class="w-5 h-5 text-brand"></i>
+            <h2 class="font-bold text-slate-800">類別清單</h2>
+          </div>
+          <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1 kanban-scroll">
+            ${allCategories.map(cat => `
+              <button class="cat-item text-left px-4 py-3 rounded-xl transition-colors text-sm font-medium flex items-center justify-between ${cat === currentCategory ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50'}" data-cat="${cat}">
+                <span>${cat}</span>
+                ${cat === currentCategory ? '<span class="w-1.5 h-1.5 rounded-full bg-brand"></span>' : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 右側：該類別的工單看板 -->
+        <div class="flex-1 flex flex-col min-w-0 bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="layers" class="w-5 h-5 text-brand"></i>
+              類別 ${currentCategory} 的工單
+            </h2>
+          </div>
+          <div class="flex-1 p-4 overflow-x-auto kanban-scroll flex gap-4 bg-slate-50/30" id="cat-board">
+            <!-- 由 renderCatBoard 注入 -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    createIcons({
+      icons: { Layers },
+      attrs: { class: 'w-5 h-5' }
+    });
+
+    this.bindEvents();
+    this.renderCatBoard();
+  },
+
+  renderCatBoard() {
+    const boardContainer = document.getElementById('cat-board');
+    if (!boardContainer) return;
+
+    const statuses = AppState.getStatuses() || ['排產中', '印刷', '裁切', '品檢', '出貨'];
+    const user = AppState.getUser();
+    const isAdmin = user && user.role === 'admin';
     
-    // 這裡使用一個內部變數來快取狀態
+    // 過濾出當前選中類別的工單
+    const catOrders = currentOrders.filter(o => {
+      const cat = o.data && o.data.category ? o.data.category : '其他';
+      return cat === currentCategory;
+    });
+    
+    // 依狀態分組
+    const grouped = groupByStatus(catOrders, statuses);
+
+    boardContainer.innerHTML = statuses.map(status => {
+      const statusOrders = grouped[status] || [];
+      
+      return `
+        <div class="w-[280px] flex-shrink-0 flex flex-col gap-2">
+          <div class="flex items-center justify-between px-2">
+            <h3 class="font-semibold text-slate-700 text-sm flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${statusOrders.length > 0 ? 'bg-brand' : 'bg-slate-300'}"></span>
+              ${status}
+            </h3>
+            <span class="text-xs font-medium bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
+          </div>
+          <div class="inset-panel p-2 flex flex-col gap-2 min-h-[150px] flex-1">
+            ${statusOrders.length === 0 ? `
+              <div class="flex items-center justify-center h-full text-slate-300 text-xs py-4">無</div>
+            ` : statusOrders.map(order => {
+              const reps = (order.salesReps || []).join(', ');
+              const otherStatuses = statuses.filter(s => s !== order.status);
+              return `
+                <div class="glass-card p-3 rounded-xl border border-slate-100 shadow-sm text-sm relative !overflow-visible">
+                  <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-slate-800">${order.id}</span>
+                    ${order.dueDate ? `<span class="text-[10px] text-amber-600">交期:${order.dueDate}</span>` : ''}
+                  </div>
+                  <div class="text-slate-500 text-xs mb-2 flex items-center gap-1">
+                    <i data-lucide="user" class="w-3 h-3"></i> ${reps}
+                  </div>
+                  
+                  ${isAdmin ? `
+                    <button class="w-full flex items-center justify-between text-xs font-medium text-slate-500 hover:text-brand transition-colors btn-dropdown border-t border-slate-50 pt-2 mt-1">
+                      <span>流轉工序</span>
+                      <i data-lucide="chevron-down" class="w-3 h-3 transition-transform"></i>
+                    </button>
+                    <div class="dropdown-menu hidden absolute left-0 right-0 bottom-full mb-1 bg-white border border-slate-100 shadow-xl rounded-xl p-1 z-[999]">
+                      ${otherStatuses.map(s => `
+                        <button class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors btn-change-status" data-id="${order.id}" data-new-status="${s}">
+                          移至 ${s}
+                        </button>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    createIcons({ icons: { ChevronDown, User }, attrs: { class: 'w-4 h-4' } });
+    this.bindCardEvents();
+  },
+
+  bindEvents() {
+    document.querySelectorAll('.cat-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const newCat = e.currentTarget.dataset.cat;
+        if (newCat !== currentCategory) {
+          currentCategory = newCat;
+          this.renderLayout();
+        }
+      });
+    });
+  },
+
+  bindCardEvents() {
+    document.querySelectorAll('#cat-board .btn-dropdown').forEach(btnDropdown => {
+      const card = btnDropdown.closest('.glass-card');
+      const dropdownMenu = card.querySelector('.dropdown-menu');
+      
+      btnDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('#cat-board .dropdown-menu').forEach(m => {
+          if (m !== dropdownMenu) m.classList.add('hidden');
+        });
+        dropdownMenu.classList.toggle('hidden');
+        const icon = btnDropdown.querySelector('i');
+        if (dropdownMenu.classList.contains('hidden')) {
+          icon.style.transform = 'rotate(0deg)';
+        } else {
+          icon.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+
+    document.querySelectorAll('#cat-board .btn-change-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const newStatus = btn.dataset.newStatus;
+        const orderId = btn.dataset.id;
+        
+        btn.disabled = true;
+        btn.textContent = '處理中...';
+
+        try {
+          const nowStr = new Date().toISOString();
+          await updateDocument('work_orders', orderId, {
+            status: newStatus,
+            statusUpdateDate: nowStr
+          });
+          showToast(`工單 ${orderId} 已流轉至【${newStatus}】`, 'success');
+        } catch (error) {
+          console.error('Update status failed:', error);
+          showToast('更新狀態失敗', 'error');
+          btn.disabled = false;
+          btn.textContent = `移至 ${newStatus}`;
+        }
+      });
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('#cat-board .dropdown-menu').forEach(m => {
+        m.classList.add('hidden');
+        const icon = m.parentElement.querySelector('.btn-dropdown i');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      });
+    }, { once: true });
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    currentOrders = [];
+    allCategories = [];
+    currentCategory = null;
+  }
+};
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/pages/category.js
+V: 1792911900
+W: UPGRADE-002
+═══ */```
+
+<!-- === FILE END: ./src/pages/category.js === -->
+
+<!-- === FILE START: ./src/pages/kanban.js === -->
+
+## 📄 ./src/pages/kanban.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection, getDocument } from '../db/read.js';
+import { updateDocument, setDocument } from '../db/write.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+import { groupByStatus, groupByCategory, calculateStats } from '../domain/stats.js';
+import { parseExcelData } from '../domain/parser.js';
+import * as XLSX from 'xlsx';
+import { createIcons, MoreVertical, ChevronDown, User, Calendar, Upload, CheckCircle2, AlertCircle, Activity, ClipboardList, LayoutGrid, List } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+let currentStatus = '';
+let currentCategory = 'ALL';
+let currentView = 'card'; // 'card' or 'table'
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 渲染頁面骨架
+    renderPageLayout({
+      title: '流水線進度控制台',
+      subtitle: '即時追蹤工單狀態與生產進度',
+      headerActions: `
+        <div class="flex items-center gap-2">
+          <button id="btn-import-excel" class="bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
+            <i data-lucide="upload" class="w-4 h-4"></i> 匯入 Excel
+          </button>
+          <input type="file" id="excel-import-input" accept=".xlsx, .xls" class="hidden">
+          
+          <!-- 視圖切換按鈕 -->
+          <div class="segmented-control hidden sm:inline-flex">
+            <button id="btn-view-card" class="segment-btn ${currentView === 'card' ? 'active' : ''} flex items-center gap-1">
+              <i data-lucide="layout-grid" class="w-4 h-4"></i> 卡片
+            </button>
+            <button id="btn-view-table" class="segment-btn ${currentView === 'table' ? 'active' : ''} flex items-center gap-1">
+              <i data-lucide="list" class="w-4 h-4"></i> 表格
+            </button>
+          </div>
+        </div>
+      `,
+      stats: [],
+      controls: `
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-slate-600">狀態：</span>
+            <select id="filter-status" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand shadow-sm min-w-[120px]">
+              <!-- 由 renderControls 注入 -->
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-slate-600">類別：</span>
+            <select id="filter-category" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand shadow-sm min-w-[120px]">
+              <option value="ALL">全部類別</option>
+              <!-- 由 renderControls 注入 -->
+            </select>
+          </div>
+        </div>
+      `,
+      listContainerId: 'kanban-container'
+    });
+
+    // 2. 優先綁定事件
+    this.bindEvents();
+
+    // 3. 渲染初始圖示
+    createIcons({
+      icons: { Upload, LayoutGrid, List },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    // 4. 初始化資料監聽
+    this.initDataListener();
+  },
+
+  bindEvents() {
+    const btnImport = document.getElementById('btn-import-excel');
+    const fileInput = document.getElementById('excel-import-input');
+    if (btnImport && fileInput) {
+      btnImport.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+    }
+
+    // 視圖切換
+    document.getElementById('btn-view-card')?.addEventListener('click', () => {
+      currentView = 'card';
+      document.getElementById('btn-view-card').classList.add('active');
+      document.getElementById('btn-view-table').classList.remove('active');
+      this.renderContent();
+    });
+    document.getElementById('btn-view-table')?.addEventListener('click', () => {
+      currentView = 'table';
+      document.getElementById('btn-view-table').classList.add('active');
+      document.getElementById('btn-view-card').classList.remove('active');
+      this.renderContent();
+    });
+
+    // 篩選器
+    document.getElementById('filter-status')?.addEventListener('change', (e) => {
+      currentStatus = e.target.value;
+      this.renderContent();
+    });
+    document.getElementById('filter-category')?.addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      this.renderContent();
+    });
+  },
+
+  initDataListener() {
     let statuses = AppState.getStatuses();
     if (!statuses || statuses.length === 0) {
       statuses = ['排產中', '印刷', '裁切', '品檢', '出貨'];
     }
+    if (!currentStatus) currentStatus = statuses[0];
 
     unsubscribe = listenCollection('work_orders', (orders) => {
       currentOrders = orders;
-      this.renderKanban(orders, statuses);
+      this.updateFiltersAndRender(statuses);
     });
   },
 
-  renderKanban(orders, statuses) {
-    const user = AppState.getUser();
-    const isAdmin = user && user.role === 'admin';
-    const container = document.getElementById('kanban-container');
-    if (!container) return;
+  updateFiltersAndRender(statuses) {
+    // 更新狀態下拉選單
+    const statusSelect = document.getElementById('filter-status');
+    if (statusSelect) {
+      statusSelect.innerHTML = statuses.map(s => 
+        `<option value="${s}" ${s === currentStatus ? 'selected' : ''}>${s} (${currentOrders.filter(o => o.status === s).length})</option>`
+      ).join('');
+    }
+
+    // 更新類別下拉選單
+    const categorySelect = document.getElementById('filter-category');
+    if (categorySelect) {
+      const grouped = groupByCategory(currentOrders);
+      const categories = Object.keys(grouped).sort();
+      
+      if (currentCategory !== 'ALL' && !categories.includes(currentCategory)) {
+        currentCategory = 'ALL';
+      }
+
+      categorySelect.innerHTML = `<option value="ALL">全部類別</option>` + 
+        categories.map(c => 
+          `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c} (${grouped[c].length})</option>`
+        ).join('');
+    }
 
     // 更新統計卡片
-    const stats = calculateStats(orders, statuses);
-    const statsContainer = container.parentElement.querySelector('.grid');
+    const stats = calculateStats(currentOrders, statuses);
+    const statsContainer = document.querySelector('#app-content > .grid');
     if (statsContainer) {
       statsContainer.innerHTML = `
         <div class="glass-card p-5 flex flex-col gap-2">
@@ -1110,86 +2170,151 @@ export default {
           </div>
         `).join('')}
       `;
-      createIcons({ attrs: { class: 'w-4 h-4' } });
+      createIcons({ icons: { Activity, ClipboardList }, attrs: { class: 'w-4 h-4' } });
     }
 
-    // 分組
-    const grouped = groupByStatus(orders, statuses);
+    this.renderContent();
+  },
 
-    // 渲染 Kanban
+  renderContent() {
+    const container = document.getElementById('kanban-container');
+    if (!container) return;
+
+    // 過濾資料
+    let filtered = currentOrders;
+    if (currentStatus) {
+      filtered = filtered.filter(o => o.status === currentStatus);
+    }
+    if (currentCategory && currentCategory !== 'ALL') {
+      filtered = filtered.filter(o => {
+        const cat = o.data && o.data.category ? o.data.category : '其他';
+        return cat === currentCategory;
+      });
+    }
+
+    if (currentView === 'card') {
+      this.renderCardView(container, filtered);
+    } else {
+      this.renderTableView(container, filtered);
+    }
+  },
+
+  renderCardView(container, orders) {
+    const user = AppState.getUser();
+    const isAdmin = user && user.role === 'admin';
+
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">此狀態或類別下無工單</span>
+        </div>
+      `;
+      createIcons({ attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
     const boardHtml = `
-      <div class="flex gap-5 overflow-x-auto kanban-scroll pb-4 h-[calc(100vh-280px)]">
-        ${statuses.map(status => {
-          const statusOrders = grouped[status] || [];
-          return `
-            <div class="w-[300px] flex-shrink-0 flex flex-col gap-3">
-              <!-- 欄位標頭 -->
-              <div class="flex items-center justify-between px-1">
-                <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-brand"></span>
-                  ${status}
-                </h3>
-                <span class="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
-              </div>
-              
-              <!-- 工單列表 (內凹區塊) -->
-              <div class="inset-panel p-2 flex flex-col gap-2 flex-1 overflow-y-auto kanban-scroll" data-status="${status}">
-                ${statusOrders.length === 0 ? `
-                  <div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2 py-10">
-                    <i data-lucide="inbox" class="w-8 h-8 opacity-50"></i>
-                    <span class="text-sm">目前無工單</span>
-                  </div>
-                ` : ''}
-
-                ${statusOrders.map(order => this.renderCard(order, statuses, isAdmin)).join('')}
-              </div>
-            </div>
-          `;
-        }).join('')}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+        ${orders.map(order => this.renderCard(order, isAdmin)).join('')}
       </div>
     `;
 
     container.innerHTML = boardHtml;
     createIcons({
-      icons: { MoreVertical, ChevronDown, User, Calendar, Upload, CheckCircle2, AlertCircle },
+      icons: { MoreVertical, ChevronDown, User, Calendar },
       attrs: { class: 'w-4 h-4' }
     });
 
-    // 綁定卡片事件
-    this.bindCardEvents(statuses);
+    this.bindCardEvents();
   },
 
-  renderCard(order, statuses, isAdmin) {
-    // 取得當前狀態之外的其他狀態（供下拉選單使用）
+  renderTableView(container, orders) {
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">無工單資料</span>
+        </div>
+      `;
+      createIcons({ attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
+    const html = `
+      <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden flex flex-col w-full">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/60 text-sm font-semibold text-slate-600">
+                <th class="px-6 py-4 rounded-tl-[20px]">工單號碼</th>
+                <th class="px-6 py-4">類別</th>
+                <th class="px-6 py-4">銷售員</th>
+                <th class="px-6 py-4">上傳日期</th>
+                <th class="px-6 py-4">交期</th>
+                <th class="px-6 py-4 rounded-tr-[20px]">操作</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+              ${orders.map(order => {
+                const cat = order.data && order.data.category ? order.data.category : '-';
+                const reps = (order.salesReps || []).join(', ');
+                return `
+                  <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-900">${order.id}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 rounded-md text-xs">${cat}</span></td>
+                    <td class="px-6 py-4 text-slate-500">${reps}</td>
+                    <td class="px-6 py-4 text-slate-500">${order.uploadDate || '-'}</td>
+                    <td class="px-6 py-4 text-slate-500">${order.dueDate || '-'}</td>
+                    <td class="px-6 py-4 text-brand font-medium cursor-pointer">流轉</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    container.innerHTML = html;
+  },
+
+  renderCard(order, isAdmin) {
+    const statuses = AppState.getStatuses() || [];
     const otherStatuses = statuses.filter(s => s !== order.status);
-    
-    // 格式化日期
     const uploadDate = order.uploadDate ? order.uploadDate.split('T')[0] : '';
-    const salesReps = order.salesReps ? order.salesReps.join(', ') : '無';
+    const salesReps = order.salesReps ? order.salesReps.join(', ') : '未填寫';
+    const category = order.data && order.data.category ? order.data.category : '其他';
+    
+    let customerName = order.data ? (order.data['customerNameZh'] || order.data['customerNameEn'] || '') : '';
+    if (customerName.includes('***')) customerName = '';
     
     return `
-      <div class="glass-card p-4 relative group card-item" data-id="${order.id}" data-current-status="${order.status}">
+      <div class="glass-card p-4 relative card-item !overflow-visible" data-id="${order.id}" data-current-status="${order.status}">
         <div class="flex justify-between items-start mb-2">
-          <span class="font-bold text-slate-900">${order.id}</span>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-900">${order.id}</span>
+            <span class="text-[10px] font-bold bg-brand/10 text-brand px-1.5 py-0.5 rounded">${category}</span>
+          </div>
           <span class="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-md">${uploadDate}</span>
         </div>
         
         <div class="flex flex-col gap-1.5 mb-3">
-          ${order.details && order.details['客戶'] ? `<div class="text-sm text-slate-600">客戶：${order.details['客戶']}</div>` : ''}
+          ${customerName ? `<div class="text-sm text-slate-600 truncate">客戶：${customerName}</div>` : ''}
           <div class="flex items-center gap-1.5 text-xs text-slate-500">
             <i data-lucide="user" class="w-3.5 h-3.5"></i> ${salesReps}
           </div>
+          ${order.dueDate ? `<div class="text-xs text-amber-600 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> 交期：${order.dueDate}</div>` : ''}
         </div>
 
         ${isAdmin ? `
-          <div class="mt-3 pt-3 border-t border-slate-100">
+          <div class="mt-3 pt-3 border-t border-slate-100 relative">
             <button class="w-full flex items-center justify-between text-xs font-medium text-slate-500 hover:text-brand transition-colors btn-dropdown">
               <span>流轉工序</span>
               <i data-lucide="chevron-down" class="w-4 h-4 transition-transform"></i>
             </button>
             
-            <!-- 下拉選單 (預設隱藏) -->
-            <div class="dropdown-menu hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-100 shadow-soft rounded-xl p-1 z-10 mx-2">
+            <!-- 修復：提高 z-index 並加上絕對定位 -->
+            <div class="dropdown-menu hidden absolute left-0 right-0 bottom-full mb-1 bg-white border border-slate-100 shadow-xl rounded-xl p-1 z-[999]">
               ${otherStatuses.map(s => `
                 <button class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors btn-change-status" data-new-status="${s}">
                   移至 ${s}
@@ -1202,24 +2327,21 @@ export default {
     `;
   },
 
-  bindCardEvents(statuses) {
+  bindCardEvents() {
     document.querySelectorAll('.card-item').forEach(card => {
       const btnDropdown = card.querySelector('.btn-dropdown');
       const dropdownMenu = card.querySelector('.dropdown-menu');
       const btnChangeStatuses = card.querySelectorAll('.btn-change-status');
 
       if (btnDropdown && dropdownMenu) {
-        // 切換下拉選單
         btnDropdown.addEventListener('click', (e) => {
           e.stopPropagation();
           
-          // 先關閉其他所有選單
           document.querySelectorAll('.dropdown-menu').forEach(m => {
             if (m !== dropdownMenu) m.classList.add('hidden');
           });
 
           dropdownMenu.classList.toggle('hidden');
-          // 旋轉箭頭
           const icon = btnDropdown.querySelector('i');
           if (dropdownMenu.classList.contains('hidden')) {
             icon.style.transform = 'rotate(0deg)';
@@ -1228,19 +2350,16 @@ export default {
           }
         });
 
-        // 點擊選項切換狀態
         btnChangeStatuses.forEach(btn => {
           btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const newStatus = btn.dataset.newStatus;
             const orderId = card.dataset.id;
             
-            // 避免重複點擊
             btn.disabled = true;
             btn.textContent = '處理中...';
 
             try {
-              // 更新資料庫 (使用 updateDocument 僅更新狀態與時間)
               const nowStr = new Date().toISOString();
               await updateDocument('work_orders', orderId, {
                 status: newStatus,
@@ -1248,7 +2367,6 @@ export default {
               });
               
               showToast(`工單 ${orderId} 已流轉至【${newStatus}】`, 'success');
-              // 這裡不需要手動重新渲染，因為 read.js 的 listenCollection 會觸發重新渲染
             } catch (error) {
               console.error('Update status failed:', error);
               showToast('更新狀態失敗', 'error');
@@ -1260,14 +2378,85 @@ export default {
       }
     });
 
-    // 點擊空白處關閉所有選單
     document.addEventListener('click', () => {
       document.querySelectorAll('.dropdown-menu').forEach(m => {
         m.classList.add('hidden');
         const icon = m.parentElement.querySelector('.btn-dropdown i');
         if (icon) icon.style.transform = 'rotate(0deg)';
       });
-    }, { once: true }); // 每次渲染時綁定一次
+    }, { once: true });
+  },
+
+  async handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (jsonData.length < 2) {
+          showToast('Excel 檔案沒有資料', 'error');
+          return;
+        }
+
+        const headers = jsonData[0];
+        const rows = jsonData.slice(1);
+
+        showToast('解析中，請稍候...', 'info');
+
+        let salesMapping = [];
+        let currentStatuses = AppState.getStatuses() || ['排產中'];
+        let currentSchema = [];
+        
+        try {
+          const settingsDoc = await getDocument('settings', 'main');
+          if (settingsDoc) {
+            salesMapping = settingsDoc.sales_mapping || [];
+            if (settingsDoc.statuses && settingsDoc.statuses.length > 0) {
+              currentStatuses = settingsDoc.statuses;
+            }
+            currentSchema = settingsDoc.schema || [];
+          }
+        } catch (err) {
+          console.warn('無法讀取設定檔，將使用預設值', err);
+        }
+
+        const parsedOrders = parseExcelData(headers, rows, salesMapping, currentStatuses[0], currentSchema);
+
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        for (const order of parsedOrders) {
+          const existing = await getDocument('work_orders', order.id);
+          if (existing) {
+            await updateDocument('work_orders', order.id, {
+              salesReps: order.salesReps,
+              uploadDate: order.uploadDate,
+              data: order.data
+            });
+            updatedCount++;
+          } else {
+            await setDocument('work_orders', order.id, order);
+            addedCount++;
+          }
+        }
+
+        showToast(`匯入完成！新增 ${addedCount} 筆，更新 ${updatedCount} 筆。`, 'success');
+        e.target.value = '';
+
+      } catch (error) {
+        console.error('Import Error:', error);
+        showToast(`匯入失敗：${error.message || '請檢查檔案格式'}`, 'error');
+        e.target.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
   },
 
   destroy() {
@@ -1280,9 +2469,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/kanban.js
-V: 1792903512
-W: webapp-20261026-001#24
+F: AI-WA-UPWO/src/pages/kanban.js
+V: 1792911700
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/kanban.js === -->
@@ -1299,12 +2488,12 @@ import { createIcons, Layers, Lock, User } from 'lucide';
 
 export default {
   async render() {
-    // 這裡直接渲染到 app-content，不使用 layout.js 的側邊欄
-    const content = document.getElementById('app-content');
+    // 登入頁不經過 App Shell，因此直接渲染到最外層的 app-root
+    const content = document.getElementById('app-root');
     if (!content) return;
 
     content.innerHTML = `
-      <div class="min-h-screen flex items-center justify-center -m-4 sm:-m-6 lg:-m-8 bg-bg">
+      <div class="min-h-screen flex items-center justify-center bg-bg">
         <div class="glass-card w-full max-w-md p-8 sm:p-10 relative overflow-hidden">
           
           <!-- 裝飾背景 -->
@@ -1381,15 +2570,9 @@ export default {
 
       try {
         // 從 settings 集合獲取使用者清單
-        // 依據 Schema，我們假設 settings 集合中有一個 document 叫做 'users'，或者 users 是其中一個集合
-        // 這裡先嘗試獲取 settings 集合，尋找名為 'users' 的設定，或者直接尋找名為 users 的集合。
-        // 為符合原始 Schema 設計（settings 下的 users 欄位），我們用一個名為 'config' 的 document 或是直接讀取 users 屬性。
-        // 由於尚未實作 settings 頁面，我們先寫一個穩健的獲取邏輯：
         let usersList = [];
         try {
-          // 嘗試從 settings 集合獲取
           const settingsData = await getCollection('settings');
-          // 尋找包含 users 的設定項，或者如果有名為 'users' 的 document
           const userSetting = settingsData.find(s => s.id === 'users' || (s.users && Array.isArray(s.users)));
           if (userSetting) {
             usersList = userSetting.users || [];
@@ -1411,7 +2594,7 @@ export default {
           showToast(`歡迎回來，${user.username}`, 'success');
           AppState.setUser({ username: user.username, role: user.role });
           
-          // 觸發自訂事件，讓 router 或 main.js 接手後續畫面切換
+          // 觸發自訂事件，讓 router 接手後續畫面切換
           window.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
         } else {
           // 登入失敗
@@ -1435,9 +2618,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/login.js
-V: 1792903511
-W: webapp-20261026-001#23
+F: AI-WA-UPWO/src/pages/login.js
+V: 1792909602
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/login.js === -->
@@ -1451,7 +2634,7 @@ import { AppState } from '../config/state.js';
 import { listenCollection } from '../db/read.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { groupByStatus, generatePivotTable } from '../domain/stats.js';
-import { createIcons, Inbox, PieChart, LayoutDashboard } from 'lucide.js';
+import { createIcons, Inbox, PieChart, LayoutDashboard } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
@@ -1604,9 +2787,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/overview.js
-V: 1792903514
-W: webapp-20261026-001#26
+F: AI-WA-UPWO/src/pages/overview.js
+V: 1792909600
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/overview.js === -->
@@ -1620,12 +2803,13 @@ import { AppState } from '../config/state.js';
 import { listenCollection } from '../db/read.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { groupByStatus } from '../domain/stats.js';
-import { createIcons, Inbox, Users, UserCircle } from 'lucide';
+import { createIcons, Inbox, Users, UserCircle, LayoutGrid, List, User, Calendar } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
 let allReps = [];
 let currentRep = null;
+let currentView = 'card'; // 'card' or 'table'
 
 export default {
   async render() {
@@ -1636,13 +2820,42 @@ export default {
     renderPageLayout({
       title: '銷售員視圖',
       subtitle: '依銷售員檢視名下工單與狀態分佈',
-      headerActions: '',
+      headerActions: `
+        <!-- 視圖切換按鈕 -->
+        <div class="segmented-control">
+          <button id="btn-view-card" class="segment-btn ${currentView === 'card' ? 'active' : ''} flex items-center gap-1">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i> 卡片
+          </button>
+          <button id="btn-view-table" class="segment-btn ${currentView === 'table' ? 'active' : ''} flex items-center gap-1">
+            <i data-lucide="list" class="w-4 h-4"></i> 表格
+          </button>
+        </div>
+      `,
       stats: [],
       controls: '',
       listContainerId: 'salesperson-container'
     });
 
-    // 2. 初始化資料監聽
+    // 2. 綁定視圖切換事件
+    document.getElementById('btn-view-card')?.addEventListener('click', () => {
+      currentView = 'card';
+      document.getElementById('btn-view-card').classList.add('active');
+      document.getElementById('btn-view-table').classList.remove('active');
+      this.renderRepBoard();
+    });
+    document.getElementById('btn-view-table')?.addEventListener('click', () => {
+      currentView = 'table';
+      document.getElementById('btn-view-table').classList.add('active');
+      document.getElementById('btn-view-card').classList.remove('active');
+      this.renderRepBoard();
+    });
+
+    createIcons({
+      icons: { LayoutGrid, List },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    // 3. 初始化資料監聽
     this.initDataListener();
   },
 
@@ -1657,11 +2870,11 @@ export default {
     // 提取所有不重複的銷售員
     const repsSet = new Set();
     currentOrders.forEach(o => {
-      (o.salesReps || ['未知銷售員']).forEach(r => repsSet.add(r));
+      (o.salesReps || ['未填寫']).forEach(r => repsSet.add(r));
     });
     allReps = Array.from(repsSet).sort();
 
-    // 預設選中第一個銷售員（若還沒選過或選中的被刪除了）
+    // 預設選中第一個銷售員
     if (allReps.length > 0 && (!currentRep || !allReps.includes(currentRep))) {
       currentRep = allReps[0];
     }
@@ -1685,7 +2898,7 @@ export default {
     }
 
     container.innerHTML = `
-      <div class="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)]">
+      <div class="flex flex-col md:flex-row gap-6 h-[calc(100vh-220px)]">
         
         <!-- 左側：銷售員清單 -->
         <div class="w-full md:w-64 flex-shrink-0 flex flex-col bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
@@ -1703,7 +2916,7 @@ export default {
           </div>
         </div>
 
-        <!-- 右側：該銷售員的工單狀態看板 -->
+        <!-- 右側：該銷售員的工單 -->
         <div class="flex-1 flex flex-col min-w-0 bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
           <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 class="font-bold text-slate-800 flex items-center gap-2">
@@ -1711,7 +2924,7 @@ export default {
               ${currentRep} 的工單
             </h2>
           </div>
-          <div class="flex-1 p-4 overflow-x-auto kanban-scroll flex gap-4 bg-slate-50/30" id="rep-board">
+          <div class="flex-1 p-4 overflow-hidden bg-slate-50/30 flex flex-col" id="rep-board">
             <!-- 由 renderRepBoard 注入 -->
           </div>
         </div>
@@ -1736,38 +2949,83 @@ export default {
     // 過濾出當前選中銷售員的工單
     const repOrders = currentOrders.filter(o => (o.salesReps || []).includes(currentRep));
     
-    // 依狀態分組
-    const grouped = groupByStatus(repOrders, statuses);
-
-    // 僅顯示有工單的狀態，或者全部顯示（這裡選擇全部顯示，方便看出進度）
-    boardContainer.innerHTML = statuses.map(status => {
-      const statusOrders = grouped[status] || [];
+    if (currentView === 'card') {
+      // 卡片視圖
+      const grouped = groupByStatus(repOrders, statuses);
       
-      return `
-        <div class="w-[280px] flex-shrink-0 flex flex-col gap-2">
-          <div class="flex items-center justify-between px-2">
-            <h3 class="font-semibold text-slate-700 text-sm flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full ${statusOrders.length > 0 ? 'bg-brand' : 'bg-slate-300'}"></span>
-              ${status}
-            </h3>
-            <span class="text-xs font-medium bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
-          </div>
-          <div class="inset-panel p-2 flex flex-col gap-2 min-h-[150px] flex-1">
-            ${statusOrders.length === 0 ? `
-              <div class="flex items-center justify-center h-full text-slate-300 text-xs py-4">無</div>
-            ` : statusOrders.map(order => `
-              <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-sm">
-                <div class="font-bold text-slate-800 mb-1">${order.id}</div>
-                ${order.details && order.details['客戶'] ? `<div class="text-slate-500 text-xs mb-2">${order.details['客戶']}</div>` : ''}
-                <div class="text-[10px] text-slate-400 flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
-                  <span>交期：${order.dueDate || '-'}</span>
+      boardContainer.innerHTML = `
+        <div class="flex gap-4 overflow-x-auto kanban-scroll h-full pb-2">
+          ${statuses.map(status => {
+            const statusOrders = grouped[status] || [];
+            return `
+              <div class="w-[280px] flex-shrink-0 flex flex-col gap-2">
+                <div class="flex items-center justify-between px-2">
+                  <h3 class="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full ${statusOrders.length > 0 ? 'bg-brand' : 'bg-slate-300'}"></span>
+                    ${status}
+                  </h3>
+                  <span class="text-xs font-medium bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
+                </div>
+                <div class="inset-panel p-2 flex flex-col gap-2 min-h-[150px] flex-1 overflow-y-auto kanban-scroll">
+                  ${statusOrders.length === 0 ? `
+                    <div class="flex items-center justify-center h-full text-slate-300 text-xs py-4">無</div>
+                  ` : statusOrders.map(order => {
+                    const cat = order.data && order.data.category ? order.data.category : '其他';
+                    return `
+                      <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-sm">
+                        <div class="flex justify-between items-start mb-1">
+                          <span class="font-bold text-slate-800">${order.id}</span>
+                          <span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">${cat}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
+                          <span>交期：${order.dueDate || '-'}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
-            `).join('')}
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else {
+      // 表格視圖
+      if (repOrders.length === 0) {
+        boardContainer.innerHTML = `<div class="flex items-center justify-center h-full text-slate-400">此銷售員目前無工單</div>`;
+        return;
+      }
+      
+      boardContainer.innerHTML = `
+        <div class="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col w-full h-full">
+          <div class="overflow-auto flex-1 kanban-scroll">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                <tr class="border-b border-slate-200/60 text-sm font-semibold text-slate-600">
+                  <th class="px-6 py-3">工單號碼</th>
+                  <th class="px-6 py-3">類別</th>
+                  <th class="px-6 py-3">當前狀態</th>
+                  <th class="px-6 py-3">交貨日期</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                ${repOrders.map(order => {
+                  const cat = order.data && order.data.category ? order.data.category : '-';
+                  return `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                      <td class="px-6 py-3 font-bold text-slate-800">${order.id}</td>
+                      <td class="px-6 py-3"><span class="px-2 py-1 bg-slate-100 rounded text-xs">${cat}</span></td>
+                      <td class="px-6 py-3"><span class="px-2 py-1 bg-brand/10 text-brand rounded text-xs font-medium">${order.status}</span></td>
+                      <td class="px-6 py-3 ${order.dueDate ? 'text-amber-600 font-medium' : 'text-slate-400'}">${order.dueDate || '-'}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
       `;
-    }).join('');
+    }
   },
 
   bindEvents() {
@@ -1777,7 +3035,6 @@ export default {
         const newRep = e.currentTarget.dataset.rep;
         if (newRep !== currentRep) {
           currentRep = newRep;
-          // 重新渲染左側選中狀態與右側看板
           this.renderLayout();
         }
       });
@@ -1796,9 +3053,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/salesperson.js
-V: 1792903515
-W: webapp-20261026-001#27
+F: AI-WA-UPWO/src/pages/salesperson.js
+V: 1792912400
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/salesperson.js === -->
@@ -1810,18 +3067,17 @@ W: webapp-20261026-001#27
 ```js
 import * as XLSX from 'xlsx';
 import { AppState } from '../config/state.js';
-import { listenDocument, getDocument } from '../db/read.js';
-import { setDocument } from '../db/write.js';
+import { listenDocument, getDocument, getCollection } from '../db/read.js';
+import { setDocument, updateDocument, deleteDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { parseExcelData } from '../domain/parser.js';
-import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X } from 'lucide';
+import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X, List, Database, Edit2 } from 'lucide';
 
 let unsubscribe = null;
-let currentSettings = { statuses: [], sales_mapping: [], users: [] };
-let currentOrders = [];
-let activeTab = 'statuses'; // 'statuses', 'mapping', 'users', 'import'
+let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [] };
+let activeTab = 'statuses'; // 'statuses', 'mapping', 'schema', 'users', 'data', 'import'
 
 export default {
   async render() {
@@ -1834,43 +3090,54 @@ export default {
     // 1. 渲染頁面骨架
     renderPageLayout({
       title: '系統設定',
-      subtitle: '管理工序狀態、銷售員對照表與系統帳號',
+      subtitle: '管理工序狀態、銷售員對照表、系統欄位與帳號',
       headerActions: '',
       stats: [],
       controls: '',
       listContainerId: 'settings-container'
     });
 
+    // 2. 優先渲染 UI 骨架
+    this.renderTabs();
+
+    // 3. 初始化資料監聽
     this.initDataListener();
   },
 
   initDataListener() {
-    // 監聽 settings/main 設定檔
     unsubscribe = listenDocument('settings', 'main', async (data) => {
       if (data) {
         currentSettings = {
           statuses: data.statuses || ['排產中'],
           sales_mapping: data.sales_mapping || [],
-          users: data.users || [{ username: 'admin', password: '123456', role: 'admin' }]
+          users: data.users || [{ username: 'admin', password: '123456', role: 'admin' }],
+          schema: data.schema || this.getDefaultSchema()
         };
       } else {
-        // 初始化預設設定
         currentSettings = {
           statuses: ['排產中', '印刷', '裁切', '品檢', '出貨'],
           sales_mapping: [],
-          users: [{ username: 'admin', password: '123456', role: 'admin' }]
+          users: [{ username: 'admin', password: '123456', role: 'admin' }],
+          schema: this.getDefaultSchema()
         };
         await setDocument('settings', 'main', currentSettings);
       }
       
-      // 更新 AppState 中的狀態（讓其他頁面能即時讀取）
       AppState.setStatuses(currentSettings.statuses);
-
-      // 同步抓取工單資料（用於刪除狀態時的檢查）
-      const orders = await getDocument('settings', 'dummy'); // 這裡只是借用非同步
-      
       this.renderTabs();
     });
+  },
+
+  getDefaultSchema() {
+    return [
+      { key: 'id', label: '發票', type: 'string', isSystem: true },
+      { key: 'uploadDate', label: '日期', type: 'date', isSystem: true },
+      { key: 'salesRep', label: '我方備考', type: 'string', isSystem: true },
+      { key: 'amount', label: '金額', type: 'number', isSystem: false },
+      { key: 'category', label: '類別', type: 'string', isSystem: false },
+      { key: 'customerNameZh', label: '中文名稱', type: 'string', isSystem: false },
+      { key: 'customerNameEn', label: '名稱', type: 'string', isSystem: false }
+    ];
   },
 
   renderTabs() {
@@ -1881,17 +3148,24 @@ export default {
       <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden min-h-[500px] flex flex-col md:flex-row">
         
         <!-- 左側設定選單 -->
-        <div class="w-full md:w-64 border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col gap-1 flex-shrink-0">
+        <div class="w-full md:w-64 border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col gap-1 flex-shrink-0 overflow-y-auto">
           <button class="tab-btn ${activeTab === 'statuses' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="statuses">
             <i data-lucide="tag" class="w-4 h-4"></i> 狀態管理
           </button>
           <button class="tab-btn ${activeTab === 'mapping' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="mapping">
             <i data-lucide="users" class="w-4 h-4"></i> 對照表管理
           </button>
+          <button class="tab-btn ${activeTab === 'schema' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="schema">
+            <i data-lucide="list" class="w-4 h-4"></i> 欄位管理
+          </button>
           <button class="tab-btn ${activeTab === 'users' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="users">
             <i data-lucide="shield" class="w-4 h-4"></i> 帳號管理
           </button>
-          <button class="tab-btn ${activeTab === 'import' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3 mt-4" data-tab="import">
+          <div class="border-t border-slate-200/60 my-2"></div>
+          <button class="tab-btn ${activeTab === 'data' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="data">
+            <i data-lucide="database" class="w-4 h-4"></i> 資料管理
+          </button>
+          <button class="tab-btn ${activeTab === 'import' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="import">
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 匯入 Excel
           </button>
         </div>
@@ -1904,7 +3178,7 @@ export default {
     `;
 
     createIcons({
-      icons: { Tag, Users, Shield, FileSpreadsheet },
+      icons: { Tag, Users, Shield, FileSpreadsheet, List, Database },
       attrs: { class: 'w-4 h-4' }
     });
 
@@ -1916,7 +3190,7 @@ export default {
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         activeTab = e.currentTarget.dataset.tab;
-        this.renderTabs(); // 重新渲染以更新 active 樣式
+        this.renderTabs();
       });
     });
   },
@@ -1925,24 +3199,21 @@ export default {
     const content = document.getElementById('settings-content');
     if (!content) return;
 
-    if (activeTab === 'statuses') {
-      this.renderStatuses(content);
-    } else if (activeTab === 'mapping') {
-      this.renderMapping(content);
-    } else if (activeTab === 'users') {
-      this.renderUsers(content);
-    } else if (activeTab === 'import') {
-      this.renderImport(content);
-    }
+    if (activeTab === 'statuses') this.renderStatuses(content);
+    else if (activeTab === 'mapping') this.renderMapping(content);
+    else if (activeTab === 'schema') this.renderSchema(content);
+    else if (activeTab === 'users') this.renderUsers(content);
+    else if (activeTab === 'data') this.renderDataManagement(content);
+    else if (activeTab === 'import') this.renderImport(content);
   },
 
-  // ═══════════ 狀態管理 ═══════════
+  // ═══════════ 狀態管理（含同步更新） ═══════════
   renderStatuses(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
         <div>
           <h2 class="text-lg font-bold text-slate-800">工序狀態管理</h2>
-          <p class="text-sm text-slate-500 mt-1">可拖曳排序，刪除時會檢查是否有工單使用中。</p>
+          <p class="text-sm text-slate-500 mt-1">可拖曳排序。修改名稱時會同步更新歷史工單。</p>
         </div>
       </div>
       
@@ -1955,9 +3226,12 @@ export default {
 
       <div class="inset-panel p-4 flex flex-col gap-2" id="status-list">
         ${currentSettings.statuses.map((status, index) => `
-          <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm cursor-move status-item" draggable="true" data-index="${index}">
+          <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm status-item" draggable="true" data-index="${index}">
             <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300 cursor-grab"></i>
-            <span class="flex-1 font-medium text-slate-700">${status}</span>
+            <span class="flex-1 font-medium text-slate-700 status-name">${status}</span>
+            <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-status" data-status="${status}">
+              <i data-lucide="edit-2" class="w-4 h-4"></i>
+            </button>
             <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-status" data-status="${status}">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
             </button>
@@ -1966,10 +3240,9 @@ export default {
       </div>
     `;
 
-    createIcons({ icons: { Plus, GripVertical, Trash2 }, attrs: { class: 'w-4 h-4' } });
+    createIcons({ icons: { Plus, GripVertical, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
 
-    // 新增狀態
-    document.getElementById('btn-add-status').addEventListener('click', async () => {
+    document.getElementById('btn-add-status')?.addEventListener('click', async () => {
       const input = document.getElementById('new-status-input');
       const val = input.value.trim();
       if (!val) return;
@@ -1982,14 +3255,43 @@ export default {
       showToast('新增成功', 'success');
     });
 
-    // 刪除狀態
+    // 編輯狀態（同步更新歷史工單）
+    document.querySelectorAll('.btn-edit-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const oldStatus = e.currentTarget.dataset.status;
+        const newStatus = window.prompt(`修改狀態名稱（原為「${oldStatus}」）：`, oldStatus);
+        
+        if (!newStatus || newStatus.trim() === "" || newStatus === oldStatus) return;
+        const trimmedNewStatus = newStatus.trim();
+
+        showToast('正在更新狀態與歷史資料...', 'info');
+
+        try {
+          // 1. 更新記憶體中的設定
+          const idx = currentSettings.statuses.indexOf(oldStatus);
+          if (idx !== -1) currentSettings.statuses[idx] = trimmedNewStatus;
+          await this.saveSettings();
+
+          // 2. 掃描並更新歷史工單
+          const orders = await getCollection('work_orders');
+          let updateCount = 0;
+          for (const order of orders) {
+            if (order.status === oldStatus) {
+              await updateDocument('work_orders', order.id, { status: trimmedNewStatus });
+              updateCount++;
+            }
+          }
+          showToast(`已修改狀態，並同步更新 ${updateCount} 筆工單`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('修改失敗，請稍後再試', 'error');
+        }
+      });
+    });
+
     document.querySelectorAll('.btn-del-status').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const status = e.currentTarget.dataset.status;
-        
-        // 檢查是否有工單使用此狀態
-        // 由於需要精確檢查，這裡先借用全域的 listenCollection 資料，若無則臨時抓取
-        // 簡化處理：直接向資料庫查詢（或依賴之前載入的資料，但設定頁可能沒載入 orders）
         const confirmed = await openConfirm({
           title: '刪除狀態',
           message: `確定要刪除「${status}」嗎？系統將檢查是否有工單處於此狀態。`,
@@ -1999,8 +3301,7 @@ export default {
 
         if (!confirmed) return;
 
-        // 檢查工單
-        import('../db/read.js').then(async ({ getCollection }) => {
+        try {
           const orders = await getCollection('work_orders');
           const hasOrders = orders.some(o => o.status === status);
           
@@ -2009,22 +3310,21 @@ export default {
             return;
           }
 
-          // 執行刪除
           currentSettings.statuses = currentSettings.statuses.filter(s => s !== status);
           await this.saveSettings();
           showToast('刪除成功', 'success');
-        });
+        } catch (err) {
+          showToast('檢查工單失敗', 'error');
+        }
       });
     });
 
-    // 拖曳排序邏輯
     this.initDragAndDrop();
   },
 
   initDragAndDrop() {
     const list = document.getElementById('status-list');
     if (!list) return;
-
     let draggedItem = null;
 
     list.querySelectorAll('.status-item').forEach(item => {
@@ -2032,48 +3332,40 @@ export default {
         draggedItem = this;
         setTimeout(() => this.classList.add('opacity-50'), 0);
       });
-
       item.addEventListener('dragend', function() {
         this.classList.remove('opacity-50');
         draggedItem = null;
-        // 取得排序後的結果並儲存
-        const newOrder = Array.from(list.querySelectorAll('.status-item')).map(el => el.querySelector('span').textContent);
+        const newOrder = Array.from(list.querySelectorAll('.status-item')).map(el => el.querySelector('.status-name').textContent);
         currentSettings.statuses = newOrder;
-        window.dispatchEvent(new CustomEvent('save-settings-drag'));
+        const saveHandler = async () => {
+          await this.saveSettings();
+          showToast('排序已更新', 'success');
+        };
+        saveHandler.call(this);
       });
-
       item.addEventListener('dragover', function(e) {
         e.preventDefault();
         if (this === draggedItem) return;
-        
         const rect = this.getBoundingClientRect();
         const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
         list.insertBefore(draggedItem, next ? this.nextSibling : this);
       });
     });
-
-    // 綁定拖曳結束的儲存事件
-    const saveHandler = async () => {
-      window.removeEventListener('save-settings-drag', saveHandler);
-      await this.saveSettings();
-      showToast('排序已更新', 'success');
-    };
-    window.addEventListener('save-settings-drag', saveHandler);
   },
 
-  // ═══════════ 對照表管理 ═══════════
+  // ═══════════ 對照表管理（含同步更新） ═══════════
   renderMapping(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
         <div>
           <h2 class="text-lg font-bold text-slate-800">銷售員對照表</h2>
-          <p class="text-sm text-slate-500 mt-1">設定別名，讓 Excel 匯入時能正確對應。</p>
+          <p class="text-sm text-slate-500 mt-1">設定別名，匯入時自動對應。新增後會自動同步更新歷史工單。</p>
         </div>
       </div>
 
       <div class="flex gap-2 mb-6">
         <input type="text" id="new-rep-name" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="正式名稱 (例：王小明)">
-        <input type="text" id="new-rep-alias" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="別名，多個請用逗號隔開 (例：123, S-123)">
+        <input type="text" id="new-rep-alias" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="別名，用逗號隔開 (例：123, S-123)">
         <button id="btn-add-rep" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
           <i data-lucide="plus" class="w-4 h-4"></i> 新增
         </button>
@@ -2097,19 +3389,50 @@ export default {
 
     createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
 
-    document.getElementById('btn-add-rep').addEventListener('click', async () => {
+    document.getElementById('btn-add-rep')?.addEventListener('click', async () => {
       const name = document.getElementById('new-rep-name').value.trim();
       const aliasStr = document.getElementById('new-rep-alias').value.trim();
-      if (!name) {
-        showToast('請輸入正式名稱', 'error');
+      if (!name || !aliasStr) {
+        showToast('請輸入正式名稱與至少一個別名', 'error');
         return;
       }
       
-      const aliases = aliasStr ? aliasStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const aliases = aliasStr.split(',').map(s => s.trim()).filter(Boolean);
       
+      // 儲存對照表
       currentSettings.sales_mapping.push({ name, aliases });
       await this.saveSettings();
-      showToast('新增成功', 'success');
+
+      showToast('正在同步歷史工單...', 'info');
+
+      // 同步更新歷史資料
+      try {
+        const orders = await getCollection('work_orders');
+        let updateCount = 0;
+        
+        for (const order of orders) {
+          let reps = order.salesReps || [];
+          let changed = false;
+          
+          aliases.forEach(alias => {
+            if (reps.includes(alias)) {
+              reps = reps.filter(r => r !== alias); // 移除別名
+              reps.push(name); // 加入正式名稱
+              changed = true;
+            }
+          });
+
+          if (changed) {
+            await updateDocument('work_orders', order.id, { salesReps: [...new Set(reps)] });
+            updateCount++;
+          }
+        }
+        
+        showToast(`新增成功，同步更新了 ${updateCount} 筆工單`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('對照表已新增，但同步歷史資料失敗', 'error');
+      }
     });
 
     document.querySelectorAll('.btn-del-rep').forEach(btn => {
@@ -2117,7 +3440,86 @@ export default {
         const idx = e.currentTarget.dataset.index;
         currentSettings.sales_mapping.splice(idx, 1);
         await this.saveSettings();
-        showToast('刪除成功', 'success');
+        showToast('刪除成功（歷史資料保留原名稱）', 'success');
+      });
+    });
+  },
+
+  // ═══════════ 欄位管理 ═══════════
+  renderSchema(container) {
+    const sysFields = currentSettings.schema.filter(f => f.isSystem);
+    const customFields = currentSettings.schema.filter(f => !f.isSystem);
+
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">動態欄位管理</h2>
+          <p class="text-sm text-slate-500 mt-1">定義系統欄位，並對應 Excel 表頭。系統核心欄位不可刪除。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-6">
+        <input type="text" id="new-field-label" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="新增欄位名稱 (例如：利潤)">
+        <button id="btn-add-field" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增
+        </button>
+      </div>
+
+      <div class="mb-4 text-sm font-semibold text-slate-600">系統核心欄位（不可刪除）</div>
+      <div class="flex flex-col gap-2 mb-8">
+        ${sysFields.map(f => `
+          <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div class="w-1/3 font-bold text-slate-700">${f.label}</div>
+            <div class="w-1/3 text-slate-400 font-mono text-xs">${f.key}</div>
+            <div class="w-1/3 text-right text-slate-400 text-xs">系統保護</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="mb-4 text-sm font-semibold text-slate-600">自訂欄位</div>
+      <div class="flex flex-col gap-2">
+        ${customFields.length === 0 ? '<div class="text-slate-400 text-sm py-2">目前尚無自訂欄位</div>' : ''}
+        ${customFields.map((f, index) => `
+          <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div class="w-1/3 font-bold text-slate-800">${f.label}</div>
+            <div class="w-1/3 text-slate-500 font-mono text-xs">${f.key}</div>
+            <div class="w-1/3 text-right">
+              <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-field" data-key="${f.key}">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    document.getElementById('btn-add-field')?.addEventListener('click', async () => {
+      const input = document.getElementById('new-field-label');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('請輸入欄位名稱', 'error');
+        return;
+      }
+      const key = 'field_' + Date.now().toString(36);
+      currentSettings.schema.push({ key, label: val, type: 'string', isSystem: false });
+      await this.saveSettings();
+      showToast('新增成功', 'success');
+    });
+
+    document.querySelectorAll('.btn-del-field').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const key = e.currentTarget.dataset.key;
+        const confirmed = await openConfirm({
+          title: '刪除自訂欄位',
+          message: `確定要刪除該欄位嗎？(歷史資料將保留，僅不再顯示)`,
+          isDanger: true
+        });
+        if (!confirmed) return;
+        currentSettings.schema = currentSettings.schema.filter(f => f.key !== key);
+        await this.saveSettings();
+        showToast('已刪除欄位', 'success');
       });
     });
   },
@@ -2162,7 +3564,7 @@ export default {
 
     createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
 
-    document.getElementById('btn-add-user').addEventListener('click', async () => {
+    document.getElementById('btn-add-user')?.addEventListener('click', async () => {
       const name = document.getElementById('new-user-name').value.trim();
       const pass = document.getElementById('new-user-pass').value.trim();
       const role = document.getElementById('new-user-role').value;
@@ -2175,7 +3577,6 @@ export default {
         showToast('帳號已存在', 'error');
         return;
       }
-      
       currentSettings.users.push({ username: name, password: pass, role });
       await this.saveSettings();
       showToast('新增成功', 'success');
@@ -2192,6 +3593,64 @@ export default {
     });
   },
 
+  // ═══════════ 資料管理 ═══════════
+  renderDataManagement(container) {
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">資料管理</h2>
+          <p class="text-sm text-slate-500 mt-1">清除由 Excel 匯入的資料，保留您手動輸入的狀態與交期。</p>
+        </div>
+      </div>
+
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+        <h3 class="text-rose-700 font-bold mb-2 flex items-center gap-2">
+          <i data-lucide="alert-circle" class="w-5 h-5"></i> 危險操作區
+        </h3>
+        <p class="text-sm text-rose-600 mb-4">
+          點擊下方按鈕將會清空所有工單中「由 Excel 匯入」的資料（如金額、類別、客戶名稱等），但<b>絕對不會</b>刪除工單號碼、當前狀態、交期與狀態更新日。清空後，您可以重新匯入新的 Excel，系統會自動將新資料與您手動填寫的狀態合併對齊。
+        </p>
+        <button id="btn-clear-excel-data" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> 清空 Excel 匯入資料
+        </button>
+      </div>
+    `;
+
+    createIcons({ icons: { Trash2, AlertCircle }, attrs: { class: 'w-4 h-4' } });
+
+    document.getElementById('btn-clear-excel-data')?.addEventListener('click', async () => {
+      const confirmed = await openConfirm({
+        title: '清空 Excel 資料',
+        message: '確定要清空所有工單的 Excel 資料嗎？此操作無法復原，但您手動填寫的狀態與交期會保留。',
+        isDanger: true,
+        confirmText: '確認清空'
+      });
+
+      if (!confirmed) return;
+
+      showToast('正在清空資料...', 'info');
+
+      try {
+        const orders = await getCollection('work_orders');
+        let count = 0;
+        
+        for (const order of orders) {
+          await updateDocument('work_orders', order.id, {
+            salesReps: ["未填寫"],
+            uploadDate: "",
+            data: { category: order.data?.category || '' } // 保留類別，或視情況清空
+          });
+          count++;
+        }
+
+        showToast(`成功清空 ${count} 筆工單的 Excel 資料`, 'success');
+      } catch (error) {
+        console.error('Clear data error:', error);
+        showToast('清空失敗，請稍後再試', 'error');
+      }
+    });
+  },
+
   // ═══════════ 匯入 Excel ═══════════
   renderImport(container) {
     container.innerHTML = `
@@ -2201,7 +3660,7 @@ export default {
           <i data-lucide="file-spreadsheet" class="w-8 h-8"></i>
         </div>
         <h3 class="text-lg font-bold text-slate-800 mb-2">點擊或拖曳 Excel 檔案至此</h3>
-        <p class="text-sm text-slate-500 max-w-sm">系統將會自動解析 A 欄(單號) 與 G 欄(銷售員)，並存入資料庫。若單號已存在，則會自動跳過。</p>
+        <p class="text-sm text-slate-500 max-w-sm">系統將會依據「欄位管理」中的設定，自動解析 Excel 標題並存入資料庫。若單號已存在，將會更新 Excel 資料並保留手動狀態。</p>
       </div>
     `;
 
@@ -2209,7 +3668,7 @@ export default {
 
     const fileInput = document.getElementById('excel-input');
     
-    fileInput.addEventListener('change', async (e) => {
+    fileInput?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       
@@ -2221,7 +3680,6 @@ export default {
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           
-          // 轉成 array of arrays
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
           if (jsonData.length < 2) {
             showToast('Excel 檔案沒有資料', 'error');
@@ -2233,29 +3691,32 @@ export default {
 
           showToast('解析中，請稍候...', 'info');
 
-          // 呼叫 domain/parser.js 進行解析
-          const parsedOrders = parseExcelData(headers, rows, currentSettings.sales_mapping, currentSettings.statuses[0] || '排產中');
+          const parsedOrders = parseExcelData(headers, rows, currentSettings.sales_mapping, currentSettings.statuses[0] || '排產中', currentSettings.schema);
 
-          // 防覆寫檢查與寫入
           let addedCount = 0;
-          let skippedCount = 0;
+          let updatedCount = 0;
 
           for (const order of parsedOrders) {
             const existing = await getDocument('work_orders', order.id);
             if (existing) {
-              skippedCount++;
+              await updateDocument('work_orders', order.id, {
+                salesReps: order.salesReps,
+                uploadDate: order.uploadDate,
+                data: order.data
+              });
+              updatedCount++;
             } else {
               await setDocument('work_orders', order.id, order);
               addedCount++;
             }
           }
 
-          showToast(`匯入完成！新增 ${addedCount} 筆，跳過 ${skippedCount} 筆重複單號。`, 'success');
-          fileInput.value = ''; // 清空 input
+          showToast(`匯入完成！新增 ${addedCount} 筆，更新 ${updatedCount} 筆。`, 'success');
+          fileInput.value = ''; 
 
         } catch (error) {
           console.error('Import Error:', error);
-          showToast('匯入失敗，請檢查檔案格式', 'error');
+          showToast(`匯入失敗：${error.message || '請檢查檔案格式'}`, 'error');
         }
       };
       reader.readAsArrayBuffer(file);
@@ -2264,7 +3725,7 @@ export default {
 
   async saveSettings() {
     await setDocument('settings', 'main', currentSettings);
-    this.renderTabs(); // 重新渲染以更新畫面
+    this.renderTabs();
   },
 
   destroy() {
@@ -2276,9 +3737,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/settings.js
-V: 1792903516
-W: webapp-20261026-001#28
+F: AI-WA-UPWO/src/pages/settings.js
+V: 1792912300
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/settings.js === -->
@@ -2289,21 +3750,35 @@ W: webapp-20261026-001#28
 
 ```js
 import { AppState } from '../config/state.js';
-import { listenCollection } from '../db/read.js';
+import { listenCollection, getDocument } from '../db/read.js';
+import { deleteDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { exportToExcel, exportToPDF } from '../lib/io.js';
 import { showToast } from '../ui/toast.js';
-import { createIcons, Download, FileText, Inbox } from 'lucide';
+import { openConfirm } from '../ui/modal.js';
+import { createIcons, Download, FileText, Inbox, Trash2 } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
+let currentSchema = [];
+let currentCategory = 'ALL';
 
 export default {
   async render() {
     const user = AppState.getUser();
     if (!user) return;
 
-    // 1. 渲染頁面骨架
+    // 1. 讀取系統設定（取得動態 Schema）
+    try {
+      const settingsDoc = await getDocument('settings', 'main');
+      if (settingsDoc && settingsDoc.schema) {
+        currentSchema = settingsDoc.schema.filter(f => !f.isSystem); // 只取自訂欄位
+      }
+    } catch (err) {
+      console.warn('無法讀取欄位設定，將以預設模式顯示', err);
+    }
+
+    // 2. 渲染頁面骨架
     renderPageLayout({
       title: '管理總表',
       subtitle: '所有工單的狀態與時間追蹤列表',
@@ -2318,45 +3793,99 @@ export default {
         </div>
       `,
       stats: [],
-      controls: '',
+      controls: `
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-slate-600">類別篩選：</span>
+            <select id="filter-category" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand shadow-sm min-w-[120px]">
+              <option value="ALL">全部類別</option>
+              <!-- 由 updateCategoryFilter 注入 -->
+            </select>
+          </div>
+        </div>
+      `,
       listContainerId: 'table-container'
     });
+
+    // 3. 綁定事件
+    this.bindHeaderEvents();
 
     createIcons({
       icons: { Download, FileText },
       attrs: { class: 'w-4 h-4' }
     });
 
-    this.bindHeaderEvents();
-
-    // 2. 初始化資料監聽
+    // 4. 初始化資料監聽
     this.initDataListener();
   },
 
   initDataListener() {
     unsubscribe = listenCollection('work_orders', (orders) => {
       currentOrders = orders;
-      this.renderTable(orders);
+      this.updateCategoryFilter();
+      this.renderTable();
     });
   },
 
-  renderTable(orders) {
+  updateCategoryFilter() {
+    const categorySelect = document.getElementById('filter-category');
+    if (!categorySelect) return;
+
+    // 提取不重複的類別
+    const categoriesSet = new Set();
+    currentOrders.forEach(o => {
+      let cat = o.data && o.data.category;
+      if (!cat) {
+        const match = String(o.id).match(/^[a-zA-Z]+/);
+        cat = match ? match[0].toUpperCase() : '其他';
+      }
+      categoriesSet.add(cat);
+    });
+
+    const categories = Array.from(categoriesSet).sort();
+    
+    if (currentCategory !== 'ALL' && !categories.includes(currentCategory)) {
+      currentCategory = 'ALL';
+    }
+
+    categorySelect.innerHTML = `<option value="ALL">全部類別</option>` + 
+      categories.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join('');
+
+    // 避免重複綁定，先移除再綁定
+    const newSelect = categorySelect.cloneNode(true);
+    categorySelect.parentNode.replaceChild(newSelect, categorySelect);
+    newSelect.addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      this.renderTable();
+    });
+  },
+
+  renderTable() {
     const container = document.getElementById('table-container');
     if (!container) return;
 
-    if (orders.length === 0) {
+    // 過濾資料
+    let filtered = currentOrders;
+    if (currentCategory !== 'ALL') {
+      filtered = filtered.filter(o => {
+        const cat = o.data && o.data.category ? o.data.category : '其他';
+        return cat === currentCategory;
+      });
+    }
+
+    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
           <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
-          <span class="text-base font-medium">目前尚無工單資料</span>
+          <span class="text-base font-medium">目前無工單資料</span>
         </div>
       `;
       createIcons({ icons: { Inbox }, attrs: { class: 'w-12 h-12' } });
       return;
     }
 
-    // 將工單依據上傳日期或狀態排序 (這裡預設依上傳日倒序)
-    const sortedOrders = [...orders].sort((a, b) => {
+    // 將工單依據上傳日期排序
+    const sortedOrders = [...filtered].sort((a, b) => {
       const dateA = a.uploadDate || '';
       const dateB = b.uploadDate || '';
       return dateB.localeCompare(dateA);
@@ -2369,10 +3898,14 @@ export default {
             <thead>
               <tr class="bg-slate-50/80 border-b border-slate-200/60 text-sm font-semibold text-slate-600">
                 <th class="px-6 py-4 rounded-tl-[20px]">工單號碼</th>
+                <th class="px-6 py-4">類別</th>
                 <th class="px-6 py-4">當前狀態</th>
                 <th class="px-6 py-4">上傳日期</th>
                 <th class="px-6 py-4">狀態更新日</th>
-                <th class="px-6 py-4 rounded-tr-[20px]">交貨日期</th>
+                <th class="px-6 py-4">交貨日期</th>
+                <!-- 動態自訂欄位表頭 -->
+                ${currentSchema.map(field => `<th class="px-6 py-4">${field.label}</th>`).join('')}
+                <th class="px-6 py-4 text-center rounded-tr-[20px]">操作</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
@@ -2380,6 +3913,7 @@ export default {
                 const uploadDate = order.uploadDate ? order.uploadDate.split('T')[0] : '-';
                 const statusUpdateDate = order.statusUpdateDate ? order.statusUpdateDate.split('T')[0] : '-';
                 const dueDate = order.dueDate || '-';
+                const cat = order.data && order.data.category ? order.data.category : '其他';
                 
                 // 依據狀態給予不同顏色的 Badge
                 let badgeClass = 'bg-slate-100 text-slate-600';
@@ -2392,6 +3926,7 @@ export default {
                 return `
                   <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 font-bold text-slate-900">${order.id}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 rounded-md text-xs">${cat}</span></td>
                     <td class="px-6 py-4">
                       <span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">
                         ${order.status || '未知'}
@@ -2400,6 +3935,16 @@ export default {
                     <td class="px-6 py-4 text-slate-500">${uploadDate}</td>
                     <td class="px-6 py-4 text-slate-500">${statusUpdateDate}</td>
                     <td class="px-6 py-4 font-medium ${order.dueDate ? 'text-brand' : 'text-slate-400'}">${dueDate}</td>
+                    <!-- 動態自訂欄位資料 -->
+                    ${currentSchema.map(field => {
+                      const val = order.data && order.data[field.key] !== undefined ? order.data[field.key] : '-';
+                      return `<td class="px-6 py-4 text-slate-500">${val}</td>`;
+                    }).join('')}
+                    <td class="px-6 py-4 text-center">
+                      <button class="btn-delete-order p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" data-id="${order.id}" title="刪除工單">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </td>
                   </tr>
                 `;
               }).join('')}
@@ -2407,12 +3952,43 @@ export default {
           </table>
         </div>
         <div class="bg-slate-50/50 px-6 py-3 border-t border-slate-100 text-xs text-slate-400 flex justify-between items-center">
-          <span>共計 ${orders.length} 筆工單</span>
+          <span>共計 ${filtered.length} 筆工單</span>
         </div>
       </div>
     `;
 
     container.innerHTML = tableHtml;
+    
+    // 渲染表格內的垃圾桶圖示
+    createIcons({ icons: { Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    // 綁定刪除按鈕事件
+    this.bindDeleteEvents();
+  },
+
+  bindDeleteEvents() {
+    document.querySelectorAll('.btn-delete-order').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const orderId = e.currentTarget.dataset.id;
+        
+        const confirmed = await openConfirm({
+          title: '刪除工單',
+          message: `確定要徹底刪除工單「${orderId}」嗎？此操作無法復原，包含手動填寫的狀態與交期都會被刪除。`,
+          isDanger: true,
+          confirmText: '確認刪除'
+        });
+
+        if (!confirmed) return;
+
+        try {
+          await deleteDocument('work_orders', orderId);
+          showToast(`工單 ${orderId} 已刪除`, 'success');
+        } catch (error) {
+          console.error('Delete order failed:', error);
+          showToast('刪除失敗，請稍後再試', 'error');
+        }
+      });
+    });
   },
 
   bindHeaderEvents() {
@@ -2424,7 +4000,7 @@ export default {
         return;
       }
       try {
-        exportToExcel(currentOrders, statuses, 'UPGRADE_工單總表');
+        exportToExcel(currentOrders, statuses, 'UPGRADE_工單總表', currentSchema);
         showToast('Excel 匯出成功', 'success');
       } catch (err) {
         console.error(err);
@@ -2438,7 +4014,7 @@ export default {
         return;
       }
       try {
-        exportToPDF(currentOrders, statuses, 'UPGRADE_工單總表');
+        exportToPDF(currentOrders, statuses, 'UPGRADE_工單總表', currentSchema);
         showToast('PDF 匯出成功', 'success');
       } catch (err) {
         console.error(err);
@@ -2457,9 +4033,9 @@ export default {
 };
 
 /* ═══ EOF ═══
-F: src/pages/table.js
-V: 1792903513
-W: webapp-20261026-001#25
+F: AI-WA-UPWO/src/pages/table.js
+V: 1792911800
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/pages/table.js === -->
@@ -2544,7 +4120,7 @@ W: webapp-20261026-001#32
 ## 📄 ./src/ui/layout.js
 
 ```js
-import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings } from 'lucide';
+import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList } from 'lucide';
 
 /**
  * 繪製 App Shell 骨架（側邊欄、頂部導覽列）
@@ -2587,8 +4163,11 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
       <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <!-- 頂部導覽 (Mobile & Desktop) -->
         <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/50 flex items-center justify-between px-4 sm:px-6 z-10">
-          <!-- Mobile Logo -->
-          <div class="flex items-center gap-2 md:hidden">
+          <!-- Mobile Logo & Menu Button -->
+          <div class="flex items-center gap-3 md:hidden">
+            <button id="btn-mobile-menu" class="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
             <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white shadow-sm">
               <i data-lucide="layers" class="w-5 h-5"></i>
             </div>
@@ -2618,6 +4197,27 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
         </main>
       </div>
     </div>
+
+    <!-- 手機版側邊選單 (Drawer) -->
+    <div id="mobile-drawer" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" id="drawer-overlay"></div>
+      <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col" id="drawer-panel">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white shadow-sm">
+              <i data-lucide="layers" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold text-lg text-slate-900">選單</span>
+          </div>
+          <button id="btn-close-drawer" class="p-2 text-slate-400 hover:bg-slate-100 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <nav class="flex-1 py-4 px-3 flex flex-col gap-1 overflow-y-auto" id="mobile-sidebar-nav">
+          <!-- 由 renderNavItems 注入 -->
+        </nav>
+      </aside>
+    </div>
   `;
 
   // 渲染圖示
@@ -2629,24 +4229,49 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
   // 綁定事件
   document.getElementById('btn-logout')?.addEventListener('click', onLogout);
 
+  // 手機版抽屜選單事件
+  const drawer = document.getElementById('mobile-drawer');
+  const panel = document.getElementById('drawer-panel');
+  const overlay = document.getElementById('drawer-overlay');
+  
+  const openDrawer = () => {
+    drawer.classList.remove('hidden');
+    setTimeout(() => {
+      overlay.classList.add('opacity-100');
+      panel.classList.remove('-translate-x-full');
+    }, 10);
+  };
+  
+  const closeDrawer = () => {
+    overlay.classList.remove('opacity-100');
+    panel.classList.add('-translate-x-full');
+    setTimeout(() => drawer.classList.add('hidden'), 300);
+  };
+
+  document.getElementById('btn-mobile-menu')?.addEventListener('click', openDrawer);
+  document.getElementById('btn-close-drawer')?.addEventListener('click', closeDrawer);
+  overlay?.addEventListener('click', closeDrawer);
+
   // 渲染導覽選單
-  renderNavItems(user.role, onNavigate);
+  renderNavItems(user.role, onNavigate, closeDrawer);
 }
 
 /**
  * 繪製導覽選單項目
  */
-function renderNavItems(role, onNavigate) {
+function renderNavItems(role, onNavigate, closeDrawer) {
   const routes = [
     { id: 'kanban', label: '流水線', icon: 'layout-dashboard', roles: ['admin', 'user'] },
     { id: 'table', label: '管理總表', icon: 'table', roles: ['admin', 'user'] },
     { id: 'overview', label: '總狀態', icon: 'pie-chart', roles: ['admin', 'user'] },
+    { id: 'category', label: '類別視圖', icon: 'layers', roles: ['admin', 'user'] },
     { id: 'salesperson', label: '銷售員', icon: 'users', roles: ['admin', 'user'] },
     { id: 'settings', label: '系統設定', icon: 'settings', roles: ['admin'] }
   ];
 
   const sidebarNav = document.getElementById('sidebar-nav');
   const topControl = document.getElementById('top-segmented-control');
+  const mobileNav = document.getElementById('mobile-sidebar-nav');
 
   routes.forEach(route => {
     if (!route.roles.includes(role)) return;
@@ -2664,6 +4289,22 @@ function renderNavItems(role, onNavigate) {
       sidebarNav.appendChild(btn);
     }
 
+    // 手機版側邊欄項目
+    if (mobileNav) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand transition-colors';
+      btn.dataset.route = route.id;
+      btn.innerHTML = `
+        <i data-lucide="${route.icon}" class="w-5 h-5"></i>
+        ${route.label}
+      `;
+      btn.addEventListener('click', () => {
+        onNavigate(route.id);
+        if (typeof closeDrawer === 'function') closeDrawer();
+      });
+      mobileNav.appendChild(btn);
+    }
+
     // 頂部 Segmented Control 項目
     if (topControl) {
       const segment = document.createElement('div');
@@ -2676,7 +4317,7 @@ function renderNavItems(role, onNavigate) {
   });
 
   createIcons({
-    icons: { LayoutDashboard, Table, PieChart, Users, Settings },
+    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers },
     attrs: { class: 'w-5 h-5' }
   });
 }
@@ -2687,7 +4328,7 @@ function renderNavItems(role, onNavigate) {
  */
 export function updateNavbar(activeRoute) {
   // 更新側邊欄
-  document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
+  document.querySelectorAll('.nav-item').forEach(item => {
     if (item.dataset.route === activeRoute) {
       item.classList.add('bg-brand/5', 'text-brand', 'font-bold');
       item.classList.remove('text-slate-600');
@@ -2761,16 +4402,17 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
     </div>
   `;
 
-  // 重新渲染圖示
+  // 重新渲染圖示（補上缺少的參數）
   createIcons({
+    icons: { Activity, ClipboardList },
     attrs: { class: 'w-4 h-4' }
   });
 }
 
 /* ═══ EOF ═══
-F: src/ui/layout.js
-V: 1792903510
-W: webapp-20261026-001#22
+F: AI-WA-UPWO/src/ui/layout.js
+V: 1792912100
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/ui/layout.js === -->
