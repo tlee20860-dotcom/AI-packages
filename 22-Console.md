@@ -1,5 +1,5 @@
 > 體系版本：SV07
-> 生成時間：2026-10-27 10:34:47 (HKT)
+> 生成時間：2026-10-27 11:17:41 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -72,21 +72,50 @@
         let triggerTime = 0;
         let pollInterval = null;
 
-        // 簡易繁簡與禁用詞對照表 (用於前端快速攔截)
-        const FORBIDDEN_WORDS = ["略", "保留原樣", "同上", "與前相同", "內容不變", "（省略）", "（程式碼略）", "...", "…", "參考前文", "其餘同前"];
-        const SIMPLIFIED_CHARS = ["体", "实", "发", "档", "权", "检", "查", "网", "页", "库", "选", "项", "标", "准", "记", "录", "历", "史", "进", "化", "设", "计", "对", "应", "当", "总", "结", "归", "纳", "务", "动", "态", "统", "过", "将", "来", "并", "且"];
+        // 動態載入的規則 (不再寫死)
+        let globalForbiddenWords = [];
+        let globalSimplifiedChars = [];
 
-        window.onload = () => {
+        window.onload = async () => {
             loadTokens(); 
-            if (currentToken) {
-                checkBuildStatus();
-            } else {
-                updateStatus('build-status', '', '請先設定 Token');
-            }
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
-            }
+            
+            // 非同步載入字典，避免卡住畫面
+            loadDictionaries().then(() => {
+                if (currentToken) checkBuildStatus();
+                else updateStatus('build-status', '', '請先設定 Token');
+            });
+
+            // 暫時關閉 sw.js 註冊，避免干擾
+            // if ('serviceWorker' in navigator) {
+            //     navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
+            // }
         };
+
+        // === 從 AI-kernel 載入字典 ===
+        async function loadDictionaries() {
+            try {
+                // 1. 讀取禁用詞 (純文字)
+                const txtUrl = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt?t=${Date.now()}`;
+                const txtRes = await fetch(txtUrl);
+                if (txtRes.ok) {
+                    const text = await txtRes.text();
+                    globalForbiddenWords = text.split('\n').map(w => w.trim()).filter(w => w && !w.startsWith('#'));
+                }
+                
+                // 2. 讀取簡體字 (從 JSON 讀取陣列)
+                const jsonUrl = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/validate-config.json?t=${Date.now()}`;
+                const jsonRes = await fetch(jsonUrl);
+                if (jsonRes.ok) {
+                    const data = await jsonRes.json();
+                    if (data.simplified_chars) {
+                        globalSimplifiedChars = data.simplified_chars;
+                    }
+                }
+                console.log("✅ 字典載入成功", { words: globalForbiddenWords.length, chars: globalSimplifiedChars.length });
+            } catch (e) {
+                console.warn("⚠️ 無法載入遠端字典，前端檢查將降級（只檢查路徑）。", e);
+            }
+        }
 
         // === Token 管理 ===
         function loadTokens() {
@@ -96,7 +125,7 @@
                     tokenList = JSON.parse(stored);
                     if (tokenList.length > 0) {
                         const active = tokenList.find(t => t.isActive);
-                        currentToken = active ? active.token : tokenList[0].token;
+                        currentToken = active ? active.token.trim() : tokenList[0].token.trim();
                     }
                 } catch (e) { console.error(e); }
             }
@@ -115,7 +144,7 @@
             checkBuildStatus();
         }
         function setActive(id) {
-            tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token; });
+            tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token.trim(); });
             saveTokensToLocal(); renderTokens(); checkBuildStatus();
         }
         function deleteToken(id) {
@@ -142,20 +171,29 @@
             });
         }
 
-        // === GitHub API ===
+        // === GitHub API (終極防呆版) ===
         async function githubAPI(url, options = {}) {
             if (!currentToken) throw new Error("未啟用 GitHub Token");
+            // 移除 Cache-Control，避免觸發 CORS 預檢失敗
             const headers = { 
                 'Accept': 'application/vnd.github.v3+json', 
-                'Authorization': `token ${currentToken}`, 
-                'Cache-Control': 'no-cache',
+                'Authorization': `token ${currentToken.trim()}`, 
                 ...options.headers 
             };
-            const res = await fetch(`https://api.github.com${url}?t=${Date.now()}`, { ...options, headers });
+            
+            let res;
+            try {
+                res = await fetch(`https://api.github.com${url}?t=${Date.now()}`, { ...options, headers });
+            } catch (fetchError) {
+                console.error("Fetch Error Detail:", fetchError);
+                throw new Error("無法連線至 GitHub（請確認 Token 無多餘空白，或關閉廣告攔截器）");
+            }
+
             if (!res.ok) {
                 let errMsg = `API 錯誤: ${res.status}`;
                 try { const errData = await res.json(); if (errData.message) errMsg += ` - ${errData.message}`; } catch(e) {}
                 if (res.status === 401) throw new Error('Token 無效或過期');
+                if (res.status === 403) throw new Error('Token 權限不足');
                 if (res.status === 404) throw new Error('找不到資源（可能路徑錯誤或無權限）');
                 if (res.status === 409) throw new Error('檔案衝突，請重試');
                 throw new Error(errMsg);
@@ -238,7 +276,6 @@
                 } else {
                     const repo = pathParts[0];
                     const filePath = pathParts.slice(1).join('/');
-                    // 簡單的白名單檢查，實際可更靈活
                     if (!['AI-kernel', 'AI-General', 'AI-WA-UPWO', 'AI-WEB-APP-Family', 'AI-OS'].includes(repo)) {
                         errors.push(`未知的倉庫目標：${repo}。請確認是否正確。`);
                     }
@@ -248,15 +285,20 @@
                 }
             }
 
-            // 2. 簡體字與禁用詞掃描 (不掃描程式碼區塊)
+            // 2. 使用動態載入的字典進行掃描 (如果載入失敗則跳過)
             const cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
             
-            FORBIDDEN_WORDS.forEach(word => {
-                if (cleanContent.includes(word)) errors.push(`發現禁用詞彙：「${word}」`);
-            });
-            SIMPLIFIED_CHARS.forEach(word => {
-                if (cleanContent.includes(word)) errors.push(`發現簡體字：「${word}」`);
-            });
+            if (globalForbiddenWords.length > 0) {
+                globalForbiddenWords.forEach(word => {
+                    if (cleanContent.includes(word)) errors.push(`發現禁用詞彙：「${word}」`);
+                });
+            }
+            
+            if (globalSimplifiedChars.length > 0) {
+                globalSimplifiedChars.forEach(word => {
+                    if (cleanContent.includes(word)) errors.push(`發現簡體字：「${word}」`);
+                });
+            }
 
             // 顯示結果
             if (errors.length > 0) {
@@ -293,7 +335,6 @@
             const filePath = document.getElementById('target-file-path').value;
 
             try {
-                // 1. 取得現有檔案內容與 SHA
                 let sha = null;
                 let originalContent = "";
                 try {
@@ -306,10 +347,8 @@
                     if (!e.message.includes('404')) throw e;
                 }
 
-                // 2. 處理替換或追加邏輯
                 let finalContent = content;
 
-                // 檢查是否為替換模式
                 const patchMatch = content.match(/<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/);
                 if (patchMatch && originalContent) {
                     const oldStr = patchMatch[1];
@@ -319,7 +358,6 @@
                     }
                     finalContent = originalContent.replace(oldStr, newStr);
                 } 
-                // 檢查是否為追加模式
                 else if (content.includes("[APPEND]") && originalContent) {
                     let base = originalContent;
                     const eofIndex = base.lastIndexOf("/* ═══ EOF ═══");
@@ -335,7 +373,6 @@
                     finalContent = base + "\n\n" + appendContent;
                 }
 
-                // 3. 轉 Base64 並 PUT 發布
                 const base64Content = btoa(unescape(encodeURIComponent(finalContent)));
 
                 const body = {
@@ -502,8 +539,8 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792906500
-W: ai-system-003#14
+V: 1792907100
+W: ai-system-003#21
 ═══ -->```
 
 <!-- === FILE END: index.html === -->
@@ -544,7 +581,8 @@ W: ai-system-003#14
 ## 📄 sw.js
 
 ```js
-const CACHE_NAME = 'ai-console-v5';
+// 將版號提升，每次大改版時改這裡（如 v6 改 v7），強迫手機清空舊快取
+const CACHE_NAME = 'ai-console-v6'; 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -552,15 +590,17 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  // 強制讓新的 Service Worker 立刻接管，不等待舊的關閉
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // 清除所有非當前版號的舊快取
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -570,35 +610,48 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // 立刻控制所有開啟的網頁
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET' || event.request.url.includes('api.github.com')) {
+  // 遇到 API 請求或非 GET 請求，直接放行，絕對不攔截快取
+  if (event.request.method !== 'GET' || event.request.url.includes('api.github.com') || event.request.url.includes('raw.githubusercontent.com')) {
     return;
   }
 
+  // 針對 HTML 網頁，採用「網路優先」策略
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('index.html') || event.request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // 抓到最新版，更新快取
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // 斷網時，才退回使用舊快取
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // 其他靜態資源（如圖片），採用「快取優先」
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
+    })
   );
 });
 
 /* ═══ EOF ═══
 F: AI-infra/sw.js
-V: 1792900076
-W: ai-system-20261024-012#118
+V: 1792907100
+W: ai-system-003#20
 ═══ */```
 
 <!-- === FILE END: sw.js === -->
