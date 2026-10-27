@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 14:42:51 (HKT)
+> 生成時間：2026-10-27 15:26:37 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -626,10 +626,23 @@
 ### 四、 對抗審查機制升級
 1. **LLM 專屬危機**：`R-016` 實質工程對抗審查升級，要求外部 AI（如 Gemini）針對「認知溢出、邏輯死鎖、幻覺與假裝執行、格式與算數出錯」四大 LLM 物理缺陷進行對抗，拒絕形式主義。
 
+### 2026-10-27｜W 包架構模式與 Vite 工程化規範
+- **來源**：`webapp-20261026-001`（舊體系）
+- **變更檔案**：
+  - `AI-kernel/docs/skills/W/W-00-startup.md`
+  - `AI-kernel/docs/skills/W/W-03-esmodule.md`
+  - `AI-kernel/docs/skills/W/W-06-sop.md`
+- **變更內容**：
+  1. `W-00`：新增「三、架構模式選擇矩陣」，定義 Mode A（純 CDN 無構建）與 Mode B（Vite 工程化），供未來新專案依據複雜度選擇。
+  2. `W-03`：新增「八、Vite 工程化基礎建設（Mode B 專用）」，收錄 `package.json`、`vite.config.js`、`tailwind.config.js`、`postcss.config.js` 等核心配置規範與 `@/` 別名使用原則。
+  3. `W-06`：修改「0.1 啟動 5 步法」之第 1 步，加入判斷並選擇架構模式的流程。
+- **決策關聯**：`D-226`（W 包新增架構模式選擇與 Vite 基礎建設）
+- **影響範圍**：未來所有載入 W 包之 Web App 專案。
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-EVOLUTION.md
-V: 1792908800
-W: ai-system-003#38
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-EVOLUTION.md === -->
 
@@ -690,10 +703,12 @@ W: ai-system-003#38
 | RJ-021 | 由網頁前端自動計算並補齊 Unix 時間戳（`V:`） | 若由前端補齊，會導致 AI 記憶與遠端倉庫狀態脫節（AI 寫的 V 與網頁補的 V 不同）。決議維持由 AI 在 EOF 中輸出完整的 `V`，前端僅負責拔出舊 EOF 並拼接新 EOF。 | ai-system-003 | 2026-10-27 |
 | RJ-022 | 將禁用詞、簡體字清單與專案白名單寫死於前端 `index.html` | 違反 `R-025`（防硬編碼）。每次新增專案或修改規則都需重貼整份網頁代碼，極易出錯。決議改為「配置驅動」，前端動態向 GitHub 抓取 `validate-config.json` 與 `repos.json`。 | ai-system-003 | 2026-10-27 |
 
+| RJ-92-01 | 否決純 CDN（無構建）架構 | 專案包含複雜的 Excel 解析與大量狀態管理，純 CDN 會導致邏輯塞在單一 HTML，無法落實 `W-03` 模組化契約，維護成本極高。決議改用 Vite + Tailwind 工程化架構。 | webapp-20261026-001 | 2026-10-27 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792908500
-W: ai-system-003#35
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
@@ -766,10 +781,14 @@ W: ai-system-003#35
 | K-25 | 體系 | 前端 `fetch` 無超時機制，導致網路卡頓時按鈕永久卡在「處理中...」 | 中 | 已解決（加入 AbortController 15 秒超時防護） | ai-system-003 |
 | K-26 | 體系 | `index.html` 仍保留了部分硬編碼的替換標籤（如 `[APPEND]`、`<<<<<<< OLD`），若未來變更語法需改前端 | 低 | 待處理（目前寫死是為了防呆，未來可考慮完全配置化） | ai-system-003 |
 
+| K-92-01 | 專案 | Firebase 前端金鑰寫死於 `src/config/firebase-keys.js`，未來多環境切換不便。 | 低 | 待處理 | webapp-20261026-001 |
+| K-92-02 | 專案 | 自訂登入機制採用前端明文比對，未整合 Firebase Auth，存在安全隱患。 | 中 | 待處理 | webapp-20261026-001 |
+| K-92-03 | 專案 | Firestore 安全規則目前為測試模式（`allow read, write: if true;`），上線前必須替換。 | 高 | 待處理 | webapp-20261026-001 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792908700
-W: ai-system-003#37
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
 

@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 14:42:50 (HKT)
+> 生成時間：2026-10-27 15:26:36 (HKT)
 
 # AI 對話系統 - 體系狀態包
 
@@ -192,10 +192,29 @@ W: ai-system-003#27
 | 2026-10-26 | ai-system-20261026-001 | 任務三十一（100%） |
 | 2026-10-27 | ai-system-003 | 任務三十二（100%） |
 
+### 任務三十三：W 包架構模式與 Vite 工程化規範
+| 欄位 | 值 |
+|---|---|
+| 任務名稱 | W 包新增架構模式矩陣、Vite 基礎建設規範與啟動 SOP 調整 |
+| 開始時間 | 2026-10-26 |
+| 當前階段 | 全數完成 |
+| 完成度 | 100% |
+
+---
+
+## 二、步驟清單
+
+### 任務三十三：W 包架構模式與 Vite 工程化規範
+| # | 步驟 | 狀態 | 完成時間 |
+|---|---|---|---|
+| 1 | W-00 新增 Mode A / Mode B 比較與選擇指引 | ✅ | 2026-10-26 |
+| 2 | W-03 新增 Vite 配置、`@/` 別名與目錄結構 | ✅ | 2026-10-26 |
+| 3 | W-06 第一步加入架構模式選擇 | ✅ | 2026-10-26 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/PROGRESS.md
-V: 1792908200
-W: ai-system-003#32
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/PROGRESS.md === -->
 
@@ -293,10 +312,19 @@ W: ai-system-003#32
 | 通用對話決策 | GENERAL-CONCLUSION.md（GC） |
 | 審查包源檔 | docs/review/（合成物 CHK.md） |
 
+| D-226 | W 包新增架構模式選擇與 Vite 基礎建設 | 因應不同規模的 Web App 專案，W-00 新增 Mode A（純 CDN）與 Mode B（Vite 工程化）矩陣；W-03 寫入 Vite 配置與 `@/` 別名規範；W-06 啟動 SOP 加入選擇流程。避免小型專案過度工程化，或大型專案缺乏模組化。 |
+
+**決策明細**：被否決方案見 `SYSTEM-REJECTED.md`（RJ-xxx）；技術債見 `SYSTEM-DEBT.md`（K-xx／C-xx）。
+
+---
+
+## 四、關聯檔案
+*(以下省略)*
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-CONCLUSION.md
-V: 1792908300
-W: ai-system-003#33
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-CONCLUSION.md === -->
 
@@ -357,10 +385,12 @@ W: ai-system-003#33
 | RJ-021 | 由網頁前端自動計算並補齊 Unix 時間戳（`V:`） | 若由前端補齊，會導致 AI 記憶與遠端倉庫狀態脫節（AI 寫的 V 與網頁補的 V 不同）。決議維持由 AI 在 EOF 中輸出完整的 `V`，前端僅負責拔出舊 EOF 並拼接新 EOF。 | ai-system-003 | 2026-10-27 |
 | RJ-022 | 將禁用詞、簡體字清單與專案白名單寫死於前端 `index.html` | 違反 `R-025`（防硬編碼）。每次新增專案或修改規則都需重貼整份網頁代碼，極易出錯。決議改為「配置驅動」，前端動態向 GitHub 抓取 `validate-config.json` 與 `repos.json`。 | ai-system-003 | 2026-10-27 |
 
+| RJ-92-01 | 否決純 CDN（無構建）架構 | 專案包含複雜的 Excel 解析與大量狀態管理，純 CDN 會導致邏輯塞在單一 HTML，無法落實 `W-03` 模組化契約，維護成本極高。決議改用 Vite + Tailwind 工程化架構。 | webapp-20261026-001 | 2026-10-27 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792908500
-W: ai-system-003#35
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
@@ -433,9 +463,13 @@ W: ai-system-003#35
 | K-25 | 體系 | 前端 `fetch` 無超時機制，導致網路卡頓時按鈕永久卡在「處理中...」 | 中 | 已解決（加入 AbortController 15 秒超時防護） | ai-system-003 |
 | K-26 | 體系 | `index.html` 仍保留了部分硬編碼的替換標籤（如 `[APPEND]`、`<<<<<<< OLD`），若未來變更語法需改前端 | 低 | 待處理（目前寫死是為了防呆，未來可考慮完全配置化） | ai-system-003 |
 
+| K-92-01 | 專案 | Firebase 前端金鑰寫死於 `src/config/firebase-keys.js`，未來多環境切換不便。 | 低 | 待處理 | webapp-20261026-001 |
+| K-92-02 | 專案 | 自訂登入機制採用前端明文比對，未整合 Firebase Auth，存在安全隱患。 | 中 | 待處理 | webapp-20261026-001 |
+| K-92-03 | 專案 | Firestore 安全規則目前為測試模式（`allow read, write: if true;`），上線前必須替換。 | 高 | 待處理 | webapp-20261026-001 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792908700
-W: ai-system-003#37
+V: 1792908900
+W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
