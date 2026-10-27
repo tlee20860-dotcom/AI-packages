@@ -1,5 +1,5 @@
 > 體系版本：SV07
-> 生成時間：2026-10-27 11:17:41 (HKT)
+> 生成時間：2026-10-27 11:51:02 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -28,7 +28,6 @@
         body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
         .container { max-width: 600px; margin: 0 auto; }
         
-        /* Sticky Header */
         .sticky-header { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); z-index: 100; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
         .sticky-header .card { margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; }
         
@@ -66,54 +65,58 @@
         const OWNER = 'tlee20860-dotcom';
         const INFRA_REPO = 'AI-infra';
         const WORKFLOW_ID = 'setup-structure.yml';
-        
+        const CONFIG_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/validate-config.json`;
+        const FORBIDDEN_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt`;
+        const REPOS_URL = `https://raw.githubusercontent.com/${OWNER}/AI-infra/main/config/repos.json`;
+
         let currentToken = '';
         let tokenList = [];
         let triggerTime = 0;
         let pollInterval = null;
 
-        // 動態載入的規則 (不再寫死)
+        // 動態載入的規則與配置
         let globalForbiddenWords = [];
-        let globalSimplifiedChars = [];
+        let globalConfig = { console_rules: {}, file_specific_rules: {} };
+        let allowedRepos = [];
 
         window.onload = async () => {
             loadTokens(); 
-            
-            // 非同步載入字典，避免卡住畫面
-            loadDictionaries().then(() => {
-                if (currentToken) checkBuildStatus();
-                else updateStatus('build-status', '', '請先設定 Token');
-            });
-
-            // 暫時關閉 sw.js 註冊，避免干擾
-            // if ('serviceWorker' in navigator) {
-            //     navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
-            // }
+            await loadDictionaries();
+            if (currentToken) checkBuildStatus();
+            else updateStatus('build-status', '', '請先設定 Token');
         };
 
-        // === 從 AI-kernel 載入字典 ===
+        // === 從遠端載入所有規則 ===
         async function loadDictionaries() {
             try {
-                // 1. 讀取禁用詞 (純文字)
-                const txtUrl = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt?t=${Date.now()}`;
-                const txtRes = await fetch(txtUrl);
+                const txtRes = await fetch(`${FORBIDDEN_URL}?t=${Date.now()}`);
                 if (txtRes.ok) {
                     const text = await txtRes.text();
                     globalForbiddenWords = text.split('\n').map(w => w.trim()).filter(w => w && !w.startsWith('#'));
                 }
                 
-                // 2. 讀取簡體字 (從 JSON 讀取陣列)
-                const jsonUrl = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/validate-config.json?t=${Date.now()}`;
-                const jsonRes = await fetch(jsonUrl);
+                const jsonRes = await fetch(`${CONFIG_URL}?t=${Date.now()}`);
                 if (jsonRes.ok) {
-                    const data = await jsonRes.json();
-                    if (data.simplified_chars) {
-                        globalSimplifiedChars = data.simplified_chars;
+                    globalConfig = await jsonRes.json();
+                    if (globalConfig.console_rules && globalConfig.console_rules.base_system_repos) {
+                        allowedRepos = [...globalConfig.console_rules.base_system_repos];
                     }
                 }
-                console.log("✅ 字典載入成功", { words: globalForbiddenWords.length, chars: globalSimplifiedChars.length });
+
+                const reposRes = await fetch(`${REPOS_URL}?t=${Date.now()}`);
+                if (reposRes.ok) {
+                    const reposData = await reposRes.json();
+                    if (reposData.projects) {
+                        reposData.projects.forEach(p => {
+                            const repoName = p.repo.split('/')[1];
+                            if (repoName && !allowedRepos.includes(repoName)) {
+                                allowedRepos.push(repoName);
+                            }
+                        });
+                    }
+                }
             } catch (e) {
-                console.warn("⚠️ 無法載入遠端字典，前端檢查將降級（只檢查路徑）。", e);
+                console.warn("⚠️ 無法載入遠端配置，將使用預設值。", e);
             }
         }
 
@@ -140,8 +143,7 @@
             tokenList.push(newToken); saveTokensToLocal();
             if (newToken.isActive) currentToken = newToken.token;
             document.getElementById('new-token-name').value = ''; document.getElementById('new-token-value').value = '';
-            renderTokens();
-            checkBuildStatus();
+            renderTokens(); checkBuildStatus();
         }
         function setActive(id) {
             tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token.trim(); });
@@ -171,22 +173,24 @@
             });
         }
 
-        // === GitHub API (終極防呆版) ===
+        // === GitHub API (加入超時機制) ===
         async function githubAPI(url, options = {}) {
             if (!currentToken) throw new Error("未啟用 GitHub Token");
-            // 移除 Cache-Control，避免觸發 CORS 預檢失敗
-            const headers = { 
-                'Accept': 'application/vnd.github.v3+json', 
-                'Authorization': `token ${currentToken.trim()}`, 
-                ...options.headers 
-            };
+            const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `token ${currentToken.trim()}`, ...options.headers };
             
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超時
+
             let res;
             try {
-                res = await fetch(`https://api.github.com${url}?t=${Date.now()}`, { ...options, headers });
+                res = await fetch(`https://api.github.com${url}?t=${Date.now()}`, { ...options, headers, signal: controller.signal });
             } catch (fetchError) {
-                console.error("Fetch Error Detail:", fetchError);
+                if (fetchError.name === 'AbortError') {
+                    throw new Error("連線超時（15秒），請檢查手機網路或稍後重試。");
+                }
                 throw new Error("無法連線至 GitHub（請確認 Token 無多餘空白，或關閉廣告攔截器）");
+            } finally {
+                clearTimeout(timeoutId);
             }
 
             if (!res.ok) {
@@ -194,8 +198,7 @@
                 try { const errData = await res.json(); if (errData.message) errMsg += ` - ${errData.message}`; } catch(e) {}
                 if (res.status === 401) throw new Error('Token 無效或過期');
                 if (res.status === 403) throw new Error('Token 權限不足');
-                if (res.status === 404) throw new Error('找不到資源（可能路徑錯誤或無權限）');
-                if (res.status === 409) throw new Error('檔案衝突，請重試');
+                if (res.status === 404) throw new Error('找不到資源');
                 throw new Error(errMsg);
             }
             return res.status === 204 ? null : await res.json();
@@ -226,7 +229,6 @@
                     const run = data.workflow_runs[0];
                     const runTime = new Date(run.created_at).getTime();
                     const createdAt = new Date(run.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' });
-                    
                     if (triggerTime > 0 && runTime < triggerTime - 10000) {
                         updateStatus('build-status', 'running', '排隊建立任務中...'); return;
                     }
@@ -250,7 +252,7 @@
             if(dot) dot.className = `status-dot ${status}`; if(text) text.textContent = msg;
         }
 
-        // === 體檢與發布 (含自動拼接) ===
+        // === 體檢與發布 ===
         function processFile() {
             const content = document.getElementById('file-input').value;
             const errorPanel = document.getElementById('error-panel');
@@ -263,21 +265,24 @@
             if (!content.trim()) return alert('請先貼上內容');
 
             let errors = [];
+            let repo = "", filePath = "", fullPath = "未知路徑";
+            const rules = globalConfig.console_rules || {};
 
-            // 1. 擷取 F: 路徑
             const pathMatch = content.match(/(?:F:|"F":)\s*"?([^\s"\n]+)"?/);
+            
             if (!pathMatch) {
                 errors.push("找不到 F: 路徑標記。請確認 AI 是否漏寫 EOF。");
             } else {
-                const fullPath = pathMatch[1];
+                fullPath = pathMatch[1];
                 const pathParts = fullPath.split('/');
                 if (pathParts.length < 2) {
                     errors.push(`路徑格式錯誤：${fullPath}。必須包含倉庫名。`);
                 } else {
-                    const repo = pathParts[0];
-                    const filePath = pathParts.slice(1).join('/');
-                    if (!['AI-kernel', 'AI-General', 'AI-WA-UPWO', 'AI-WEB-APP-Family', 'AI-OS'].includes(repo)) {
-                        errors.push(`未知的倉庫目標：${repo}。請確認是否正確。`);
+                    repo = pathParts[0];
+                    filePath = pathParts.slice(1).join('/');
+                    
+                    if (!allowedRepos.includes(repo)) {
+                        errors.push(`未知的倉庫目標：${repo}。請確認是否已在 config/repos.json 中註冊。`);
                     }
                     document.getElementById('target-path-display').textContent = `目標：${repo} / ${filePath}`;
                     document.getElementById('target-repo').value = repo;
@@ -285,26 +290,43 @@
                 }
             }
 
-            // 2. 使用動態載入的字典進行掃描 (如果載入失敗則跳過)
-            const cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
+            let specificRule = (globalConfig.file_specific_rules && globalConfig.file_specific_rules[`${repo}/${filePath}`]) || {};
+
+            let isRecordFile = false;
+            if (rules.record_auto_exempt !== false && repo === rules.record_exempt_repo) {
+                const exemptPaths = rules.record_exempt_paths || [];
+                isRecordFile = exemptPaths.some(p => filePath.includes(p));
+            }
+
+            const isCodeFile = filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('.html') || filePath.endsWith('.py') || filePath.endsWith('.sh');
+
+            // 1. 拔除程式碼區塊
+            let cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
+            // 2. 拔除引號與反引號內的定義 (防自指陷阱)
+            cleanContent = cleanContent.replace(/「[^」]*」/g, '').replace(/`[^`]*`/g, '');
             
-            if (globalForbiddenWords.length > 0) {
+            if (specificRule.check_forbidden_words !== false && !isRecordFile && !isCodeFile) {
                 globalForbiddenWords.forEach(word => {
                     if (cleanContent.includes(word)) errors.push(`發現禁用詞彙：「${word}」`);
                 });
             }
-            
-            if (globalSimplifiedChars.length > 0) {
-                globalSimplifiedChars.forEach(word => {
+
+            if (specificRule.check_simplified !== false) {
+                const simplified = globalConfig.simplified_chars || [];
+                simplified.forEach(word => {
                     if (cleanContent.includes(word)) errors.push(`發現簡體字：「${word}」`);
                 });
             }
 
-            // 顯示結果
             if (errors.length > 0) {
                 errorPanel.style.display = 'block';
                 inputArea.style.display = 'none';
-                document.getElementById('error-list').textContent = errors.join('\n');
+                
+                let header = "";
+                if (rules.show_file_path_in_error !== false) {
+                    header = (rules.error_header_format || "📄 檔案：{path}\n------------------------\n").replace("{path}", fullPath);
+                }
+                document.getElementById('error-list').textContent = header + errors.join('\n');
             } else {
                 successPanel.style.display = 'block';
                 document.getElementById('success-message').textContent = '✅ 體檢通過！請點擊下方按鈕發布。';
@@ -318,6 +340,10 @@
             document.getElementById('success-panel').style.display = 'none';
             document.getElementById('input-area').style.display = 'block';
             document.getElementById('btn-publish').style.display = 'none';
+            
+            const btn = document.getElementById('btn-publish');
+            btn.disabled = false; 
+            btn.textContent = '🚀 確認發布到倉庫';
         }
 
         function copyError() {
@@ -328,7 +354,7 @@
         async function publishFile() {
             if (!currentToken) return alert('請先設定 Token');
             const btn = document.getElementById('btn-publish');
-            btn.disabled = true; btn.textContent = '處理中...';
+            btn.disabled = true; btn.textContent = '正在取得原檔...';
             
             let content = document.getElementById('file-input').value;
             const repo = document.getElementById('target-repo').value;
@@ -347,9 +373,12 @@
                     if (!e.message.includes('404')) throw e;
                 }
 
+                btn.textContent = '正在替換與檢查...';
                 let finalContent = content;
 
-                const patchMatch = content.match(/<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/);
+                const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
+                const patchMatch = content.match(patchRegex);
+                
                 if (patchMatch && originalContent) {
                     const oldStr = patchMatch[1];
                     const newStr = patchMatch[2];
@@ -373,6 +402,7 @@
                     finalContent = base + "\n\n" + appendContent;
                 }
 
+                btn.textContent = '正在寫入倉庫...';
                 const base64Content = btoa(unescape(encodeURIComponent(finalContent)));
 
                 const body = {
@@ -389,6 +419,9 @@
 
                 document.getElementById('success-message').innerHTML = `🎉 已成功寫入：<br><b>${repo}/${filePath}</b>`;
                 btn.style.display = 'none';
+                
+                // 顯示清空並繼續的按鈕
+                document.getElementById('btn-reset-next').style.display = 'block';
             } catch (error) {
                 alert(`發布失敗：${error.message}`);
                 btn.disabled = false; btn.textContent = '🚀 確認發布到倉庫';
@@ -499,7 +532,9 @@
             <div style="font-size:0.85rem; margin-bottom:15px; font-family:monospace; background:#fff; padding:8px; border-radius:5px;" id="target-path-display"></div>
             <input type="hidden" id="target-repo">
             <input type="hidden" id="target-file-path">
+            
             <button class="btn-success" id="btn-publish" onclick="publishFile()">🚀 確認發布到倉庫</button>
+            <button class="btn-primary" id="btn-reset-next" style="display:none; margin-top:10px;" onclick="resetUI()">📝 繼續貼上下一個檔案</button>
             <button class="btn-primary" style="background:#64748b; margin-top:10px;" onclick="resetUI()">取消</button>
         </div>
     </div>
@@ -539,8 +574,8 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792907100
-W: ai-system-003#21
+V: 1792909300
+W: ai-system-003#43
 ═══ -->```
 
 <!-- === FILE END: index.html === -->
