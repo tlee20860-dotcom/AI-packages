@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 13:03:17 (HKT)
+> 生成時間：2026-10-27 14:42:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,6 +15,9 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1792904003 | UPGRADE-001 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1792904001 | UPGRADE-001 |
+| AI-General | docs/p92/WF-PROGRESS.md | 1792904002 | UPGRADE-001 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792908200 | ai-system-003#32 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
@@ -75,12 +78,36 @@
 | AI-OS | E-01-engine.md |
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
+| AI-WA-UPWO | .env.example |
 | AI-WA-UPWO | .gitignore |
 | AI-WA-UPWO | README.md |
 | AI-WA-UPWO | github/workflows/notify.yml |
+| AI-WA-UPWO | index.html |
 | AI-WA-UPWO | meta.json |
 | AI-WA-UPWO | package.json |
 | AI-WA-UPWO | postcss.config.js |
+| AI-WA-UPWO | src/config/constants.js |
+| AI-WA-UPWO | src/config/firebase-keys.js |
+| AI-WA-UPWO | src/config/firebase.js |
+| AI-WA-UPWO | src/config/state.js |
+| AI-WA-UPWO | src/db/read.js |
+| AI-WA-UPWO | src/db/write.js |
+| AI-WA-UPWO | src/domain/parser.js |
+| AI-WA-UPWO | src/domain/stats.js |
+| AI-WA-UPWO | src/engine/main.js |
+| AI-WA-UPWO | src/engine/router.js |
+| AI-WA-UPWO | src/lib/io.js |
+| AI-WA-UPWO | src/pages/kanban.js |
+| AI-WA-UPWO | src/pages/login.js |
+| AI-WA-UPWO | src/pages/overview.js |
+| AI-WA-UPWO | src/pages/salesperson.js |
+| AI-WA-UPWO | src/pages/settings.js |
+| AI-WA-UPWO | src/pages/table.js |
+| AI-WA-UPWO | src/style.css |
+| AI-WA-UPWO | src/ui/layout.js |
+| AI-WA-UPWO | src/ui/modal.js |
+| AI-WA-UPWO | src/ui/toast.js |
+| AI-WA-UPWO | tailwind.config.js |
 | AI-WA-UPWO | vite.config.js |
 | AI-WEB-APP-Family | .github/PATCH.md |
 | AI-WEB-APP-Family | .github/workflows/apply-patch.yml |
@@ -274,4 +301,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 4 |
+| 92-Code.md | 104 |
+| 92-P.md | 4 |
+| 92-SP.md | 8 |

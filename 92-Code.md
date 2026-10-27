@@ -1,8 +1,50 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 13:03:17 (HKT)
+> 生成時間：2026-10-27 14:42:51 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
+
+<!-- === FILE START: ./index.html === -->
+
+## 📄 ./index.html
+
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPGRADE-WO | 流水線進度控制台</title>
+  <meta name="description" content="先鋒印刷 - 流水線進度控制台">
+  
+  <!-- 引入全域樣式 (由 Vite 處理) -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="bg-[#F4F7FB] text-slate-800 font-sans min-h-screen antialiased overflow-hidden">
+
+  <!-- 初始載入畫面 -->
+  <div id="app-loading" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#F4F7FB] transition-opacity duration-300">
+    <div class="w-12 h-12 rounded-xl bg-[#6366F1] flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4 animate-bounce">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+    </div>
+    <div class="text-sm font-medium text-slate-500 animate-pulse">系統載入中...</div>
+  </div>
+
+  <!-- 系統掛載點 -->
+  <div id="app-root" class="w-full h-full"></div>
+
+  <!-- 系統啟動入口 (Vite 會自動處理 Module 依賴) -->
+  <script type="module" src="/src/engine/main.js"></script>
+</body>
+</html>
+
+<!-- ═══ EOF ═══
+F: index.html
+V: 1792903519
+W: webapp-20261026-001#31
+═══ -->```
+
+<!-- === FILE END: ./index.html === -->
 
 <!-- === FILE START: ./meta.json === -->
 
@@ -68,6 +110,2934 @@ W: webapp-20261026-001#10
 ═══ */```
 
 <!-- === FILE END: ./postcss.config.js === -->
+
+<!-- === FILE START: ./src/config/constants.js === -->
+
+## 📄 ./src/config/constants.js
+
+```js
+// 系統常數
+export const SYSTEM_NAME = 'UPGRADE-WO';
+
+// 預設狀態（當資料庫無資料時使用）
+export const DEFAULT_STATUSES = ['排產中', '印刷', '裁切', '品檢', '出貨'];
+
+// 路由名稱常數
+export const ROUTES = {
+  LOGIN: 'login',
+  KANBAN: 'kanban',
+  TABLE: 'table',
+  OVERVIEW: 'overview',
+  SALESPERSON: 'salesperson',
+  SETTINGS: 'settings'
+};
+
+/* ═══ EOF ═══
+F: src/config/constants.js
+V: 1792903522
+W: webapp-20261026-001#34
+═══ */```
+
+<!-- === FILE END: ./src/config/constants.js === -->
+
+<!-- === FILE START: ./src/config/firebase-keys.js === -->
+
+## 📄 ./src/config/firebase-keys.js
+
+```js
+export const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCOuxzJXxwmPEDYLxg_VHAwPLYikNq8e1c",
+  authDomain: "up-wo-87f60.firebaseapp.com",
+  projectId: "up-wo-87f60",
+  storageBucket: "up-wo-87f60.firebasestorage.app",
+  messagingSenderId: "180994034713",
+  appId: "1:180994034713:web:fc143f987d14df99102e88"
+};
+
+/* ═══ EOF ═══
+F: src/config/firebase-keys.js
+V: 1792903501
+W: webapp-20261026-001#13
+═══ */```
+
+<!-- === FILE END: ./src/config/firebase-keys.js === -->
+
+<!-- === FILE START: ./src/config/firebase.js === -->
+
+## 📄 ./src/config/firebase.js
+
+```js
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { FIREBASE_CONFIG } from "./firebase-keys.js";
+
+// 初始化 Firebase App
+const app = initializeApp(FIREBASE_CONFIG);
+
+// 初始化並匯出 Firestore 實例
+export const db = getFirestore(app);
+
+/* ═══ EOF ═══
+F: src/config/firebase.js
+V: 1792903502
+W: webapp-20261026-001#14
+═══ */```
+
+<!-- === FILE END: ./src/config/firebase.js === -->
+
+<!-- === FILE START: ./src/config/state.js === -->
+
+## 📄 ./src/config/state.js
+
+```js
+class State {
+  constructor() {
+    this.user = null;
+    this.statuses = ['排產中', '印刷', '裁切', '品檢', '出貨'];
+  }
+
+  // ═══ 使用者相關 ═══
+  setUser(user) {
+    this.user = user;
+    // 存入 sessionStorage 以便重新整理時保持登入狀態
+    if (user) {
+      sessionStorage.setItem('upgrade_user', JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem('upgrade_user');
+    }
+  }
+
+  getUser() {
+    if (!this.user) {
+      const stored = sessionStorage.getItem('upgrade_user');
+      if (stored) {
+        try {
+          this.user = JSON.parse(stored);
+        } catch (e) {
+          this.user = null;
+        }
+      }
+    }
+    return this.user;
+  }
+
+  clearUser() {
+    this.user = null;
+    sessionStorage.removeItem('upgrade_user');
+  }
+
+  // ═══ 狀態相關 ═══
+  setStatuses(statuses) {
+    if (Array.isArray(statuses) && statuses.length > 0) {
+      this.statuses = statuses;
+    }
+  }
+
+  getStatuses() {
+    return this.statuses;
+  }
+}
+
+// 匯出單一實例 (Singleton)
+export const AppState = new State();
+
+/* ═══ EOF ═══
+F: src/config/state.js
+V: 1792903521
+W: webapp-20261026-001#33
+═══ */```
+
+<!-- === FILE END: ./src/config/state.js === -->
+
+<!-- === FILE START: ./src/db/read.js === -->
+
+## 📄 ./src/db/read.js
+
+```js
+import { db } from "../config/firebase.js";
+import { 
+  collection, 
+  getDocs, 
+  onSnapshot, 
+  doc, 
+  getDoc 
+} from "firebase/firestore";
+
+/**
+ * 一次性取得整個集合的資料
+ * @param {string} collectionName 集合名稱
+ * @returns {Promise<Array>} 包含 id 與資料的陣列
+ */
+export async function getCollection(collectionName) {
+  try {
+    const colRef = collection(db, collectionName);
+    const snapshot = await getDocs(colRef);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error(`[DB Read Error] getCollection(${collectionName}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 監聽整個集合的即時變更
+ * @param {string} collectionName 集合名稱
+ * @param {function} callback 回呼函式，接收包含 id 與資料的陣列
+ * @returns {function} 取消監聽的函式
+ */
+export function listenCollection(collectionName, callback) {
+  const colRef = collection(db, collectionName);
+  
+  const unsubscribe = onSnapshot(colRef, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(data);
+  }, (error) => {
+    console.error(`[DB Read Error] listenCollection(${collectionName}):`, error);
+  });
+
+  return unsubscribe;
+}
+
+/**
+ * 一次性取得單一文檔資料
+ * @param {string} collectionName 集合名稱
+ * @param {string} docId 文檔 ID
+ * @returns {Promise<Object|null>} 資料物件或 null
+ */
+export async function getDocument(collectionName, docId) {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error(`[DB Read Error] getDocument(${collectionName}/${docId}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 監聽單一文檔的即時變更
+ * @param {string} collectionName 集合名稱
+ * @param {string} docId 文檔 ID
+ * @param {function} callback 回呼函式，接收資料物件或 null
+ * @returns {function} 取消監聽的函式
+ */
+export function listenDocument(collectionName, docId, callback) {
+  const docRef = doc(db, collectionName, docId);
+
+  const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      callback({ id: docSnap.id, ...docSnap.data() });
+    } else {
+      callback(null);
+    }
+  }, (error) => {
+    console.error(`[DB Read Error] listenDocument(${collectionName}/${docId}):`, error);
+  });
+
+  return unsubscribe;
+}
+
+/* ═══ EOF ═══
+F: src/db/read.js
+V: 1792903503
+W: webapp-20261026-001#15
+═══ */```
+
+<!-- === FILE END: ./src/db/read.js === -->
+
+<!-- === FILE START: ./src/db/write.js === -->
+
+## 📄 ./src/db/write.js
+
+```js
+import { db } from "../config/firebase.js";
+import { 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  addDoc,
+  collection 
+} from "firebase/firestore";
+
+/**
+ * 指定 ID 寫入文檔（覆寫或建立）
+ * 註：若需「防覆寫」邏輯，應在上層（如 parser.js）先使用 getDocument 檢查
+ * @param {string} collectionName 集合名稱
+ * @param {string} docId 文檔 ID
+ * @param {Object} data 要寫入的資料
+ */
+export async function setDocument(collectionName, docId, data) {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await setDoc(docRef, data);
+    return true;
+  } catch (error) {
+    console.error(`[DB Write Error] setDocument(${collectionName}/${docId}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 自動生成 ID 新增文檔
+ * @param {string} collectionName 集合名稱
+ * @param {Object} data 要寫入的資料
+ * @returns {Promise<string>} 新增的文檔 ID
+ */
+export async function addDocument(collectionName, data) {
+  try {
+    const colRef = collection(db, collectionName);
+    const docRef = await addDoc(colRef, data);
+    return docRef.id;
+  } catch (error) {
+    console.error(`[DB Write Error] addDocument(${collectionName}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 更新指定文檔的部分欄位
+ * @param {string} collectionName 集合名稱
+ * @param {string} docId 文檔 ID
+ * @param {Object} data 要更新的欄位（僅更新傳入的 key）
+ */
+export async function updateDocument(collectionName, docId, data) {
+  try {
+    if (!docId) throw new Error("docId is required for update.");
+    if (!data || Object.keys(data).length === 0) throw new Error("data is empty.");
+    
+    const docRef = doc(db, collectionName, docId);
+    await updateDoc(docRef, data);
+    return true;
+  } catch (error) {
+    console.error(`[DB Write Error] updateDocument(${collectionName}/${docId}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 刪除指定文檔
+ * @param {string} collectionName 集合名稱
+ * @param {string} docId 文檔 ID
+ */
+export async function deleteDocument(collectionName, docId) {
+  try {
+    if (!docId) throw new Error("docId is required for delete.");
+    
+    const docRef = doc(db, collectionName, docId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.error(`[DB Write Error] deleteDocument(${collectionName}/${docId}):`, error);
+    throw error;
+  }
+}
+
+/* ═══ EOF ═══
+F: src/db/write.js
+V: 1792903504
+W: webapp-20261026-001#16
+═══ */```
+
+<!-- === FILE END: ./src/db/write.js === -->
+
+<!-- === FILE START: ./src/domain/parser.js === -->
+
+## 📄 ./src/domain/parser.js
+
+```js
+/**
+ * 將銷售員字串依據對照表進行標準化
+ * @param {string} repString 原始字串 (例如: "王小明 / 123")
+ * @param {Array} salesMapping 對照表 (例如: [{ name: "王小明", aliases: ["123"] }])
+ * @returns {Array<string>} 標準化後的銷售員名稱陣列
+ */
+export function normalizeSalesRep(repString, salesMapping) {
+  if (!repString) return ["未知銷售員"];
+  
+  // 依 "/" 分割並去除空白
+  const rawNames = repString.split('/').map(s => s.trim()).filter(Boolean);
+  if (rawNames.length === 0) return ["未知銷售員"];
+
+  const resultSet = new Set();
+
+  for (const rawName of rawNames) {
+    let matched = false;
+    
+    // 尋找對照表中符合的 name 或 aliases
+    for (const mapItem of salesMapping) {
+      const isNameMatch = mapItem.name === rawName;
+      const isAliasMatch = mapItem.aliases && mapItem.aliases.includes(rawName);
+      
+      if (isNameMatch || isAliasMatch) {
+        resultSet.add(mapItem.name);
+        matched = true;
+        break;
+      }
+    }
+
+    // 若無對應，則歸為未知
+    if (!matched) {
+      resultSet.add("未知銷售員");
+    }
+  }
+
+  return Array.from(resultSet);
+}
+
+/**
+ * 解析 Excel 匯入的資料列
+ * @param {Array<string>} headers Excel 第一列的標題
+ * @param {Array<Array<any>>} rows Excel 的資料列（不含標題）
+ * @param {Array} salesMapping 銷售員對照表
+ * @param {string} defaultStatus 預設狀態 (如 "排產中")
+ * @returns {Array<Object>} 標準化後的工單物件陣列
+ */
+export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中") {
+  const nowStr = new Date().toISOString();
+  const parsedOrders = [];
+
+  // 建立表頭索引映射，方便尋找交貨日等欄位
+  // 假設 Excel 欄位：A(0) 工單、B(1) 客戶、C(2) 品名、D(3) 數量、E(4) 單價、F(5) 金額、G(6) 銷售員、H(7) 交貨日
+  // 這裡我們不寫死交貨日是哪一欄，而是讓 AI 或使用者自己決定，但預設我們可以找包含「交期」或「交貨」的欄位。
+  const dueDateIndex = headers.findIndex(h => h && (h.includes('交期') || h.includes('交貨')));
+  const salesRepIndex = 6; // 依據需求，G 欄固定為銷售員 (索引 6)
+  const orderIdIndex = 0;  // 依據需求，A 欄固定為工單號 (索引 0)
+
+  for (const row of rows) {
+    // 跳過空行
+    if (!row || row.length === 0) continue;
+
+    const orderId = String(row[orderIdIndex] || '').trim();
+    
+    // 跳過沒有工單號的行
+    if (!orderId) continue;
+
+    // 解析銷售員
+    const rawSalesRep = row[salesRepIndex] ? String(row[salesRepIndex]) : "";
+    const normalizedReps = normalizeSalesRep(rawSalesRep, salesMapping);
+
+    // 解析交貨日 (如果有找到對應欄位且該格有值)
+    let dueDate = "";
+    if (dueDateIndex !== -1 && row[dueDateIndex]) {
+      // 如果是 Excel 日期序列號，可以在此轉換，或交給上層處理
+      dueDate = String(row[dueDateIndex]).trim();
+    }
+
+    // 將其他欄位存入 details
+    const details = {};
+    headers.forEach((header, index) => {
+      // 排除 A 欄(工單號) 與 G 欄(銷售員)，避免重複
+      if (index !== orderIdIndex && index !== salesRepIndex && header) {
+        details[header] = row[index] !== undefined ? row[index] : "";
+      }
+    });
+
+    parsedOrders.push({
+      id: orderId,
+      status: defaultStatus,
+      salesReps: normalizedReps,
+      uploadDate: nowStr,
+      statusUpdateDate: nowStr,
+      dueDate: dueDate,
+      details: details
+    });
+  }
+
+  return parsedOrders;
+}
+
+/* ═══ EOF ═══
+F: src/domain/parser.js
+V: 1792903505
+W: webapp-20261026-001#17
+═══ */```
+
+<!-- === FILE END: ./src/domain/parser.js === -->
+
+<!-- === FILE START: ./src/domain/stats.js === -->
+
+## 📄 ./src/domain/stats.js
+
+```js
+/**
+ * 將工單陣列依「狀態」分組
+ * @param {Array<Object>} orders 工單陣列
+ * @param {Array<string>} allStatuses 所有可能的狀態清單（確保空狀態也有空陣列）
+ * @returns {Object} 以狀態為 key 的物件，value 為該狀態的工單陣列
+ */
+export function groupByStatus(orders, allStatuses = []) {
+  const grouped = {};
+  
+  // 先初始化所有狀態為空陣列
+  allStatuses.forEach(status => {
+    grouped[status] = [];
+  });
+
+  // 遍歷工單進行分組
+  orders.forEach(order => {
+    const status = order.status || '未知狀態';
+    if (!grouped[status]) {
+      grouped[status] = [];
+    }
+    grouped[status].push(order);
+  });
+
+  return grouped;
+}
+
+/**
+ * 將工單陣列依「銷售員」分組
+ * @param {Array<Object>} orders 工單陣列
+ * @returns {Object} 以銷售員為 key 的物件，value 為該銷售員的工單陣列
+ */
+export function groupBySalesRep(orders) {
+  const grouped = {};
+
+  orders.forEach(order => {
+    const reps = order.salesReps || ['未知銷售員'];
+    reps.forEach(rep => {
+      if (!grouped[rep]) {
+        grouped[rep] = [];
+      }
+      grouped[rep].push(order);
+    });
+  });
+
+  return grouped;
+}
+
+/**
+ * 計算總體統計數據（用於 Overview 視圖或 Stats 卡片）
+ * @param {Array<Object>} orders 工單陣列
+ * @param {Array<string>} allStatuses 所有狀態清單
+ * @returns {Object} 包含總數與各狀態數量的物件
+ */
+export function calculateStats(orders, allStatuses = []) {
+  const stats = {
+    total: orders.length,
+    byStatus: {}
+  };
+
+  allStatuses.forEach(status => {
+    stats.byStatus[status] = 0;
+  });
+
+  orders.forEach(order => {
+    const status = order.status || '未知狀態';
+    if (!stats.byStatus[status]) {
+      stats.byStatus[status] = 0;
+    }
+    stats.byStatus[status]++;
+  });
+
+  return stats;
+}
+
+/**
+ * 生成樞紐交叉表資料（用於 Overview 視圖上半部）
+ * @param {Array<Object>} orders 工單陣列
+ * @param {Array<string>} statuses 狀態清單（列）
+ * @param {Array<string>} salesReps 銷售員清單（欄）
+ * @returns {Object} 包含表頭與二維資料的物件
+ */
+export function generatePivotTable(orders, statuses = [], salesReps = []) {
+  // 建立二維陣列結構
+  const matrix = {};
+  
+  // 初始化矩陣
+  statuses.forEach(status => {
+    matrix[status] = {};
+    salesReps.forEach(rep => {
+      matrix[status][rep] = 0;
+    });
+  });
+
+  // 填充數據
+  orders.forEach(order => {
+    const status = order.status || '未知狀態';
+    const reps = order.salesReps || ['未知銷售員'];
+    
+    reps.forEach(rep => {
+      // 如果該銷售員不在表頭清單中，動態加入
+      if (!matrix[status]) {
+        matrix[status] = {};
+      }
+      if (matrix[status][rep] === undefined) {
+        matrix[status][rep] = 0;
+      }
+      matrix[status][rep]++;
+    });
+  });
+
+  return matrix;
+}
+
+/* ═══ EOF ═══
+F: src/domain/stats.js
+V: 1792903506
+W: webapp-20261026-001#18
+═══ */```
+
+<!-- === FILE END: ./src/domain/stats.js === -->
+
+<!-- === FILE START: ./src/engine/main.js === -->
+
+## 📄 ./src/engine/main.js
+
+```js
+import { initRouter } from './router.js';
+import { createIcons } from 'lucide';
+
+/**
+ * 系統啟動入口
+ * 負責等待 DOM 載入完成後，初始化路由與圖示
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  const root = document.getElementById('app-root');
+  
+  if (!root) {
+    console.error('[System Error] 找不到 #app-root 容器，無法啟動系統。');
+    return;
+  }
+
+  // 顯示初始載入動畫 (可選，這裡假設 index.html 有預設的 loading 遮罩)
+  const loadingEl = document.getElementById('app-loading');
+  if (loadingEl) {
+    loadingEl.classList.add('hidden');
+  }
+
+  try {
+    // 初始化 Lucide 圖示
+    createIcons();
+
+    // 啟動路由系統
+    initRouter();
+    
+    console.log('[System] UPGRADE-WO 系統啟動成功。');
+  } catch (error) {
+    console.error('[System Error] 系統啟動失敗:', error);
+    root.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center bg-bg text-slate-600">
+        <div class="glass-card p-8 text-center max-w-md">
+          <h2 class="text-xl font-bold text-rose-500 mb-2">系統啟動失敗</h2>
+          <p class="text-sm">請檢查 Console 錯誤訊息，或重新整理頁面。</p>
+        </div>
+      </div>
+    `;
+  }
+});
+
+/* ═══ EOF ═══
+F: src/engine/main.js
+V: 1792903518
+W: webapp-20261026-001#30
+═══ */```
+
+<!-- === FILE END: ./src/engine/main.js === -->
+
+<!-- === FILE START: ./src/engine/router.js === -->
+
+## 📄 ./src/engine/router.js
+
+```js
+import { AppState } from '../config/state.js';
+import { renderAppShell, updateNavbar } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+
+// 引入各頁面模組
+import LoginPage from '../pages/login.js';
+import KanbanPage from '../pages/kanban.js';
+import TablePage from '../pages/table.js';
+import OverviewPage from '../pages/overview.js';
+import SalespersonPage from '../pages/salesperson.js';
+import SettingsPage from '../pages/settings.js';
+
+const routes = {
+  login: LoginPage,
+  kanban: KanbanPage,
+  table: TablePage,
+  overview: OverviewPage,
+  salesperson: SalespersonPage,
+  settings: SettingsPage
+};
+
+let currentPageInstance = null;
+let isShellRendered = false;
+
+/**
+ * 處理路由變更與守衛
+ */
+function handleRoute() {
+  let hash = window.location.hash.replace('#', '') || 'kanban';
+  const user = AppState.getUser();
+
+  // 1. 登入守衛
+  if (!user) {
+    if (hash !== 'login') {
+      window.location.hash = '#login';
+      return;
+    }
+  } else {
+    // 已登入卻試圖去登入頁
+    if (hash === 'login') {
+      window.location.hash = '#kanban';
+      return;
+    }
+  }
+
+  // 2. 權限守衛 (Settings 僅限 admin)
+  if (hash === 'settings' && user && user.role !== 'admin') {
+    showToast('您沒有權限訪問系統設定', 'error');
+    window.location.hash = '#kanban';
+    return;
+  }
+
+  // 3. 渲染頁面
+  const PageClass = routes[hash];
+  if (!PageClass) {
+    window.location.hash = user ? '#kanban' : '#login';
+    return;
+  }
+
+  // 4. 處理 App Shell 與頁面切換
+  if (hash === 'login') {
+    isShellRendered = false; // 登出後重置狀態
+    if (currentPageInstance && typeof currentPageInstance.destroy === 'function') {
+      currentPageInstance.destroy();
+    }
+    currentPageInstance = PageClass;
+    currentPageInstance.render();
+  } else {
+    // 需要 App Shell 的頁面
+    if (!isShellRendered) {
+      renderAppShell({
+        user: user,
+        onLogout: handleLogout,
+        onNavigate: (route) => { window.location.hash = `#${route}`; }
+      });
+      isShellRendered = true;
+    }
+
+    // 更新導覽列高亮
+    updateNavbar(hash);
+
+    // 銷毀舊頁面
+    if (currentPageInstance && typeof currentPageInstance.destroy === 'function') {
+      currentPageInstance.destroy();
+    }
+
+    // 渲染新頁面
+    currentPageInstance = PageClass;
+    currentPageInstance.render();
+  }
+}
+
+/**
+ * 處理登出
+ */
+function handleLogout() {
+  AppState.clearUser(); // 假設 state.js 有這個方法
+  isShellRendered = false;
+  window.location.hash = '#login';
+  showToast('已登出系統', 'info');
+}
+
+/**
+ * 初始化路由
+ */
+export function initRouter() {
+  // 監聽 Hash 變更
+  window.addEventListener('hashchange', handleRoute);
+
+  // 監聽登入事件 (由 login.js 觸發)
+  window.addEventListener('auth:login', () => {
+    // 登入成功後，強制導向首頁
+    window.location.hash = '#kanban';
+  });
+
+  // 首次載入
+  handleRoute();
+}
+
+/* ═══ EOF ═══
+F: src/engine/router.js
+V: 1792903517
+W: webapp-20261026-001#29
+═══ */```
+
+<!-- === FILE END: ./src/engine/router.js === -->
+
+<!-- === FILE START: ./src/lib/io.js === -->
+
+## 📄 ./src/lib/io.js
+
+```js
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import { groupByStatus } from '../domain/stats.js';
+
+/**
+ * 將工單資料匯出為 Excel 檔案 (依狀態分 Sheet)
+ * @param {Array<Object>} orders 工單陣列
+ * @param {Array<string>} statuses 狀態清單
+ * @param {string} filename 檔案名稱 (不含副檔名)
+ */
+export function exportToExcel(orders, statuses, filename = '工單清單') {
+  if (!orders || orders.length === 0) {
+    throw new Error('無資料可匯出');
+  }
+
+  const groupedData = groupByStatus(orders, statuses);
+  const wb = XLSX.utils.book_new();
+
+  for (const status of statuses) {
+    const statusOrders = groupedData[status] || [];
+    if (statusOrders.length === 0) continue;
+
+    // 整理要輸出的欄位
+    const dataToExport = statusOrders.map(order => ({
+      '工單號碼': order.id,
+      '狀態': order.status,
+      '銷售員': (order.salesReps || []).join(', '),
+      '上傳日期': order.uploadDate || '',
+      '狀態更新日': order.statusUpdateDate || '',
+      '交貨日期': order.dueDate || '',
+      // 將 details 展開
+      ...order.details
+    }));
+
+    // 建立工作表
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    // 將工作表加入活頁簿，並以狀態名稱命名（Excel sheet 名稱限制 31 字元）
+    XLSX.utils.book_append_sheet(wb, ws, status.substring(0, 31));
+  }
+
+  // 觸發下載
+  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/**
+ * 將工單資料匯出為 PDF 檔案 (依狀態分頁或分區塊)
+ * @param {Array<Object>} orders 工單陣列
+ * @param {Array<string>} statuses 狀態清單
+ * @param {string} filename 檔案名稱 (不含副檔名)
+ */
+export function exportToPDF(orders, statuses, filename = '工單清單') {
+  if (!orders || orders.length === 0) {
+    throw new Error('無資料可匯出');
+  }
+
+  const doc = new jsPDF();
+  const groupedData = groupByStatus(orders, statuses);
+  
+  let isFirstPage = true;
+
+  for (const status of statuses) {
+    const statusOrders = groupedData[status] || [];
+    if (statusOrders.length === 0) continue;
+
+    if (!isFirstPage) {
+      doc.addPage();
+    }
+    isFirstPage = false;
+
+    // 標題
+    doc.setFontSize(16);
+    doc.text(`工序狀態：${status}`, 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+
+    let yPos = 30;
+    const lineHeight = 10;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // 表頭
+    doc.text('工單號碼', 14, yPos);
+    doc.text('銷售員', 60, yPos);
+    doc.text('交貨日', 120, yPos);
+    doc.text('上傳日', 160, yPos);
+    
+    yPos += 5;
+    doc.setLineWidth(0.5);
+    doc.line(14, yPos, 196, yPos);
+    yPos += 5;
+
+    // 內容
+    doc.setTextColor(0);
+    for (const order of statusOrders) {
+      if (yPos > pageHeight - 20) {
+        doc.addPage();
+        yPos = 20;
+        // 重新繪製表頭
+        doc.text('工單號碼', 14, yPos);
+        doc.text('銷售員', 60, yPos);
+        doc.text('交貨日', 120, yPos);
+        doc.text('上傳日', 160, yPos);
+        yPos += 5;
+        doc.line(14, yPos, 196, yPos);
+        yPos += 5;
+      }
+
+      const orderId = String(order.id).substring(0, 20);
+      const salesRep = (order.salesReps || []).join(', ').substring(0, 20);
+      const dueDate = String(order.dueDate || '').substring(0, 15);
+      const uploadDate = String(order.uploadDate || '').split('T')[0];
+
+      doc.text(orderId, 14, yPos);
+      doc.text(salesRep, 60, yPos);
+      doc.text(dueDate, 120, yPos);
+      doc.text(uploadDate, 160, yPos);
+
+      yPos += lineHeight;
+    }
+  }
+
+  // 觸發下載
+  doc.save(`${filename}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+/* ═══ EOF ═══
+F: src/lib/io.js
+V: 1792903507
+W: webapp-20261026-001#19
+═══ */```
+
+<!-- === FILE END: ./src/lib/io.js === -->
+
+<!-- === FILE START: ./src/pages/kanban.js === -->
+
+## 📄 ./src/pages/kanban.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection } from '../db/read.js';
+import { updateDocument } from '../db/write.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+import { groupByStatus, calculateStats } from '../domain/stats.js';
+import { createIcons, MoreVertical, ChevronDown, User, Calendar, Upload, CheckCircle2, AlertCircle } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 渲染頁面骨架與統計卡片
+    renderPageLayout({
+      title: '流水線進度控制台',
+      subtitle: '即時追蹤工單狀態與生產進度',
+      headerActions: `
+        <button id="btn-import-excel" class="bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          匯入 Excel
+        </button>
+      `,
+      stats: [], // 初始為空，等資料載入後更新
+      controls: '',
+      listContainerId: 'kanban-container'
+    });
+
+    createIcons({
+      icons: { Upload },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    // 匯入按鈕事件（交由外部處理，或後續實作）
+    document.getElementById('btn-import-excel')?.addEventListener('click', () => {
+      showToast('請至「系統設定」頁面進行匯入，或使用專屬匯入元件', 'info');
+    });
+
+    // 2. 初始化資料監聽
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    // 監聽 settings 取得狀態清單
+    // 監聽 work_orders 取得工單資料
+    // 為了簡化，這裡先監聽 work_orders，狀態清單我們從 settings 讀取（或使用預設）
+    
+    // 這裡使用一個內部變數來快取狀態
+    let statuses = AppState.getStatuses();
+    if (!statuses || statuses.length === 0) {
+      statuses = ['排產中', '印刷', '裁切', '品檢', '出貨'];
+    }
+
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.renderKanban(orders, statuses);
+    });
+  },
+
+  renderKanban(orders, statuses) {
+    const user = AppState.getUser();
+    const isAdmin = user && user.role === 'admin';
+    const container = document.getElementById('kanban-container');
+    if (!container) return;
+
+    // 更新統計卡片
+    const stats = calculateStats(orders, statuses);
+    const statsContainer = container.parentElement.querySelector('.grid');
+    if (statsContainer) {
+      statsContainer.innerHTML = `
+        <div class="glass-card p-5 flex flex-col gap-2">
+          <span class="text-sm text-slate-500 font-medium flex items-center gap-2">
+            <i data-lucide="clipboard-list" class="w-4 h-4 text-brand"></i> 總工單數
+          </span>
+          <span class="text-3xl font-bold text-slate-900">${stats.total}</span>
+        </div>
+        ${statuses.slice(0, 3).map(s => `
+          <div class="glass-card p-5 flex flex-col gap-2">
+            <span class="text-sm text-slate-500 font-medium flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-blue-500"></i> ${s}
+            </span>
+            <span class="text-3xl font-bold text-slate-900">${stats.byStatus[s] || 0}</span>
+          </div>
+        `).join('')}
+      `;
+      createIcons({ attrs: { class: 'w-4 h-4' } });
+    }
+
+    // 分組
+    const grouped = groupByStatus(orders, statuses);
+
+    // 渲染 Kanban
+    const boardHtml = `
+      <div class="flex gap-5 overflow-x-auto kanban-scroll pb-4 h-[calc(100vh-280px)]">
+        ${statuses.map(status => {
+          const statusOrders = grouped[status] || [];
+          return `
+            <div class="w-[300px] flex-shrink-0 flex flex-col gap-3">
+              <!-- 欄位標頭 -->
+              <div class="flex items-center justify-between px-1">
+                <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-brand"></span>
+                  ${status}
+                </h3>
+                <span class="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
+              </div>
+              
+              <!-- 工單列表 (內凹區塊) -->
+              <div class="inset-panel p-2 flex flex-col gap-2 flex-1 overflow-y-auto kanban-scroll" data-status="${status}">
+                ${statusOrders.length === 0 ? `
+                  <div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2 py-10">
+                    <i data-lucide="inbox" class="w-8 h-8 opacity-50"></i>
+                    <span class="text-sm">目前無工單</span>
+                  </div>
+                ` : ''}
+
+                ${statusOrders.map(order => this.renderCard(order, statuses, isAdmin)).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    container.innerHTML = boardHtml;
+    createIcons({
+      icons: { MoreVertical, ChevronDown, User, Calendar, Upload, CheckCircle2, AlertCircle },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    // 綁定卡片事件
+    this.bindCardEvents(statuses);
+  },
+
+  renderCard(order, statuses, isAdmin) {
+    // 取得當前狀態之外的其他狀態（供下拉選單使用）
+    const otherStatuses = statuses.filter(s => s !== order.status);
+    
+    // 格式化日期
+    const uploadDate = order.uploadDate ? order.uploadDate.split('T')[0] : '';
+    const salesReps = order.salesReps ? order.salesReps.join(', ') : '無';
+    
+    return `
+      <div class="glass-card p-4 relative group card-item" data-id="${order.id}" data-current-status="${order.status}">
+        <div class="flex justify-between items-start mb-2">
+          <span class="font-bold text-slate-900">${order.id}</span>
+          <span class="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-md">${uploadDate}</span>
+        </div>
+        
+        <div class="flex flex-col gap-1.5 mb-3">
+          ${order.details && order.details['客戶'] ? `<div class="text-sm text-slate-600">客戶：${order.details['客戶']}</div>` : ''}
+          <div class="flex items-center gap-1.5 text-xs text-slate-500">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i> ${salesReps}
+          </div>
+        </div>
+
+        ${isAdmin ? `
+          <div class="mt-3 pt-3 border-t border-slate-100">
+            <button class="w-full flex items-center justify-between text-xs font-medium text-slate-500 hover:text-brand transition-colors btn-dropdown">
+              <span>流轉工序</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 transition-transform"></i>
+            </button>
+            
+            <!-- 下拉選單 (預設隱藏) -->
+            <div class="dropdown-menu hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-100 shadow-soft rounded-xl p-1 z-10 mx-2">
+              ${otherStatuses.map(s => `
+                <button class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors btn-change-status" data-new-status="${s}">
+                  移至 ${s}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  bindCardEvents(statuses) {
+    document.querySelectorAll('.card-item').forEach(card => {
+      const btnDropdown = card.querySelector('.btn-dropdown');
+      const dropdownMenu = card.querySelector('.dropdown-menu');
+      const btnChangeStatuses = card.querySelectorAll('.btn-change-status');
+
+      if (btnDropdown && dropdownMenu) {
+        // 切換下拉選單
+        btnDropdown.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // 先關閉其他所有選單
+          document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m !== dropdownMenu) m.classList.add('hidden');
+          });
+
+          dropdownMenu.classList.toggle('hidden');
+          // 旋轉箭頭
+          const icon = btnDropdown.querySelector('i');
+          if (dropdownMenu.classList.contains('hidden')) {
+            icon.style.transform = 'rotate(0deg)';
+          } else {
+            icon.style.transform = 'rotate(180deg)';
+          }
+        });
+
+        // 點擊選項切換狀態
+        btnChangeStatuses.forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const newStatus = btn.dataset.newStatus;
+            const orderId = card.dataset.id;
+            
+            // 避免重複點擊
+            btn.disabled = true;
+            btn.textContent = '處理中...';
+
+            try {
+              // 更新資料庫 (使用 updateDocument 僅更新狀態與時間)
+              const nowStr = new Date().toISOString();
+              await updateDocument('work_orders', orderId, {
+                status: newStatus,
+                statusUpdateDate: nowStr
+              });
+              
+              showToast(`工單 ${orderId} 已流轉至【${newStatus}】`, 'success');
+              // 這裡不需要手動重新渲染，因為 read.js 的 listenCollection 會觸發重新渲染
+            } catch (error) {
+              console.error('Update status failed:', error);
+              showToast('更新狀態失敗', 'error');
+              btn.disabled = false;
+              btn.textContent = `移至 ${newStatus}`;
+            }
+          });
+        });
+      }
+    });
+
+    // 點擊空白處關閉所有選單
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(m => {
+        m.classList.add('hidden');
+        const icon = m.parentElement.querySelector('.btn-dropdown i');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      });
+    }, { once: true }); // 每次渲染時綁定一次
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    currentOrders = [];
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/kanban.js
+V: 1792903512
+W: webapp-20261026-001#24
+═══ */```
+
+<!-- === FILE END: ./src/pages/kanban.js === -->
+
+<!-- === FILE START: ./src/pages/login.js === -->
+
+## 📄 ./src/pages/login.js
+
+```js
+import { AppState } from '../config/state.js';
+import { getCollection } from '../db/read.js';
+import { showToast } from '../ui/toast.js';
+import { createIcons, Layers, Lock, User } from 'lucide';
+
+export default {
+  async render() {
+    // 這裡直接渲染到 app-content，不使用 layout.js 的側邊欄
+    const content = document.getElementById('app-content');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center -m-4 sm:-m-6 lg:-m-8 bg-bg">
+        <div class="glass-card w-full max-w-md p-8 sm:p-10 relative overflow-hidden">
+          
+          <!-- 裝飾背景 -->
+          <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand to-purple-500"></div>
+
+          <div class="flex flex-col items-center mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-brand flex items-center justify-center text-white shadow-lg shadow-brand/30 mb-4">
+              <i data-lucide="layers" class="w-7 h-7"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900">UPGRADE-WO</h1>
+            <p class="text-sm text-slate-500 mt-1">流水線進度控制台</p>
+          </div>
+
+          <form id="login-form" class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-slate-700 ml-1">帳號</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+                <input type="text" id="username" required
+                  class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+                  placeholder="請輸入帳號">
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-slate-700 ml-1">密碼</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <i data-lucide="lock" class="w-5 h-5"></i>
+                </div>
+                <input type="password" id="password" required
+                  class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+                  placeholder="請輸入密碼">
+              </div>
+            </div>
+
+            <button type="submit" id="login-btn" class="btn-primary w-full py-3 mt-2 flex justify-center items-center gap-2">
+              <span>登入系統</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    createIcons({
+      icons: { Layers, User, Lock },
+      attrs: { class: 'w-5 h-5' }
+    });
+
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('login-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const usernameInput = document.getElementById('username').value.trim();
+      const passwordInput = document.getElementById('password').value;
+      
+      if (!usernameInput || !passwordInput) {
+        showToast('請填寫帳號與密碼', 'error');
+        return;
+      }
+
+      // 變更按鈕狀態
+      const originalBtnHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-pulse">驗證中...</span>`;
+
+      try {
+        // 從 settings 集合獲取使用者清單
+        // 依據 Schema，我們假設 settings 集合中有一個 document 叫做 'users'，或者 users 是其中一個集合
+        // 這裡先嘗試獲取 settings 集合，尋找名為 'users' 的設定，或者直接尋找名為 users 的集合。
+        // 為符合原始 Schema 設計（settings 下的 users 欄位），我們用一個名為 'config' 的 document 或是直接讀取 users 屬性。
+        // 由於尚未實作 settings 頁面，我們先寫一個穩健的獲取邏輯：
+        let usersList = [];
+        try {
+          // 嘗試從 settings 集合獲取
+          const settingsData = await getCollection('settings');
+          // 尋找包含 users 的設定項，或者如果有名為 'users' 的 document
+          const userSetting = settingsData.find(s => s.id === 'users' || (s.users && Array.isArray(s.users)));
+          if (userSetting) {
+            usersList = userSetting.users || [];
+          }
+        } catch (err) {
+          console.warn('無法讀取 settings，將使用預設帳密', err);
+        }
+
+        // 若資料庫完全沒有資料（全新專案），提供預設的 admin 帳號作為 Fallback
+        if (usersList.length === 0) {
+          usersList = [{ username: "admin", password: "123456", role: "admin" }];
+        }
+
+        // 比對帳密
+        const user = usersList.find(u => u.username === usernameInput && u.password === passwordInput);
+
+        if (user) {
+          // 登入成功
+          showToast(`歡迎回來，${user.username}`, 'success');
+          AppState.setUser({ username: user.username, role: user.role });
+          
+          // 觸發自訂事件，讓 router 或 main.js 接手後續畫面切換
+          window.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
+        } else {
+          // 登入失敗
+          showToast('帳號或密碼錯誤', 'error');
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
+
+      } catch (error) {
+        console.error('Login error:', error);
+        showToast('登入過程發生錯誤', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+      }
+    });
+  },
+
+  destroy() {
+    // 表單會隨 innerHTML 被清空，無需特別清理事件
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/login.js
+V: 1792903511
+W: webapp-20261026-001#23
+═══ */```
+
+<!-- === FILE END: ./src/pages/login.js === -->
+
+<!-- === FILE START: ./src/pages/overview.js === -->
+
+## 📄 ./src/pages/overview.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection } from '../db/read.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { groupByStatus, generatePivotTable } from '../domain/stats.js';
+import { createIcons, Inbox, PieChart, LayoutDashboard } from 'lucide.js';
+
+let unsubscribe = null;
+let currentOrders = [];
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 渲染頁面骨架
+    renderPageLayout({
+      title: '總狀態視圖',
+      subtitle: '全廠工單狀態分佈與銷售員樞紐分析',
+      headerActions: '',
+      stats: [],
+      controls: '',
+      listContainerId: 'overview-container'
+    });
+
+    // 2. 初始化資料監聽
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.renderOverview(orders);
+    });
+  },
+
+  renderOverview(orders) {
+    const container = document.getElementById('overview-container');
+    if (!container) return;
+
+    const statuses = AppState.getStatuses() || ['排產中', '印刷', '裁切', '品檢', '出貨'];
+
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">目前尚無工單資料</span>
+        </div>
+      `;
+      createIcons({ icons: { Inbox }, attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
+    // 取得所有出現過的銷售員（作為樞紐表的欄）
+    const allRepsSet = new Set();
+    orders.forEach(o => {
+      (o.salesReps || ['未知銷售員']).forEach(r => allRepsSet.add(r));
+    });
+    const allReps = Array.from(allRepsSet).sort();
+
+    // 生成樞紐表數據
+    const pivotData = generatePivotTable(orders, statuses, allReps);
+    const grouped = groupByStatus(orders, statuses);
+
+    // 上半部：樞紐交叉表
+    let pivotHtml = `
+      <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+          <i data-lucide="pie-chart" class="w-5 h-5 text-brand"></i>
+          <h2 class="font-bold text-slate-800">狀態 / 銷售員 樞紐分析</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr class="border-b border-slate-200/60 text-sm font-semibold text-slate-600 bg-slate-50/30">
+                <th class="px-6 py-3 sticky left-0 bg-white/90 backdrop-blur z-10">工序狀態</th>
+                ${allReps.map(rep => `<th class="px-4 py-3 text-center whitespace-nowrap">${rep}</th>`).join('')}
+                <th class="px-6 py-3 text-center text-brand">總計</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+              ${statuses.map(status => {
+                const rowData = pivotData[status] || {};
+                let rowTotal = 0;
+                
+                const cellsHtml = allReps.map(rep => {
+                  const count = rowData[rep] || 0;
+                  rowTotal += count;
+                  return `<td class="px-4 py-3 text-center ${count > 0 ? 'font-bold text-slate-800' : 'text-slate-300'}">${count || '-'}</td>`;
+                }).join('');
+
+                return `
+                  <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3 font-medium text-slate-700 sticky left-0 bg-white/90 backdrop-blur z-10">${status}</td>
+                    ${cellsHtml}
+                    <td class="px-6 py-3 text-center font-bold text-brand">${rowTotal}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // 下半部：各狀態工單看板 (簡化版)
+    let boardHtml = `
+      <div class="flex items-center gap-2 mb-4">
+        <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand"></i>
+        <h2 class="font-bold text-slate-800">各狀態工單看板</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6">
+        ${statuses.map(status => {
+          const statusOrders = grouped[status] || [];
+          if (statusOrders.length === 0) return ''; // 若該狀態無工單則不顯示區塊
+
+          return `
+            <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden flex flex-col h-[300px]">
+              <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-brand"></span> ${status}
+                </h3>
+                <span class="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
+              </div>
+              <div class="p-3 flex flex-col gap-2 flex-1 overflow-y-auto kanban-scroll inset-panel m-3">
+                ${statusOrders.map(order => `
+                  <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-default flex justify-between items-center">
+                    <div class="flex flex-col">
+                      <span class="font-bold text-slate-800 text-sm">${order.id}</span>
+                      <span class="text-xs text-slate-500 mt-1">${(order.salesReps || []).join(', ')}</span>
+                    </div>
+                    ${order.dueDate ? `<span class="text-[10px] font-medium bg-amber-50 text-amber-600 px-2 py-1 rounded-md">${order.dueDate}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    container.innerHTML = pivotHtml + boardHtml;
+    createIcons({
+      icons: { PieChart, LayoutDashboard },
+      attrs: { class: 'w-5 h-5' }
+    });
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    currentOrders = [];
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/overview.js
+V: 1792903514
+W: webapp-20261026-001#26
+═══ */```
+
+<!-- === FILE END: ./src/pages/overview.js === -->
+
+<!-- === FILE START: ./src/pages/salesperson.js === -->
+
+## 📄 ./src/pages/salesperson.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection } from '../db/read.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { groupByStatus } from '../domain/stats.js';
+import { createIcons, Inbox, Users, UserCircle } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+let allReps = [];
+let currentRep = null;
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 渲染頁面骨架
+    renderPageLayout({
+      title: '銷售員視圖',
+      subtitle: '依銷售員檢視名下工單與狀態分佈',
+      headerActions: '',
+      stats: [],
+      controls: '',
+      listContainerId: 'salesperson-container'
+    });
+
+    // 2. 初始化資料監聽
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.extractRepsAndRender();
+    });
+  },
+
+  extractRepsAndRender() {
+    // 提取所有不重複的銷售員
+    const repsSet = new Set();
+    currentOrders.forEach(o => {
+      (o.salesReps || ['未知銷售員']).forEach(r => repsSet.add(r));
+    });
+    allReps = Array.from(repsSet).sort();
+
+    // 預設選中第一個銷售員（若還沒選過或選中的被刪除了）
+    if (allReps.length > 0 && (!currentRep || !allReps.includes(currentRep))) {
+      currentRep = allReps[0];
+    }
+
+    this.renderLayout();
+  },
+
+  renderLayout() {
+    const container = document.getElementById('salesperson-container');
+    if (!container) return;
+
+    if (allReps.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">目前尚無銷售員資料或工單</span>
+        </div>
+      `;
+      createIcons({ icons: { Inbox }, attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)]">
+        
+        <!-- 左側：銷售員清單 -->
+        <div class="w-full md:w-64 flex-shrink-0 flex flex-col bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5 text-brand"></i>
+            <h2 class="font-bold text-slate-800">銷售員清單</h2>
+          </div>
+          <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1 kanban-scroll">
+            ${allReps.map(rep => `
+              <button class="rep-item text-left px-4 py-3 rounded-xl transition-colors text-sm font-medium flex items-center justify-between ${rep === currentRep ? 'bg-brand/10 text-brand' : 'text-slate-600 hover:bg-slate-50'}" data-rep="${rep}">
+                <span>${rep}</span>
+                ${rep === currentRep ? '<span class="w-1.5 h-1.5 rounded-full bg-brand"></span>' : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 右側：該銷售員的工單狀態看板 -->
+        <div class="flex-1 flex flex-col min-w-0 bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="user-circle" class="w-5 h-5 text-brand"></i>
+              ${currentRep} 的工單
+            </h2>
+          </div>
+          <div class="flex-1 p-4 overflow-x-auto kanban-scroll flex gap-4 bg-slate-50/30" id="rep-board">
+            <!-- 由 renderRepBoard 注入 -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    createIcons({
+      icons: { Users, UserCircle },
+      attrs: { class: 'w-5 h-5' }
+    });
+
+    this.bindEvents();
+    this.renderRepBoard();
+  },
+
+  renderRepBoard() {
+    const boardContainer = document.getElementById('rep-board');
+    if (!boardContainer) return;
+
+    const statuses = AppState.getStatuses() || ['排產中', '印刷', '裁切', '品檢', '出貨'];
+    
+    // 過濾出當前選中銷售員的工單
+    const repOrders = currentOrders.filter(o => (o.salesReps || []).includes(currentRep));
+    
+    // 依狀態分組
+    const grouped = groupByStatus(repOrders, statuses);
+
+    // 僅顯示有工單的狀態，或者全部顯示（這裡選擇全部顯示，方便看出進度）
+    boardContainer.innerHTML = statuses.map(status => {
+      const statusOrders = grouped[status] || [];
+      
+      return `
+        <div class="w-[280px] flex-shrink-0 flex flex-col gap-2">
+          <div class="flex items-center justify-between px-2">
+            <h3 class="font-semibold text-slate-700 text-sm flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${statusOrders.length > 0 ? 'bg-brand' : 'bg-slate-300'}"></span>
+              ${status}
+            </h3>
+            <span class="text-xs font-medium bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
+          </div>
+          <div class="inset-panel p-2 flex flex-col gap-2 min-h-[150px] flex-1">
+            ${statusOrders.length === 0 ? `
+              <div class="flex items-center justify-center h-full text-slate-300 text-xs py-4">無</div>
+            ` : statusOrders.map(order => `
+              <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-sm">
+                <div class="font-bold text-slate-800 mb-1">${order.id}</div>
+                ${order.details && order.details['客戶'] ? `<div class="text-slate-500 text-xs mb-2">${order.details['客戶']}</div>` : ''}
+                <div class="text-[10px] text-slate-400 flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
+                  <span>交期：${order.dueDate || '-'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  bindEvents() {
+    // 點擊左側銷售員切換
+    document.querySelectorAll('.rep-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const newRep = e.currentTarget.dataset.rep;
+        if (newRep !== currentRep) {
+          currentRep = newRep;
+          // 重新渲染左側選中狀態與右側看板
+          this.renderLayout();
+        }
+      });
+    });
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    currentOrders = [];
+    allReps = [];
+    currentRep = null;
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/salesperson.js
+V: 1792903515
+W: webapp-20261026-001#27
+═══ */```
+
+<!-- === FILE END: ./src/pages/salesperson.js === -->
+
+<!-- === FILE START: ./src/pages/settings.js === -->
+
+## 📄 ./src/pages/settings.js
+
+```js
+import * as XLSX from 'xlsx';
+import { AppState } from '../config/state.js';
+import { listenDocument, getDocument } from '../db/read.js';
+import { setDocument } from '../db/write.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+import { openConfirm } from '../ui/modal.js';
+import { parseExcelData } from '../domain/parser.js';
+import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X } from 'lucide';
+
+let unsubscribe = null;
+let currentSettings = { statuses: [], sales_mapping: [], users: [] };
+let currentOrders = [];
+let activeTab = 'statuses'; // 'statuses', 'mapping', 'users', 'import'
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user || user.role !== 'admin') {
+      document.getElementById('app-content').innerHTML = '<div class="p-8 text-center text-rose-500 font-bold">您沒有權限訪問此頁面</div>';
+      return;
+    }
+
+    // 1. 渲染頁面骨架
+    renderPageLayout({
+      title: '系統設定',
+      subtitle: '管理工序狀態、銷售員對照表與系統帳號',
+      headerActions: '',
+      stats: [],
+      controls: '',
+      listContainerId: 'settings-container'
+    });
+
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    // 監聽 settings/main 設定檔
+    unsubscribe = listenDocument('settings', 'main', async (data) => {
+      if (data) {
+        currentSettings = {
+          statuses: data.statuses || ['排產中'],
+          sales_mapping: data.sales_mapping || [],
+          users: data.users || [{ username: 'admin', password: '123456', role: 'admin' }]
+        };
+      } else {
+        // 初始化預設設定
+        currentSettings = {
+          statuses: ['排產中', '印刷', '裁切', '品檢', '出貨'],
+          sales_mapping: [],
+          users: [{ username: 'admin', password: '123456', role: 'admin' }]
+        };
+        await setDocument('settings', 'main', currentSettings);
+      }
+      
+      // 更新 AppState 中的狀態（讓其他頁面能即時讀取）
+      AppState.setStatuses(currentSettings.statuses);
+
+      // 同步抓取工單資料（用於刪除狀態時的檢查）
+      const orders = await getDocument('settings', 'dummy'); // 這裡只是借用非同步
+      
+      this.renderTabs();
+    });
+  },
+
+  renderTabs() {
+    const container = document.getElementById('settings-container');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden min-h-[500px] flex flex-col md:flex-row">
+        
+        <!-- 左側設定選單 -->
+        <div class="w-full md:w-64 border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col gap-1 flex-shrink-0">
+          <button class="tab-btn ${activeTab === 'statuses' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="statuses">
+            <i data-lucide="tag" class="w-4 h-4"></i> 狀態管理
+          </button>
+          <button class="tab-btn ${activeTab === 'mapping' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="mapping">
+            <i data-lucide="users" class="w-4 h-4"></i> 對照表管理
+          </button>
+          <button class="tab-btn ${activeTab === 'users' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="users">
+            <i data-lucide="shield" class="w-4 h-4"></i> 帳號管理
+          </button>
+          <button class="tab-btn ${activeTab === 'import' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3 mt-4" data-tab="import">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 匯入 Excel
+          </button>
+        </div>
+
+        <!-- 右側內容區 -->
+        <div class="flex-1 p-6 md:p-8" id="settings-content">
+          <!-- 由 renderContent 注入 -->
+        </div>
+      </div>
+    `;
+
+    createIcons({
+      icons: { Tag, Users, Shield, FileSpreadsheet },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    this.bindTabEvents();
+    this.renderContent();
+  },
+
+  bindTabEvents() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        activeTab = e.currentTarget.dataset.tab;
+        this.renderTabs(); // 重新渲染以更新 active 樣式
+      });
+    });
+  },
+
+  renderContent() {
+    const content = document.getElementById('settings-content');
+    if (!content) return;
+
+    if (activeTab === 'statuses') {
+      this.renderStatuses(content);
+    } else if (activeTab === 'mapping') {
+      this.renderMapping(content);
+    } else if (activeTab === 'users') {
+      this.renderUsers(content);
+    } else if (activeTab === 'import') {
+      this.renderImport(content);
+    }
+  },
+
+  // ═══════════ 狀態管理 ═══════════
+  renderStatuses(container) {
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">工序狀態管理</h2>
+          <p class="text-sm text-slate-500 mt-1">可拖曳排序，刪除時會檢查是否有工單使用中。</p>
+        </div>
+      </div>
+      
+      <div class="flex gap-2 mb-6">
+        <input type="text" id="new-status-input" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="輸入新狀態名稱...">
+        <button id="btn-add-status" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增
+        </button>
+      </div>
+
+      <div class="inset-panel p-4 flex flex-col gap-2" id="status-list">
+        ${currentSettings.statuses.map((status, index) => `
+          <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm cursor-move status-item" draggable="true" data-index="${index}">
+            <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300 cursor-grab"></i>
+            <span class="flex-1 font-medium text-slate-700">${status}</span>
+            <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-status" data-status="${status}">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    createIcons({ icons: { Plus, GripVertical, Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    // 新增狀態
+    document.getElementById('btn-add-status').addEventListener('click', async () => {
+      const input = document.getElementById('new-status-input');
+      const val = input.value.trim();
+      if (!val) return;
+      if (currentSettings.statuses.includes(val)) {
+        showToast('狀態已存在', 'error');
+        return;
+      }
+      currentSettings.statuses.push(val);
+      await this.saveSettings();
+      showToast('新增成功', 'success');
+    });
+
+    // 刪除狀態
+    document.querySelectorAll('.btn-del-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const status = e.currentTarget.dataset.status;
+        
+        // 檢查是否有工單使用此狀態
+        // 由於需要精確檢查，這裡先借用全域的 listenCollection 資料，若無則臨時抓取
+        // 簡化處理：直接向資料庫查詢（或依賴之前載入的資料，但設定頁可能沒載入 orders）
+        const confirmed = await openConfirm({
+          title: '刪除狀態',
+          message: `確定要刪除「${status}」嗎？系統將檢查是否有工單處於此狀態。`,
+          isDanger: true,
+          confirmText: '檢查並刪除'
+        });
+
+        if (!confirmed) return;
+
+        // 檢查工單
+        import('../db/read.js').then(async ({ getCollection }) => {
+          const orders = await getCollection('work_orders');
+          const hasOrders = orders.some(o => o.status === status);
+          
+          if (hasOrders) {
+            showToast(`無法刪除：仍有工單處於「${status}」狀態`, 'error');
+            return;
+          }
+
+          // 執行刪除
+          currentSettings.statuses = currentSettings.statuses.filter(s => s !== status);
+          await this.saveSettings();
+          showToast('刪除成功', 'success');
+        });
+      });
+    });
+
+    // 拖曳排序邏輯
+    this.initDragAndDrop();
+  },
+
+  initDragAndDrop() {
+    const list = document.getElementById('status-list');
+    if (!list) return;
+
+    let draggedItem = null;
+
+    list.querySelectorAll('.status-item').forEach(item => {
+      item.addEventListener('dragstart', function() {
+        draggedItem = this;
+        setTimeout(() => this.classList.add('opacity-50'), 0);
+      });
+
+      item.addEventListener('dragend', function() {
+        this.classList.remove('opacity-50');
+        draggedItem = null;
+        // 取得排序後的結果並儲存
+        const newOrder = Array.from(list.querySelectorAll('.status-item')).map(el => el.querySelector('span').textContent);
+        currentSettings.statuses = newOrder;
+        window.dispatchEvent(new CustomEvent('save-settings-drag'));
+      });
+
+      item.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        if (this === draggedItem) return;
+        
+        const rect = this.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        list.insertBefore(draggedItem, next ? this.nextSibling : this);
+      });
+    });
+
+    // 綁定拖曳結束的儲存事件
+    const saveHandler = async () => {
+      window.removeEventListener('save-settings-drag', saveHandler);
+      await this.saveSettings();
+      showToast('排序已更新', 'success');
+    };
+    window.addEventListener('save-settings-drag', saveHandler);
+  },
+
+  // ═══════════ 對照表管理 ═══════════
+  renderMapping(container) {
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">銷售員對照表</h2>
+          <p class="text-sm text-slate-500 mt-1">設定別名，讓 Excel 匯入時能正確對應。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-6">
+        <input type="text" id="new-rep-name" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="正式名稱 (例：王小明)">
+        <input type="text" id="new-rep-alias" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="別名，多個請用逗號隔開 (例：123, S-123)">
+        <button id="btn-add-rep" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        ${currentSettings.sales_mapping.length === 0 ? '<div class="text-slate-400 text-sm py-4 text-center">尚無對照表資料</div>' : ''}
+        ${currentSettings.sales_mapping.map((rep, index) => `
+          <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div class="w-1/3 font-bold text-slate-800">${rep.name}</div>
+            <div class="flex-1 flex flex-wrap gap-1">
+              ${(rep.aliases || []).map(a => `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">${a}</span>`).join('')}
+            </div>
+            <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-rep" data-index="${index}">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    document.getElementById('btn-add-rep').addEventListener('click', async () => {
+      const name = document.getElementById('new-rep-name').value.trim();
+      const aliasStr = document.getElementById('new-rep-alias').value.trim();
+      if (!name) {
+        showToast('請輸入正式名稱', 'error');
+        return;
+      }
+      
+      const aliases = aliasStr ? aliasStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+      
+      currentSettings.sales_mapping.push({ name, aliases });
+      await this.saveSettings();
+      showToast('新增成功', 'success');
+    });
+
+    document.querySelectorAll('.btn-del-rep').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const idx = e.currentTarget.dataset.index;
+        currentSettings.sales_mapping.splice(idx, 1);
+        await this.saveSettings();
+        showToast('刪除成功', 'success');
+      });
+    });
+  },
+
+  // ═══════════ 帳號管理 ═══════════
+  renderUsers(container) {
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">帳號管理</h2>
+          <p class="text-sm text-slate-500 mt-1">設定登入系統的帳號與角色。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-6">
+        <input type="text" id="new-user-name" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="帳號">
+        <input type="text" id="new-user-pass" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="密碼">
+        <select id="new-user-role" class="w-1/6 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+          <option value="user">一般使用者</option>
+          <option value="admin">管理員</option>
+        </select>
+        <button id="btn-add-user" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        ${currentSettings.users.map((u, index) => `
+          <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div class="w-1/3 font-bold text-slate-800">${u.username}</div>
+            <div class="w-1/3 text-slate-500 font-mono text-sm">••••••••</div>
+            <div class="w-1/6">
+              <span class="px-2 py-1 text-xs font-medium rounded-md ${u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
+            </div>
+            <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-user" data-index="${index}" ${u.username === 'admin' ? 'disabled title="無法刪除預設 admin"' : ''}>
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    document.getElementById('btn-add-user').addEventListener('click', async () => {
+      const name = document.getElementById('new-user-name').value.trim();
+      const pass = document.getElementById('new-user-pass').value.trim();
+      const role = document.getElementById('new-user-role').value;
+      
+      if (!name || !pass) {
+        showToast('請填寫帳號與密碼', 'error');
+        return;
+      }
+      if (currentSettings.users.some(u => u.username === name)) {
+        showToast('帳號已存在', 'error');
+        return;
+      }
+      
+      currentSettings.users.push({ username: name, password: pass, role });
+      await this.saveSettings();
+      showToast('新增成功', 'success');
+    });
+
+    document.querySelectorAll('.btn-del-user').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (e.currentTarget.disabled) return;
+        const idx = e.currentTarget.dataset.index;
+        currentSettings.users.splice(idx, 1);
+        await this.saveSettings();
+        showToast('刪除成功', 'success');
+      });
+    });
+  },
+
+  // ═══════════ 匯入 Excel ═══════════
+  renderImport(container) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-8 text-center transition-colors hover:bg-slate-50 relative" id="drop-zone">
+        <input type="file" id="excel-input" accept=".xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+        <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 text-brand">
+          <i data-lucide="file-spreadsheet" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">點擊或拖曳 Excel 檔案至此</h3>
+        <p class="text-sm text-slate-500 max-w-sm">系統將會自動解析 A 欄(單號) 與 G 欄(銷售員)，並存入資料庫。若單號已存在，則會自動跳過。</p>
+      </div>
+    `;
+
+    createIcons({ icons: { FileSpreadsheet }, attrs: { class: 'w-8 h-8' } });
+
+    const fileInput = document.getElementById('excel-input');
+    
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // 轉成 array of arrays
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          if (jsonData.length < 2) {
+            showToast('Excel 檔案沒有資料', 'error');
+            return;
+          }
+
+          const headers = jsonData[0];
+          const rows = jsonData.slice(1);
+
+          showToast('解析中，請稍候...', 'info');
+
+          // 呼叫 domain/parser.js 進行解析
+          const parsedOrders = parseExcelData(headers, rows, currentSettings.sales_mapping, currentSettings.statuses[0] || '排產中');
+
+          // 防覆寫檢查與寫入
+          let addedCount = 0;
+          let skippedCount = 0;
+
+          for (const order of parsedOrders) {
+            const existing = await getDocument('work_orders', order.id);
+            if (existing) {
+              skippedCount++;
+            } else {
+              await setDocument('work_orders', order.id, order);
+              addedCount++;
+            }
+          }
+
+          showToast(`匯入完成！新增 ${addedCount} 筆，跳過 ${skippedCount} 筆重複單號。`, 'success');
+          fileInput.value = ''; // 清空 input
+
+        } catch (error) {
+          console.error('Import Error:', error);
+          showToast('匯入失敗，請檢查檔案格式', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  },
+
+  async saveSettings() {
+    await setDocument('settings', 'main', currentSettings);
+    this.renderTabs(); // 重新渲染以更新畫面
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/settings.js
+V: 1792903516
+W: webapp-20261026-001#28
+═══ */```
+
+<!-- === FILE END: ./src/pages/settings.js === -->
+
+<!-- === FILE START: ./src/pages/table.js === -->
+
+## 📄 ./src/pages/table.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection } from '../db/read.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { exportToExcel, exportToPDF } from '../lib/io.js';
+import { showToast } from '../ui/toast.js';
+import { createIcons, Download, FileText, Inbox } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 渲染頁面骨架
+    renderPageLayout({
+      title: '管理總表',
+      subtitle: '所有工單的狀態與時間追蹤列表',
+      headerActions: `
+        <div class="flex items-center gap-2">
+          <button id="btn-export-excel" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i> Excel
+          </button>
+          <button id="btn-export-pdf" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
+            <i data-lucide="file-text" class="w-4 h-4"></i> PDF
+          </button>
+        </div>
+      `,
+      stats: [],
+      controls: '',
+      listContainerId: 'table-container'
+    });
+
+    createIcons({
+      icons: { Download, FileText },
+      attrs: { class: 'w-4 h-4' }
+    });
+
+    this.bindHeaderEvents();
+
+    // 2. 初始化資料監聽
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.renderTable(orders);
+    });
+  },
+
+  renderTable(orders) {
+    const container = document.getElementById('table-container');
+    if (!container) return;
+
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">目前尚無工單資料</span>
+        </div>
+      `;
+      createIcons({ icons: { Inbox }, attrs: { class: 'w-12 h-12' } });
+      return;
+    }
+
+    // 將工單依據上傳日期或狀態排序 (這裡預設依上傳日倒序)
+    const sortedOrders = [...orders].sort((a, b) => {
+      const dateA = a.uploadDate || '';
+      const dateB = b.uploadDate || '';
+      return dateB.localeCompare(dateA);
+    });
+
+    const tableHtml = `
+      <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden flex flex-col w-full">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/60 text-sm font-semibold text-slate-600">
+                <th class="px-6 py-4 rounded-tl-[20px]">工單號碼</th>
+                <th class="px-6 py-4">當前狀態</th>
+                <th class="px-6 py-4">上傳日期</th>
+                <th class="px-6 py-4">狀態更新日</th>
+                <th class="px-6 py-4 rounded-tr-[20px]">交貨日期</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+              ${sortedOrders.map(order => {
+                const uploadDate = order.uploadDate ? order.uploadDate.split('T')[0] : '-';
+                const statusUpdateDate = order.statusUpdateDate ? order.statusUpdateDate.split('T')[0] : '-';
+                const dueDate = order.dueDate || '-';
+                
+                // 依據狀態給予不同顏色的 Badge
+                let badgeClass = 'bg-slate-100 text-slate-600';
+                if (order.status === '排產中') badgeClass = 'bg-amber-100 text-amber-700';
+                else if (order.status === '印刷') badgeClass = 'bg-blue-100 text-blue-700';
+                else if (order.status === '裁切') badgeClass = 'bg-purple-100 text-purple-700';
+                else if (order.status === '品檢') badgeClass = 'bg-orange-100 text-orange-700';
+                else if (order.status === '出貨') badgeClass = 'bg-emerald-100 text-emerald-700';
+
+                return `
+                  <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-900">${order.id}</td>
+                    <td class="px-6 py-4">
+                      <span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">
+                        ${order.status || '未知'}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500">${uploadDate}</td>
+                    <td class="px-6 py-4 text-slate-500">${statusUpdateDate}</td>
+                    <td class="px-6 py-4 font-medium ${order.dueDate ? 'text-brand' : 'text-slate-400'}">${dueDate}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-slate-50/50 px-6 py-3 border-t border-slate-100 text-xs text-slate-400 flex justify-between items-center">
+          <span>共計 ${orders.length} 筆工單</span>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = tableHtml;
+  },
+
+  bindHeaderEvents() {
+    const statuses = AppState.getStatuses() || ['排產中', '印刷', '裁切', '品檢', '出貨'];
+
+    document.getElementById('btn-export-excel')?.addEventListener('click', () => {
+      if (currentOrders.length === 0) {
+        showToast('無資料可匯出', 'info');
+        return;
+      }
+      try {
+        exportToExcel(currentOrders, statuses, 'UPGRADE_工單總表');
+        showToast('Excel 匯出成功', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Excel 匯出失敗', 'error');
+      }
+    });
+
+    document.getElementById('btn-export-pdf')?.addEventListener('click', () => {
+      if (currentOrders.length === 0) {
+        showToast('無資料可匯出', 'info');
+        return;
+      }
+      try {
+        exportToPDF(currentOrders, statuses, 'UPGRADE_工單總表');
+        showToast('PDF 匯出成功', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('PDF 匯出失敗', 'error');
+      }
+    });
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    currentOrders = [];
+  }
+};
+
+/* ═══ EOF ═══
+F: src/pages/table.js
+V: 1792903513
+W: webapp-20261026-001#25
+═══ */```
+
+<!-- === FILE END: ./src/pages/table.js === -->
+
+<!-- === FILE START: ./src/style.css === -->
+
+## 📄 ./src/style.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* 實體感卡片 */
+  .glass-card {
+    @apply bg-white rounded-[20px] border border-black/[0.04] shadow-soft transition-all duration-300;
+  }
+  
+  .glass-card:hover {
+    @apply -translate-y-0.5 shadow-lg;
+  }
+
+  /* 內凹區塊 */
+  .inset-panel {
+    @apply bg-[#F8FAFC] rounded-xl shadow-inset-soft border border-black/[0.02];
+  }
+
+  /* 主按鈕 */
+  .btn-primary {
+    @apply bg-brand text-white font-medium rounded-[10px] shadow-md shadow-brand/20 transition-all duration-150;
+  }
+  
+  .btn-primary:hover {
+    @apply bg-brand-hover;
+  }
+  
+  .btn-primary:active {
+    @apply translate-y-0.5 scale-[0.98] shadow-sm;
+  }
+
+  /* 仿 iOS Segmented Control */
+  .segmented-control {
+    @apply bg-slate-200 p-1 rounded-xl inline-flex relative;
+  }
+  
+  .segment-btn {
+    @apply px-4 py-1.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-300 z-10 cursor-pointer select-none;
+  }
+  
+  .segment-btn.active {
+    @apply text-slate-900 bg-white shadow-sm;
+  }
+}
+
+/* 隱藏滾動條 (Kanban 區域) */
+.kanban-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.kanban-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 基礎全域設定 */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══ EOF ═══
+F: src/style.css
+V: 1792903520
+W: webapp-20261026-001#32
+═══ */```
+
+<!-- === FILE END: ./src/style.css === -->
+
+<!-- === FILE START: ./src/ui/layout.js === -->
+
+## 📄 ./src/ui/layout.js
+
+```js
+import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings } from 'lucide';
+
+/**
+ * 繪製 App Shell 骨架（側邊欄、頂部導覽列）
+ * @param {Object} options
+ * @param {Object} options.user 當前登入使用者 (需含 username, role)
+ * @param {function} options.onLogout 登出回呼
+ * @param {function} options.onNavigate 切換視圖回呼 (接收 route)
+ */
+export function renderAppShell({ user, onLogout, onNavigate }) {
+  const root = document.getElementById('app-root');
+  if (!root) return;
+
+  // 清空並建立新的骨架
+  root.innerHTML = `
+    <div class="flex h-screen w-full bg-bg overflow-hidden">
+      <!-- 側邊欄 (Desktop) -->
+      <aside class="w-64 bg-white border-r border-slate-200/50 flex-col hidden md:flex z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white shadow-sm shadow-brand/30">
+              <i data-lucide="layers" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-slate-900">UPGRADE-WO</span>
+          </div>
+        </div>
+        
+        <nav class="flex-1 py-4 px-3 flex flex-col gap-1 overflow-y-auto" id="sidebar-nav">
+          <!-- 導覽按鈕由 renderNavItems 注入 -->
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+          <button id="btn-logout" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            登出系統
+          </button>
+        </div>
+      </aside>
+
+      <!-- 主內容區 -->
+      <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- 頂部導覽 (Mobile & Desktop) -->
+        <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/50 flex items-center justify-between px-4 sm:px-6 z-10">
+          <!-- Mobile Logo -->
+          <div class="flex items-center gap-2 md:hidden">
+            <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white shadow-sm">
+              <i data-lucide="layers" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold text-slate-900">UPGRADE</span>
+          </div>
+
+          <!-- 中間：iOS Segmented Control (視圖切換) - Desktop -->
+          <div class="hidden md:flex segmented-control" id="top-segmented-control">
+            <!-- 由 renderNavItems 動態注入 -->
+          </div>
+
+          <!-- 右側：使用者資訊 -->
+          <div class="flex items-center gap-3">
+            <div class="text-right hidden sm:block">
+              <div class="text-sm font-bold text-slate-700">${user.username}</div>
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">${user.role}</div>
+            </div>
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-100 to-purple-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm cursor-pointer">
+              ${user.username.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        </header>
+
+        <!-- 頁面渲染容器 -->
+        <main id="app-content" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+          <!-- 各頁面內容會注入這裡 -->
+        </main>
+      </div>
+    </div>
+  `;
+
+  // 渲染圖示
+  createIcons({
+    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings },
+    attrs: { class: 'w-5 h-5' }
+  });
+
+  // 綁定事件
+  document.getElementById('btn-logout')?.addEventListener('click', onLogout);
+
+  // 渲染導覽選單
+  renderNavItems(user.role, onNavigate);
+}
+
+/**
+ * 繪製導覽選單項目
+ */
+function renderNavItems(role, onNavigate) {
+  const routes = [
+    { id: 'kanban', label: '流水線', icon: 'layout-dashboard', roles: ['admin', 'user'] },
+    { id: 'table', label: '管理總表', icon: 'table', roles: ['admin', 'user'] },
+    { id: 'overview', label: '總狀態', icon: 'pie-chart', roles: ['admin', 'user'] },
+    { id: 'salesperson', label: '銷售員', icon: 'users', roles: ['admin', 'user'] },
+    { id: 'settings', label: '系統設定', icon: 'settings', roles: ['admin'] }
+  ];
+
+  const sidebarNav = document.getElementById('sidebar-nav');
+  const topControl = document.getElementById('top-segmented-control');
+
+  routes.forEach(route => {
+    if (!route.roles.includes(role)) return;
+
+    // 側邊欄項目
+    if (sidebarNav) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand transition-colors';
+      btn.dataset.route = route.id;
+      btn.innerHTML = `
+        <i data-lucide="${route.icon}" class="w-5 h-5"></i>
+        ${route.label}
+      `;
+      btn.addEventListener('click', () => onNavigate(route.id));
+      sidebarNav.appendChild(btn);
+    }
+
+    // 頂部 Segmented Control 項目
+    if (topControl) {
+      const segment = document.createElement('div');
+      segment.className = 'segment-btn';
+      segment.dataset.route = route.id;
+      segment.textContent = route.label;
+      segment.addEventListener('click', () => onNavigate(route.id));
+      topControl.appendChild(segment);
+    }
+  });
+
+  createIcons({
+    icons: { LayoutDashboard, Table, PieChart, Users, Settings },
+    attrs: { class: 'w-5 h-5' }
+  });
+}
+
+/**
+ * 更新當前選中的導覽狀態
+ * @param {string} activeRoute 
+ */
+export function updateNavbar(activeRoute) {
+  // 更新側邊欄
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
+    if (item.dataset.route === activeRoute) {
+      item.classList.add('bg-brand/5', 'text-brand', 'font-bold');
+      item.classList.remove('text-slate-600');
+    } else {
+      item.classList.remove('bg-brand/5', 'text-brand', 'font-bold');
+      item.classList.add('text-slate-600');
+    }
+  });
+
+  // 更新頂部 Segmented Control
+  document.querySelectorAll('#top-segmented-control .segment-btn').forEach(item => {
+    if (item.dataset.route === activeRoute) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+/**
+ * 統一的頁面佈局渲染
+ * @param {Object} options
+ * @param {string} options.title 頁面標題
+ * @param {string} options.subtitle 副標題
+ * @param {string} options.headerActions 右上角操作按鈕 HTML
+ * @param {Array} options.stats 統計卡片資料
+ * @param {string} options.controls 控制列 HTML
+ * @param {string} options.listContainerId 內容容器 ID
+ */
+export function renderPageLayout({ title, subtitle = '', headerActions = '', stats = [], controls = '', listContainerId = 'page-content' }) {
+  const container = document.getElementById('app-content');
+  if (!container) return;
+
+  let statsHtml = '';
+  if (stats && stats.length > 0) {
+    statsHtml = `
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+        ${stats.map(s => `
+          <div class="glass-card p-5 flex flex-col gap-2">
+            <span class="text-sm text-slate-500 font-medium flex items-center gap-2">
+              <i data-lucide="${s.icon || 'activity'}" class="w-4 h-4 text-brand"></i> ${s.label}
+            </span>
+            <span class="text-3xl font-bold text-slate-900">${s.value}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <!-- 標題與操作區 -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">${title}</h1>
+        ${subtitle ? `<p class="text-sm text-slate-500 mt-1">${subtitle}</p>` : ''}
+      </div>
+      <div class="flex items-center gap-3">
+        ${headerActions}
+      </div>
+    </div>
+
+    <!-- 統計卡片 -->
+    ${statsHtml}
+
+    <!-- 控制列 -->
+    ${controls ? `<div class="w-full">${controls}</div>` : ''}
+
+    <!-- 主內容容器 -->
+    <div id="${listContainerId}" class="flex-1 flex flex-col relative w-full">
+      <!-- 內容由各頁面自行渲染 -->
+    </div>
+  `;
+
+  // 重新渲染圖示
+  createIcons({
+    attrs: { class: 'w-4 h-4' }
+  });
+}
+
+/* ═══ EOF ═══
+F: src/ui/layout.js
+V: 1792903510
+W: webapp-20261026-001#22
+═══ */```
+
+<!-- === FILE END: ./src/ui/layout.js === -->
+
+<!-- === FILE START: ./src/ui/modal.js === -->
+
+## 📄 ./src/ui/modal.js
+
+```js
+import { createIcons, X } from 'lucide';
+
+/**
+ * 建立並顯示一個 Modal
+ * @param {Object} options 設定選項
+ * @param {string} options.title 標題
+ * @param {string} options.content 內容 HTML
+ * @param {function} options.onClose 關閉時的回呼
+ * @returns {Object} 包含 close 方法的物件，可手動關閉
+ */
+export function openModal({ title, content, onClose }) {
+  // 建立遮罩與容器
+  const overlay = document.createElement('div');
+  overlay.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 opacity-0';
+  
+  const modal = document.createElement('div');
+  // 使用 tailwind 的 glass-card 風格 (純白背景、圓角20px、細微邊框、柔和陰影)
+  modal.className = 'bg-white border border-slate-100 shadow-soft rounded-[20px] w-full max-w-md mx-4 overflow-hidden transform transition-transform duration-300 scale-95';
+  
+  modal.innerHTML = `
+    <div class="flex justify-between items-center p-5 border-b border-slate-100">
+      <h3 class="text-lg font-bold text-slate-900">${title}</h3>
+      <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 hover:bg-slate-100 p-1.5 rounded-full">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="p-5 text-slate-600">
+      ${content}
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  createIcons({
+    icons: { X },
+    attrs: { class: 'w-5 h-5' }
+  });
+
+  // 進場動畫
+  requestAnimationFrame(() => {
+    overlay.classList.remove('opacity-0');
+    modal.classList.remove('scale-95');
+    modal.classList.add('scale-100');
+  });
+
+  // 關閉邏輯
+  const close = () => {
+    overlay.classList.add('opacity-0');
+    modal.classList.remove('scale-100');
+    modal.classList.add('scale-95');
+    
+    setTimeout(() => {
+      overlay.remove();
+      if (typeof onClose === 'function') onClose();
+    }, 300); // 等待動畫結束
+  };
+
+  // 綁定事件
+  modal.querySelector('#modal-close-btn').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close(); // 點擊遮罩關閉
+  });
+
+  return { close, element: modal };
+}
+
+/**
+ * 顯示確認對話框 (Promise 包裝)
+ * @param {Object} options 設定選項
+ * @param {string} options.title 標題
+ * @param {string} options.message 訊息內容
+ * @param {string} options.confirmText 確認按鈕文字 (預設 '確認')
+ * @param {string} options.cancelText 取消按鈕文字 (預設 '取消')
+ * @param {boolean} options.isDanger 是否為危險操作 (紅色按鈕)
+ * @returns {Promise<boolean>} 使用者點擊確認回傳 true，取消回傳 false
+ */
+export function openConfirm({ title, message, confirmText = '確認', cancelText = '取消', isDanger = false }) {
+  return new Promise((resolve) => {
+    const btnClass = isDanger 
+      ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' 
+      : 'bg-brand hover:bg-brand-hover text-white shadow-brand/20';
+
+    const content = `
+      <p class="mb-6 text-slate-600">${message}</p>
+      <div class="flex justify-end gap-3">
+        <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+          ${cancelText}
+        </button>
+        <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 shadow-md ${btnClass}">
+          ${confirmText}
+        </button>
+      </div>
+    `;
+
+    const { close, element } = openModal({
+      title,
+      content,
+      onClose: () => resolve(false) // 若透過右上角 X 或遮罩關閉，視為取消
+    });
+
+    // 覆寫按鈕事件
+    element.querySelector('#modal-cancel-btn').addEventListener('click', () => {
+      close();
+    });
+
+    element.querySelector('#modal-confirm-btn').addEventListener('click', () => {
+      // 避免觸發 onClose 的 resolve(false)
+      element.querySelector('#modal-close-btn').removeEventListener('click', close);
+      element.parentElement.removeEventListener('click', close); 
+      
+      // 直接觸發動畫並移除
+      element.parentElement.classList.add('opacity-0');
+      element.classList.remove('scale-100');
+      element.classList.add('scale-95');
+      setTimeout(() => {
+        element.parentElement.remove();
+        resolve(true);
+      }, 300);
+    });
+  });
+}
+
+/* ═══ EOF ═══
+F: src/ui/modal.js
+V: 1792903509
+W: webapp-20261026-001#21
+═══ */```
+
+<!-- === FILE END: ./src/ui/modal.js === -->
+
+<!-- === FILE START: ./src/ui/toast.js === -->
+
+## 📄 ./src/ui/toast.js
+
+```js
+import { createIcons, CheckCircle2, Info, AlertCircle, X } from 'lucide';
+
+/**
+ * 顯示全域 Toast 提示
+ * @param {string} message 提示訊息
+ * @param {string} type 類型：'success' | 'info' | 'error' (預設 'success')
+ * @param {number} duration 顯示時間（毫秒），預設 3000
+ */
+export function showToast(message, type = 'success', duration = 3000) {
+  // 確保容器存在
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    // 置中頂部，z-index 設高，pointer-events-none 讓不點擊到時不擋路
+    container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none items-center';
+    document.body.appendChild(container);
+  }
+
+  // 建立 Toast 元素
+  const toast = document.createElement('div');
+  toast.className = 'bg-white/90 backdrop-blur-md border border-slate-200 shadow-soft rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium text-slate-700 min-w-[250px] pointer-events-auto transition-all duration-300 transform -translate-y-4 opacity-0';
+  
+  // 設定圖示與顏色
+  let iconHtml = '';
+  let iconColor = 'text-emerald-500';
+
+  if (type === 'success') {
+    iconHtml = '<i data-lucide="check-circle-2" class="w-5 h-5"></i>';
+  } else if (type === 'info') {
+    iconHtml = '<i data-lucide="info" class="w-5 h-5"></i>';
+    iconColor = 'text-blue-500';
+  } else if (type === 'error') {
+    iconHtml = '<i data-lucide="alert-circle" class="w-5 h-5"></i>';
+    iconColor = 'text-rose-500';
+  }
+
+  toast.innerHTML = `
+    <div class="${iconColor}">${iconHtml}</div>
+    <span class="flex-1">${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // 渲染 Lucide 圖示
+  // 注意：如果在 Vue/React 中，這裡會是響應式的，但我們是純 JS
+  createIcons({
+    icons: { CheckCircle2, Info, AlertCircle, X },
+    attrs: { class: 'w-5 h-5' }
+  });
+
+  // 觸發動畫 (從上滑入)
+  requestAnimationFrame(() => {
+    toast.classList.remove('-translate-y-4', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+  });
+
+  // 自動銷毀
+  setTimeout(() => {
+    // 觸發滑出動畫
+    toast.classList.remove('translate-y-0', 'opacity-100');
+    toast.classList.add('-translate-y-4', 'opacity-0');
+    
+    // 動畫結束後移除 DOM
+    toast.addEventListener('transitionend', () => {
+      toast.remove();
+      // 如果容器空了，也一併移除（可選，保持 DOM 乾淨）
+      if (container.children.length === 0) {
+        container.remove();
+      }
+    });
+  }, duration);
+}
+
+/* ═══ EOF ═══
+F: src/ui/toast.js
+V: 1792903508
+W: webapp-20261026-001#20
+═══ */```
+
+<!-- === FILE END: ./src/ui/toast.js === -->
+
+<!-- === FILE START: ./tailwind.config.js === -->
+
+## 📄 ./tailwind.config.js
+
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,html}"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          DEFAULT: '#6366F1',
+          hover: '#4F46E5',
+        },
+        bg: '#F4F7FB',
+        inset: '#F8FAFC',
+      },
+      boxShadow: {
+        'soft': '0 4px 20px -2px rgba(0,0,0,0.05)',
+        'inset-soft': 'inset 0 2px 4px 0 rgba(0,0,0,0.02)',
+      },
+      borderRadius: {
+        '2xl': '20px',
+      }
+    }
+  },
+  plugins: [],
+}
+
+/* ═══ EOF ═══
+F: tailwind.config.js
+V: 1792903500
+W: webapp-20261026-001#11
+═══ */```
+
+<!-- === FILE END: ./tailwind.config.js === -->
 
 <!-- === FILE START: ./vite.config.js === -->
 
