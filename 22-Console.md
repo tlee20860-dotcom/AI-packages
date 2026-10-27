@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 15:26:39 (HKT)
+> 生成時間：2026-10-27 16:39:47 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -269,9 +269,11 @@
             const errorPanel = document.getElementById('error-panel');
             const successPanel = document.getElementById('success-panel');
             const inputArea = document.getElementById('input-area');
+            const forceBtn = document.getElementById('btn-force-publish');
             
             errorPanel.style.display = 'none';
             successPanel.style.display = 'none';
+            forceBtn.style.display = 'none';
 
             if (!content.trim()) return alert('請先貼上內容');
 
@@ -279,7 +281,17 @@
             let repo = "", filePath = "", fullPath = "未知路徑";
             const rules = globalConfig.console_rules || {};
 
-            const pathMatch = content.match(/(?:F:|"F":)\s*"?([^\s"\n]+)"?/);
+            // 優先匹配標準的 EOF 結構 (F, V, W)
+            let eofMatch = content.match(/F:\s*([^\s\n]+)\s*\nV:\s*\d+\s*\nW:\s*[^\s\n]+/);
+            let pathMatch = null;
+            
+            if (eofMatch) {
+                // 精準提取 F 後面的路徑
+                pathMatch = eofMatch[0].match(/F:\s*([^\s\n]+)/);
+            } else {
+                // 如果找不到標準 EOF，退回舊的寬鬆匹配 (防呆用)
+                pathMatch = content.match(/(?:F:|"F":)\s*"?([^\s"\n]+)"?/);
+            }
             
             if (!pathMatch) {
                 errors.push("找不到 F: 路徑標記。請確認 AI 是否漏寫 EOF。");
@@ -316,7 +328,14 @@
             
             if (specificRule.check_forbidden_words !== false && !isRecordFile && !isCodeFile) {
                 globalForbiddenWords.forEach(word => {
-                    if (cleanContent.includes(word)) errors.push(`發現禁用詞彙：「${word}」`);
+                    // 防呆：如果是單字「略」，必須確保它不是「忽略」或「省略」等複合詞
+                    let regex;
+                    if (word === '略') {
+                        regex = /(?<!忽|省|策|戰|大|方|概)略/;
+                    } else {
+                        regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+                    }
+                    if (regex.test(cleanContent)) errors.push(`發現禁用詞彙：「${word}」`);
                 });
             }
 
@@ -336,10 +355,16 @@
                     header = (rules.error_header_format || "📄 檔案：{path}\n------------------------\n").replace("{path}", fullPath);
                 }
                 document.getElementById('error-list').textContent = header + errors.join('\n');
+
+                // 如果成功抓到 repo 與 filePath，允許強制發布
+                if (repo && filePath) {
+                    forceBtn.style.display = 'block';
+                }
             } else {
                 successPanel.style.display = 'block';
                 document.getElementById('success-message').textContent = '✅ 體檢通過！請點擊下方按鈕發布。';
                 document.getElementById('btn-publish').style.display = 'block';
+                forceBtn.style.display = 'none';
             }
         }
 
@@ -354,6 +379,11 @@
             const btn = document.getElementById('btn-publish');
             btn.disabled = false; 
             btn.textContent = '🚀 確認發布到倉庫';
+
+            const forceBtn = document.getElementById('btn-force-publish');
+            forceBtn.style.display = 'none';
+            forceBtn.disabled = false;
+            forceBtn.textContent = '🚨 強制發布（忽略錯誤）';
         }
 
         function copyError() {
@@ -361,10 +391,12 @@
             navigator.clipboard.writeText(`網頁體檢報錯：\n${errorText}`).then(() => alert('已複製錯誤訊息，請貼回對話框。'));
         }
 
-        async function publishFile() {
+        async function publishFile(isForce = false) {
             if (!currentToken) return alert('請先設定 Token');
-            const btn = document.getElementById('btn-publish');
-            btn.disabled = true; btn.textContent = '處理中...';
+            
+            let targetBtn = isForce ? document.getElementById('btn-force-publish') : document.getElementById('btn-publish');
+            const originalText = targetBtn.textContent;
+            targetBtn.disabled = true; targetBtn.textContent = '處理中...';
             
             let content = document.getElementById('file-input').value;
             const repo = document.getElementById('target-repo').value;
@@ -423,7 +455,9 @@
                 const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
                 
                 document.getElementById('success-message').innerHTML = `🎉 已成功寫入：<br><b>${repo}/${filePath}</b><br><span style="font-size:0.85rem; color:#047857; font-weight:normal;">⏱️ 寫入時間：${timeStr}</span>`;
-                btn.style.display = 'none';
+                targetBtn.style.display = 'none';
+                document.getElementById('error-panel').style.display = 'none';
+                document.getElementById('success-panel').style.display = 'block';
                 document.getElementById('btn-reset-next').style.display = 'block';
 
                 hasUnpackedChanges = true;
@@ -431,7 +465,8 @@
 
             } catch (error) {
                 alert(`發布失敗：${error.message}`);
-                btn.disabled = false; btn.textContent = '🚀 確認發布到倉庫';
+                targetBtn.disabled = false; 
+                targetBtn.textContent = originalText;
             }
         }
 
@@ -496,7 +531,7 @@
 <body>
 <div class="container">
     
-    <!-- 頂部導航列 (改為垂直排版，與下方卡片對齊) -->
+    <!-- 頂部導航列 -->
     <div class="sticky-header">
         <div class="card">
             <div class="card-title">🚀 AI 控制台</div>
@@ -523,6 +558,7 @@
             <div class="error-list" id="error-list"></div>
             <button class="btn-primary" style="background:#ef4444; margin-bottom:10px;" onclick="copyError()">📋 一鍵複製錯誤訊息</button>
             <button class="btn-primary" style="background:#64748b;" onclick="resetUI()">🔄 清除並重新貼上</button>
+            <button class="btn-danger" id="btn-force-publish" style="display:none; margin-top:10px; background:#991b1b;" onclick="publishFile(true)">🚨 強制發布（忽略錯誤）</button>
         </div>
 
         <div class="success-panel" id="success-panel">
@@ -531,7 +567,7 @@
             <input type="hidden" id="target-repo">
             <input type="hidden" id="target-file-path">
             
-            <button class="btn-success" id="btn-publish" onclick="publishFile()">🚀 確認發布到倉庫</button>
+            <button class="btn-success" id="btn-publish" onclick="publishFile(false)">🚀 確認發布到倉庫</button>
             <button class="btn-primary" id="btn-reset-next" style="display:none; margin-top:10px;" onclick="resetUI()">📝 繼續貼上下一個檔案</button>
             <button class="btn-primary" style="background:#64748b; margin-top:10px;" onclick="resetUI()">取消</button>
         </div>
@@ -572,8 +608,8 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792909900
-W: ai-system-003#49
+V: 1792910000
+W: ai-system-004
 ═══ -->```
 
 <!-- === FILE END: index.html === -->
@@ -615,7 +651,7 @@ W: ai-system-003#49
 
 ```js
 // 將版號提升到 v8，強迫手機清空舊快取
-const CACHE_NAME = 'ai-console-v8'; 
+const CACHE_NAME = 'ai-console-v9'; 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

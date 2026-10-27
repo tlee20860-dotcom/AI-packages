@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 15:26:37 (HKT)
+> 生成時間：2026-10-27 16:39:45 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -19,18 +19,18 @@
 | AI-General | docs/p92/WF-HANDOFF.md | 1792904001 | UPGRADE-001 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792904002 | UPGRADE-001 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1792908900 | ai-system-004 |
+| AI-General | docs/records/PROGRESS.md | 1792909800 | ai-system-004 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792908900 | ai-system-004 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792908900 | ai-system-004 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792908900 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792909700 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792909600 | ` |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792909900 | ` |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792907700 | ai-system-003#27 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792908900 | ai-system-004 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792905300 | ai-system-003#2 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792905500 | ai-system-003#4 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792909300 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792900147 | ai-system-20261024-013#6 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
@@ -45,7 +45,7 @@
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792901260 | webapp-20261025-001#7 |
 | AI-kernel | docs/skills/W/W-06-sop.md | 1792903300 | webapp-20261026-001#9 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
-| AI-kernel | docs/u-profile/U-00-profile.md | 1792900120 | ai-system-20261024-013#12 |
+| AI-kernel | docs/u-profile/U-00-profile.md | 1792909500 | ai-system-004 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
 | 目錄/路徑 | 檔案名稱 |
@@ -292,10 +292,10 @@
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 48 |
-| 20-SP-Sys.md | 28 |
+| 20-SP-Sys.md | 32 |
 | 21-INFRA.md | 52 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 72 |
+| 24-HISTORY.md | 76 |
 | 90-Code.md | 384 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
