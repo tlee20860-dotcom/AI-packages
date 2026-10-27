@@ -1,5 +1,5 @@
-> 體系版本：SV06
-> 生成時間：2026-10-27 08:41:51 (HKT)
+> 體系版本：SV07
+> 生成時間：2026-10-27 10:34:45 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -20,14 +20,14 @@
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792903300 | ai-system-20261026-001#13 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792903000 | ai-system-20261026-001#10 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900159 | ai-system-20261024-013#10 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792903100 | ai-system-20261026-001#11 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792906400 | ai-system-003#13 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792906300 | ai-system-003#12 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792903400 | ai-system-20261026-001#14 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792904100 | ai-system-20261026-002#10 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792904300 | ai-system-20261026-002#12 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792905300 | ai-system-003#2 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792904000 | ai-system-20261026-002#9 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792905500 | ai-system-003#4 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792900147 | ai-system-20261024-013#6 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
@@ -60,6 +60,7 @@
 | .github/workflows | notify.yml |
 | .github/workflows | pages.yml |
 | .github/workflows | setup-structure.yml |
+| .github/workflows | validate.yml |
 | config | repos.json |
 | . | index.html |
 | . | manifest.json |
@@ -265,9 +266,9 @@
 | 04-GC.md | 4 |
 | 10-WP.md | 48 |
 | 20-SP-Sys.md | 48 |
-| 21-INFRA.md | 48 |
+| 21-INFRA.md | 52 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 64 |
+| 24-HISTORY.md | 68 |
 | 90-Code.md | 384 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |

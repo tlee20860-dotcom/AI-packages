@@ -1,5 +1,5 @@
-> 體系版本：SV06
-> 生成時間：2026-10-27 08:41:53 (HKT)
+> 體系版本：SV07
+> 生成時間：2026-10-27 10:34:47 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -25,11 +25,11 @@
             --warning: #f59e0b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
         .container { max-width: 600px; margin: 0 auto; }
         
         /* Sticky Header */
-        .sticky-header { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); z-index: 100; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .sticky-header { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); z-index: 100; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
         .sticky-header .card { margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; }
         
         h1 { font-size: 1.2rem; margin-bottom: 5px; color: var(--text); }
@@ -72,12 +72,17 @@
         let triggerTime = 0;
         let pollInterval = null;
 
-        // 簡易繁簡與禁用詞對照表 (需與後端 validate-config.json 對齊)
+        // 簡易繁簡與禁用詞對照表 (用於前端快速攔截)
         const FORBIDDEN_WORDS = ["略", "保留原樣", "同上", "與前相同", "內容不變", "（省略）", "（程式碼略）", "...", "…", "參考前文", "其餘同前"];
         const SIMPLIFIED_CHARS = ["体", "实", "发", "档", "权", "检", "查", "网", "页", "库", "选", "项", "标", "准", "记", "录", "历", "史", "进", "化", "设", "计", "对", "应", "当", "总", "结", "归", "纳", "务", "动", "态", "统", "过", "将", "来", "并", "且"];
 
         window.onload = () => {
-            loadTokens(); checkBuildStatus();
+            loadTokens(); 
+            if (currentToken) {
+                checkBuildStatus();
+            } else {
+                updateStatus('build-status', '', '請先設定 Token');
+            }
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
             }
@@ -107,15 +112,16 @@
             if (newToken.isActive) currentToken = newToken.token;
             document.getElementById('new-token-name').value = ''; document.getElementById('new-token-value').value = '';
             renderTokens();
+            checkBuildStatus();
         }
         function setActive(id) {
             tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token; });
-            saveTokensToLocal(); renderTokens();
+            saveTokensToLocal(); renderTokens(); checkBuildStatus();
         }
         function deleteToken(id) {
             if (!confirm('確定刪除？')) return;
             tokenList = tokenList.filter(t => t.id !== id);
-            if (tokenList.length > 0) { setActive(tokenList[0].id); } else { currentToken = ''; saveTokensToLocal(); renderTokens(); }
+            if (tokenList.length > 0) { setActive(tokenList[0].id); } else { currentToken = ''; saveTokensToLocal(); renderTokens(); updateStatus('build-status', '', '請先設定 Token'); }
         }
         function copyToken(tokenStr) { navigator.clipboard.writeText(tokenStr).then(() => alert('已複製 Token')); }
         function renderTokens() {
@@ -159,6 +165,7 @@
 
         // === 打包 ===
         async function triggerBuild() {
+            if (!currentToken) return alert('請先設定 Token');
             const btn = document.getElementById('btn-trigger');
             btn.disabled = true; triggerTime = Date.now();
             updateStatus('build-status', 'running', '正在發送打包指令...');
@@ -174,6 +181,7 @@
         }
 
         async function checkBuildStatus() {
+            if (!currentToken) return;
             try {
                 const data = await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`);
                 if (data.workflow_runs && data.workflow_runs.length > 0) {
@@ -204,7 +212,7 @@
             if(dot) dot.className = `status-dot ${status}`; if(text) text.textContent = msg;
         }
 
-        // === 體檢與發布 ===
+        // === 體檢與發布 (含自動拼接) ===
         function processFile() {
             const content = document.getElementById('file-input').value;
             const errorPanel = document.getElementById('error-panel');
@@ -230,7 +238,8 @@
                 } else {
                     const repo = pathParts[0];
                     const filePath = pathParts.slice(1).join('/');
-                    if (!['AI-kernel', 'AI-General', 'AI-WA-UPWO', 'AI-WEB-APP-Family', 'AI-OS'].includes(repo)) { // 簡易白名單
+                    // 簡單的白名單檢查，實際可更靈活
+                    if (!['AI-kernel', 'AI-General', 'AI-WA-UPWO', 'AI-WEB-APP-Family', 'AI-OS'].includes(repo)) {
                         errors.push(`未知的倉庫目標：${repo}。請確認是否正確。`);
                     }
                     document.getElementById('target-path-display').textContent = `目標：${repo} / ${filePath}`;
@@ -239,8 +248,7 @@
                 }
             }
 
-            // 2. 簡體字與禁用詞掃描
-            // 移除程式碼區塊避免誤判
+            // 2. 簡體字與禁用詞掃描 (不掃描程式碼區塊)
             const cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
             
             FORBIDDEN_WORDS.forEach(word => {
@@ -276,27 +284,60 @@
         }
 
         async function publishFile() {
+            if (!currentToken) return alert('請先設定 Token');
             const btn = document.getElementById('btn-publish');
-            btn.disabled = true; btn.textContent = '發布中...';
+            btn.disabled = true; btn.textContent = '處理中...';
             
-            const content = document.getElementById('file-input').value;
+            let content = document.getElementById('file-input').value;
             const repo = document.getElementById('target-repo').value;
             const filePath = document.getElementById('target-file-path').value;
 
             try {
-                // 1. 取得現有檔案 SHA (若不存在則為 null，視為新建)
+                // 1. 取得現有檔案內容與 SHA
                 let sha = null;
+                let originalContent = "";
                 try {
                     const existing = await githubAPI(`/repos/${OWNER}/${repo}/contents/${filePath}`);
-                    if (existing && existing.sha) sha = existing.sha;
+                    if (existing && existing.sha) {
+                        sha = existing.sha;
+                        originalContent = decodeURIComponent(escape(atob(existing.content.replace(/\n/g, ''))));
+                    }
                 } catch (e) {
-                    if (!e.message.includes('404')) throw e; // 404 代表新檔案，忽略
+                    if (!e.message.includes('404')) throw e;
                 }
 
-                // 2. 轉 Base64 (解決中文亂碼)
-                const base64Content = btoa(unescape(encodeURIComponent(content)));
+                // 2. 處理替換或追加邏輯
+                let finalContent = content;
 
-                // 3. PUT 發布
+                // 檢查是否為替換模式
+                const patchMatch = content.match(/<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/);
+                if (patchMatch && originalContent) {
+                    const oldStr = patchMatch[1];
+                    const newStr = patchMatch[2];
+                    if (!originalContent.includes(oldStr)) {
+                        throw new Error(`找不到要替換的目標字串，可能檔案已被修改。\n目標：${oldStr.substring(0, 20)}...`);
+                    }
+                    finalContent = originalContent.replace(oldStr, newStr);
+                } 
+                // 檢查是否為追加模式
+                else if (content.includes("[APPEND]") && originalContent) {
+                    let base = originalContent;
+                    const eofIndex = base.lastIndexOf("/* ═══ EOF ═══");
+                    const mdEofIndex = base.lastIndexOf("F:");
+                    
+                    if (eofIndex > 0) base = base.substring(0, eofIndex).trim();
+                    else if (mdEofIndex > 0) {
+                        const lineStart = base.lastIndexOf("\n", mdEofIndex);
+                        if (lineStart > 0) base = base.substring(0, lineStart).trim();
+                    }
+
+                    let appendContent = content.replace("[APPEND]", "").trim();
+                    finalContent = base + "\n\n" + appendContent;
+                }
+
+                // 3. 轉 Base64 並 PUT 發布
+                const base64Content = btoa(unescape(encodeURIComponent(finalContent)));
+
                 const body = {
                     message: `Update ${filePath} via Console`,
                     content: base64Content,
@@ -319,6 +360,7 @@
 
         // === 一鍵建庫 ===
         async function createNewProject() {
+            if (!currentToken) return alert('請先設定 Token');
             const name = document.getElementById('new-repo-name').value.trim();
             const domain = document.getElementById('new-repo-domain').value;
             const pkgNo = document.getElementById('new-repo-pkg').value.trim();
@@ -331,18 +373,14 @@
             btn.disabled = true; btn.textContent = '建立中...';
 
             try {
-                // 1. 建立新倉庫 (auto_init: true 避免空庫問題)
                 await githubAPI(`/user/repos`, {
                     method: 'POST',
                     body: JSON.stringify({ name: name, private: false, auto_init: true })
                 });
 
-                // 等待兩秒讓 GitHub 生成初始 commit
                 await new Promise(r => setTimeout(r, 2000));
-
                 const v = Math.floor(Date.now() / 1000).toString();
 
-                // 2. 寫入 meta.json
                 const metaContent = JSON.stringify({
                     domain: domain,
                     pkg_no: pkgNo,
@@ -356,7 +394,6 @@
                     body: JSON.stringify({ message: 'Init meta.json', content: btoa(unescape(encodeURIComponent(metaContent))) })
                 });
 
-                // 3. 寫入 AI-General 的 WF-HANDOFF.md
                 const wfContent = `# WF-HANDOFF (${display})\n\n## 專案基礎資訊\n\n- 專案編號：${pkgNo}\n- 領域代碼：${domain}\n\n/* ═══ EOF ═══\nF: AI-General/docs/p${pkgNo}/WF-HANDOFF.md\nV: ${v}\nW: init-${pkgNo}#1\n═══ */`;
                 
                 let wfSha = null;
@@ -463,11 +500,11 @@
 </div>
 </body>
 </html>
-/* ═══ EOF ═══
+<!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792904800
-W: ai-system-20261026-002#17
-═══ */```
+V: 1792906500
+W: ai-system-003#14
+═══ -->```
 
 <!-- === FILE END: index.html === -->
 
