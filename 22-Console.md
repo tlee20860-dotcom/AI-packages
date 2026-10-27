@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 12:02:03 (HKT)
+> 生成時間：2026-10-27 12:22:24 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -30,14 +30,19 @@
         
         /* 統一卡片樣式 */
         .card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid var(--border); }
-        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        .subtitle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
         
         /* Sticky Header 專用樣式 */
-        .sticky-header { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); z-index: 100; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
-        .sticky-header .card { margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; }
-        .header-title-group { display: flex; flex-direction: column; justify-content: center; }
-        .header-title { font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .subtitle { color: var(--text-muted); font-size: 0.8rem; }
+        .sticky-header { 
+            position: sticky; 
+            top: 0; 
+            background: var(--bg); 
+            z-index: 100; 
+            padding-top: 15px; 
+            margin-top: -15px; /* 抵銷 body 的 padding-top */
+            margin-bottom: 15px; 
+        }
         
         input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: vertical; min-height: 120px; font-family: monospace; }
@@ -48,7 +53,8 @@
         .btn-danger { background-color: var(--danger); color: white; }
         .btn-small { width: auto; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; }
         
-        .status-box { padding: 10px; border-radius: 8px; background-color: #f1f5f9; margin-top: 5px; font-size: 0.75rem; display: flex; align-items: center; gap: 10px; }
+        /* 狀態框改為全寬並置中 */
+        .status-box { padding: 10px; border-radius: 8px; background-color: #f1f5f9; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; width: 100%; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--text-muted); flex-shrink: 0; }
         .status-dot.running { background-color: var(--warning); animation: pulse 1.5s infinite; }
         .status-dot.success { background-color: var(--success); }
@@ -76,8 +82,8 @@
         let tokenList = [];
         let triggerTime = 0;
         let pollInterval = null;
+        let hasUnpackedChanges = false;
 
-        // 動態載入的規則與配置
         let globalForbiddenWords = [];
         let globalConfig = { console_rules: {}, file_specific_rules: {} };
         let allowedRepos = [];
@@ -87,9 +93,12 @@
             await loadDictionaries();
             if (currentToken) checkBuildStatus();
             else updateStatus('build-status', '', '等待操作');
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
+            }
         };
 
-        // === 從遠端載入所有規則 ===
         async function loadDictionaries() {
             try {
                 const txtRes = await fetch(`${FORBIDDEN_URL}?t=${Date.now()}`);
@@ -123,7 +132,6 @@
             }
         }
 
-        // === Token 管理 ===
         function loadTokens() {
             const stored = localStorage.getItem('gh_token_list');
             if (stored) {
@@ -176,13 +184,12 @@
             });
         }
 
-        // === GitHub API (加入超時機制) ===
         async function githubAPI(url, options = {}) {
             if (!currentToken) throw new Error("未啟用 GitHub Token");
             const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `token ${currentToken.trim()}`, ...options.headers };
             
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超時
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             let res;
             try {
@@ -207,12 +214,14 @@
             return res.status === 204 ? null : await res.json();
         }
 
-        // === 打包 ===
         async function triggerBuild() {
             if (!currentToken) return alert('請先設定 Token');
             const btn = document.getElementById('btn-trigger');
             btn.disabled = true; triggerTime = Date.now();
             updateStatus('build-status', 'running', '發送指令...');
+            
+            hasUnpackedChanges = false;
+
             try {
                 await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: 'main' })
@@ -255,7 +264,6 @@
             if(dot) dot.className = `status-dot ${status}`; if(text) text.textContent = msg;
         }
 
-        // === 體檢與發布 ===
         function processFile() {
             const content = document.getElementById('file-input').value;
             const errorPanel = document.getElementById('error-panel');
@@ -412,16 +420,21 @@
                     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
                 });
 
-                document.getElementById('success-message').innerHTML = `🎉 已成功寫入：<br><b>${repo}/${filePath}</b>`;
+                const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+                
+                document.getElementById('success-message').innerHTML = `🎉 已成功寫入：<br><b>${repo}/${filePath}</b><br><span style="font-size:0.85rem; color:#047857; font-weight:normal;">⏱️ 寫入時間：${timeStr}</span>`;
                 btn.style.display = 'none';
                 document.getElementById('btn-reset-next').style.display = 'block';
+
+                hasUnpackedChanges = true;
+                updateStatus('build-status', 'running', '有新檔案！請點擊打包');
+
             } catch (error) {
                 alert(`發布失敗：${error.message}`);
                 btn.disabled = false; btn.textContent = '🚀 確認發布到倉庫';
             }
         }
 
-        // === 一鍵建庫 ===
         async function createNewProject() {
             if (!currentToken) return alert('請先設定 Token');
             const name = document.getElementById('new-repo-name').value.trim();
@@ -483,19 +496,15 @@
 <body>
 <div class="container">
     
-    <!-- 頂部導航列 -->
+    <!-- 頂部導航列 (改為垂直排版，與下方卡片對齊) -->
     <div class="sticky-header">
         <div class="card">
-            <div class="header-title-group">
-                <div class="header-title">🚀 AI 控制台</div>
-                <div class="subtitle">極簡發布與打包中心</div>
-            </div>
-            <div style="width: 120px;">
-                <button class="btn-primary" id="btn-trigger" onclick="triggerBuild()" style="padding: 8px; font-size:0.9rem;">▶️ 打包</button>
-                <div class="status-box">
-                    <div class="status-dot" id="build-status-dot"></div>
-                    <div id="build-status-text">等待操作</div>
-                </div>
+            <div class="card-title">🚀 AI 控制台</div>
+            <div class="subtitle">極簡發布與打包中心</div>
+            <button class="btn-primary" id="btn-trigger" onclick="triggerBuild()">▶️ 打包</button>
+            <div class="status-box">
+                <div class="status-dot" id="build-status-dot"></div>
+                <div id="build-status-text">等待操作</div>
             </div>
         </div>
     </div>
@@ -563,8 +572,8 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792909400
-W: ai-system-003#44
+V: 1792909900
+W: ai-system-003#49
 ═══ -->```
 
 <!-- === FILE END: index.html === -->
@@ -605,8 +614,8 @@ W: ai-system-003#44
 ## 📄 sw.js
 
 ```js
-// 將版號提升，每次大改版時改這裡（如 v6 改 v7），強迫手機清空舊快取
-const CACHE_NAME = 'ai-console-v6'; 
+// 將版號提升到 v8，強迫手機清空舊快取
+const CACHE_NAME = 'ai-console-v8'; 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -614,8 +623,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  // 強制讓新的 Service Worker 立刻接管，不等待舊的關閉
-  self.skipWaiting();
+  self.skipWaiting(); // 強制立刻接管
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -649,7 +657,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // 抓到最新版，更新快取
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
@@ -657,14 +664,13 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // 斷網時，才退回使用舊快取
           return caches.match(event.request);
         })
     );
     return;
   }
 
-  // 其他靜態資源（如圖片），採用「快取優先」
+  // 其他靜態資源
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
@@ -674,8 +680,8 @@ self.addEventListener('fetch', (event) => {
 
 /* ═══ EOF ═══
 F: AI-infra/sw.js
-V: 1792907100
-W: ai-system-003#20
+V: 1792909700
+W: ai-system-003#47
 ═══ */```
 
 <!-- === FILE END: sw.js === -->
