@@ -1,5 +1,5 @@
 > 體系版本：SV06
-> 生成時間：2026-10-26 23:06:36 (HKT)
+> 生成時間：2026-10-27 08:41:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -23,11 +23,11 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792900159 | ai-system-20261024-013#10 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792903100 | ai-system-20261026-001#11 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792903400 | ai-system-20261026-001#14 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792902700 | ai-system-20261026-001#7 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792904100 | ai-system-20261026-002#10 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792902500 | ai-system-20261026-001#4 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792904300 | ai-system-20261026-002#12 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792902400 | ai-system-20261026-001#3 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792904000 | ai-system-20261026-002#9 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792900147 | ai-system-20261024-013#6 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
@@ -74,6 +74,13 @@
 | AI-OS | E-01-engine.md |
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
+| AI-WA-UPWO | .gitignore |
+| AI-WA-UPWO | README.md |
+| AI-WA-UPWO | github/workflows/notify.yml |
+| AI-WA-UPWO | meta.json |
+| AI-WA-UPWO | package.json |
+| AI-WA-UPWO | postcss.config.js |
+| AI-WA-UPWO | vite.config.js |
 | AI-WEB-APP-Family | .github/PATCH.md |
 | AI-WEB-APP-Family | .github/workflows/apply-patch.yml |
 | AI-WEB-APP-Family | .github/workflows/cleanup.yml |
@@ -246,6 +253,7 @@
 | old-AI-WA-FAMILY | settings.html |
 | old-AI-WA-FAMILY | settlements.html |
 | old-AI-WA-FAMILY | sw.js |
+| 📄 notify.yml | 📄 notify.yml |
 
 ## 🎁 本輪生成物清單 (AI-Packages)
 | 生成物檔案 | 大小 (KB) |
@@ -265,3 +273,4 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
+| 92-Code.md | 4 |

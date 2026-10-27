@@ -1,5 +1,5 @@
 > 體系版本：SV06
-> 生成時間：2026-10-26 23:06:36 (HKT)
+> 生成時間：2026-10-27 08:41:51 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -1182,6 +1182,13 @@ jobs:
     "code": "ai-os",
     "display": "AI-OS 系統",
     "pkg_no": "91"
+  },
+  {
+    "repo": "tlee20860-dotcom/AI-WA-UPWO",
+    "domain": "W",
+    "code": "UPGRADE",
+    "display": "UPGRADE-WO",
+    "pkg_no": "92"
   }
 ]
 }
