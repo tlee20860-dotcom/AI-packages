@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 11:20:21 (HKT)
+> 生成時間：2026-10-28 13:05:29 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -18,9 +18,9 @@
 | AI-General | docs/p92/P-Architecture.md | 1792915400 | UPGRADE-002 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1792917000 | UPGRADE-002 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1792916800 | UPGRADE-002 |
-| AI-General | docs/p92/WF-PROGRESS.md | 1792916900 | UPGRADE-002 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1792918300 | UPGRADE-003 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1792918100 | UPGRADE-003 |
+| AI-General | docs/p92/WF-PROGRESS.md | 1792918200 | UPGRADE-003 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792909800 | ai-system-004 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
@@ -104,6 +104,7 @@
 | AI-WA-UPWO | src/engine/main.js |
 | AI-WA-UPWO | src/engine/router.js |
 | AI-WA-UPWO | src/lib/io.js |
+| AI-WA-UPWO | src/pages/admin-data.js |
 | AI-WA-UPWO | src/pages/category.js |
 | AI-WA-UPWO | src/pages/kanban.js |
 | AI-WA-UPWO | src/pages/login.js |
@@ -309,6 +310,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 140 |
+| 92-Code.md | 144 |
 | 92-P.md | 12 |
-| 92-SP.md | 16 |
+| 92-SP.md | 20 |

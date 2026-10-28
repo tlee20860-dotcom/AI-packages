@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 11:20:21 (HKT)
+> 生成時間：2026-10-28 13:05:29 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1045,6 +1045,7 @@ import OverviewPage from '../pages/overview.js';
 import SalespersonPage from '../pages/salesperson.js';
 import SettingsPage from '../pages/settings.js';
 import CategoryPage from '../pages/category.js';
+import AdminDataPage from '../pages/admin-data.js';
 
 const routes = {
   login: LoginPage,
@@ -1053,7 +1054,8 @@ const routes = {
   overview: OverviewPage,
   salesperson: SalespersonPage,
   settings: SettingsPage,
-  category: CategoryPage
+  category: CategoryPage,
+  'admin-data': AdminDataPage
 };
 
 let currentPageInstance = null;
@@ -1080,9 +1082,9 @@ function handleRoute() {
     }
   }
 
-  // 2. 權限守衛 (Settings 僅限 admin)
-  if (hash === 'settings' && user && user.role !== 'admin') {
-    showToast('您沒有權限訪問系統設定', 'error');
+  // 2. 權限守衛 (Settings 與 Admin-Data 僅限 admin)
+  if ((hash === 'settings' || hash === 'admin-data') && user && user.role !== 'admin') {
+    showToast('您沒有權限訪問此頁面', 'error');
     window.location.hash = '#kanban';
     return;
   }
@@ -1156,8 +1158,8 @@ export function initRouter() {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/router.js
-V: 1792912200
-W: UPGRADE-002
+V: 1792917800
+W: UPGRADE-003
 ═══ */```
 
 <!-- === FILE END: ./src/engine/router.js === -->
@@ -1328,6 +1330,143 @@ W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/lib/io.js === -->
+
+<!-- === FILE START: ./src/pages/admin-data.js === -->
+
+## 📄 ./src/pages/admin-data.js
+
+```js
+import { AppState } from '../config/state.js';
+import { listenCollection, getDocument, getCollection } from '../db/read.js';
+import { deleteDocument } from '../db/write.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+import { openConfirm } from '../ui/modal.js';
+import { renderOrderView } from '../ui/order-view.js';
+import { createIcons, Database, Trash2 } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+let schema = [];
+let viewConfig = {};
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user || user.role !== 'admin') {
+      document.getElementById('app-content').innerHTML = '<div class="p-8 text-center text-rose-500 font-bold">您沒有權限訪問此頁面</div>';
+      return;
+    }
+
+    try {
+      const settingsDoc = await getDocument('settings', 'main');
+      if (settingsDoc) {
+        schema = settingsDoc.schema || [];
+        viewConfig = settingsDoc.view_configs || {};
+      }
+    } catch (err) {}
+
+    renderPageLayout({
+      title: '資料總管',
+      subtitle: '最高權限資料檢視與清理',
+      headerActions: `
+        <button id="btn-clear-all" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-[10px] text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> 一鍵清空資料庫
+        </button>
+      `,
+      stats: [],
+      controls: '',
+      listContainerId: 'admin-data-container'
+    });
+
+    document.getElementById('btn-clear-all')?.addEventListener('click', async () => {
+      const confirmed = await openConfirm({
+        title: '清空所有資料',
+        message: '這將會永久刪除資料庫中的「所有」工單，包含所有狀態與自訂欄位，且無法復原。確定要繼續嗎？',
+        isDanger: true,
+        confirmText: '確定清空'
+      });
+
+      if (!confirmed) return;
+
+      showToast('正在清空所有資料...', 'info');
+      try {
+        const orders = await getCollection('work_orders');
+        let count = 0;
+        for (const order of orders) {
+          await deleteDocument('work_orders', order.id);
+          count++;
+        }
+        showToast(`成功清空 ${count} 筆工單資料`, 'success');
+      } catch (error) {
+        console.error('Clear all data error:', error);
+        showToast('清空失敗，請查看 Console', 'error');
+      }
+    });
+
+    createIcons({ icons: { Database, Trash2 }, attrs: { class: 'w-4 h-4' } });
+
+    window.addEventListener('refresh-admin-data', this.updateUI.bind(this));
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    if (unsubscribe) unsubscribe();
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.updateUI();
+    });
+  },
+
+  updateUI() {
+    renderOrderView({
+      containerId: 'admin-data-container',
+      orders: currentOrders,
+      visibleFields: schema.map(f => ({ ...f, isVisible: true })), // 管理員看全部欄位
+      isAdmin: true,
+      pageKey: 'admin-data',
+      onAction: async (action, id) => {
+        if (action === 'delete') {
+          const confirmed = await openConfirm({
+            title: '刪除工單',
+            message: `確定要徹底刪除工單「${id}」嗎？此操作無法復原。`,
+            isDanger: true,
+            confirmText: '確認刪除'
+          });
+          if (confirmed) {
+            try {
+              await deleteDocument('work_orders', id);
+              showToast(`工單 ${id} 已刪除`, 'success');
+            } catch (err) {
+              showToast('刪除失敗', 'error');
+            }
+          }
+        } else if (action === 'status_change') {
+          // 管理員頁面也允許直接改狀態
+          const newStatus = window.prompt('請輸入目標狀態：');
+          if (newStatus && newStatus.trim()) {
+            const { updateDocument } = await import('../db/write.js');
+            await updateDocument('work_orders', id, { status: newStatus.trim(), statusUpdateDate: new Date().toISOString() });
+            showToast('已更新生產進度', 'success');
+          }
+        }
+      }
+    });
+  },
+
+  destroy() {
+    if (unsubscribe) unsubscribe();
+    window.removeEventListener('refresh-admin-data', this.updateUI.bind(this));
+  }
+};
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/pages/admin-data.js
+V: 1792917700
+W: UPGRADE-003
+═══ */```
+
+<!-- === FILE END: ./src/pages/admin-data.js === -->
 
 <!-- === FILE START: ./src/pages/category.js === -->
 
@@ -2085,7 +2224,7 @@ import { listenDocument, getDocument, getCollection } from '../db/read.js';
 import { setDocument, updateDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
-import { openConfirm } from '../ui/modal.js';
+import { openConfirm, openModal } from '../ui/modal.js';
 import { parseExcelData } from '../domain/parser.js';
 import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X, List, Database, Edit2, AlertCircle, LayoutDashboard, Table, PieChart, Layers, Check } from 'lucide';
 
@@ -2143,7 +2282,6 @@ export default {
           }
         });
 
-        // 確保每個頁面的視圖配置有基本欄位
         Object.keys(currentSettings.view_configs).forEach(page => {
           if (!currentSettings.view_configs[page].includes('status')) {
             currentSettings.view_configs[page].unshift('status');
@@ -2155,7 +2293,6 @@ export default {
           }
         });
 
-        // 檢查是否有 overview 配置，若無則補上
         if (!currentSettings.view_configs['overview']) {
           currentSettings.view_configs['overview'] = ['id', 'status', 'salesRep', 'dueDate'];
           needSave = true;
@@ -2558,50 +2695,89 @@ export default {
       }
     });
 
+    // 修改為單一表單彈窗
     document.querySelectorAll('.btn-edit-rep').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const idx = e.currentTarget.dataset.index;
         const oldRep = currentSettings.sales_mapping[idx];
-        const newName = window.prompt(`修改正式名稱（原為「${oldRep.name}」）：`, oldRep.name);
-        if (!newName || newName.trim() === "" || newName === oldRep.name) return;
-        
-        const newAliasStr = window.prompt(`修改別名（原為「${(oldRep.aliases||[]).join(', ')}」）：`, (oldRep.aliases||[]).join(', '));
-        if (newAliasStr === null) return;
-        
-        const trimmedNewName = newName.trim();
-        const newAliases = newAliasStr.split(',').map(s => s.trim()).filter(Boolean);
 
-        showToast('正在更新設定與歷史資料...', 'info');
-        try {
-          currentSettings.sales_mapping[idx] = { name: trimmedNewName, aliases: newAliases };
-          await this.saveSettings();
+        const content = `
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-slate-700">正式名稱</label>
+              <input type="text" id="edit-rep-name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand" value="${oldRep.name}">
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-slate-700">別名 (用逗號隔開)</label>
+              <input type="text" id="edit-rep-alias" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand" value="${(oldRep.aliases||[]).join(', ')}">
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">取消</button>
+            <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover shadow-md shadow-brand/20 active:scale-95 transition-all">儲存</button>
+          </div>
+        `;
 
-          const orders = await getCollection('work_orders');
-          let updateCount = 0;
-          for (const order of orders) {
-            let reps = order.salesReps || [];
-            let changed = false;
-            if (reps.includes(oldRep.name)) {
-              reps = reps.filter(r => r !== oldRep.name);
-              reps.push(trimmedNewName);
-              changed = true;
-            }
-            (oldRep.aliases || []).forEach(alias => {
-              if (reps.includes(alias)) {
-                reps = reps.filter(r => r !== alias);
-                reps.push(trimmedNewName);
+        const { close, element } = openModal({ title: '編輯銷售員', content });
+
+        element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+
+        element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+          const newName = element.querySelector('#edit-rep-name').value.trim();
+          const newAliasStr = element.querySelector('#edit-rep-alias').value.trim();
+
+          if (!newName) {
+            showToast('正式名稱不能為空', 'error');
+            return;
+          }
+
+          if (newName === oldRep.name && newAliasStr === (oldRep.aliases||[]).join(', ')) {
+            close();
+            return;
+          }
+
+          const confirmBtn = element.querySelector('#modal-confirm-btn');
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = '更新中...';
+
+          showToast('正在更新設定與歷史資料...', 'info');
+          try {
+            const newAliases = newAliasStr.split(',').map(s => s.trim()).filter(Boolean);
+            currentSettings.sales_mapping[idx] = { name: newName, aliases: newAliases };
+            await this.saveSettings();
+
+            const orders = await getCollection('work_orders');
+            let updateCount = 0;
+            for (const order of orders) {
+              let reps = order.salesReps || [];
+              let changed = false;
+              if (reps.includes(oldRep.name)) {
+                reps = reps.filter(r => r !== oldRep.name);
+                reps.push(newName);
                 changed = true;
               }
-            });
-            if (changed) {
-              await updateDocument('work_orders', order.id, { salesReps: [...new Set(reps)] });
-              updateCount++;
+              (oldRep.aliases || []).forEach(alias => {
+                if (reps.includes(alias)) {
+                  reps = reps.filter(r => r !== alias);
+                  reps.push(newName);
+                  changed = true;
+                }
+              });
+              if (changed) {
+                await updateDocument('work_orders', order.id, { salesReps: [...new Set(reps)] });
+                updateCount++;
+              }
             }
+            showToast(`修改成功，同步更新了 ${updateCount} 筆工單`, 'success');
+            close();
+            this.renderTabs(); // 重新整理畫面
+          } catch (err) {
+            console.error(err);
+            showToast('修改失敗，請稍後再試', 'error');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '儲存';
           }
-          showToast(`修改成功，同步更新了 ${updateCount} 筆工單`, 'success');
-        } catch (err) {
-          showToast('修改失敗，請稍後再試', 'error');
-        }
+        });
       });
     });
 
@@ -2918,8 +3094,8 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1792916000
-W: UPGRADE-002
+V: 1792918000
+W: UPGRADE-003
 ═══ */```
 
 <!-- === FILE END: ./src/pages/settings.js === -->
@@ -3141,7 +3317,7 @@ W: webapp-20261026-001#32
 ## 📄 ./src/ui/layout.js
 
 ```js
-import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList } from 'lucide';
+import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database } from 'lucide';
 
 /**
  * 繪製 App Shell 骨架（側邊欄、頂部導覽列）
@@ -3243,7 +3419,7 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
 
   // 渲染圖示
   createIcons({
-    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings },
+    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Database },
     attrs: { class: 'w-5 h-5' }
   });
 
@@ -3287,7 +3463,8 @@ function renderNavItems(role, onNavigate, closeDrawer) {
     { id: 'overview', label: '總狀態', icon: 'pie-chart', roles: ['admin', 'user'] },
     { id: 'category', label: '類別視圖', icon: 'layers', roles: ['admin', 'user'] },
     { id: 'salesperson', label: '銷售員', icon: 'users', roles: ['admin', 'user'] },
-    { id: 'settings', label: '系統設定', icon: 'settings', roles: ['admin'] }
+    { id: 'settings', label: '系統設定', icon: 'settings', roles: ['admin'] },
+    { id: 'admin-data', label: '資料總管', icon: 'database', roles: ['admin'] }
   ];
 
   const sidebarNav = document.getElementById('sidebar-nav');
@@ -3326,8 +3503,8 @@ function renderNavItems(role, onNavigate, closeDrawer) {
       mobileNav.appendChild(btn);
     }
 
-    // 頂部 Segmented Control 項目
-    if (topControl) {
+    // 頂部 Segmented Control 項目 (排除 admin-data 以免太擠)
+    if (topControl && route.id !== 'admin-data') {
       const segment = document.createElement('div');
       segment.className = 'segment-btn';
       segment.dataset.route = route.id;
@@ -3338,7 +3515,7 @@ function renderNavItems(role, onNavigate, closeDrawer) {
   });
 
   createIcons({
-    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers },
+    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers, Database },
     attrs: { class: 'w-5 h-5' }
   });
 }
@@ -3348,7 +3525,7 @@ function renderNavItems(role, onNavigate, closeDrawer) {
  * @param {string} activeRoute 
  */
 export function updateNavbar(activeRoute) {
-  // 更新側邊欄
+  // 更新側邊欄與手機版側邊欄
   document.querySelectorAll('.nav-item').forEach(item => {
     if (item.dataset.route === activeRoute) {
       item.classList.add('bg-brand/5', 'text-brand', 'font-bold');
@@ -3432,8 +3609,8 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/layout.js
-V: 1792914600
-W: UPGRADE-002
+V: 1792917900
+W: UPGRADE-003
 ═══ */```
 
 <!-- === FILE END: ./src/ui/layout.js === -->
