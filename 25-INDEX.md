@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 10:57:57 (HKT)
+> 生成時間：2026-10-28 11:20:21 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -40,14 +40,14 @@
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
 | AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792902800 | ai-system-20261026-001#8 |
-| AI-kernel | docs/skills/W/W-00-startup.md | 1792903000 | webapp-20261026-001#5 |
+| AI-kernel | docs/skills/W/W-00-startup.md | 1792917101 | UPGRADE-002 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
 | AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
-| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792903200 | webapp-20261026-001#8 |
-| AI-kernel | docs/skills/W/W-04-pwa.md | 1792581005 | ai-system-20261021-004#5 |
-| AI-kernel | docs/skills/W/W-05-schema.md | 1792901260 | webapp-20261025-001#7 |
-| AI-kernel | docs/skills/W/W-06-sop.md | 1792903300 | webapp-20261026-001#9 |
-| AI-kernel | docs/skills/W/W-07-errors.md | 1792900069 | ai-system-20261024-012#104 |
+| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792917201 | UPGRADE-002 |
+| AI-kernel | docs/skills/W/W-04-pwa.md | 1792917300 | UPGRADE-002 |
+| AI-kernel | docs/skills/W/W-05-schema.md | 1792917400 | UPGRADE-002 |
+| AI-kernel | docs/skills/W/W-06-sop.md | 1792917500 | UPGRADE-002 |
+| AI-kernel | docs/skills/W/W-07-errors.md | 1792917600 | UPGRADE-002 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792909500 | ai-system-004 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
@@ -299,7 +299,7 @@
 | 02-RP.md | 72 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
-| 10-WP.md | 48 |
+| 10-WP.md | 44 |
 | 20-SP-Sys.md | 32 |
 | 21-INFRA.md | 52 |
 | 23-CHK.md | 12 |
