@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 09:29:44 (HKT)
+> 生成時間：2026-10-28 10:57:57 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -14,9 +14,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>UPGRADE-WO | 流水線進度控制台</title>
-  <meta name="description" content="先鋒印刷 - 流水線進度控制台">
+  <title>UPGRADE-WO | 生產進度控制台</title>
+  <meta name="description" content="先鋒印刷 - 生產進度控制台">
   <meta name="theme-color" content="#6366F1">
+  
+  <!-- PWA 設定檔 -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- iOS 專用 PWA Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="UPGRADE">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   
   <!-- 引入全域樣式 (由 Vite 處理) -->
   <link rel="stylesheet" href="/src/style.css">
@@ -41,7 +50,7 @@
 
 <!-- ═══ EOF ═══
 F: AI-WA-UPWO/index.html
-V: 1792912600
+V: 1792916400
 W: UPGRADE-002
 ═══ -->```
 
@@ -112,6 +121,108 @@ W: webapp-20261026-001#10
 
 <!-- === FILE END: ./postcss.config.js === -->
 
+<!-- === FILE START: ./public/manifest.json === -->
+
+## 📄 ./public/manifest.json
+
+```json
+{
+  "name": "UPGRADE-WO 生產進度控制台",
+  "short_name": "UPGRADE",
+  "description": "先鋒印刷 - 流水線進度控制台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F7FB",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "_EOF": {
+    "F": "AI-WA-UPWO/public/manifest.json",
+    "V": "1792916200",
+    "W": "UPGRADE-002"
+  }
+}```
+
+<!-- === FILE END: ./public/manifest.json === -->
+
+<!-- === FILE START: ./public/sw.js === -->
+
+## 📄 ./public/sw.js
+
+```js
+const SW_VERSION = 'v1.0.0';
+const CACHE_NAME = `upgrade-wo-cache-${SW_VERSION}`;
+
+// 安裝階段：跳過等待，立即啟用
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+// 啟用階段：清理舊版快取
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 攔截請求：Network First, fallback to Cache
+self.addEventListener('fetch', (event) => {
+  // 只處理 GET 請求
+  if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // 排除跨域請求（如 Firebase API）與 Chrome 擴充功能
+  if (url.origin !== location.origin) return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // 若請求成功，將結果存入快取
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // 若網路失敗，嘗試從快取讀取
+        return caches.match(event.request);
+      })
+  );
+});
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/public/sw.js
+V: 1792916300
+W: UPGRADE-002
+═══ */```
+
+<!-- === FILE END: ./public/sw.js === -->
+
 <!-- === FILE START: ./src/config/constants.js === -->
 
 ## 📄 ./src/config/constants.js
@@ -129,14 +240,15 @@ export const ROUTES = {
   KANBAN: 'kanban',
   TABLE: 'table',
   OVERVIEW: 'overview',
+  CATEGORY: 'category',
   SALESPERSON: 'salesperson',
   SETTINGS: 'settings'
 };
 
 /* ═══ EOF ═══
-F: src/config/constants.js
-V: 1792903522
-W: webapp-20261026-001#34
+F: AI-WA-UPWO/src/config/constants.js
+V: 1792916600
+W: UPGRADE-002
 ═══ */```
 
 <!-- === FILE END: ./src/config/constants.js === -->
@@ -778,12 +890,12 @@ W: UPGRADE-002
 
 ```js
 import { initRouter } from './router.js';
-import { getCollection, getDocument } from '../db/read.js';
+import { getCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
 
 /**
  * 系統啟動入口
- * 負責等待 DOM 載入完成後，初始化路由與背景任務
+ * 負責等待 DOM 載入完成後，初始化路由、背景任務與 PWA
  */
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('app-root');
@@ -800,12 +912,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   try {
-    // 啟動路由系統
+    // 1. 啟動路由系統
     initRouter();
     console.log('[System] UPGRADE-WO 系統啟動成功。');
 
-    // 背景任務：自動修正歷史錯誤日期
+    // 2. 背景任務：自動修正歷史錯誤日期
     fixLegacyDatesInBackground();
+
+    // 3. 註冊 Service Worker (PWA)
+    registerServiceWorker();
     
   } catch (error) {
     console.error('[System Error] 系統啟動失敗:', error);
@@ -831,11 +946,9 @@ function formatDate(val) {
   const num = Number(val);
   if (!isNaN(num) && num > 20000 && num < 80000) {
     const date = new Date((num - 25569) * 86400 * 1000);
-    if (!date.getTime || isNaN(date.getTime())) {
-      const d = new Date((num - 25569) * 86400 * 1000);
-      return d.toISOString().split('T')[0];
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
     }
-    return date.toISOString().split('T')[0];
   }
   return String(val).trim();
 }
@@ -845,11 +958,9 @@ function formatDate(val) {
  */
 async function fixLegacyDatesInBackground() {
   try {
-    // 檢查是否有管理員權限或已登入，避免未登入時報錯
     const userStr = sessionStorage.getItem('upgrade_user');
-    if (!userStr) return;
+    if (!userStr) return; // 未登入不執行
     
-    // 為了避免每次重整都掃描，可以存個標記在 localStorage，但這裡為了確保資料正確，每次啟動掃描
     const orders = await getCollection('work_orders');
     let fixCount = 0;
 
@@ -858,7 +969,7 @@ async function fixLegacyDatesInBackground() {
       const updates = {};
 
       // 檢查 uploadDate
-      if (order.uploadDate && typeof order.uploadDate === 'number' || (typeof order.uploadDate === 'string' && !order.uploadDate.includes('-'))) {
+      if (order.uploadDate && (typeof order.uploadDate === 'number' || (typeof order.uploadDate === 'string' && !order.uploadDate.includes('-')))) {
         const formatted = formatDate(order.uploadDate);
         if (formatted !== order.uploadDate && formatted !== '') {
           updates.uploadDate = formatted;
@@ -883,19 +994,35 @@ async function fixLegacyDatesInBackground() {
 
     if (fixCount > 0) {
       console.log(`[System] 背景自動修正了 ${fixCount} 筆工單的日期格式。`);
-      // 可選：觸發一個自訂事件讓當前頁面重新渲染
+      // 觸發事件讓當前頁面重新渲染
       window.dispatchEvent(new Event('data:dates-fixed'));
     }
 
   } catch (error) {
-    // 在背景靜默處理，避免干擾使用者
     console.warn('[System Background Task] 自動修正日期時發生錯誤:', error);
+  }
+}
+
+/**
+ * 註冊 Service Worker 以啟用 PWA 功能
+ */
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('[PWA] ServiceWorker 註冊成功，範圍為:', registration.scope);
+        })
+        .catch((error) => {
+          console.warn('[PWA] ServiceWorker 註冊失敗:', error);
+        });
+    });
   }
 }
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/main.js
-V: 1792912800
+V: 1792916500
 W: UPGRADE-002
 ═══ */```
 
@@ -1253,7 +1380,6 @@ export default {
     if (unsubscribe) unsubscribe();
     unsubscribe = listenCollection('work_orders', (orders) => {
       currentOrders = orders;
-      // 如果第一次載入，自動選中第一個類別
       if (!currentCategory) {
         const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
         if (cats.length > 0) currentCategory = cats[0];
@@ -1265,7 +1391,6 @@ export default {
   updateUI() {
     const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
     
-    // 若當前選中的類別不存在了，重置為第一個
     if (cats.length > 0 && !cats.includes(currentCategory)) {
       currentCategory = cats[0];
     }
@@ -1293,17 +1418,16 @@ export default {
       visibleFields: schema.filter(f => (viewConfig['category'] || []).includes(f.key)).map(f => ({ ...f, isVisible: true })),
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'category',
-      onAction: async (action, id) => {
+      onAction: async (action, id, newStatus) => {
         if (action === 'delete') {
           if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
             await deleteDocument('work_orders', id);
             showToast('已刪除', 'success');
           }
-        } else if (action === 'flow') {
-          const newStatus = window.prompt('輸入目標狀態：');
+        } else if (action === 'status_change') {
           if (newStatus) {
-            await updateDocument('work_orders', id, { status: newStatus.trim(), statusUpdateDate: new Date().toISOString() });
-            showToast('已流轉', 'success');
+            await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+            showToast('已更新生產進度', 'success');
           }
         }
       }
@@ -1318,7 +1442,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/category.js
-V: 1792914200
+V: 1792915200
 W: UPGRADE-002
 ═══ */```
 
@@ -1388,7 +1512,6 @@ export default {
       this.updateUI();
     });
 
-    // 監聽全域刷新 (由 order-view 觸發)
     window.addEventListener('refresh-kanban', this.updateUI.bind(this));
     createIcons({ icons: { Upload }, attrs: { class: 'w-4 h-4' } });
 
@@ -1441,9 +1564,9 @@ export default {
             await deleteDocument('work_orders', id);
             showToast('已刪除', 'success');
           }
-        } else if (action === 'flow') {
+        } else if (action === 'status_change') {
           if (newStatus) {
-            await updateDocument('work_orders', id, { status: newStatus.trim(), statusUpdateDate: new Date().toISOString() });
+            await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
             showToast('已更新生產進度', 'success');
           }
         }
@@ -1474,6 +1597,7 @@ export default {
 
         for (const order of parsed) {
           if (await getDocument('work_orders', order.id)) {
+            // 若存在，僅更新 Excel 相關欄位，保留狀態
             await updateDocument('work_orders', order.id, { salesReps: order.salesReps, uploadDate: order.uploadDate, data: order.data });
             updated++;
           } else {
@@ -1498,7 +1622,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/kanban.js
-V: 1792914700
+V: 1792915000
 W: UPGRADE-002
 ═══ */```
 
@@ -1659,20 +1783,32 @@ W: UPGRADE-002
 
 ```js
 import { AppState } from '../config/state.js';
-import { listenCollection } from '../db/read.js';
+import { listenCollection, getDocument } from '../db/read.js';
+import { updateDocument, deleteDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
-import { groupByStatus, generatePivotTable } from '../domain/stats.js';
+import { showToast } from '../ui/toast.js';
+import { openConfirm } from '../ui/modal.js';
+import { renderOrderView } from '../ui/order-view.js';
+import { groupByStatus, calculateStats, generatePivotTable } from '../domain/stats.js';
 import { createIcons, Inbox, PieChart, LayoutDashboard } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
+let schema = [];
+let viewConfig = {};
 
 export default {
   async render() {
-    const user = AppState.getUser();
-    if (!user) return;
+    if (!AppState.getUser()) return;
 
-    // 1. 渲染頁面骨架
+    try {
+      const settingsDoc = await getDocument('settings', 'main');
+      if (settingsDoc) {
+        schema = settingsDoc.schema || [];
+        viewConfig = settingsDoc.view_configs || {};
+      }
+    } catch (err) {}
+
     renderPageLayout({
       title: '總狀態視圖',
       subtitle: '全廠工單狀態分佈與銷售員樞紐分析',
@@ -1682,24 +1818,30 @@ export default {
       listContainerId: 'overview-container'
     });
 
-    // 2. 初始化資料監聽
+    window.addEventListener('refresh-overview', this.updateUI.bind(this));
+
     this.initDataListener();
   },
 
   initDataListener() {
+    if (unsubscribe) unsubscribe();
     unsubscribe = listenCollection('work_orders', (orders) => {
       currentOrders = orders;
-      this.renderOverview(orders);
+      this.updateUI();
     });
   },
 
-  renderOverview(orders) {
+  updateUI() {
     const container = document.getElementById('overview-container');
     if (!container) return;
 
-    const statuses = AppState.getStatuses() || ['排產中', '印刷', '裁切', '品檢', '出貨'];
+    // 過濾垃圾資料
+    const cleanOrders = currentOrders.filter(o => {
+      const id = String(o.id || '');
+      return id && !id.includes('***') && !id.includes('訂單');
+    });
 
-    if (orders.length === 0) {
+    if (cleanOrders.length === 0) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
           <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
@@ -1710,18 +1852,16 @@ export default {
       return;
     }
 
-    // 取得所有出現過的銷售員（作為樞紐表的欄）
+    const statuses = AppState.getStatuses() || [];
+
+    // 1. 上半部：狀態 / 銷售員 樞紐分析
     const allRepsSet = new Set();
-    orders.forEach(o => {
-      (o.salesReps || ['未知銷售員']).forEach(r => allRepsSet.add(r));
+    cleanOrders.forEach(o => {
+      (o.salesReps || ['未填寫']).forEach(r => allRepsSet.add(r));
     });
     const allReps = Array.from(allRepsSet).sort();
+    const pivotData = generatePivotTable(cleanOrders, statuses, allReps);
 
-    // 生成樞紐表數據
-    const pivotData = generatePivotTable(orders, statuses, allReps);
-    const grouped = groupByStatus(orders, statuses);
-
-    // 上半部：樞紐交叉表
     let pivotHtml = `
       <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden mb-6">
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
@@ -1762,61 +1902,51 @@ export default {
       </div>
     `;
 
-    // 下半部：各狀態工單看板 (簡化版)
-    let boardHtml = `
-      <div class="flex items-center gap-2 mb-4">
+    // 2. 下半部：工單動態列表 (使用 order-view)
+    let listHtml = `
+      <div class="flex items-center gap-2 mb-4 mt-8">
         <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand"></i>
-        <h2 class="font-bold text-slate-800">各狀態工單看板</h2>
+        <h2 class="font-bold text-slate-800">工單狀態列表</h2>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6">
-        ${statuses.map(status => {
-          const statusOrders = grouped[status] || [];
-          if (statusOrders.length === 0) return ''; // 若該狀態無工單則不顯示區塊
-
-          return `
-            <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden flex flex-col h-[300px]">
-              <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-brand"></span> ${status}
-                </h3>
-                <span class="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">${statusOrders.length}</span>
-              </div>
-              <div class="p-3 flex flex-col gap-2 flex-1 overflow-y-auto kanban-scroll inset-panel m-3">
-                ${statusOrders.map(order => `
-                  <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-default flex justify-between items-center">
-                    <div class="flex flex-col">
-                      <span class="font-bold text-slate-800 text-sm">${order.id}</span>
-                      <span class="text-xs text-slate-500 mt-1">${(order.salesReps || []).join(', ')}</span>
-                    </div>
-                    ${order.dueDate ? `<span class="text-[10px] font-medium bg-amber-50 text-amber-600 px-2 py-1 rounded-md">${order.dueDate}</span>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
+      <div id="overview-list-container"></div>
     `;
 
-    container.innerHTML = pivotHtml + boardHtml;
-    createIcons({
-      icons: { PieChart, LayoutDashboard },
-      attrs: { class: 'w-5 h-5' }
+    container.innerHTML = pivotHtml + listHtml;
+
+    createIcons({ icons: { PieChart, LayoutDashboard }, attrs: { class: 'w-5 h-5' } });
+
+    // 渲染下半部的工單列表
+    renderOrderView({
+      containerId: 'overview-list-container',
+      orders: cleanOrders,
+      visibleFields: schema.filter(f => (viewConfig['overview'] || ['id', 'status', 'salesReps', 'dueDate']).includes(f.key)).map(f => ({ ...f, isVisible: true })),
+      isAdmin: AppState.getUser()?.role === 'admin',
+      pageKey: 'overview',
+      onAction: async (action, id, newStatus) => {
+        if (action === 'delete') {
+          if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
+            await deleteDocument('work_orders', id);
+            showToast('已刪除', 'success');
+          }
+        } else if (action === 'status_change') {
+          if (newStatus) {
+            await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+            showToast('已更新生產進度', 'success');
+          }
+        }
+      }
     });
   },
 
   destroy() {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-    currentOrders = [];
+    if (unsubscribe) unsubscribe();
+    window.removeEventListener('refresh-overview', this.updateUI.bind(this));
   }
 };
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/overview.js
-V: 1792909600
+V: 1792915900
 W: UPGRADE-002
 ═══ */```
 
@@ -1914,17 +2044,16 @@ export default {
       visibleFields: schema.filter(f => (viewConfig['salesperson'] || []).includes(f.key)).map(f => ({ ...f, isVisible: true })),
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'salesperson',
-      onAction: async (action, id) => {
+      onAction: async (action, id, newStatus) => {
         if (action === 'delete') {
           if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
             await deleteDocument('work_orders', id);
             showToast('已刪除', 'success');
           }
-        } else if (action === 'flow') {
-          const newStatus = window.prompt('輸入目標狀態：');
+        } else if (action === 'status_change') {
           if (newStatus) {
-            await updateDocument('work_orders', id, { status: newStatus.trim(), statusUpdateDate: new Date().toISOString() });
-            showToast('已流轉', 'success');
+            await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+            showToast('已更新生產進度', 'success');
           }
         }
       }
@@ -1939,7 +2068,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/salesperson.js
-V: 1792914400
+V: 1792915300
 W: UPGRADE-002
 ═══ */```
 
@@ -1962,7 +2091,7 @@ import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users
 
 let unsubscribe = null;
 let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [], view_configs: {} };
-let activeTab = 'statuses'; // 'statuses', 'mapping', 'schema', 'users', 'view_config', 'data', 'import'
+let activeTab = 'statuses';
 
 export default {
   async render() {
@@ -1972,7 +2101,6 @@ export default {
       return;
     }
 
-    // 1. 渲染頁面骨架
     renderPageLayout({
       title: '系統設定',
       subtitle: '管理工序狀態、銷售員對照表、系統欄位與帳號',
@@ -1982,15 +2110,13 @@ export default {
       listContainerId: 'settings-container'
     });
 
-    // 2. 優先渲染 UI 骨架
     this.renderTabs();
-
-    // 3. 初始化資料監聽
     this.initDataListener();
   },
 
   initDataListener() {
     unsubscribe = listenDocument('settings', 'main', async (data) => {
+      let needSave = false;
       if (data) {
         currentSettings = {
           statuses: data.statuses || ['排產中'],
@@ -1999,6 +2125,42 @@ export default {
           schema: data.schema || this.getDefaultSchema(),
           view_configs: data.view_configs || this.getDefaultViewConfigs()
         };
+        
+        // 自動補齊核心欄位與視圖配置
+        const requiredSysFields = [
+          { key: 'id', label: '發票', type: 'string', isSystem: true },
+          { key: 'uploadDate', label: '日期', type: 'date', isSystem: true },
+          { key: 'salesRep', label: '我方備考', type: 'string', isSystem: true },
+          { key: 'status', label: '生產進度', type: 'string', isSystem: true },
+          { key: 'dueDate', label: '交貨日期', type: 'date', isSystem: true },
+          { key: 'statusUpdateDate', label: '更新日期', type: 'date', isSystem: true }
+        ];
+
+        requiredSysFields.forEach(req => {
+          if (!currentSettings.schema.some(f => f.key === req.key)) {
+            currentSettings.schema.unshift(req);
+            needSave = true;
+          }
+        });
+
+        // 確保每個頁面的視圖配置有基本欄位
+        Object.keys(currentSettings.view_configs).forEach(page => {
+          if (!currentSettings.view_configs[page].includes('status')) {
+            currentSettings.view_configs[page].unshift('status');
+            needSave = true;
+          }
+          if (!currentSettings.view_configs[page].includes('dueDate') && page !== 'kanban') {
+            currentSettings.view_configs[page].push('dueDate');
+            needSave = true;
+          }
+        });
+
+        // 檢查是否有 overview 配置，若無則補上
+        if (!currentSettings.view_configs['overview']) {
+          currentSettings.view_configs['overview'] = ['id', 'status', 'salesRep', 'dueDate'];
+          needSave = true;
+        }
+
       } else {
         currentSettings = {
           statuses: ['排產中', '印刷', '裁切', '品檢', '出貨'],
@@ -2007,9 +2169,13 @@ export default {
           schema: this.getDefaultSchema(),
           view_configs: this.getDefaultViewConfigs()
         };
-        await setDocument('settings', 'main', currentSettings);
+        needSave = true;
       }
       
+      if (needSave) {
+        await setDocument('settings', 'main', currentSettings);
+      }
+
       AppState.setStatuses(currentSettings.statuses);
       this.renderTabs();
     });
@@ -2020,6 +2186,9 @@ export default {
       { key: 'id', label: '發票', type: 'string', isSystem: true },
       { key: 'uploadDate', label: '日期', type: 'date', isSystem: true },
       { key: 'salesRep', label: '我方備考', type: 'string', isSystem: true },
+      { key: 'status', label: '生產進度', type: 'string', isSystem: true },
+      { key: 'dueDate', label: '交貨日期', type: 'date', isSystem: true },
+      { key: 'statusUpdateDate', label: '更新日期', type: 'date', isSystem: true },
       { key: 'amount', label: '金額', type: 'number', isSystem: false },
       { key: 'customCategory', label: '類別', type: 'string', isSystem: false },
       { key: 'customerNameZh', label: '中文名稱', type: 'string', isSystem: false },
@@ -2032,7 +2201,8 @@ export default {
       kanban: ['id', 'status', 'customerNameZh', 'salesRep', 'dueDate'],
       table: ['id', 'customCategory', 'status', 'uploadDate', 'dueDate', 'amount', 'customerNameZh', 'customerNameEn'],
       category: ['id', 'customCategory', 'status', 'dueDate'],
-      salesperson: ['id', 'customCategory', 'status', 'dueDate']
+      salesperson: ['id', 'customCategory', 'status', 'dueDate'],
+      overview: ['id', 'status', 'salesRep', 'dueDate']
     };
   },
 
@@ -2043,7 +2213,6 @@ export default {
     container.innerHTML = `
       <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden min-h-[500px] flex flex-col md:flex-row">
         
-        <!-- 左側設定選單 -->
         <div class="w-full md:w-64 border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col gap-1 flex-shrink-0 overflow-y-auto">
           <button class="tab-btn ${activeTab === 'statuses' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="statuses">
             <i data-lucide="tag" class="w-4 h-4"></i> 狀態管理
@@ -2074,10 +2243,7 @@ export default {
           </button>
         </div>
 
-        <!-- 右側內容區 -->
-        <div class="flex-1 p-6 md:p-8" id="settings-content">
-          <!-- 由 renderContent 注入 -->
-        </div>
+        <div class="flex-1 p-6 md:p-8" id="settings-content"></div>
       </div>
     `;
 
@@ -2112,11 +2278,11 @@ export default {
     else if (activeTab === 'import') this.renderImport(content);
   },
 
-  // ═══════════ 視圖配置（全新功能） ═══════════
   renderViewConfig(container) {
     const pages = [
-      { key: 'kanban', label: '流水線進度控制台', icon: 'layout-dashboard' },
+      { key: 'kanban', label: '工單進度表', icon: 'layout-dashboard' },
       { key: 'table', label: '管理總表', icon: 'table' },
+      { key: 'overview', label: '總狀態視圖', icon: 'pie-chart' },
       { key: 'category', label: '類別視圖', icon: 'layers' },
       { key: 'salesperson', label: '銷售員視圖', icon: 'users' }
     ];
@@ -2155,7 +2321,7 @@ export default {
       </div>
     `;
 
-    createIcons({ icons: { LayoutDashboard, Table, Layers, Users }, attrs: { class: 'w-5 h-5' } });
+    createIcons({ icons: { LayoutDashboard, Table, Layers, Users, PieChart }, attrs: { class: 'w-5 h-5' } });
 
     document.querySelectorAll('.view-config-checkbox').forEach(checkbox => {
       checkbox.addEventListener('change', async (e) => {
@@ -2181,7 +2347,6 @@ export default {
     });
   },
 
-  // ═══════════ 狀態管理 ═══════════
   renderStatuses(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
@@ -2318,7 +2483,6 @@ export default {
     });
   },
 
-  // ═══════════ 對照表管理 ═══════════
   renderMapping(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
@@ -2451,7 +2615,6 @@ export default {
     });
   },
 
-  // ═══════════ 欄位管理 ═══════════
   renderSchema(container) {
     const sysFields = currentSettings.schema.filter(f => f.isSystem);
     const customFields = currentSettings.schema.filter(f => !f.isSystem);
@@ -2542,7 +2705,6 @@ export default {
         if (!confirmed) return;
         
         currentSettings.schema = currentSettings.schema.filter(f => f.key !== key);
-        // 同時從視圖配置中移除
         Object.keys(currentSettings.view_configs).forEach(page => {
           currentSettings.view_configs[page] = currentSettings.view_configs[page].filter(k => k !== key);
         });
@@ -2553,7 +2715,6 @@ export default {
     });
   },
 
-  // ═══════════ 帳號管理 ═══════════
   renderUsers(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
@@ -2622,7 +2783,6 @@ export default {
     });
   },
 
-  // ═══════════ 資料管理 ═══════════
   renderDataManagement(container) {
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
@@ -2675,7 +2835,6 @@ export default {
     });
   },
 
-  // ═══════════ 匯入 Excel ═══════════
   renderImport(container) {
     container.innerHTML = `
       <div class="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-8 text-center relative" id="drop-zone">
@@ -2759,7 +2918,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1792913900
+V: 1792916000
 W: UPGRADE-002
 ═══ */```
 
@@ -2859,17 +3018,16 @@ export default {
       visibleFields: schema.filter(f => (viewConfig['table'] || []).includes(f.key)).map(f => ({ ...f, isVisible: true })),
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'table',
-      onAction: async (action, id) => {
+      onAction: async (action, id, newStatus) => {
         if (action === 'delete') {
           if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
             await deleteDocument('work_orders', id);
             showToast('已刪除', 'success');
           }
-        } else if (action === 'flow') {
-          const newStatus = window.prompt('輸入目標狀態：');
+        } else if (action === 'status_change') {
           if (newStatus) {
-            await updateDocument('work_orders', id, { status: newStatus.trim(), statusUpdateDate: new Date().toISOString() });
-            showToast('已流轉', 'success');
+            await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+            showToast('已更新生產進度', 'success');
           }
         }
       }
@@ -2897,7 +3055,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/table.js
-V: 1792914100
+V: 1792915100
 W: UPGRADE-002
 ═══ */```
 
@@ -3422,7 +3580,7 @@ W: webapp-20261026-001#21
 
 ```js
 import { AppState } from '../config/state.js';
-import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, ArrowRightLeft, User, Calendar, ChevronDown, Inbox } from 'lucide';
+import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox } from 'lucide';
 
 /**
  * 將 Excel 日期轉為 YYYY-MM-DD，並防呆過濾
@@ -3439,47 +3597,6 @@ export function formatExcelDate(val) {
     if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
   }
   return String(val).trim();
-}
-
-/**
- * 彈出狀態選擇視窗
- */
-function showStatusModal(currentStatus, onSelect) {
-  const statuses = AppState.getStatuses() || [];
-  const otherStatuses = statuses.filter(s => s !== currentStatus);
-  
-  if (otherStatuses.length === 0) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'fixed inset-0 bg-black/40 z-[999] flex items-center justify-center p-4';
-  overlay.innerHTML = `
-    <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
-      <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
-        <h3 class="font-bold text-slate-800">選擇目標狀態</h3>
-        <button class="text-slate-400 hover:text-slate-600 close-modal text-xl leading-none">&times;</button>
-      </div>
-      <div class="p-4 flex flex-col gap-2">
-        ${otherStatuses.map(s => `
-          <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 hover:border-brand hover:text-brand font-medium transition-colors btn-select-status" data-status="${s}">
-            ${s}
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(overlay);
-  
-  const close = () => overlay.remove();
-  overlay.querySelector('.close-modal').onclick = close;
-  overlay.onclick = (e) => { if (e.target === overlay) close(); };
-  
-  overlay.querySelectorAll('.btn-select-status').forEach(btn => {
-    btn.onclick = () => {
-      close();
-      onSelect(btn.dataset.status);
-    };
-  });
 }
 
 // 全域狀態暫存，避免切換頁面時遺失
@@ -3503,11 +3620,18 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     return id && !id.includes('***') && !id.includes('訂單');
   });
 
-  // 2. 依配置提取顯示欄位
-  const displayFields = visibleFields.filter(f => f.isVisible);
+  // 2. 依配置提取顯示欄位 (若無配置，保底顯示 id 與 status)
+  let displayFields = visibleFields.filter(f => f.isVisible);
+  if (displayFields.length === 0) {
+    displayFields = [
+      { key: 'id', label: '發票', isVisible: true },
+      { key: 'status', label: '生產進度', isVisible: true }
+    ];
+  }
 
   // 3. 全域事件委派 (確保全站按鈕絕不失效)
   if (!window._orderViewListenerAdded) {
+    // 點擊事件
     document.addEventListener('click', (e) => {
       // 切換視圖
       const viewBtn = e.target.closest('[data-action="switch-view"]');
@@ -3537,25 +3661,14 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         return;
       }
       
-      // 動作按鈕 (流轉、刪除)
-      const actionBtn = e.target.closest('[data-action="flow"], [data-action="delete"]');
+      // 動作按鈕 (刪除)
+      const actionBtn = e.target.closest('[data-action="delete"]');
       if (actionBtn) {
-        const action = actionBtn.dataset.action;
-        const id = actionBtn.dataset.id;
-        if (action === 'flow') {
-          const order = cleanOrders.find(o => o.id === id);
-          if (order) {
-            showStatusModal(order.status, (newStatus) => {
-              if (onAction) onAction('flow', id, newStatus);
-            });
-          }
-        } else {
-          if (onAction) onAction(action, id);
-        }
+        if (onAction) onAction('delete', actionBtn.dataset.id);
       }
     });
 
-    // 篩選輸入
+    // 輸入事件 (篩選)
     document.addEventListener('input', (e) => {
       const input = e.target.closest('input[data-filter]');
       if (input) {
@@ -3566,6 +3679,17 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         }
       }
     });
+
+    // 改變事件 (狀態下拉選單)
+    document.addEventListener('change', (e) => {
+      const select = e.target.closest('select[data-action="change-status"]');
+      if (select) {
+        const id = select.dataset.id;
+        const newStatus = select.value;
+        if (onAction) onAction('status_change', id, newStatus);
+      }
+    });
+
     window._orderViewListenerAdded = true;
   }
 
@@ -3581,6 +3705,8 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     const v = state.filters[k].toLowerCase();
     if (v) cleanOrders = cleanOrders.filter(o => String(getOrderValue(o, k)).toLowerCase().includes(v));
   });
+
+  const statuses = AppState.getStatuses() || [];
 
   // 5. 生成 HTML
   const viewToggleHtml = `
@@ -3609,11 +3735,20 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         <div class="glass-card p-4 flex flex-col gap-2">
           ${displayFields.map(f => {
             const val = getOrderValue(order, f.key);
+            if (f.key === 'status') {
+              return `
+                <div class="text-sm flex flex-col gap-1">
+                  <span class="text-slate-400">${f.label}:</span>
+                  <select data-action="change-status" data-id="${order.id}" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand">
+                    ${statuses.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
+                  </select>
+                </div>
+              `;
+            }
             return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <span class="font-medium text-slate-700">${val || '-'}</span></div>`;
           }).join('')}
           ${isAdmin ? `
-            <div class="mt-auto pt-2 border-t border-slate-100 flex gap-2 justify-end">
-              <button data-action="flow" data-id="${order.id}" class="text-xs text-brand hover:bg-brand/10 px-2 py-1 rounded">流轉</button>
+            <div class="mt-auto pt-2 border-t border-slate-100 flex justify-end">
               <button data-action="delete" data-id="${order.id}" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded">刪除</button>
             </div>
           ` : ''}
@@ -3627,24 +3762,34 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
           <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
             <tr class="border-b border-slate-200/60 text-sm font-semibold text-slate-600">
               ${displayFields.map(f => `
-                <th class="px-4 py-3 cursor-pointer hover:bg-slate-100 transition-colors" data-sort="${f.key}" data-page-key="${pageKey}">
+                <th class="px-4 py-3 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap min-w-[120px]" data-sort="${f.key}" data-page-key="${pageKey}">
                   <div class="flex items-center gap-1">${f.label} <i data-lucide="${state.sortKey === f.key ? (state.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrow-up-down'}" class="w-3 h-3 ${state.sortKey === f.key ? 'text-brand' : 'text-slate-300'}"></i></div>
                 </th>
               `).join('')}
-              ${isAdmin ? `<th class="px-4 py-3 text-center">操作</th>` : ''}
+              ${isAdmin ? `<th class="px-4 py-3 text-center whitespace-nowrap min-w-[100px]">操作</th>` : ''}
             </tr>
             <tr class="bg-white border-b border-slate-100">
-              ${displayFields.map(f => `<th class="px-2 py-2"><input type="text" data-filter="${f.key}" data-page-key="${pageKey}" value="${state.filters[f.key] || ''}" class="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none"></th>`).join('')}
-              ${isAdmin ? `<th></th>` : ''}
+              ${displayFields.map(f => `<th class="px-2 py-2 min-w-[120px]"><input type="text" data-filter="${f.key}" data-page-key="${pageKey}" value="${state.filters[f.key] || ''}" class="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none"></th>`).join('')}
+              ${isAdmin ? `<th class="min-w-[100px]"></th>` : ''}
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
             ${cleanOrders.map(order => `
               <tr class="hover:bg-slate-50/50 transition-colors">
-                ${displayFields.map(f => `<td class="px-4 py-3 whitespace-nowrap">${getOrderValue(order, f.key) || '-'}</td>`).join('')}
+                ${displayFields.map(f => {
+                  if (f.key === 'status') {
+                    return `
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <select data-action="change-status" data-id="${order.id}" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand">
+                          ${statuses.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                      </td>
+                    `;
+                  }
+                  return `<td class="px-4 py-3 whitespace-nowrap">${getOrderValue(order, f.key) || '-'}</td>`;
+                }).join('')}
                 ${isAdmin ? `
                   <td class="px-4 py-3 text-center whitespace-nowrap">
-                    <button data-action="flow" data-id="${order.id}" class="text-xs text-brand hover:bg-brand/10 px-2 py-1 rounded mr-1">流轉</button>
                     <button data-action="delete" data-id="${order.id}" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded">刪除</button>
                   </td>
                 ` : ''}
@@ -3668,7 +3813,7 @@ function getOrderValue(order, key) {
     return formatExcelDate(order[key]);
   }
   if (key === 'status') {
-    return `<span class="px-2 py-1 bg-brand/10 text-brand rounded-md text-xs font-semibold">${order.status || '未知'}</span>`;
+    return order.status || '未知'; // 這裡只回傳文字供排序或篩選用
   }
   if (order.data && order.data[key] !== undefined) {
     return order.data[key];
@@ -3678,7 +3823,7 @@ function getOrderValue(order, key) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1792914500
+V: 1792916100
 W: UPGRADE-002
 ═══ */```
 

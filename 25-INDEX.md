@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 09:29:45 (HKT)
+> 生成時間：2026-10-28 10:57:57 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,9 +15,12 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1792904003 | UPGRADE-001 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1792904001 | UPGRADE-001 |
-| AI-General | docs/p92/WF-PROGRESS.md | 1792904002 | UPGRADE-001 |
+| AI-General | docs/p92/P-Architecture.md | 1792915400 | UPGRADE-002 |
+| AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
+| AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1792917000 | UPGRADE-002 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1792916800 | UPGRADE-002 |
+| AI-General | docs/p92/WF-PROGRESS.md | 1792916900 | UPGRADE-002 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792909800 | ai-system-004 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
@@ -28,10 +31,10 @@
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792908900 | ai-system-004 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792905300 | ai-system-003#2 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792910600 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792909300 | ai-system-004 |
-| AI-kernel | docs/r-rules/R-04-learning.md | 1792909600 | ai-system-004 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1792910700 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
@@ -87,6 +90,9 @@
 | AI-WA-UPWO | meta.json |
 | AI-WA-UPWO | package.json |
 | AI-WA-UPWO | postcss.config.js |
+| AI-WA-UPWO | public/icons/README.md |
+| AI-WA-UPWO | public/manifest.json |
+| AI-WA-UPWO | public/sw.js |
 | AI-WA-UPWO | src/config/constants.js |
 | AI-WA-UPWO | src/config/firebase-keys.js |
 | AI-WA-UPWO | src/config/firebase.js |
@@ -303,6 +309,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 136 |
-| 92-P.md | 4 |
-| 92-SP.md | 8 |
+| 92-Code.md | 140 |
+| 92-P.md | 12 |
+| 92-SP.md | 16 |
