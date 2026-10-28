@@ -1,5 +1,5 @@
-> 體系版本：SV08
-> 生成時間：2026-10-28 19:36:18 (HKT)
+> 體系版本：SV09
+> 生成時間：2026-10-28 22:07:05 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -51,8 +51,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-WA-UPWO/.github/workflows/deploy.yml
-# V: 1792913400
-# W: UPGRADE-002
+# V: 1792922200
+# W: UPGRADE-004
 # ═══```
 
 <!-- === FILE END: ./.github/workflows/deploy.yml === -->
@@ -80,7 +80,12 @@ jobs:
           token: ${{ secrets.CROSS_REPO_PAT }}
           repository: ${{ secrets.AI_INFRA_REPO }}
           event-type: update-package
-```
+
+# ═══ EOF ═══
+# F: AI-WA-UPWO/.github/workflows/notify.yml
+# V: 1792922100
+# W: UPGRADE-004
+# ═══```
 
 <!-- === FILE END: ./.github/workflows/notify.yml === -->
 
@@ -105,7 +110,7 @@ jobs:
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="UPGRADE">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon.png">
   
   <!-- 引入全域樣式 (由 Vite 處理) -->
   <link rel="stylesheet" href="/src/style.css">
@@ -130,8 +135,8 @@ jobs:
 
 <!-- ═══ EOF ═══
 F: AI-WA-UPWO/index.html
-V: 1792916400
-W: UPGRADE-002
+V: 1792923100
+W: UPGRADE-004
 ═══ -->```
 
 <!-- === FILE END: ./index.html === -->
@@ -216,22 +221,16 @@ W: webapp-20261026-001#10
   "theme_color": "#6366F1",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "/icons/icon.png",
+      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
   "_EOF": {
     "F": "AI-WA-UPWO/public/manifest.json",
-    "V": "1792916200",
-    "W": "UPGRADE-002"
+    "V": "1792923000",
+    "W": "UPGRADE-004"
   }
 }```
 
@@ -4078,7 +4077,7 @@ W: UPGRADE-004
 
 ```js
 import { AppState } from '../config/state.js';
-import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox } from 'lucide';
+import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search } from 'lucide';
 
 /**
  * 將 Excel 日期轉為 YYYY-MM-DD，並防呆過濾
@@ -4166,13 +4165,13 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
       }
     });
 
-    // 輸入事件 (篩選)
+    // 輸入事件 (全域搜尋)
     document.addEventListener('input', (e) => {
-      const input = e.target.closest('input[data-filter]');
-      if (input) {
-        const key = input.dataset.pageKey;
+      const searchInput = e.target.closest('input[data-action="global-search"]');
+      if (searchInput) {
+        const key = searchInput.dataset.pageKey;
         if (viewStates[key]) {
-          viewStates[key].filters[input.dataset.filter] = input.value;
+          viewStates[key].filters['__GLOBAL__'] = searchInput.value.toLowerCase();
           window.dispatchEvent(new Event(`refresh-${key}`));
         }
       }
@@ -4206,7 +4205,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     window._orderViewListenerAdded = true;
   }
 
-  // 4. 處理排序與篩選
+  // 4. 處理排序與全域篩選
   if (state.sortKey) {
     cleanOrders.sort((a, b) => {
       let valA = getOrderValue(a, state.sortKey);
@@ -4214,18 +4213,33 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
       return (valA < valB ? -1 : 1) * (state.sortOrder === 'asc' ? 1 : -1);
     });
   }
-  Object.keys(state.filters).forEach(k => {
-    const v = state.filters[k].toLowerCase();
-    if (v) cleanOrders = cleanOrders.filter(o => String(getOrderValue(o, k)).toLowerCase().includes(v));
-  });
+
+  const globalFilter = state.filters['__GLOBAL__'];
+  if (globalFilter) {
+    cleanOrders = cleanOrders.filter(o => {
+      // 檢查所有顯示欄位是否包含關鍵字
+      return displayFields.some(f => {
+        const val = String(getOrderValue(o, f.key) || '').toLowerCase();
+        return val.includes(globalFilter);
+      });
+    });
+  }
 
   const statuses = AppState.getStatuses() || [];
 
   // 5. 生成 HTML
   const viewToggleHtml = `
-    <div class="segmented-control mb-4">
-      <button data-action="switch-view" data-view="card" data-page-key="${pageKey}" class="segment-btn ${state.viewType === 'card' ? 'active' : ''}">卡片</button>
-      <button data-action="switch-view" data-view="table" data-page-key="${pageKey}" class="segment-btn ${state.viewType === 'table' ? 'active' : ''}">表格</button>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <div class="segmented-control">
+        <button data-action="switch-view" data-view="card" data-page-key="${pageKey}" class="segment-btn ${state.viewType === 'card' ? 'active' : ''}">卡片</button>
+        <button data-action="switch-view" data-view="table" data-page-key="${pageKey}" class="segment-btn ${state.viewType === 'table' ? 'active' : ''}">表格</button>
+      </div>
+      <div class="relative w-full sm:w-64">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <input type="text" data-action="global-search" data-page-key="${pageKey}" value="${state.filters['__GLOBAL__'] || ''}" class="w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm" placeholder="搜尋所有欄位...">
+      </div>
     </div>
   `;
 
@@ -4285,7 +4299,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         </div>
       `).join('') + `</div>`;
   } else {
-    // 動態表格
+    // 動態表格 (已移除第二行篩選列)
     contentHtml = `
       <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-x-auto w-full">
         <table class="w-full text-left border-collapse min-w-full">
@@ -4297,10 +4311,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                 </th>
               `).join('')}
               ${isAdmin ? `<th class="px-4 py-3 text-center whitespace-nowrap min-w-[100px]">操作</th>` : ''}
-            </tr>
-            <tr class="bg-white border-b border-slate-100">
-              ${displayFields.map(f => `<th class="px-2 py-2 min-w-[120px]"><input type="text" data-filter="${f.key}" data-page-key="${pageKey}" value="${state.filters[f.key] || ''}" class="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none"></th>`).join('')}
-              ${isAdmin ? `<th class="min-w-[100px]"></th>` : ''}
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
@@ -4346,7 +4356,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
   }
 
   container.innerHTML = viewToggleHtml + contentHtml;
-  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown }, attrs: { class: 'w-3 h-3' } });
+  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown, Search }, attrs: { class: 'w-3 h-3' } });
 }
 
 /**
@@ -4367,7 +4377,7 @@ function getOrderValue(order, key) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1792921000
+V: 1792922300
 W: UPGRADE-004
 ═══ */```
 

@@ -1,5 +1,5 @@
-> 體系版本：SV08
-> 生成時間：2026-10-28 19:36:21 (HKT)
+> 體系版本：SV09
+> 生成時間：2026-10-28 22:07:07 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -33,17 +33,25 @@
         .subtitle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
         
         .sticky-header { 
-            position: sticky; 
-            top: 0; 
+            position: relative; 
             background: var(--bg); 
             z-index: 100; 
             padding-top: 15px; 
             margin-top: -15px;
             margin-bottom: 15px; 
         }
+
+/* ═══ EOF ═══
+F: AI-infra/index.html
+V: 1792912000
+W: ai-system-004
+═══ */
         
         input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; font-family: inherit; }
-        textarea { resize: vertical; min-height: 120px; font-family: monospace; }
+        
+        /* 鎖定 textarea 的高度，防止被內容撐爆 */
+        textarea { resize: vertical; min-height: 150px; max-height: 400px; font-family: monospace; overflow-y: auto; }
+        
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-primary { background-color: var(--primary); color: white; }
@@ -92,7 +100,7 @@
             await loadDictionaries();
             if (currentToken) {
                 checkBuildStatus();
-                checkLatestDeployStatus(); // 載入時自動查詢最後一次部署狀態
+                checkLatestDeployStatus();
             } else {
                 updateStatus('build-status', '', '等待操作');
                 updateStatus('deploy-status', '', '等待操作');
@@ -275,7 +283,6 @@
             if(dot) dot.className = `status-dot ${status}`; if(text) text.textContent = msg;
         }
 
-        // 切換專案時，查詢該專案最後一次部署狀態
         async function checkLatestDeployStatus() {
             if (!currentToken) return;
             const repoName = document.getElementById('deploy-repo-select').value;
@@ -387,7 +394,7 @@
                 pathMatch = content.match(/(?:F:|"F":)\s*"?([^\s"\n]+)"?/);
             }
 
-            // 防呆：如果是 PARTIAL_REPLACE，NEW 區塊必須包含 EOF（支援 # 註解格式）
+            // 防呆：如果是 PARTIAL_REPLACE，NEW 區塊必須包含 EOF
             const patchMatch = content.match(/<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/);
             if (patchMatch) {
                 const newStr = patchMatch[2];
@@ -422,7 +429,8 @@
             }
 
             // 防呆：如果是 HTML 檔案，檢查是否重複包含 <!DOCTYPE html> 或 <html>
-            if (filePath.endsWith('.html')) {
+            // 排除 AI-infra/index.html 自己，避免發布控制台原始碼時被自我攔截
+            if (filePath.endsWith('.html') && repo !== 'AI-infra') {
                 const doctypeCount = (content.match(/<!DOCTYPE html>/gi) || []).length;
                 const htmlTagCount = (content.match(/<html/gi) || []).length;
                 if (doctypeCount > 1 || htmlTagCount > 1) {
@@ -611,12 +619,6 @@
                     throw new Error(`發布失敗：替換後的檔案缺少 EOF (F/V/W)。請要求 AI 補齊後重新發布。`);
                 }
 
-/* ═══ EOF ═══
-F: AI-infra/index.html
-V: 1792911400
-W: ai-system-004
-═══ */
-
                 const base64Content = btoa(unescape(encodeURIComponent(finalContent)));
 
                 const body = { message: `Update ${filePath} via Console`, content: base64Content };
@@ -793,7 +795,7 @@ W: ai-system-004
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792911200
+V: 1792911600
 W: ai-system-004
 ═══ -->```
 

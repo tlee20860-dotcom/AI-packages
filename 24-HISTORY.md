@@ -1,5 +1,5 @@
-> 體系版本：SV08
-> 生成時間：2026-10-28 19:36:19 (HKT)
+> 體系版本：SV09
+> 生成時間：2026-10-28 22:07:05 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -662,9 +662,35 @@
 
 **關聯決策**：`D-227`（局部替換）、`D-228`（生命週期 SOP）、`D-229`（腳本與控制台升級）。
 
+### 2026-10-28｜局部替換、生命週期與控制台防呆升級（SV09）
+
+| 項目 | 內容 |
+|---|---|
+| 觸發者 | Ken |
+| 執行者 | 系統架構師（ai-system-004） |
+| 變更類型 | 交付機制優化、防呆機制升級、自動化腳本優化、UI 體驗優化 |
+
+**變更摘要**
+1. **新增局部替換（PARTIAL_REPLACE）模式**：放寬交付限制，允許修改 ≤10 行的局部替換以節省 Token。AI 需提供精準 `OLD/NEW` 區塊，若前端匹配失敗則退回完整檔。
+2. **端到端發布生命週期**：於 `A-00 §八` 明文化「AI 輸出 ➜ 控制台海關檢查 ➜ 受控替換 ➜ 手動觸發 Action ➜ 載入新包」的標準迴圈，並加入寫作防呆（禁止裸寫 `F:`、禁用複合詞）。
+3. **前端控制台防呆進化**：
+   - 新增「一鍵部署 CF」與「顯示最後部署時間」功能。
+   - 修復正則表達式過於寬鬆導致誤抓內文 `F:` 的問題，改為優先匹配完整 EOF 結構。
+   - 禁用詞導入負向斷言，排除「忽略」、「省略」等正常複合詞。
+   - 新增「強制發布（忽略錯誤）」按鈕，保留人類最高權限以應對 Bug 誤判。
+   - 導入程式碼偷懶攔截（`// ...` 等），強迫 AI 吐出完整內容。
+   - 修復 UI 版面被固定（`position: sticky`）與 `textarea` 撐爆畫面的問題。
+4. **腳本編號與打包提示**：`setup-structure.yml` 生成 SP 包時，主動讀取 HANDOFF 的 `W:` 欄位並印在頂部；專案代碼包打包納入 `.github/workflows/*.yml`，確保專案 AI 能讀取 CI/CD 腳本。
+
+**架構形態改變**
+- 從「單一完整檔交付」轉向「完整檔＋局部替換」雙軌制，大幅提升大型專案的修改效率。
+- 前端海關從「無腦字串匹配」升級為「精準正則與防呆」，並具備直接觸發專案部署的能力。
+
+**關聯決策**：`D-227`（局部替換）、`D-228`（生命週期 SOP）、`D-229`（腳本與控制台升級）、`D-230`（一鍵部署）、`D-231`（專案腳本納入代碼包）。
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-EVOLUTION.md
-V: 1792909900
+V: 1792912500
 W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-EVOLUTION.md === -->
@@ -728,9 +754,12 @@ W: ai-system-004
 
 | RJ-92-01 | 否決純 CDN（無構建）架構 | 專案包含複雜的 Excel 解析與大量狀態管理，純 CDN 會導致邏輯塞在單一 HTML，無法落實 `W-03` 模組化契約，維護成本極高。決議改用 Vite + Tailwind 工程化架構。 | webapp-20261026-001 | 2026-10-27 |
 
+| RJ-023 | 將專案腳本（如 `deploy.yml`）一併打包進 `21-INFRA.md` | 會造成體系包肥大，且專案腳本已包含在 `{pkg_no}-Code.md` 中，重複打包會浪費 Token 且造成職責污染。 | ai-system-004 | 2026-10-28 |
+| RJ-024 | 在前端控制台硬編碼專案名稱（如 `AI-WA-UPWO`）來自動補齊路徑 | 違反 R-025（防硬編碼），未來新增專案（如 p93）且有同名路徑時，會將檔案錯發到錯誤的倉庫。決議改為精準報錯提示，強迫 AI 或人類補齊前綴。 | ai-system-004 | 2026-10-28 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792908900
+V: 1792912300
 W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
@@ -814,9 +843,14 @@ W: ai-system-004
 | K-30 | 體系 | 前端控制台禁用詞採無腦包含匹配，導致「忽略」、「省略」等正常詞彙被誤判為「略」。 | 高 | 已解決（已加入 `(?<!忽|省)略` 負向斷言） | ai-system-004 |
 | K-31 | 體系 | 前端缺乏「人類最高權限」的強制發布機制，導致 Bug 誤判時無法手動繞過。 | 中 | 已解決（已加入強制發布按鈕） | ai-system-004 |
 
+| K-32 | 體系 | 前端控制台未提示專案路徑缺少倉庫前綴（如 `src/` 開頭），導致發布失敗。 | 中 | 已解決（已加入精準錯誤提示） | ai-system-004 |
+| K-33 | 體系 | 專案 AI 交付程式碼時常偷懶使用 `// ...`，導致檔案覆寫後損壞。 | 高 | 已解決（前端控制台加入 `lazyPatterns` 攔截） | ai-system-004 |
+| K-34 | 體系 | 控制台 UI 因 `position: sticky` 與 `textarea` 預設樣式，導致畫面被固定與輸入框撐爆。 | 低 | 已解決（移除 sticky、鎖定 textarea 高度） | ai-system-004 |
+| K-35 | 體系 | AI 在局部替換時漏寫 EOF，導致版本追蹤失效。 | 高 | 已解決（前端加入強制檢查、R-00 補齊規範） | ai-system-004 |
+
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792909600
+V: 1792912400
 W: ai-system-004
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
@@ -902,8 +936,9 @@ W: ai-system-004
 | 補充 | DEBT 加「解決對話」；PROGRESS 加「完成日期」；CONCLUSION 加「結案日期」 |
 
 F: AI-General/docs/records/SYSTEM-ARCHIVE.md
-V: 1792900170
-W: ai-system-20261025-001#1
+V: 1792912600
+W: ai-system-004
+<!-- === FILE END: AI-General/docs/records/SYSTEM-ARCHIVE.md === -->
 <!-- === FILE END: AI-General/docs/records/SYSTEM-ARCHIVE.md === -->
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-04-learning.md === -->

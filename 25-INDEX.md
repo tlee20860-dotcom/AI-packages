@@ -1,5 +1,5 @@
-> 體系版本：SV08
-> 生成時間：2026-10-28 19:36:19 (HKT)
+> 體系版本：SV09
+> 生成時間：2026-10-28 22:07:05 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -22,20 +22,20 @@
 | AI-General | docs/p92/WF-HANDOFF.md | 1792918100 | UPGRADE-003 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792918200 | UPGRADE-003 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1792909800 | ai-system-004 |
-| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792900170 | ai-system-20261025-001#1 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792909700 | ai-system-004 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792909600 | ` |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792909900 | ` |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792907700 | ai-system-003#27 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1792908900 | ai-system-004 |
+| AI-General | docs/records/PROGRESS.md | 1792912100 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792912600 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792912200 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792912400 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792912500 | ` |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792912000 | ai-system-004 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1792912300 | ai-system-004 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792910600 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792909300 | ai-system-004 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792910700 | ai-system-004 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792902600 | ai-system-20261026-001#6 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792912700 | ai-system-004 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -91,6 +91,7 @@
 | AI-WA-UPWO | package.json |
 | AI-WA-UPWO | postcss.config.js |
 | AI-WA-UPWO | public/icons/README.md |
+| AI-WA-UPWO | public/icons/icon.png |
 | AI-WA-UPWO | public/manifest.json |
 | AI-WA-UPWO | public/sw.js |
 | AI-WA-UPWO | src/config/constants.js |
@@ -307,7 +308,7 @@
 | 20-SP-Sys.md | 32 |
 | 21-INFRA.md | 52 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 76 |
+| 24-HISTORY.md | 80 |
 | 90-Code.md | 388 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
