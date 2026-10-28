@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-28 22:07:05 (HKT)
+> 生成時間：2026-10-28 22:32:18 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -732,6 +732,15 @@ jobs:
             echo "" >> "$OUTPUT"
           fi
 
+          # 打包體系驗證配置（validate_delivery.py 依賴）
+          for cfg in "AI-kernel/docs/r-rules/validate-config.json" "AI-kernel/docs/r-rules/forbidden_words.txt"; do
+            if [ -f "$cfg" ]; then
+              echo "### 📄 檔案：$cfg" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh "$cfg" "$OUTPUT" || true
+              echo "" >> "$OUTPUT"
+            fi
+          done
+
       - name: "Step 9.3: 生成歷史檔案包 (24-HISTORY.md)"
         run: |
           OUTPUT="build-repo/24-HISTORY.md"
@@ -804,6 +813,19 @@ jobs:
           done
           echo "" >> "$OUTPUT"
 
+          # 2.5 體系驗證配置 (AI-kernel)
+          echo "## 🔧 體系驗證配置 (AI-kernel)" >> "$OUTPUT"
+          echo "| 目錄/路徑 | 檔案名稱 |" >> "$OUTPUT"
+          echo "|---|---|" >> "$OUTPUT"
+          for cfg in "AI-kernel/docs/r-rules/validate-config.json" "AI-kernel/docs/r-rules/forbidden_words.txt"; do
+            if [ -f "$cfg" ]; then
+              DIR_NAME=$(dirname "$cfg")
+              FILE_NAME=$(basename "$cfg")
+              echo "| $DIR_NAME | $FILE_NAME |" >> "$OUTPUT"
+            fi
+          done
+          echo "" >> "$OUTPUT"
+
           # 3. 專案源碼索引
           echo "## 📦 專案源碼檔案樹 (external)" >> "$OUTPUT"
           echo "| 專案倉庫 | 檔案路徑 |" >> "$OUTPUT"
@@ -869,8 +891,8 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792911500
-# W: ai-system-004
+# V: 1792913000
+# W: ai-system-005
 # ═══ EOF ═══```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
@@ -1338,4 +1360,69 @@ jobs:
 ```
 
 <!-- === FILE END: config/repos.json === -->
+
+### 📄 檔案：AI-kernel/docs/r-rules/validate-config.json
+
+<!-- === FILE START: AI-kernel/docs/r-rules/validate-config.json === -->
+
+## 📄 AI-kernel/docs/r-rules/validate-config.json
+
+```json
+{
+  "ignore_patterns": [
+    "external/old-AI-WA-FAMILY/*",
+    "external/AI-OS/*"
+  ],
+  "file_specific_rules": {
+    "AI-General/docs/records/SYSTEM-REJECTED.md": { "check_forbidden_words": false },
+    "AI-General/docs/records/SYSTEM-HANDOFF.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/SYSTEM-CONCLUSION.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/SYSTEM-DEBT.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/SYSTEM-ARCHIVE.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/SYSTEM-EVOLUTION.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/PROGRESS.md": { "check_forbidden_words": false, "check_simplified": false },
+    "AI-General/docs/records/GENERAL-CONCLUSION.md": { "check_forbidden_words": false, "check_simplified": false }
+  },
+  "console_rules": {
+    "base_system_repos": ["AI-kernel", "AI-General", "AI-infra"],
+    "record_exempt_paths": ["docs/records/", "/WF-", "/p"],
+    "record_exempt_repo": "AI-General",
+    "show_file_path_in_error": true,
+    "error_header_format": "📄 檔案：{path}\n------------------------\n"
+  },
+  "_EOF": {
+    "F": "AI-kernel/docs/r-rules/validate-config.json",
+    "V": 1792909200,
+    "W": "ai-system-003#42"
+  }
+}```
+
+<!-- === FILE END: AI-kernel/docs/r-rules/validate-config.json === -->
+
+### 📄 檔案：AI-kernel/docs/r-rules/forbidden_words.txt
+
+<!-- === FILE START: AI-kernel/docs/r-rules/forbidden_words.txt === -->
+
+## 📄 AI-kernel/docs/r-rules/forbidden_words.txt
+
+```txt
+略
+保留原樣
+同上
+與前相同
+內容不變
+（省略）
+（程式碼略）
+...
+…
+參考前文
+其餘同前
+
+# ═══ EOF ═══
+# F: AI-kernel/docs/r-rules/forbidden_words.txt
+# V: 1792905700
+# W: ai-system-003#6
+# ═══ EOF ═══```
+
+<!-- === FILE END: AI-kernel/docs/r-rules/forbidden_words.txt === -->
 

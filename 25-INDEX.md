@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-28 22:07:05 (HKT)
+> 生成時間：2026-10-28 22:32:18 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -71,6 +71,12 @@
 | . | index.html |
 | . | manifest.json |
 | . | sw.js |
+
+## 🔧 體系驗證配置 (AI-kernel)
+| 目錄/路徑 | 檔案名稱 |
+|---|---|
+| AI-kernel/docs/r-rules | validate-config.json |
+| AI-kernel/docs/r-rules | forbidden_words.txt |
 
 ## 📦 專案源碼檔案樹 (external)
 | 專案倉庫 | 檔案路徑 |
@@ -306,7 +312,7 @@
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
 | 20-SP-Sys.md | 32 |
-| 21-INFRA.md | 52 |
+| 21-INFRA.md | 56 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 80 |
 | 90-Code.md | 388 |
