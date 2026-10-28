@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 20:18:28 (HKT)
+> 生成時間：2026-10-28 09:29:45 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -108,6 +108,7 @@
 | AI-WA-UPWO | src/style.css |
 | AI-WA-UPWO | src/ui/layout.js |
 | AI-WA-UPWO | src/ui/modal.js |
+| AI-WA-UPWO | src/ui/order-view.js |
 | AI-WA-UPWO | src/ui/toast.js |
 | AI-WA-UPWO | tailwind.config.js |
 | AI-WA-UPWO | vite.config.js |
@@ -302,6 +303,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 144 |
+| 92-Code.md | 136 |
 | 92-P.md | 4 |
 | 92-SP.md | 8 |

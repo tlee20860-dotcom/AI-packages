@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-27 20:18:29 (HKT)
+> 生成時間：2026-10-28 09:29:46 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -453,7 +453,10 @@
                         originalContent = decodeURIComponent(escape(atob(existing.content.replace(/\n/g, ''))));
                     }
                 } catch (e) {
-                    if (!e.message.includes('404')) throw e;
+                    // 修正：必須同時攔截 404 與「找不到資源」，才能允許新增檔案
+                    if (!e.message.includes('404') && !e.message.includes('找不到資源')) {
+                        throw e;
+                    }
                 }
 
                 let finalContent = content;
