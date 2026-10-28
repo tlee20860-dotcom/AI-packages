@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 15:27:34 (HKT)
+> 生成時間：2026-10-28 19:36:19 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,7 +15,7 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1792915400 | UPGRADE-002 |
+| AI-General | docs/p92/P-Architecture.md | 1792918500 | UPGRADE-004 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
 | AI-General | docs/p92/WF-CONCLUSION.md | 1792918300 | UPGRADE-003 |
@@ -110,11 +110,14 @@
 | AI-WA-UPWO | src/pages/login.js |
 | AI-WA-UPWO | src/pages/overview.js |
 | AI-WA-UPWO | src/pages/salesperson.js |
+| AI-WA-UPWO | src/pages/settings-basic.js |
+| AI-WA-UPWO | src/pages/settings-schema.js |
 | AI-WA-UPWO | src/pages/settings.js |
 | AI-WA-UPWO | src/pages/table.js |
 | AI-WA-UPWO | src/style.css |
 | AI-WA-UPWO | src/ui/layout.js |
 | AI-WA-UPWO | src/ui/modal.js |
+| AI-WA-UPWO | src/ui/order-view-editor.js |
 | AI-WA-UPWO | src/ui/order-view.js |
 | AI-WA-UPWO | src/ui/toast.js |
 | AI-WA-UPWO | tailwind.config.js |
@@ -305,11 +308,11 @@
 | 21-INFRA.md | 52 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 76 |
-| 90-Code.md | 384 |
+| 90-Code.md | 388 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 144 |
+| 92-Code.md | 160 |
 | 92-P.md | 12 |
 | 92-SP.md | 20 |

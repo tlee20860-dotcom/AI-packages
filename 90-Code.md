@@ -1,8 +1,234 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 15:27:33 (HKT)
+> 生成時間：2026-10-28 19:36:18 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
+
+<!-- === FILE START: ./.github/workflows/apply-patch.yml === -->
+
+## 📄 ./.github/workflows/apply-patch.yml
+
+```yml
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: ./.github/workflows/apply-patch.yml === -->
+
+<!-- === FILE START: ./.github/workflows/cleanup.yml === -->
+
+## 📄 ./.github/workflows/cleanup.yml
+
+```yml
+# ============================================
+# cleanup.yml — 一鍵清空專案程式碼（保留骨架）
+# 用途：手動觸發，清空所有舊程式碼，為重構鋪路
+# ============================================
+
+name: Cleanup Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '請輸入 DELETE_ALL 以確認清空 (此操作不可逆)'
+        required: true
+        default: ''
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Safety Check
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DELETE_ALL" ]; then
+            echo "❌ 確認碼錯誤，終止執行。請輸入 DELETE_ALL"
+            exit 1
+          fi
+          echo "✅ 確認碼正確，準備執行清空。"
+
+      - name: Cleanup Files
+        run: |
+          echo "🧹 開始清空專案程式碼..."
+          
+          # 使用 find 刪除所有檔案，排除白名單（.git, .github, meta.json, README.md）
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name ".git" \
+            ! -name ".github" \
+            ! -name "meta.json" \
+            ! -name "README.md" \
+            -exec rm -rf {} +
+            
+          echo "✅ 清空完成，目前根目錄剩餘檔案："
+          ls -la
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          
+          if git diff --cached --quiet; then
+            echo "沒有變更，倉庫可能已經是空的。"
+          else
+            git commit -m "chore: cleanup all project files for rebuild"
+            git push
+            echo "✅ 清空結果已推送到倉庫。"
+          fi
+
+# ═══ EOF ═══
+# F: .github/workflows/cleanup.yml
+# V: 1792900100
+# W: ai-system-20261024-012#1
+# ═══ EOF ═══```
+
+<!-- === FILE END: ./.github/workflows/cleanup.yml === -->
+
+<!-- === FILE START: ./.github/workflows/move-api.yml === -->
+
+## 📄 ./.github/workflows/move-api.yml
+
+```yml
+# ============================================
+# move-api.yml — 自動將 ./api 搬移至 ./functions/api
+# 用途：修正 Cloudflare Pages Functions 的目錄結構
+# ============================================
+
+name: Move API to Functions Directory
+
+on:
+  workflow_dispatch: # 僅允許手動觸發
+
+jobs:
+  move-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Move Directory
+        run: |
+          echo "開始搬移目錄..."
+          if [ -d "api" ]; then
+            mkdir -p functions
+            # 優先使用 git mv 保留追蹤歷史
+            git mv api functions/api || mv api functions/api
+            echo "✅ 已將 api 搬移至 functions/api"
+          else
+            echo "⚠️ 找不到 api 資料夾，可能已經搬移過。"
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          
+          if git diff --cached --quiet; then
+            echo "沒有變更，無需提交。"
+          else
+            git commit -m "chore: move api to functions/api for CF Pages"
+            git push
+            echo "✅ 變更已推送到倉庫。"
+          fi
+
+# ═══ EOF ═══
+# F: .github/workflows/move-api.yml
+# V: 1792900680
+# W: ai-system-20261024-012#59
+# ═══ EOF ═══```
+
+<!-- === FILE END: ./.github/workflows/move-api.yml === -->
+
+<!-- === FILE START: ./.github/workflows/notify.yml === -->
+
+## 📄 ./.github/workflows/notify.yml
+
+```yml
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+      - '**/*.ico'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"```
+
+<!-- === FILE END: ./.github/workflows/notify.yml === -->
 
 <!-- === FILE START: ./admin/admin.js === -->
 

@@ -1,8 +1,98 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 15:27:33 (HKT)
+> 生成時間：2026-10-28 19:36:18 (HKT)
 
 # 專案全程式碼包：old-AI-WA-FAMILY
 
+
+<!-- === FILE START: ./.github/workflows/apply-patch.yml === -->
+
+## 📄 ./.github/workflows/apply-patch.yml
+
+```yml
+name: Apply Patch (Project)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/PATCH.md'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download central script
+        run: |
+          curl -sL https://raw.githubusercontent.com/tlee20860-dotcom/AI-infra/main/.github/scripts/apply_patch.py -o /tmp/apply_patch.py
+
+      - name: Run Patch
+        run: python3 /tmp/apply_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply PATCH.md [skip ci]"
+          git push
+
+# ═══ EOF ═══
+# F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
+# V: 1792358000
+# W: ai-system-20261019-010#088
+# ═══ EOF ═══```
+
+<!-- === FILE END: ./.github/workflows/apply-patch.yml === -->
+
+<!-- === FILE START: ./.github/workflows/notify.yml === -->
+
+## 📄 ./.github/workflows/notify.yml
+
+```yml
+# ============================================
+# notify.yml — 專案變更時通知 AI-infra
+# ============================================
+name: Notify AI-infra
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+      - '**/*.ico'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'docs/projects/**/WF-STATE-INDEX.md' # 👈 新增這行，避免自動生成的索引檔觸發通知
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI-infra build
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
+            https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
+            -d '{"event_type":"project-updated"}'
+          echo "已通知 AI-infra 重新建置"```
+
+<!-- === FILE END: ./.github/workflows/notify.yml === -->
 
 <!-- === FILE START: ./admin.html === -->
 

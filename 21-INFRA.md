@@ -1,5 +1,5 @@
 > 體系版本：SV08
-> 生成時間：2026-10-28 15:27:34 (HKT)
+> 生成時間：2026-10-28 19:36:19 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -684,11 +684,11 @@ jobs:
               echo "" >> "$OUTPUT_CODE"
               (
                 cd "external/${SAFE_NAME}" || exit 0
-                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) \
+                # 移除 .github 的排除，並加入 .yml 與 .yaml，確保專案 AI 能讀取 CI/CD 腳本
+                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" \) \
                   -not -path "./.git/*" \
                   -not -path "./node_modules/*" \
-                  -not -path "./docs/*" \
-                  -not -path "./.github/*" | sort | while read -r f; do
+                  -not -path "./docs/*" | sort | while read -r f; do
                   if [ -f "$f" ]; then bash "../../.github/workflows/append_file.sh" "$f" "../../$OUTPUT_CODE" || true; fi
                 done
               ) || true
@@ -869,7 +869,7 @@ jobs:
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792909100
+# V: 1792911500
 # W: ai-system-004
 # ═══ EOF ═══```
 
