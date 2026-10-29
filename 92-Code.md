@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-29 11:38:33 (HKT)
+> 生成時間：2026-10-29 15:55:34 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -969,8 +969,9 @@ W: UPGRADE-002
 
 ```js
 import { initRouter } from './router.js';
-import { getCollection } from '../db/read.js';
+import { getCollection, listenDocument } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
+import { AppState } from '../config/state.js';
 import '../ui/order-view-editor.js';
 
 /**
@@ -996,10 +997,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initRouter();
     console.log('[System] UPGRADE-WO 系統啟動成功。');
 
-    // 2. 背景任務：自動修正歷史錯誤日期
+    // 2. 全域監聽設定檔變更（確保工序、模板等即時同步）
+    listenSettingsUpdates();
+
+    // 3. 背景任務：自動修正歷史錯誤日期
     fixLegacyDatesInBackground();
 
-    // 3. 註冊 Service Worker (PWA)
+    // 4. 註冊 Service Worker (PWA)
     registerServiceWorker();
     
   } catch (error) {
@@ -1014,6 +1018,21 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 });
+
+/**
+ * 全域監聽設定檔變更
+ */
+function listenSettingsUpdates() {
+  listenDocument('settings', 'main', (data) => {
+    if (!data) return;
+    
+    // 更新 AppState 中的全域狀態
+    if (data.statuses) AppState.setStatuses(data.statuses);
+    
+    // 派發事件，通知所有前台頁面重新渲染
+    window.dispatchEvent(new Event('settings-updated'));
+  });
+}
 
 /**
  * 將 Excel 日期序列號轉換為 YYYY-MM-DD 格式
@@ -1102,7 +1121,7 @@ function registerServiceWorker() {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/main.js
-V: 1792921300
+V: 1792926100
 W: UPGRADE-004
 ═══ */```
 
@@ -1591,6 +1610,7 @@ export default {
     });
 
     window.addEventListener('refresh-category', this.updateUI.bind(this));
+    window.addEventListener('settings-updated', this.updateUI.bind(this));
 
     this.initDataListener();
   },
@@ -1600,7 +1620,7 @@ export default {
     unsubscribe = listenCollection('work_orders', (orders) => {
       currentOrders = orders;
       if (!currentCategory) {
-        const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
+        const cats = Array.from(new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))).sort();
         if (cats.length > 0) currentCategory = cats[0];
       }
       this.updateUI();
@@ -1608,7 +1628,7 @@ export default {
   },
 
   updateUI() {
-    const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
+    const cats = Array.from(new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))).sort();
     
     if (cats.length > 0 && !cats.includes(currentCategory)) {
       currentCategory = cats[0];
@@ -1635,7 +1655,7 @@ export default {
     // 依使用者設定的順序對齊欄位
     const visibleFields = (viewConfig['category'] || []).map(key => {
       const field = schema.find(f => f.key === key);
-      return field ? { ...field, isVisible: true } : null;
+      return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
 
     renderOrderView({
@@ -1663,12 +1683,13 @@ export default {
   destroy() {
     if (unsubscribe) unsubscribe();
     window.removeEventListener('refresh-category', this.updateUI.bind(this));
+    window.removeEventListener('settings-updated', this.updateUI.bind(this));
   }
 };
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/category.js
-V: 1792919900
+V: 1792926700
 W: UPGRADE-004
 ═══ */```
 
@@ -1739,6 +1760,7 @@ export default {
     });
 
     window.addEventListener('refresh-kanban', this.updateUI.bind(this));
+    window.addEventListener('settings-updated', this.updateUI.bind(this));
     createIcons({ icons: { Upload }, attrs: { class: 'w-4 h-4' } });
 
     this.initDataListener();
@@ -1770,7 +1792,7 @@ export default {
 
     const catSelect = document.getElementById('filter-category');
     if (catSelect) {
-      const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
+      const cats = Array.from(new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))).sort();
       catSelect.innerHTML = `<option value="ALL">全部類別</option>` + cats.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join('');
     }
 
@@ -1782,7 +1804,7 @@ export default {
     // 依使用者設定的順序對齊欄位
     const visibleFields = (viewConfig['kanban'] || []).map(key => {
       const field = schema.find(f => f.key === key);
-      return field ? { ...field, isVisible: true } : null;
+      return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
 
     renderOrderView({
@@ -1819,21 +1841,46 @@ export default {
 
         showToast('解析中...', 'info');
         let salesMapping = [], statuses = AppState.getStatuses() || ['排產中'];
+        let routeTemplates = [];
         
         try {
           const s = await getDocument('settings', 'main');
-          if (s) { salesMapping = s.sales_mapping || []; statuses = s.statuses || statuses; schema = s.schema || schema; }
+          if (s) { 
+            salesMapping = s.sales_mapping || []; 
+            statuses = s.statuses || statuses; 
+            schema = s.schema || schema; 
+            routeTemplates = s.route_templates || [];
+          }
         } catch (err) {}
 
         const parsed = parseExcelData(jsonData[0], jsonData.slice(1), salesMapping, statuses[0], schema);
         let added = 0, updated = 0;
 
         for (const order of parsed) {
-          if (await getDocument('work_orders', order.id)) {
-            // 若存在，僅更新 Excel 相關欄位，保留狀態
+          const existing = await getDocument('work_orders', order.id);
+          if (existing) {
+            // 若存在，僅更新 Excel 相關欄位，保留狀態與製程
             await updateDocument('work_orders', order.id, { salesReps: order.salesReps, uploadDate: order.uploadDate, data: order.data });
             updated++;
           } else {
+            // 新工單：依工單類別尋找對應的模板
+            const orderCategory = order.data.category || '其他';
+            
+            // 優先找類別相符的，再找通用預設 (category 為空)
+            let matchedTemplate = routeTemplates.find(t => t.category === orderCategory);
+            if (!matchedTemplate) {
+              matchedTemplate = routeTemplates.find(t => !t.category || t.category === '');
+            }
+
+            // 若找到模板且不為空，套用模板；否則套用全站狀態
+            if (matchedTemplate && matchedTemplate.steps && matchedTemplate.steps.length > 0) {
+              order.route = matchedTemplate.steps.slice();
+              order.status = matchedTemplate.steps[0];
+            } else {
+              order.route = statuses.slice();
+              order.status = statuses[0];
+            }
+
             await setDocument('work_orders', order.id, order);
             added++;
           }
@@ -1850,12 +1897,13 @@ export default {
   destroy() {
     if (unsubscribe) unsubscribe();
     window.removeEventListener('refresh-kanban', this.updateUI.bind(this));
+    window.removeEventListener('settings-updated', this.updateUI.bind(this));
   }
 };
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/kanban.js
-V: 1792919800
+V: 1792926500
 W: UPGRADE-004
 ═══ */```
 
@@ -2234,6 +2282,7 @@ export default {
     });
 
     window.addEventListener('refresh-salesperson', this.updateUI.bind(this));
+    window.addEventListener('settings-updated', this.updateUI.bind(this));
 
     this.initDataListener();
   },
@@ -2244,7 +2293,7 @@ export default {
       currentOrders = orders;
       // 如果第一次載入，自動選中第一個銷售員
       if (!currentRep) {
-        const reps = [...new Set(currentOrders.flatMap(o => o.salesReps || ['未填寫']))].sort();
+        const reps = Array.from(new Set(currentOrders.flatMap(o => o.salesReps || ['未填寫']))).sort();
         if (reps.length > 0) currentRep = reps[0];
       }
       this.updateUI();
@@ -2253,7 +2302,7 @@ export default {
 
   updateUI() {
     // 提取所有銷售員
-    const reps = [...new Set(currentOrders.flatMap(o => o.salesReps || ['未填寫']))].sort();
+    const reps = Array.from(new Set(currentOrders.flatMap(o => o.salesReps || ['未填寫']))).sort();
     
     // 若當前選中的銷售員不存在了，重置為第一個
     if (reps.length > 0 && !reps.includes(currentRep)) {
@@ -2281,7 +2330,7 @@ export default {
     // 依使用者設定的順序對齊欄位
     const visibleFields = (viewConfig['salesperson'] || []).map(key => {
       const field = schema.find(f => f.key === key);
-      return field ? { ...field, isVisible: true } : null;
+      return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
 
     renderOrderView({
@@ -2309,12 +2358,13 @@ export default {
   destroy() {
     if (unsubscribe) unsubscribe();
     window.removeEventListener('refresh-salesperson', this.updateUI.bind(this));
+    window.removeEventListener('settings-updated', this.updateUI.bind(this));
   }
 };
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/salesperson.js
-V: 1792920000
+V: 1792926800
 W: UPGRADE-004
 ═══ */```
 
@@ -2329,7 +2379,7 @@ import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
-import { createIcons, Plus, GripVertical, Trash2, Edit2 } from 'lucide';
+import { createIcons, Plus, GripVertical, Trash2, Edit2, Star, Settings2, X, Check } from 'lucide';
 
 /**
  * 渲染狀態管理頁籤
@@ -2344,7 +2394,7 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     </div>
     
     <div class="flex gap-2 mb-6">
-      <input type="text" id="new-status-input" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="輸入新狀態名稱...">
+      <input type="text" id="new-status-input" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="輸入新狀態名稱&#8230;">
       <button id="btn-add-status" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
         <i data-lucide="plus" class="w-4 h-4"></i> 新增
       </button>
@@ -2472,6 +2522,239 @@ export function renderStatuses(container, currentSettings, saveSettings) {
 }
 
 /**
+ * 渲染製程模板管理頁籤
+ */
+export function renderRouteTemplates(container, currentSettings, saveSettings) {
+  container.innerHTML = `
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">製程模板管理</h2>
+        <p class="text-sm text-slate-500 mt-1">建立生產路線並綁定類別，匯入工單時會自動套用對應類別的模板。</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-2 mb-6">
+      <input type="text" id="new-template-name" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="模板名稱 (例如：GF生產流程)">
+      <input type="text" id="new-template-category" class="w-full sm:w-48 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="對應類別 (例：GF)">
+      <button id="btn-add-template" class="btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap">
+        <i data-lucide="plus" class="w-4 h-4"></i> 新增模板
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      ${currentSettings.route_templates.map((tmpl, index) => `
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-800 text-base">${tmpl.name}</span>
+              ${tmpl.category 
+                ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">對應類別：${tmpl.category}</span>` 
+                : `<span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded">通用預設</span>`
+              }
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-template" data-index="${index}">
+                <i data-lucide="edit-2" class="w-4 h-4"></i>
+              </button>
+              <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-template" data-index="${index}">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+            ${tmpl.steps.length === 0 ? '<span class="text-slate-400">無設定工序</span>' : ''}
+            ${tmpl.steps.map((s, i) => `
+              <span class="px-2 py-1 bg-white border border-slate-200 rounded-md"><span class="text-slate-400 mr-1 text-xs">${i+1}.</span>${s}</span>
+              ${i < tmpl.steps.length - 1 ? '<span class="text-slate-300">➔</span>' : ''}
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  createIcons({ icons: { Plus, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
+
+  // 新增模板
+  document.getElementById('btn-add-template')?.addEventListener('click', async () => {
+    const nameInput = document.getElementById('new-template-name');
+    const catInput = document.getElementById('new-template-category');
+    const name = nameInput.value.trim();
+    const category = catInput.value.trim().toUpperCase();
+    
+    if (!name) return;
+    if (currentSettings.route_templates.some(t => t.name === name)) {
+      showToast('模板名稱已存在', 'error');
+      return;
+    }
+    currentSettings.route_templates.push({ name, category, steps: [] });
+    await saveSettings();
+    showToast('模板已新增，請編輯工序', 'success');
+  });
+
+  // 刪除模板
+  document.querySelectorAll('.btn-del-template').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = e.currentTarget.dataset.index;
+      const confirmed = await openConfirm({
+        title: '刪除模板',
+        message: '確定要刪除此模板嗎？',
+        isDanger: true
+      });
+      if (!confirmed) return;
+      currentSettings.route_templates.splice(idx, 1);
+      await saveSettings();
+      showToast('模板已刪除', 'success');
+    });
+  });
+
+  // 編輯模板（左右雙清單與基本資料）
+  document.querySelectorAll('.btn-edit-template').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      const tmpl = currentSettings.route_templates[idx];
+      
+      const content = `
+        <div class="flex flex-col md:flex-row gap-4 mb-4">
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-sm font-medium text-slate-700">模板名稱</label>
+            <input type="text" id="edit-tmpl-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" value="${tmpl.name}">
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-sm font-medium text-slate-700">對應類別 (留空為通用)</label>
+            <input type="text" id="edit-tmpl-category" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" value="${tmpl.category || ''}" placeholder="例：GF">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。</p>
+          <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
+            <!-- 左側：可選工序 -->
+            <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
+              <h4 class="font-bold text-sm text-slate-700 mb-2">可選工序</h4>
+              <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-available-list"></div>
+            </div>
+            <!-- 右側：預計工序順序 -->
+            <div class="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex flex-col shadow-sm">
+              <h4 class="font-bold text-sm text-slate-700 mb-2">預計工序順序</h4>
+              <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-selected-list"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+          <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">儲存</button>
+        </div>
+      `;
+
+      const { close, element } = openModal({ title: `編輯模板`, content });
+      
+      let currentSteps = Array.from(tmpl.steps);
+
+      const renderModalLists = () => {
+        const availableList = element.querySelector('#modal-available-list');
+        const selectedList = element.querySelector('#modal-selected-list');
+        
+        const availableStatuses = currentSettings.statuses.filter(s => !currentSteps.includes(s));
+
+        // 渲染左側
+        if (availableStatuses.length === 0) {
+          availableList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">所有工序已加入</div>';
+        } else {
+          availableList.innerHTML = availableStatuses.map(status => `
+            <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 cursor-pointer hover:border-brand transition-colors available-item" data-step="${status}">
+              <span class="flex-1 font-medium text-slate-700">${status}</span>
+              <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
+            </div>
+          `).join('');
+        }
+
+        // 渲染右側
+        if (currentSteps.length === 0) {
+          selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
+        } else {
+          selectedList.innerHTML = currentSteps.map((step, idx) => `
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
+              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
+              <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${idx + 1}.</span>${step}</span>
+              <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `).join('');
+        }
+
+        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+        
+        // 綁定左側點擊加入
+        availableList.querySelectorAll('.available-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const step = item.dataset.step;
+            if (!currentSteps.includes(step)) {
+              currentSteps.push(step);
+              renderModalLists();
+            }
+          });
+        });
+
+        // 綁定右側移除
+        selectedList.querySelectorAll('.btn-remove-step').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const step = ev.currentTarget.dataset.step;
+            currentSteps = currentSteps.filter(s => s !== step);
+            renderModalLists();
+          });
+        });
+
+        // 綁定右側拖曳
+        let dragged = null;
+        selectedList.querySelectorAll('.step-item').forEach(item => {
+          item.addEventListener('dragstart', function() {
+            dragged = this;
+            setTimeout(() => this.classList.add('opacity-50'), 0);
+          });
+          item.addEventListener('dragend', function() {
+            this.classList.remove('opacity-50');
+            dragged = null;
+            currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
+            renderModalLists(); // 重新渲染以更新序號
+          });
+          item.addEventListener('dragover', function(ev) {
+            ev.preventDefault();
+            if (this === dragged) return;
+            const rect = this.getBoundingClientRect();
+            const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            selectedList.insertBefore(dragged, next ? this.nextSibling : this);
+          });
+        });
+      };
+
+      renderModalLists();
+
+      element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+
+      element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+        const newName = element.querySelector('#edit-tmpl-name').value.trim();
+        const newCategory = element.querySelector('#edit-tmpl-category').value.trim().toUpperCase();
+        
+        if (!newName) {
+          showToast('模板名稱不能為空', 'error');
+          return;
+        }
+
+        currentSettings.route_templates[idx].name = newName;
+        currentSettings.route_templates[idx].category = newCategory;
+        currentSettings.route_templates[idx].steps = currentSteps;
+        
+        await saveSettings();
+        showToast('模板已更新', 'success');
+        close();
+      });
+    });
+  });
+}
+
+/**
  * 渲染銷售員對照表管理頁籤
  */
 export function renderMapping(container, currentSettings, saveSettings) {
@@ -2539,7 +2822,7 @@ export function renderMapping(container, currentSettings, saveSettings) {
           }
         });
         if (changed) {
-          await updateDocument('work_orders', order.id, { salesReps: [...new Set(reps)] });
+          await updateDocument('work_orders', order.id, { salesReps: Array.from(new Set(reps)) });
           updateCount++;
         }
       }
@@ -2618,7 +2901,7 @@ export function renderMapping(container, currentSettings, saveSettings) {
               }
             });
             if (changed) {
-              await updateDocument('work_orders', order.id, { salesReps: [...new Set(reps)] });
+              await updateDocument('work_orders', order.id, { salesReps: Array.from(new Set(reps)) });
               updateCount++;
             }
           }
@@ -2646,7 +2929,7 @@ export function renderMapping(container, currentSettings, saveSettings) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings-basic.js
-V: 1792919600
+V: 1792926300
 W: UPGRADE-004
 ═══ */```
 
@@ -2960,11 +3243,11 @@ import { parseExcelData } from '../domain/parser.js';
 import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X, List, Database, Edit2, AlertCircle, LayoutDashboard, Table, PieChart, Layers, Check } from 'lucide';
 
 // 引入拆分出去的模組
-import { renderStatuses, renderMapping } from './settings-basic.js';
+import { renderStatuses, renderMapping, renderRouteTemplates } from './settings-basic.js';
 import { renderSchema, renderViewConfig } from './settings-schema.js';
 
 let unsubscribe = null;
-export let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [], view_configs: {} };
+export let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [], view_configs: {}, route_templates: [] };
 let activeTab = 'statuses';
 
 export default {
@@ -2997,7 +3280,8 @@ export default {
           sales_mapping: data.sales_mapping || [],
           users: data.users || [{ username: 'admin', password: '123456', role: 'admin' }],
           schema: data.schema || this.getDefaultSchema(),
-          view_configs: data.view_configs || this.getDefaultViewConfigs()
+          view_configs: data.view_configs || this.getDefaultViewConfigs(),
+          route_templates: data.route_templates || this.getDefaultRouteTemplates(data.statuses || ['排產中'])
         };
         
         // 自動補齊核心欄位與視圖配置
@@ -3007,12 +3291,13 @@ export default {
           { key: 'salesRep', label: '我方備考', type: 'string', isSystem: true, isEditable: true },
           { key: 'status', label: '生產進度', type: 'string', isSystem: true, isEditable: false },
           { key: 'dueDate', label: '交貨日期', type: 'date', isSystem: true, isEditable: true },
-          { key: 'statusUpdateDate', label: '更新日期', type: 'date', isSystem: true, isEditable: false }
+          { key: 'statusUpdateDate', label: '更新日期', type: 'date', isSystem: true, isEditable: false },
+          { key: 'route', label: '製程路線', type: 'string', isSystem: true, isEditable: false }
         ];
 
         requiredSysFields.forEach(req => {
           if (!currentSettings.schema.some(f => f.key === req.key)) {
-            currentSettings.schema.unshift(req);
+            currentSettings.schema.push(req);
             needSave = true;
           }
         });
@@ -3033,13 +3318,39 @@ export default {
           needSave = true;
         }
 
+        // 💡 資料遷移與修復：確保模板皆有 category 欄位，且通用預設模板不會是空的
+        let hasEmptyDefault = false;
+        currentSettings.route_templates.forEach(t => {
+          if (t.category === undefined) {
+            t.category = '';
+            needSave = true;
+          }
+          // 如果發現通用模板（category 為空）卻沒有工序，將其補齊
+          if ((t.category === '' || t.category === '通用') && (!t.steps || t.steps.length === 0)) {
+            t.steps = [...currentSettings.statuses];
+            hasEmptyDefault = true;
+            needSave = true;
+          }
+        });
+
+        // 如果完全沒有通用預設模板，強制建立一個
+        if (!currentSettings.route_templates.some(t => t.category === '' || t.category === '通用')) {
+          currentSettings.route_templates.unshift({
+            name: '預設常規路線',
+            category: '',
+            steps: [...currentSettings.statuses]
+          });
+          needSave = true;
+        }
+
       } else {
         currentSettings = {
           statuses: ['排產中', '印刷', '裁切', '品檢', '出貨'],
           sales_mapping: [],
           users: [{ username: 'admin', password: '123456', role: 'admin' }],
           schema: this.getDefaultSchema(),
-          view_configs: this.getDefaultViewConfigs()
+          view_configs: this.getDefaultViewConfigs(),
+          route_templates: this.getDefaultRouteTemplates()
         };
         needSave = true;
       }
@@ -3061,10 +3372,17 @@ export default {
       { key: 'status', label: '生產進度', type: 'string', isSystem: true, isEditable: false },
       { key: 'dueDate', label: '交貨日期', type: 'date', isSystem: true, isEditable: true },
       { key: 'statusUpdateDate', label: '更新日期', type: 'date', isSystem: true, isEditable: false },
+      { key: 'route', label: '製程路線', type: 'string', isSystem: true, isEditable: false },
       { key: 'amount', label: '金額', type: 'number', isSystem: false, isEditable: true },
       { key: 'customCategory', label: '類別', type: 'string', isSystem: false, isEditable: true },
       { key: 'customerNameZh', label: '中文名稱', type: 'string', isSystem: false, isEditable: true },
       { key: 'customerNameEn', label: '名稱', type: 'string', isSystem: false, isEditable: true }
+    ];
+  },
+
+  getDefaultRouteTemplates(statuses = ['排產中', '印刷', '裁切', '品檢', '出貨']) {
+    return [
+      { name: '預設常規路線', category: '', steps: [...statuses] }
     ];
   },
 
@@ -3088,6 +3406,9 @@ export default {
         <div class="w-full md:w-64 border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col gap-1 flex-shrink-0 overflow-y-auto">
           <button class="tab-btn ${activeTab === 'statuses' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="statuses">
             <i data-lucide="tag" class="w-4 h-4"></i> 狀態管理
+          </button>
+          <button class="tab-btn ${activeTab === 'route_templates' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="route_templates">
+            <i data-lucide="layers" class="w-4 h-4"></i> 製程模板
           </button>
           <button class="tab-btn ${activeTab === 'mapping' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="mapping">
             <i data-lucide="users" class="w-4 h-4"></i> 對照表管理
@@ -3120,7 +3441,7 @@ export default {
     `;
 
     createIcons({
-      icons: { Tag, Users, Shield, FileSpreadsheet, List, Database, LayoutDashboard },
+      icons: { Tag, Users, Shield, FileSpreadsheet, List, Database, LayoutDashboard, Layers },
       attrs: { class: 'w-4 h-4' }
     });
 
@@ -3144,6 +3465,8 @@ export default {
     // 委派給拆分出去的模組
     if (activeTab === 'statuses') {
       renderStatuses(content, currentSettings, this.saveSettings.bind(this));
+    } else if (activeTab === 'route_templates') {
+      renderRouteTemplates(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'mapping') {
       renderMapping(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'schema') {
@@ -3362,7 +3685,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1792921500
+V: 1792926200
 W: UPGRADE-004
 ═══ */```
 
@@ -3431,6 +3754,7 @@ export default {
     });
 
     window.addEventListener('refresh-table', this.updateUI.bind(this));
+    window.addEventListener('settings-updated', this.updateUI.bind(this));
     createIcons({ icons: { Download, FileText }, attrs: { class: 'w-4 h-4' } });
 
     this.initDataListener();
@@ -3447,7 +3771,7 @@ export default {
   updateUI() {
     const catSelect = document.getElementById('filter-category');
     if (catSelect) {
-      const cats = [...new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))].sort();
+      const cats = Array.from(new Set(currentOrders.map(o => o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他'))).sort();
       catSelect.innerHTML = `<option value="ALL">全部類別</option>` + cats.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join('');
     }
 
@@ -3500,12 +3824,13 @@ export default {
   destroy() {
     if (unsubscribe) unsubscribe();
     window.removeEventListener('refresh-table', this.updateUI.bind(this));
+    window.removeEventListener('settings-updated', this.updateUI.bind(this));
   }
 };
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/table.js
-V: 1792920200
+V: 1792926600
 W: UPGRADE-004
 ═══ */```
 
@@ -3907,20 +4232,20 @@ import { createIcons, X } from 'lucide';
 export function openModal({ title, content, onClose }) {
   // 建立遮罩與容器
   const overlay = document.createElement('div');
-  overlay.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 opacity-0';
+  overlay.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 opacity-0 p-4';
   
   const modal = document.createElement('div');
-  // 使用 tailwind 的 glass-card 風格 (純白背景、圓角20px、細微邊框、柔和陰影)
-  modal.className = 'bg-white border border-slate-100 shadow-soft rounded-[20px] w-full max-w-md mx-4 overflow-hidden transform transition-transform duration-300 scale-95';
+  // 使用 flex flex-col 與 max-h-[90vh] 確保內容不會撐破螢幕
+  modal.className = 'bg-white border border-slate-100 shadow-soft rounded-[20px] w-full max-w-md flex flex-col max-h-[90vh] transform transition-transform duration-300 scale-95 overflow-hidden';
   
   modal.innerHTML = `
-    <div class="flex justify-between items-center p-5 border-b border-slate-100">
+    <div class="flex justify-between items-center p-5 border-b border-slate-100 flex-shrink-0">
       <h3 class="text-lg font-bold text-slate-900">${title}</h3>
       <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 hover:bg-slate-100 p-1.5 rounded-full">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
-    <div class="p-5 text-slate-600">
+    <div class="p-5 text-slate-600 overflow-y-auto flex-1">
       ${content}
     </div>
   `;
@@ -4018,9 +4343,9 @@ export function openConfirm({ title, message, confirmText = '確認', cancelText
 }
 
 /* ═══ EOF ═══
-F: src/ui/modal.js
-V: 1792903509
-W: webapp-20261026-001#21
+F: AI-WA-UPWO/src/ui/modal.js
+V: 1792926000
+W: UPGRADE-004
 ═══ */```
 
 <!-- === FILE END: ./src/ui/modal.js === -->
@@ -4031,11 +4356,14 @@ W: webapp-20261026-001#21
 
 ```js
 import { updateDocument } from '../db/write.js';
+import { getDocument } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
+import { openModal } from '../ui/modal.js';
+import { AppState } from '../config/state.js';
+import { createIcons, GripVertical, Plus, X } from 'lucide';
 
 /**
- * 全域行內編輯處理器
- * 負責接收 order-view.js 拋出的 inline-edit 事件，並寫入 Firestore。
+ * 處理行內編輯事件
  */
 window.addEventListener('inline-edit', async (e) => {
   const { id, key, value } = e.detail;
@@ -4045,7 +4373,7 @@ window.addEventListener('inline-edit', async (e) => {
     const updateData = {};
     
     // 系統核心欄位清單（直接更新根節點）
-    const coreFields = ['id', 'status', 'salesReps', 'uploadDate', 'dueDate', 'statusUpdateDate'];
+    const coreFields = ['id', 'status', 'salesReps', 'uploadDate', 'dueDate', 'statusUpdateDate', 'route'];
     
     if (coreFields.includes(key)) {
       updateData[key] = value;
@@ -4063,9 +4391,262 @@ window.addEventListener('inline-edit', async (e) => {
   }
 });
 
+/**
+ * 處理全域點擊事件（上/下工序與編輯製程）
+ */
+document.addEventListener('click', async (e) => {
+  // 1. 點擊上一個工序
+  const prevBtn = e.target.closest('button[data-action="prev-step"]');
+  if (prevBtn) {
+    const id = prevBtn.dataset.id;
+    const routeStr = prevBtn.dataset.route;
+    const currentStatus = prevBtn.dataset.status;
+    
+    try {
+      const route = JSON.parse(routeStr);
+      const idx = route.indexOf(currentStatus);
+      if (idx > 0) {
+        const newStatus = route[idx - 1];
+        await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+        showToast(`已退回：${newStatus}`, 'success');
+      }
+    } catch (err) {
+      console.error('[Prev Step Error]', err);
+    }
+    return;
+  }
+
+  // 2. 點擊下一個工序
+  const nextBtn = e.target.closest('button[data-action="next-step"]');
+  if (nextBtn) {
+    const id = nextBtn.dataset.id;
+    const routeStr = nextBtn.dataset.route;
+    const currentStatus = nextBtn.dataset.status;
+    
+    try {
+      const route = JSON.parse(routeStr);
+      const idx = route.indexOf(currentStatus);
+      if (idx !== -1 && idx < route.length - 1) {
+        const newStatus = route[idx + 1];
+        await updateDocument('work_orders', id, { status: newStatus, statusUpdateDate: new Date().toISOString() });
+        showToast(`已進入：${newStatus}`, 'success');
+      }
+    } catch (err) {
+      console.error('[Next Step Error]', err);
+    }
+    return;
+  }
+
+  // 3. 點擊編輯製程 ⚙️
+  const editRouteBtn = e.target.closest('button[data-action="edit-route"]');
+  if (editRouteBtn) {
+    const id = editRouteBtn.dataset.id;
+    const routeStr = editRouteBtn.dataset.route;
+    const currentStatus = editRouteBtn.dataset.status;
+    
+    let currentRoute = [];
+    try {
+      currentRoute = JSON.parse(routeStr);
+    } catch (e) {
+      currentRoute = [];
+    }
+
+    const allStatuses = AppState.getStatuses() || [];
+
+    // 獲取最新的設定與模板
+    let routeTemplates = [];
+    try {
+      const settings = await getDocument('settings', 'main');
+      if (settings && settings.route_templates) {
+        routeTemplates = settings.route_templates;
+      }
+    } catch (err) {
+      console.warn('無法讀取模板設定', err);
+    }
+
+    const templateOptions = routeTemplates.map((t, i) => {
+      const label = t.category ? `[${t.category}] ${t.name}` : `[通用] ${t.name}`;
+      return `<option value="${i}">${label}</option>`;
+    }).join('');
+
+    const content = `
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+          <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。</p>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <select id="modal-template-select" class="flex-1 sm:w-48 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand shadow-sm">
+              <option value="">-- 快速套用模板 --</option>
+              ${templateOptions}
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-4 max-h-[50vh]">
+          <!-- 左側：可選工序 -->
+          <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col h-[200px] md:h-auto">
+            <h4 class="font-bold text-sm text-slate-700 mb-2">可選工序</h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-available-list"></div>
+          </div>
+          <!-- 右側：預計工序順序 -->
+          <div class="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex flex-col shadow-sm h-[200px] md:h-auto">
+            <h4 class="font-bold text-sm text-slate-700 mb-2">預計工序順序</h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-selected-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">儲存</button>
+      </div>
+    `;
+
+    const { close, element } = openModal({ title: `編輯製程路線 (${id})`, content });
+    
+    let currentSteps = Array.from(currentRoute);
+
+    const renderModalLists = () => {
+      const availableList = element.querySelector('#modal-available-list');
+      const selectedList = element.querySelector('#modal-selected-list');
+      
+      const availableStatuses = allStatuses.filter(s => !currentSteps.includes(s));
+
+      // 渲染左側
+      if (availableStatuses.length === 0) {
+        availableList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">所有工序已加入</div>';
+      } else {
+        availableList.innerHTML = availableStatuses.map(status => `
+          <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 cursor-pointer hover:border-brand transition-colors available-item" data-step="${status}">
+            <span class="flex-1 font-medium text-slate-700">${status}</span>
+            <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
+          </div>
+        `).join('');
+      }
+
+      // 渲染右側
+      if (currentSteps.length === 0) {
+        selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
+      } else {
+        selectedList.innerHTML = currentSteps.map((step, idx) => `
+          <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
+            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
+            <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${idx + 1}.</span>${step}</span>
+            <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+      
+      // 綁定左側點擊加入
+      availableList.querySelectorAll('.available-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const step = item.dataset.step;
+          if (!currentSteps.includes(step)) {
+            currentSteps.push(step);
+            renderModalLists();
+          }
+        });
+      });
+
+      // 綁定右側移除
+      selectedList.querySelectorAll('.btn-remove-step').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const step = ev.currentTarget.dataset.step;
+          currentSteps = currentSteps.filter(s => s !== step);
+          renderModalLists();
+        });
+      });
+
+      // 綁定右側拖曳
+      let dragged = null;
+      selectedList.querySelectorAll('.step-item').forEach(item => {
+        item.addEventListener('dragstart', function() {
+          dragged = this;
+          setTimeout(() => this.classList.add('opacity-50'), 0);
+        });
+        item.addEventListener('dragend', function() {
+          this.classList.remove('opacity-50');
+          dragged = null;
+          currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
+          renderModalLists(); // 重新渲染以更新序號
+        });
+        item.addEventListener('dragover', function(ev) {
+          ev.preventDefault();
+          if (this === dragged) return;
+          const rect = this.getBoundingClientRect();
+          const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          selectedList.insertBefore(dragged, next ? this.nextSibling : this);
+        });
+      });
+    };
+
+    renderModalLists();
+
+    // 快速套用模板變更事件
+    element.querySelector('#modal-template-select').addEventListener('change', (ev) => {
+      const idx = parseInt(ev.target.value);
+      if (!isNaN(idx) && routeTemplates[idx]) {
+        currentSteps = [...routeTemplates[idx].steps];
+        renderModalLists();
+        showToast(`已套用模板：${routeTemplates[idx].name}`, 'info');
+        ev.target.value = ''; // 重設下拉選單
+      }
+    });
+
+    element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+
+    element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+      if (currentSteps.length === 0) {
+        showToast('製程路線不能為空', 'error');
+        return;
+      }
+
+      let newStatus = currentStatus;
+      
+      // 若原本的狀態不在新路線中，依規則退回上一個工序
+      if (!currentSteps.includes(currentStatus)) {
+        let fallbackStatus = currentSteps[0]; // 預設退回第一個
+        
+        // 尋找原本路線中當前狀態的上一個工序
+        const oldIdx = currentRoute.indexOf(currentStatus);
+        if (oldIdx > 0) {
+          const prevStatus = currentRoute[oldIdx - 1];
+          // 如果上一個工序存在於新路線中，就退回它
+          if (currentSteps.includes(prevStatus)) {
+            fallbackStatus = prevStatus;
+          }
+        }
+        newStatus = fallbackStatus;
+      }
+
+      const confirmBtn = element.querySelector('#modal-confirm-btn');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '儲存中...';
+
+      try {
+        await updateDocument('work_orders', id, { 
+          route: currentSteps,
+          status: newStatus,
+          statusUpdateDate: new Date().toISOString()
+        });
+        showToast(`製程已更新${newStatus !== currentStatus ? `，狀態退回至：${newStatus}` : ''}`, 'success');
+        close();
+      } catch (err) {
+        console.error(err);
+        showToast('更新失敗，請稍後再試', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '儲存';
+      }
+    });
+    return;
+  }
+});
+
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view-editor.js
-V: 1792921100
+V: 1792926400
 W: UPGRADE-004
 ═══ */```
 
@@ -4077,7 +4658,7 @@ W: UPGRADE-004
 
 ```js
 import { AppState } from '../config/state.js';
-import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search } from 'lucide';
+import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search, ChevronLeft, ChevronRight, Settings } from 'lucide';
 
 /**
  * 將 Excel 日期轉為 YYYY-MM-DD，並防呆過濾
@@ -4177,17 +4758,8 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
       }
     });
 
-    // 改變事件 (狀態下拉選單 & 行內編輯)
+    // 改變事件 (行內編輯)
     document.addEventListener('change', (e) => {
-      // 狀態變更
-      const select = e.target.closest('select[data-action="change-status"]');
-      if (select) {
-        const id = select.dataset.id;
-        const newStatus = select.value;
-        if (onAction) onAction('status_change', id, newStatus);
-        return;
-      }
-
       // 行內編輯（日期或文字）
       const inlineInput = e.target.closest('input[data-action="inline-edit"]');
       if (inlineInput) {
@@ -4225,7 +4797,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     });
   }
 
-  const statuses = AppState.getStatuses() || [];
+  const allStatuses = AppState.getStatuses() || [];
 
   // 5. 生成 HTML
   const viewToggleHtml = `
@@ -4238,7 +4810,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
           <i data-lucide="search" class="w-4 h-4"></i>
         </div>
-        <input type="text" data-action="global-search" data-page-key="${pageKey}" value="${state.filters['__GLOBAL__'] || ''}" class="w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm" placeholder="搜尋所有欄位...">
+        <input type="text" data-action="global-search" data-page-key="${pageKey}" value="${state.filters['__GLOBAL__'] || ''}" class="w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm" placeholder="搜尋所有欄位&#8230;">
       </div>
     </div>
   `;
@@ -4264,12 +4836,36 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             const val = getOrderValue(order, f.key);
             
             if (f.key === 'status') {
+              let route = order.route && order.route.length > 0 ? order.route : allStatuses;
+              let idx = route.indexOf(order.status);
+              if (idx === -1) idx = 0;
+              const isFirst = idx <= 0;
+              const isLast = idx >= route.length - 1;
+              const prevStep = isFirst ? '' : route[idx - 1];
+              const nextStep = isLast ? '' : route[idx + 1];
+              const routeStr = JSON.stringify(route).replace(/"/g, '&quot;');
+
               return `
                 <div class="text-sm flex flex-col gap-1">
                   <span class="text-slate-400">${f.label}:</span>
-                  <select data-action="change-status" data-id="${order.id}" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand">
-                    ${statuses.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
-                  </select>
+                  <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-1 py-0.5 w-fit max-w-full">
+                    <button data-action="prev-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                      class="flex items-center text-xs p-1 rounded text-slate-600 hover:bg-slate-200 transition-colors ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}" ${isFirst ? 'disabled' : ''}>
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                      <span class="truncate max-w-[60px]">${prevStep}</span>
+                    </button>
+                    <span class="font-bold text-slate-700 text-sm px-1 min-w-[60px] text-center truncate max-w-[100px]">${order.status}</span>
+                    <button data-action="next-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                      class="flex items-center text-xs p-1 rounded text-slate-600 hover:bg-slate-200 transition-colors ${isLast ? 'opacity-30 cursor-not-allowed' : ''}" ${isLast ? 'disabled' : ''}>
+                      <span class="truncate max-w-[60px]">${nextStep}</span>
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                    <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                    <button data-action="edit-route" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                      class="p-1 rounded text-slate-400 hover:text-brand hover:bg-white transition-colors" title="編輯製程">
+                      <i data-lucide="settings" class="w-4 h-4"></i>
+                    </button>
+                  </div>
                 </div>
               `;
             }
@@ -4277,7 +4873,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             // 判斷是否可編輯
             if (f.isEditable) {
               const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
-              // 若為日期，需先格式化，避免瀏覽器不支援
               const displayVal = f.type === 'date' ? formatExcelDate(val) : val;
               
               return `
@@ -4299,7 +4894,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         </div>
       `).join('') + `</div>`;
   } else {
-    // 動態表格 (已移除第二行篩選列)
+    // 動態表格
     contentHtml = `
       <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-x-auto w-full">
         <table class="w-full text-left border-collapse min-w-full">
@@ -4318,11 +4913,35 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
               <tr class="hover:bg-slate-50/50 transition-colors">
                 ${displayFields.map(f => {
                   if (f.key === 'status') {
+                    let route = order.route && order.route.length > 0 ? order.route : allStatuses;
+                    let idx = route.indexOf(order.status);
+                    if (idx === -1) idx = 0;
+                    const isFirst = idx <= 0;
+                    const isLast = idx >= route.length - 1;
+                    const prevStep = isFirst ? '' : route[idx - 1];
+                    const nextStep = isLast ? '' : route[idx + 1];
+                    const routeStr = JSON.stringify(route).replace(/"/g, '&quot;');
+
                     return `
                       <td class="px-4 py-3 whitespace-nowrap">
-                        <select data-action="change-status" data-id="${order.id}" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand">
-                          ${statuses.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
-                        </select>
+                        <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-1 py-0.5 w-fit max-w-full">
+                          <button data-action="prev-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                            class="flex items-center text-xs p-1 rounded text-slate-600 hover:bg-slate-200 transition-colors ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}" ${isFirst ? 'disabled' : ''}>
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            <span class="truncate max-w-[60px]">${prevStep}</span>
+                          </button>
+                          <span class="font-bold text-slate-700 text-sm px-1 min-w-[60px] text-center truncate max-w-[100px]">${order.status}</span>
+                          <button data-action="next-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                            class="flex items-center text-xs p-1 rounded text-slate-600 hover:bg-slate-200 transition-colors ${isLast ? 'opacity-30 cursor-not-allowed' : ''}" ${isLast ? 'disabled' : ''}>
+                            <span class="truncate max-w-[60px]">${nextStep}</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                          </button>
+                          <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                          <button data-action="edit-route" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}" 
+                            class="p-1 rounded text-slate-400 hover:text-brand hover:bg-white transition-colors" title="編輯製程">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                          </button>
+                        </div>
                       </td>
                     `;
                   }
@@ -4356,7 +4975,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
   }
 
   container.innerHTML = viewToggleHtml + contentHtml;
-  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown, Search }, attrs: { class: 'w-3 h-3' } });
+  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Settings }, attrs: { class: 'w-4 h-4' } });
 }
 
 /**
@@ -4377,7 +4996,7 @@ function getOrderValue(order, key) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1792922300
+V: 1792925500
 W: UPGRADE-004
 ═══ */```
 
