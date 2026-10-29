@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-29 15:55:34 (HKT)
+> 生成時間：2026-10-29 23:07:48 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -35,7 +35,7 @@
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792913500 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792914300 | ai-system-005 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792914200 | ai-system-005 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792914700 | ai-system-005 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -307,7 +307,7 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 24 |
-| 02-RP.md | 184 |
+| 02-RP.md | 156 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
