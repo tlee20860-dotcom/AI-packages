@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-29 23:07:48 (HKT)
+> 生成時間：2026-10-29 23:39:48 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -31,9 +31,9 @@
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792912300 | ai-system-004 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792913300 | ai-system-005 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792914600 | ai-system-005 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792915100 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792913500 | ai-system-005 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792915200 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792914300 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792914700 | ai-system-005 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
@@ -307,7 +307,7 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 24 |
-| 02-RP.md | 156 |
+| 02-RP.md | 76 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
