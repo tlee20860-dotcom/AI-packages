@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-29 11:26:52 (HKT)
+> 生成時間：2026-10-29 11:38:35 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -70,6 +70,9 @@
         .compare-card-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; }
         .compare-card pre { font-size: 0.75rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; font-family: monospace; color: var(--text); background: #f8fafc; padding: 6px; border-radius: 4px; }
         .compare-card.loading pre { color: var(--text-muted); font-style: italic; }
+        
+        /* 高亮樣式 */
+        .highlight-error { color: #dc2626; background-color: #fee2e2; font-weight: bold; border-radius: 2px; padding: 0 2px; }
         
         details { margin-bottom: 15px; }
         summary { cursor: pointer; font-weight: bold; padding: 12px 15px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); outline: none; display: flex; align-items: center; gap: 8px; }
@@ -405,6 +408,39 @@
             return eofRegex.test(content);
         }
 
+        // ── HTML 轉義（防 XSS 與破版） ──
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        // ── 禁用詞高亮（僅用於顯示，不影響源碼） ──
+        function highlightText(text, targets) {
+            if (text === null || text === undefined) return '';
+            let safeText = escapeHTML(text);
+            if (!targets || targets.length === 0) return safeText;
+            
+            // 去除重複與 null，並依長度降序排序（避免短詞先匹配長詞的一部分）
+            const uniqueTargets = [...new Set(targets)].filter(Boolean).sort((a, b) => b.length - a.length);
+            
+            uniqueTargets.forEach(target => {
+                // 轉義正則特殊字元
+                const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedTarget, 'g');
+                const replacement = `<span class="highlight-error">${escapeHTML(target)}</span>`;
+                safeText = safeText.replace(regex, replacement);
+            });
+            
+            return safeText;
+        }
+
         // ── 標記錯誤 ──
         function markError(msg, target, oldContent) {
             let mark = '';
@@ -565,15 +601,19 @@
 
                 const oldCard = document.getElementById('old-content-card');
                 const oldPre = document.getElementById('old-content-view');
+                const newPre = document.getElementById('new-content-view');
+
+                const targetsToHighlight = errorTargets.filter(t => t);
+
                 if (oldContent !== null) {
                     oldCard.classList.remove('loading');
-                    oldPre.textContent = oldContent;
+                    oldPre.innerHTML = highlightText(oldContent, targetsToHighlight);
                 } else {
                     oldCard.classList.add('loading');
                     oldPre.textContent = oldContentStatus || '讀取中…';
                 }
 
-                document.getElementById('new-content-view').textContent = content;
+                newPre.innerHTML = highlightText(content, targetsToHighlight);
 
                 if (repo && filePath) {
                     forceBtn.style.display = 'block';
@@ -865,7 +905,7 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792914000
+V: 1792914400
 W: ai-system-005
 ═══ -->```
 
