@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-28 22:32:18 (HKT)
+> 生成時間：2026-10-29 11:26:51 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -29,13 +29,13 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792912500 | ` |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792912000 | ai-system-004 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792912300 | ai-system-004 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792905400 | ai-system-003#3 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792913300 | ai-system-005 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792910600 | ai-system-004 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1792913200 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792909300 | ai-system-004 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1792913500 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792910700 | ai-system-004 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792912700 | ai-system-004 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792914200 | ai-system-005 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -48,7 +48,7 @@
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792917400 | UPGRADE-002 |
 | AI-kernel | docs/skills/W/W-06-sop.md | 1792917500 | UPGRADE-002 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1792917600 | UPGRADE-002 |
-| AI-kernel | docs/u-profile/U-00-profile.md | 1792909500 | ai-system-004 |
+| AI-kernel | docs/u-profile/U-00-profile.md | 1792913600 | ai-system-005 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
 | 目錄/路徑 | 檔案名稱 |
@@ -307,7 +307,7 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 24 |
-| 02-RP.md | 72 |
+| 02-RP.md | 148 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 44 |
