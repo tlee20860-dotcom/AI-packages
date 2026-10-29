@@ -1,5 +1,5 @@
 > 體系版本：SV09
-> 生成時間：2026-10-29 23:39:50 (HKT)
+> 生成時間：2026-10-29 23:43:38 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -548,6 +548,30 @@
             let cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
             cleanContent = cleanContent.replace(/「[^」]*」/g, '').replace(/`[^`]*`/g, '');
 
+            // 取舊檔（若非新檔）
+            let oldContent = null;
+            let oldContentStatus = '';
+            if (repo && filePath && allowedRepos.includes(repo)) {
+                oldContent = await fetchOldContent(repo, filePath);
+                if (oldContent === null) {
+                    oldContentStatus = '（新檔案，倉庫無舊版）';
+                }
+            } else {
+                oldContentStatus = '（無法解析路徑或非白名單，無法取得舊檔）';
+            }
+
+            // 【新增防呆】累積型檔案覆蓋攔截
+            const appendOnlyKeywords = ['DEBT', 'REJECTED', 'EVOLUTION', 'ARCHIVE', 'CONCLUSION'];
+            const isAppendOnlyFile = appendOnlyKeywords.some(kw => filePath.toUpperCase().includes(kw));
+            
+            if (isAppendOnlyFile && oldContent !== null) {
+                const isAppendMode = /^\s*\[APPEND\]/m.test(content);
+                if (!isAppendMode && content.length < 500) {
+                    errors.push(`⚠️ 目標為累積型檔案，但未標記 [APPEND]。若發布將完全覆蓋舊檔，確定要繼續嗎？（若這是完整檔，請按強制發布）`);
+                    errorTargets.push(null);
+                }
+            }
+
             // 統一從 forbidden_words.txt 讀取（含 lazyPatterns 5 條），做字串比對
             // 不再使用獨立的 lazyPatterns 正則，確保「規則怎麼寫，檢查就怎麼查」
             if (!isRecordFile) {
@@ -580,18 +604,6 @@
                 let header = "";
                 if (rules.show_file_path_in_error !== false) {
                     header = (rules.error_header_format || "📄 檔案：{path}\n------------------------\n").replace("{path}", fullPath);
-                }
-
-                // 取舊檔（若非新檔）
-                let oldContent = null;
-                let oldContentStatus = '';
-                if (repo && filePath) {
-                    oldContent = await fetchOldContent(repo, filePath);
-                    if (oldContent === null) {
-                        oldContentStatus = '（新檔案，倉庫無舊版）';
-                    }
-                } else {
-                    oldContentStatus = '（無法解析路徑，無法取得舊檔）';
                 }
 
                 // 顯示錯誤列表（含標記）
@@ -931,7 +943,7 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792915000
+V: 1792915400
 W: ai-system-005
 ═══ -->```
 
