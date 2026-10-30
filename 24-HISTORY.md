@@ -1,5 +1,5 @@
-> 體系版本：SV11
-> 生成時間：2026-10-30 23:56:49 (HKT)
+> 體系版本：SV12
+> 生成時間：2026-10-31 01:18:21 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -282,11 +282,14 @@ EOF */
 
 | RJ-027 | 將 `copy-backup.yml` 改為每日定時全量複製 | 每日將所有倉庫實體檔案複製到 `AI-Backup` 會佔用大量 GitHub 儲存空間且拖慢執行速度。決議維持原樣：每日 `backup.yml` 僅在原倉庫打 Tag，全量實體複製交由控制台的「一鍵備份」手動觸發。 | ai-system-005 | 2026-10-30 |
 
-/* ═══ EOF ═══
+| RJ-028 | 將依賴映射表抽離為獨立的 JSON 檔（`dependency-map.json`） | 雖然符合防硬編碼原則，但會增加維護成本（每次修改體系檔案都要同步改 JSON）。若忘記更新，會導致防線失效。決議：直接將字典寫死在前端 `index.html`，並由 AI 於必要時手動更新。 | ai-system-006 | 2026-10-31 |
+| RJ-029 | 使用腳本自動解析 Markdown 表格以生成依賴字典 | Markdown 的表格語意高度依賴人類寫作習慣，腳本正則難以精準抓取（例如「A00 §二、詞 28」）。強行解析會導致嚴重的誤報與漏報。決議：維持前端靜態字典與 AI 的 S-006 關聯分析。 | ai-system-006 | 2026-10-31 |
+
+/* EOF
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1792917200
-W: ai-system-005
-═══ */
+V: 1792936800
+W: ai-system-006
+EOF */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
 
 <!-- === FILE START: AI-General/docs/records/SYSTEM-DEBT.md === -->
@@ -381,8 +384,17 @@ W: ai-system-005
 | K-28 | 體系 | AI 未嚴格遵守 F-002（路徑未用波浪號包裹）與 R-001（偽造密語 `等待確認`）。 | 中 | 已解決（前端已加入強制校驗與分頁物理隔離，大幅降低誤判風險） | ai-system-006 |
 
 /* EOF
+EOF */
+
+| K-40 | 體系 | 前端控制台狀態管理脆弱。曾發生預演面板未渲染、錯誤面板隱藏對比區、`[APPEND]` 與 `<<<<<<< OLD` 優先級誤判等問題。 | 中 | 待處理（已透過多次修補解決當前問題，未來可考慮導入狀態機） | ai-system-006 |
+| K-41 | 體系 | `SYSTEM-CONCLUSION.md` 無限膨脹（已達 112 行約 6500 字），逼近 Context 溢出邊界。需加入滾動歸檔機制。 | 高 | 待處理（已列入 records_pending，留待 007 處理） | ai-system-006 |
+| K-42 | 體系 | `A-00 §6.2` 轉交語意「Role->系統架構師」易讓 AI 誤以為能切換角色，需正名為「輸出外部 AI 轉交指令包」。 | 中 | 待處理（已列入 records_pending，留待 007 處理） | ai-system-006 |
+| K-43 | 體系 | `R-00` 缺乏「強制發布權責」與「無豁免權」之明確規範。 | 中 | 待處理（已列入 records_pending，留待 007 處理） | ai-system-006 |
+| K-44 | 體系 | `A-00` 缺乏「專案代碼包（合成物）不可假設單檔上傳」之強制提示。 | 中 | 待處理（已列入 records_pending，留待 007 處理） | ai-system-006 |
+
+/* EOF
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792933800
+V: 1792937000
 W: ai-system-006
 EOF */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
@@ -442,7 +454,7 @@ EOF */
 
 | 議題編號 | 議題名稱 | 結案日期 | 歸檔日期 | 來源檔 |
 |---|---|---|---|---|
-| （待歸檔） | — | — | — | `SYSTEM-CONCLUSION.md` |
+| 1~97 | 歷史議題與設計結論（含 W 包重構、FSM 演進、前端防呆等） | 2026-10-31 | 2026-10-31 | `SYSTEM-CONCLUSION.md` |
 
 ---
 
@@ -469,8 +481,8 @@ EOF */
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-ARCHIVE.md
-V: 1792916800
-W: ai-system-005
+V: 1792937200
+W: ai-system-006
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-ARCHIVE.md === -->
 
@@ -529,9 +541,14 @@ W: ai-system-005
 | 3 | 加入本表（倒序） |
 | 4 | 若超過 500 行，合併重複教訓 |
 
-/* ═══ EOF ═══
+| L-047 | 前端控制台發布流程設計 | 讓使用者直接貼上替換語法並點擊發布，若匹配失敗直接將 `<<<<<<< OLD` 寫入源碼，造成污染。 | 導入「預演機制（Dry-Run）」。前端必須先抓取舊檔進行模擬替換，若失敗則報錯並阻斷，絕不允許直接寫入。 | F-007、D-242 |
+| L-048 | 前端狀態機判斷優先級 | 內容同時包含 `[APPEND]` 與 `<<<<<<< OLD` 時（如歷史紀錄檔），前端優先判定為局部替換，導致格式錯誤。 | 調整判斷優先級，`[APPEND]` 必須優先於局部替換標記。 | F-007、D-242 |
+| L-049 | 前端自指干擾（Self-Interference） | 規則檔案（如 R-00）內含禁用詞（「略」）或替換語法範例（`<<<<<<< OLD`），被前端自己的檢查機制攔截。 | 廢除自動豁免。由人類（Ken）肉眼確認誤判後，手動點擊「強制發布」解鎖。 | R-027、K-43 |
+| L-050 | 跨檔依賴提醒的設計 | 試圖用靜態 JSON 或腳本自動解析 Markdown 表格來生成跨檔依賴表，皆因維護成本高或語意無法窮舉而失敗。 | 前端僅維護核心規則（`R-00`、`A-00`）的輕量依賴字典，其餘交由 AI 的 S-006 關聯分析負責。 | RJ-028、RJ-029 |
+
+/* EOF
 F: AI-kernel/docs/r-rules/R-04-learning.md
-V: 1792914300
-W: ai-system-005
-═══ */
+V: 1792937400
+W: ai-system-006
+EOF */
 <!-- === FILE END: AI-kernel/docs/r-rules/R-04-learning.md === -->
