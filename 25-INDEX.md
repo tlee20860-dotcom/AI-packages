@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 15:06:38 (HKT)
+> 生成時間：2026-10-30 19:03:54 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,18 +15,18 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1792928300 | UPGRADE-004 |
+| AI-General | docs/p92/P-Architecture.md | 1792930200 | ai-system-006 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1792928000 | UPGRADE-004 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1792928100 | UPGRADE-004 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1792930000 | ai-system-006 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1792930300 | ai-system-006 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792928200 | UPGRADE-004 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792917000 | ai-system-005 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792916800 | ai-system-005 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792917100 | ai-system-005 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792929600 | ai-system-006 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792916700 | ai-system-005 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792916100 | ai-system-005 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792929700 | ai-system-006 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792916900 | ai-system-005 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792917200 | ai-system-005 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792913300 | ai-system-005 |
@@ -311,10 +311,10 @@
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 52 |
-| 20-SP-Sys.md | 32 |
+| 20-SP-Sys.md | 36 |
 | 21-INFRA.md | 56 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 76 |
+| 24-HISTORY.md | 40 |
 | 90-Code.md | 388 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
