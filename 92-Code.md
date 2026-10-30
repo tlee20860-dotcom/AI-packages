@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 19:03:54 (HKT)
+> 生成時間：2026-10-30 20:03:28 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1132,6 +1132,7 @@ W: UPGRADE-004
 ## 📄 ./src/engine/router.js
 
 ```js
+~~~javascript
 import { AppState } from '../config/state.js';
 import { renderAppShell, updateNavbar } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
@@ -1145,6 +1146,7 @@ import SalespersonPage from '../pages/salesperson.js';
 import SettingsPage from '../pages/settings.js';
 import CategoryPage from '../pages/category.js';
 import AdminDataPage from '../pages/admin-data.js';
+import AreaPage from '../pages/area.js';
 
 const routes = {
   login: LoginPage,
@@ -1154,7 +1156,8 @@ const routes = {
   salesperson: SalespersonPage,
   settings: SettingsPage,
   category: CategoryPage,
-  'admin-data': AdminDataPage
+  'admin-data': AdminDataPage,
+  area: AreaPage
 };
 
 let currentPageInstance = null;
@@ -1257,8 +1260,8 @@ export function initRouter() {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/router.js
-V: 1792917800
-W: UPGRADE-003
+V: 1792935200
+W: UPGRADE-005
 ═══ */```
 
 <!-- === FILE END: ./src/engine/router.js === -->
@@ -1566,6 +1569,305 @@ W: UPGRADE-003
 ═══ */```
 
 <!-- === FILE END: ./src/pages/admin-data.js === -->
+
+<!-- === FILE START: ./src/pages/area.js === -->
+
+## 📄 ./src/pages/area.js
+
+```js
+~~~javascript
+import { AppState } from '../config/state.js';
+import { listenCollection, getDocument } from '../db/read.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { createIcons, Inbox, ChevronLeft, ChevronRight, MapPin, AlertCircle } from 'lucide';
+
+let unsubscribe = null;
+let currentOrders = [];
+let areas = [];
+let statuses = [];
+let userRole = 'user';
+let userAllowedAreas = [];
+
+/**
+ * 渲染單一工單 chip（工單號 + 上/下工序按鈕）
+ * 按鈕事件由 order-view-editor.js 的全域委派處理（data-action="prev-step" / "next-step"）
+ */
+function renderOrderChip(order, allStatuses) {
+  let route = order.route && order.route.length > 0 ? order.route : allStatuses;
+  let idx = route.indexOf(order.status);
+  if (idx === -1) idx = 0;
+  const isFirst = idx <= 0;
+  const isLast = idx >= route.length - 1;
+  const routeStr = JSON.stringify(route).replace(/"/g, '&quot;');
+
+  return `
+    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-sm">
+      <span class="text-sm font-medium text-slate-700">${order.id}</span>
+      <button data-action="prev-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}"
+        class="p-0.5 rounded text-slate-400 hover:bg-slate-100 transition-colors ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}" ${isFirst ? 'disabled' : ''}>
+        <i data-lucide="chevron-left" class="w-3 h-3"></i>
+      </button>
+      <button data-action="next-step" data-id="${order.id}" data-route="${routeStr}" data-status="${order.status}"
+        class="p-0.5 rounded text-slate-400 hover:bg-slate-100 transition-colors ${isLast ? 'opacity-30 cursor-not-allowed' : ''}" ${isLast ? 'disabled' : ''}>
+        <i data-lucide="chevron-right" class="w-3 h-3"></i>
+      </button>
+    </div>
+  `;
+}
+
+/**
+ * 渲染一組工序區塊（工序小標題 + 工單 chips）
+ */
+function renderStatusBlock(status, orders, allStatuses) {
+  if (!orders || orders.length === 0) return '';
+  return `
+    <div>
+      <div class="text-xs font-semibold text-slate-500 mb-1.5">${status}（${orders.length}）</div>
+      <div class="flex flex-wrap gap-1.5">
+        ${orders.map(o => renderOrderChip(o, allStatuses)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    userRole = user.role;
+    userAllowedAreas = Array.isArray(user.allowedAreas) ? user.allowedAreas : [];
+
+    try {
+      const settingsDoc = await getDocument('settings', 'main');
+      if (settingsDoc) {
+        areas = settingsDoc.areas || [];
+        statuses = settingsDoc.statuses || [];
+      }
+    } catch (err) {}
+
+    renderPageLayout({
+      title: '生產區域',
+      subtitle: '依區域檢視工單狀態',
+      headerActions: '',
+      stats: [],
+      controls: '',
+      listContainerId: 'area-container'
+    });
+
+    window.addEventListener('settings-updated', this.updateUI.bind(this));
+    window.addEventListener('refresh-area', this.updateUI.bind(this));
+
+    this.initDataListener();
+  },
+
+  initDataListener() {
+    if (unsubscribe) unsubscribe();
+    unsubscribe = listenCollection('work_orders', (orders) => {
+      currentOrders = orders;
+      this.updateUI();
+    });
+  },
+
+  updateUI() {
+    const container = document.getElementById('area-container');
+    if (!container) return;
+
+    const allStatuses = AppState.getStatuses() || statuses;
+
+    // 1. 過濾垃圾資料
+    const cleanOrders = currentOrders.filter(o => {
+      const id = String(o.id || '');
+      return id && !id.includes('***') && !id.includes('訂單');
+    });
+
+    // 2. 建立「全域」工序 → 區域映射（基於全部 areas，不受權限影響）
+    //    這一步必須用全部 areas，否則未授權區域的工序會被誤判為「未分配」而外洩。
+    const statusToArea = {};
+    areas.forEach(area => {
+      (area.statuses || []).forEach(s => {
+        statusToArea[s] = area.id;
+      });
+    });
+
+    // 3. 權限過濾：決定「可見區域」
+    let visibleAreas = areas;
+    let showAllWarning = false;
+    if (userRole !== 'admin') {
+      if (userAllowedAreas.length > 0) {
+        visibleAreas = areas.filter(a => userAllowedAreas.includes(a.id));
+      } else {
+        // 空陣列 = 看到全部（向後相容），但提示管理員應配置
+        showAllWarning = true;
+      }
+    }
+    const visibleAreaIds = new Set(visibleAreas.map(a => a.id));
+
+    // 4. 真正未綁定的工序 = allStatuses 中不在 statusToArea 者
+    const unassignedStatuses = allStatuses.filter(s => !statusToArea[s]);
+
+    // 5. 收集「未知工序」：工單 status 不在 allStatuses 也不在 statusToArea
+    const knownStatuses = new Set([...allStatuses, ...Object.keys(statusToArea)]);
+    const unknownStatuses = new Set();
+    cleanOrders.forEach(o => {
+      if (o.status && !knownStatuses.has(o.status)) {
+        unknownStatuses.add(o.status);
+      }
+    });
+
+    // 6. 初始化分組容器
+    const ordersByArea = {};
+    visibleAreas.forEach(area => {
+      ordersByArea[area.id] = {};
+      (area.statuses || []).forEach(s => {
+        ordersByArea[area.id][s] = [];
+      });
+    });
+
+    const unassignedOrders = {};
+    unassignedStatuses.forEach(s => {
+      unassignedOrders[s] = [];
+    });
+
+    const unknownOrders = {}; // key: 未知工序名稱或 '__EMPTY__'
+
+    // 7. 分派工單
+    cleanOrders.forEach(order => {
+      const status = order.status;
+      const areaId = statusToArea[status];
+
+      if (areaId) {
+        // 屬於某區域的工序
+        if (visibleAreaIds.has(areaId) && ordersByArea[areaId] && ordersByArea[areaId][status]) {
+          ordersByArea[areaId][status].push(order);
+        }
+        // 未授權區域的工單：完全不出現（不進未分配）
+        return;
+      }
+
+      // 未綁定任何區域的工序
+      if (status && unassignedOrders[status]) {
+        unassignedOrders[status].push(order);
+        return;
+      }
+
+      // 未知工序（status 不在 allStatuses 也不在 statusToArea）
+      const key = status || '__EMPTY__';
+      if (!unknownOrders[key]) unknownOrders[key] = [];
+      unknownOrders[key].push(order);
+    });
+
+    // 8. 組裝 HTML
+    let html = '';
+
+    if (showAllWarning) {
+      html += `
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-2">
+          <i data-lucide="alert-circle" class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"></i>
+          <p class="text-sm text-amber-700">尚未配置區域權限，目前可看到全部區域。請聯繫管理員於「帳號管理」配置可見區域。</p>
+        </div>
+      `;
+    }
+
+    // 非 admin 且沒有任何授權區域 → 空白提示
+    if (userRole !== 'admin' && userAllowedAreas.length > 0 && visibleAreas.length === 0) {
+      html += `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">您沒有被授權查看任何區域</span>
+        </div>
+      `;
+      container.innerHTML = html;
+      createIcons({ icons: { Inbox, AlertCircle }, attrs: { class: 'w-4 h-4' } });
+      return;
+    }
+
+    // 8-1. 各區域卡片
+    const areaCardsHtml = visibleAreas.map(area => {
+      const areaOrders = ordersByArea[area.id] || {};
+      const totalCount = Object.values(areaOrders).reduce((sum, arr) => sum + arr.length, 0);
+
+      const statusBlocks = (area.statuses || []).map(status =>
+        renderStatusBlock(status, areaOrders[status] || [], allStatuses)
+      ).join('');
+
+      return `
+        <div class="glass-card p-4 flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-5 h-5 text-brand"></i>
+            <h2 class="text-base font-bold text-slate-800">${area.name}</h2>
+            <span class="text-xs px-2 py-0.5 bg-brand/10 text-brand rounded font-medium">${totalCount} 單</span>
+          </div>
+          ${totalCount === 0 ? `<div class="text-sm text-slate-400 py-2">暫無工單</div>` : statusBlocks}
+        </div>
+      `;
+    }).join('');
+
+    // 8-2. 未分配區域（含真正未綁定 + 未知工序）
+    const unassignedBlocks = unassignedStatuses.map(status =>
+      renderStatusBlock(status, unassignedOrders[status] || [], allStatuses)
+    ).join('');
+
+    const unknownBlocks = Object.keys(unknownOrders).map(status => {
+      const label = status === '__EMPTY__' ? '（無工序）' : status;
+      return renderStatusBlock(label, unknownOrders[status], allStatuses);
+    }).join('');
+
+    const unassignedTotal = Object.values(unassignedOrders).reduce((sum, arr) => sum + arr.length, 0)
+      + Object.values(unknownOrders).reduce((sum, arr) => sum + arr.length, 0);
+
+    let unassignedHtml = '';
+    if (unassignedTotal > 0) {
+      unassignedHtml = `
+        <div class="glass-card p-4 flex flex-col gap-3 border-dashed">
+          <div class="flex items-center gap-2">
+            <i data-lucide="inbox" class="w-5 h-5 text-slate-400"></i>
+            <h2 class="text-base font-bold text-slate-800">未分配區域</h2>
+            <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">${unassignedTotal} 單</span>
+          </div>
+          ${unassignedBlocks}
+          ${unknownBlocks}
+        </div>
+      `;
+    }
+
+    // 8-3. 空狀態
+    if (!areaCardsHtml && !unassignedHtml) {
+      html += `
+        <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-3 bg-white rounded-2xl border border-slate-100 shadow-soft">
+          <i data-lucide="inbox" class="w-12 h-12 opacity-30"></i>
+          <span class="text-base font-medium">目前尚無區域或工單資料</span>
+        </div>
+      `;
+    } else {
+      html += `<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">${areaCardsHtml}${unassignedHtml}</div>`;
+    }
+
+    container.innerHTML = html;
+    createIcons({
+      icons: { Inbox, ChevronLeft, ChevronRight, MapPin, AlertCircle },
+      attrs: { class: 'w-4 h-4' }
+    });
+  },
+
+  destroy() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    window.removeEventListener('settings-updated', this.updateUI.bind(this));
+    window.removeEventListener('refresh-area', this.updateUI.bind(this));
+  }
+};
+~~~
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/pages/area.js
+V: 1792934400
+W: UPGRADE-005
+═══ */```
+
+<!-- === FILE END: ./src/pages/area.js === -->
 
 <!-- === FILE START: ./src/pages/category.js === -->
 
@@ -1914,6 +2216,7 @@ W: UPGRADE-004
 ## 📄 ./src/pages/login.js
 
 ```js
+~~~javascript
 import { AppState } from '../config/state.js';
 import { getCollection } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
@@ -2016,16 +2319,20 @@ export default {
 
         // 若資料庫完全沒有資料（全新專案），提供預設的 admin 帳號作為 Fallback
         if (usersList.length === 0) {
-          usersList = [{ username: "admin", password: "123456", role: "admin" }];
+          usersList = [{ username: "admin", password: "123456", role: "admin", allowedAreas: [] }];
         }
 
         // 比對帳密
         const user = usersList.find(u => u.username === usernameInput && u.password === passwordInput);
 
         if (user) {
-          // 登入成功
+          // 登入成功：將 allowedAreas 一併存入 AppState（供區域頁面權限過濾使用）
           showToast(`歡迎回來，${user.username}`, 'success');
-          AppState.setUser({ username: user.username, role: user.role });
+          AppState.setUser({
+            username: user.username,
+            role: user.role,
+            allowedAreas: Array.isArray(user.allowedAreas) ? user.allowedAreas : []
+          });
           
           // 觸發自訂事件，讓 router 接手後續畫面切換
           window.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
@@ -2052,8 +2359,8 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/login.js
-V: 1792909602
-W: UPGRADE-002
+V: 1792936800
+W: UPGRADE-005
 ═══ */```
 
 <!-- === FILE END: ./src/pages/login.js === -->
@@ -2370,11 +2677,297 @@ W: UPGRADE-004
 
 <!-- === FILE END: ./src/pages/salesperson.js === -->
 
+<!-- === FILE START: ./src/pages/settings-area.js === -->
+
+## 📄 ./src/pages/settings-area.js
+
+```js
+~~~javascript
+import { showToast } from '../ui/toast.js';
+import { openConfirm, openModal } from '../ui/modal.js';
+import { createIcons, Plus, GripVertical, Trash2, Edit2, X, MapPin, AlertCircle } from 'lucide';
+
+/**
+ * 渲染「區域管理」頁籤
+ * - 新增／改名／刪除區域
+ * - 雙清單拖曳綁定工序
+ * - 一個工序最多屬於一個區域（已在其他區域的工序顯示為已綁定並禁用）
+ *
+ * @param {HTMLElement} container 目標容器
+ * @param {Object} currentSettings settings/main 的內容（含 areas、statuses）
+ * @param {Function} saveSettings 儲存回呼（async）
+ */
+export function renderAreas(container, currentSettings, saveSettings) {
+  const areas = currentSettings.areas || [];
+  const statuses = currentSettings.statuses || [];
+
+  container.innerHTML = `
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">區域管理</h2>
+        <p class="text-sm text-slate-500 mt-1">新增區域並綁定工序。一個工序最多屬於一個區域；未綁定的工序會歸入「未分配區域」。</p>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-6">
+      <input type="text" id="new-area-name" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="區域名稱 (例如：四色印刷機)">
+      <button id="btn-add-area" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+        <i data-lucide="plus" class="w-4 h-4"></i> 新增區域
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      ${areas.length === 0 ? '<div class="text-slate-400 text-sm py-4 text-center">尚無區域，請先新增</div>' : ''}
+      ${areas.map((area, index) => {
+        const boundStatuses = area.statuses || [];
+        return `
+          <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-5 h-5 text-brand"></i>
+                <span class="font-bold text-slate-800">${area.name}</span>
+                <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded">${boundStatuses.length} 個工序</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-area" data-index="${index}">
+                  <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-area" data-index="${index}">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+              ${boundStatuses.length === 0 ? '<span class="text-slate-400">尚未綁定工序，點擊編輯加入</span>' : ''}
+              ${boundStatuses.map((s, i) => `
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-md"><span class="text-slate-400 mr-1 text-xs">${i+1}.</span>${s}</span>
+                ${i < boundStatuses.length - 1 ? '<span class="text-slate-300">➔</span>' : ''}
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  createIcons({ icons: { Plus, Trash2, Edit2, MapPin }, attrs: { class: 'w-4 h-4' } });
+
+  // ── 新增區域 ──
+  document.getElementById('btn-add-area')?.addEventListener('click', async () => {
+    const input = document.getElementById('new-area-name');
+    const name = input.value.trim();
+    if (!name) {
+      showToast('請輸入區域名稱', 'error');
+      return;
+    }
+    if ((currentSettings.areas || []).some(a => a.name === name)) {
+      showToast('區域名稱已存在', 'error');
+      return;
+    }
+    const id = 'area_' + Date.now().toString(36);
+    if (!currentSettings.areas) currentSettings.areas = [];
+    currentSettings.areas.push({ id, name, statuses: [] });
+    await saveSettings();
+    showToast('區域已新增', 'success');
+  });
+
+  // ── 刪除區域 ──
+  document.querySelectorAll('.btn-del-area').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      const area = areas[idx];
+      const confirmed = await openConfirm({
+        title: '刪除區域',
+        message: `確定要刪除「${area.name}」嗎？綁定的工序將回到未分配狀態。`,
+        isDanger: true,
+        confirmText: '確認刪除'
+      });
+      if (!confirmed) return;
+      currentSettings.areas.splice(idx, 1);
+      await saveSettings();
+      showToast('區域已刪除', 'success');
+    });
+  });
+
+  // ── 編輯區域（改名 + 雙清單綁定工序） ──
+  document.querySelectorAll('.btn-edit-area').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      const area = areas[idx];
+
+      // 建立「其他區域已綁定」的工序映射（用於禁用與提示）
+      const otherAreaStatusMap = {};
+      currentSettings.areas.forEach((a, i) => {
+        if (i === idx) return;
+        (a.statuses || []).forEach(s => {
+          otherAreaStatusMap[s] = a.name;
+        });
+      });
+
+      const content = `
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-slate-700">區域名稱</label>
+            <input type="text" id="edit-area-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${area.name}">
+          </div>
+          <div class="flex flex-col gap-2">
+            <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。已綁定至其他區域的工序需先從該區域移除。</p>
+            <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
+              <!-- 左側：可選工序 -->
+              <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
+                <h4 class="font-bold text-sm text-slate-700 mb-2">可選工序</h4>
+                <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-available-list"></div>
+              </div>
+              <!-- 右側：已綁定工序順序 -->
+              <div class="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex flex-col shadow-sm">
+                <h4 class="font-bold text-sm text-slate-700 mb-2">已綁定工序順序</h4>
+                <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="modal-selected-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const footer = `
+        <div class="flex justify-end gap-3">
+          <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+          <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">儲存</button>
+        </div>
+      `;
+
+      const { close, element } = openModal({ title: `編輯區域`, content, footer });
+
+      let currentSteps = Array.from(area.statuses || []);
+
+      const renderModalLists = () => {
+        const availableList = element.querySelector('#modal-available-list');
+        const selectedList = element.querySelector('#modal-selected-list');
+
+        // 可選：不在 currentSteps 中的工序
+        const availableStatuses = statuses.filter(s => !currentSteps.includes(s));
+
+        if (availableStatuses.length === 0) {
+          availableList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">所有工序已加入</div>';
+        } else {
+          availableList.innerHTML = availableStatuses.map(status => {
+            const boundTo = otherAreaStatusMap[status];
+            const isBlocked = !!boundTo;
+            return `
+              <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 ${isBlocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-brand transition-colors'} available-item" data-step="${status}" data-blocked="${isBlocked ? '1' : '0'}">
+                <span class="flex-1 font-medium text-slate-700">${status}</span>
+                ${isBlocked
+                  ? `<span class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded whitespace-nowrap">已綁定：${boundTo}</span>`
+                  : `<i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>`
+                }
+              </div>
+            `;
+          }).join('');
+        }
+
+        if (currentSteps.length === 0) {
+          selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
+        } else {
+          selectedList.innerHTML = currentSteps.map((step, i) => `
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
+              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
+              <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${i + 1}.</span>${step}</span>
+              <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `).join('');
+        }
+
+        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+
+        // 左側點擊加入
+        availableList.querySelectorAll('.available-item').forEach(item => {
+          item.addEventListener('click', () => {
+            if (item.dataset.blocked === '1') {
+              showToast('此工序已綁定至其他區域，請先移除該綁定', 'error');
+              return;
+            }
+            const step = item.dataset.step;
+            if (!currentSteps.includes(step)) {
+              currentSteps.push(step);
+              renderModalLists();
+            }
+          });
+        });
+
+        // 右側移除
+        selectedList.querySelectorAll('.btn-remove-step').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const step = ev.currentTarget.dataset.step;
+            currentSteps = currentSteps.filter(s => s !== step);
+            renderModalLists();
+          });
+        });
+
+        // 右側拖曳排序
+        let dragged = null;
+        selectedList.querySelectorAll('.step-item').forEach(item => {
+          item.addEventListener('dragstart', function() {
+            dragged = this;
+            setTimeout(() => this.classList.add('opacity-50'), 0);
+          });
+          item.addEventListener('dragend', function() {
+            this.classList.remove('opacity-50');
+            dragged = null;
+            currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
+            renderModalLists();
+          });
+          item.addEventListener('dragover', function(ev) {
+            ev.preventDefault();
+            if (this === dragged) return;
+            const rect = this.getBoundingClientRect();
+            const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            selectedList.insertBefore(dragged, next ? this.nextSibling : this);
+          });
+        });
+      };
+
+      renderModalLists();
+
+      element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+
+      element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+        const newName = element.querySelector('#edit-area-name').value.trim();
+        if (!newName) {
+          showToast('區域名稱不能為空', 'error');
+          return;
+        }
+        if (currentSettings.areas.some((a, i) => i !== idx && a.name === newName)) {
+          showToast('區域名稱已存在', 'error');
+          return;
+        }
+
+        currentSettings.areas[idx].name = newName;
+        currentSettings.areas[idx].statuses = currentSteps;
+
+        await saveSettings();
+        showToast('區域已更新', 'success');
+        close();
+      });
+    });
+  });
+}
+~~~
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/pages/settings-area.js
+V: 1792934800
+W: UPGRADE-005
+═══ */```
+
+<!-- === FILE END: ./src/pages/settings-area.js === -->
+
 <!-- === FILE START: ./src/pages/settings-basic.js === -->
 
 ## 📄 ./src/pages/settings-basic.js
 
 ```js
+~~~javascript
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
@@ -2389,7 +2982,7 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">工序狀態管理</h2>
-        <p class="text-sm text-slate-500 mt-1">可拖曳排序。修改名稱時會同步更新歷史工單。</p>
+        <p class="text-sm text-slate-500 mt-1">可拖曳排序。修改名稱時會同步更新歷史工單與區域綁定。</p>
       </div>
     </div>
     
@@ -2444,6 +3037,16 @@ export function renderStatuses(container, currentSettings, saveSettings) {
       try {
         const idx = currentSettings.statuses.indexOf(oldStatus);
         if (idx !== -1) currentSettings.statuses[idx] = trimmedNewStatus;
+
+        // 同步更新區域綁定中的工序名稱
+        if (Array.isArray(currentSettings.areas)) {
+          currentSettings.areas.forEach(area => {
+            if (Array.isArray(area.statuses)) {
+              area.statuses = area.statuses.map(s => s === oldStatus ? trimmedNewStatus : s);
+            }
+          });
+        }
+
         await saveSettings();
 
         const orders = await getCollection('work_orders');
@@ -2467,7 +3070,7 @@ export function renderStatuses(container, currentSettings, saveSettings) {
       const status = e.currentTarget.dataset.status;
       const confirmed = await openConfirm({
         title: '刪除狀態',
-        message: `確定要刪除「${status}」嗎？系統將檢查是否有工單處於此狀態。`,
+        message: `確定要刪除「${status}」嗎？系統將檢查是否有工單處於此狀態，並同步從區域綁定中移除。`,
         isDanger: true,
         confirmText: '檢查並刪除'
       });
@@ -2481,6 +3084,16 @@ export function renderStatuses(container, currentSettings, saveSettings) {
           return;
         }
         currentSettings.statuses = currentSettings.statuses.filter(s => s !== status);
+
+        // 同步從區域綁定中移除該工序
+        if (Array.isArray(currentSettings.areas)) {
+          currentSettings.areas.forEach(area => {
+            if (Array.isArray(area.statuses)) {
+              area.statuses = area.statuses.filter(s => s !== status);
+            }
+          });
+        }
+
         await saveSettings();
         showToast('刪除成功', 'success');
       } catch (err) {
@@ -2935,8 +3548,8 @@ export function renderMapping(container, currentSettings, saveSettings) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings-basic.js
-V: 1792927200
-W: UPGRADE-004
+V: 1792936400
+W: UPGRADE-005
 ═══ */```
 
 <!-- === FILE END: ./src/pages/settings-basic.js === -->
@@ -3238,6 +3851,7 @@ W: UPGRADE-004
 ## 📄 ./src/pages/settings.js
 
 ```js
+~~~javascript
 import * as XLSX from 'xlsx';
 import { AppState } from '../config/state.js';
 import { listenDocument, getDocument, getCollection } from '../db/read.js';
@@ -3246,14 +3860,15 @@ import { renderPageLayout } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { parseExcelData } from '../domain/parser.js';
-import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X, List, Database, Edit2, AlertCircle, LayoutDashboard, Table, PieChart, Layers, Check } from 'lucide';
+import { createIcons, Upload, Plus, Trash2, GripVertical, FileSpreadsheet, Users, Tag, Shield, X, List, Database, Edit2, AlertCircle, LayoutDashboard, Table, PieChart, Layers, Check, MapPin } from 'lucide';
 
 // 引入拆分出去的模組
 import { renderStatuses, renderMapping, renderRouteTemplates } from './settings-basic.js';
 import { renderSchema, renderViewConfig } from './settings-schema.js';
+import { renderAreas } from './settings-area.js';
 
 let unsubscribe = null;
-export let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [], view_configs: {}, route_templates: [] };
+export let currentSettings = { statuses: [], sales_mapping: [], users: [], schema: [], view_configs: {}, route_templates: [], areas: [] };
 let activeTab = 'statuses';
 
 export default {
@@ -3266,7 +3881,7 @@ export default {
 
     renderPageLayout({
       title: '系統設定',
-      subtitle: '管理工序狀態、銷售員對照表、系統欄位與帳號',
+      subtitle: '管理工序狀態、區域、銷售員對照表、系統欄位與帳號',
       headerActions: '',
       stats: [],
       controls: '',
@@ -3284,12 +3899,26 @@ export default {
         currentSettings = {
           statuses: data.statuses || ['排產中'],
           sales_mapping: data.sales_mapping || [],
-          users: data.users || [{ username: 'admin', password: '123456', role: 'admin' }],
+          users: data.users || [{ username: 'admin', password: '123456', role: 'admin', allowedAreas: [] }],
           schema: data.schema || this.getDefaultSchema(),
           view_configs: data.view_configs || this.getDefaultViewConfigs(),
-          route_templates: data.route_templates || this.getDefaultRouteTemplates(data.statuses || ['排產中'])
+          route_templates: data.route_templates || this.getDefaultRouteTemplates(data.statuses || ['排產中']),
+          areas: Array.isArray(data.areas) ? data.areas : []
         };
-        
+
+        // 遷移：areas 不存在
+        if (!Array.isArray(data.areas)) {
+          needSave = true;
+        }
+
+        // 遷移：每個使用者補 allowedAreas 欄位
+        currentSettings.users.forEach(u => {
+          if (!Array.isArray(u.allowedAreas)) {
+            u.allowedAreas = [];
+            needSave = true;
+          }
+        });
+
         // 自動補齊核心欄位與視圖配置
         const requiredSysFields = [
           { key: 'id', label: '發票', type: 'string', isSystem: true, isEditable: false },
@@ -3324,17 +3953,14 @@ export default {
           needSave = true;
         }
 
-        // 💡 資料遷移與修復：確保模板皆有 category 欄位，且通用預設模板不會是空的
-        let hasEmptyDefault = false;
+        // 資料遷移與修復：確保模板皆有 category 欄位，且通用預設模板不會是空的
         currentSettings.route_templates.forEach(t => {
           if (t.category === undefined) {
             t.category = '';
             needSave = true;
           }
-          // 如果發現通用模板（category 為空）卻沒有工序，將其補齊
           if ((t.category === '' || t.category === '通用') && (!t.steps || t.steps.length === 0)) {
             t.steps = [...currentSettings.statuses];
-            hasEmptyDefault = true;
             needSave = true;
           }
         });
@@ -3353,14 +3979,15 @@ export default {
         currentSettings = {
           statuses: ['排產中', '印刷', '裁切', '品檢', '出貨'],
           sales_mapping: [],
-          users: [{ username: 'admin', password: '123456', role: 'admin' }],
+          users: [{ username: 'admin', password: '123456', role: 'admin', allowedAreas: [] }],
           schema: this.getDefaultSchema(),
           view_configs: this.getDefaultViewConfigs(),
-          route_templates: this.getDefaultRouteTemplates()
+          route_templates: this.getDefaultRouteTemplates(),
+          areas: []
         };
         needSave = true;
       }
-      
+
       if (needSave) {
         await setDocument('settings', 'main', currentSettings);
       }
@@ -3416,6 +4043,9 @@ export default {
           <button class="tab-btn ${activeTab === 'route_templates' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="route_templates">
             <i data-lucide="layers" class="w-4 h-4"></i> 製程模板
           </button>
+          <button class="tab-btn ${activeTab === 'areas' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="areas">
+            <i data-lucide="map-pin" class="w-4 h-4"></i> 區域管理
+          </button>
           <button class="tab-btn ${activeTab === 'mapping' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="mapping">
             <i data-lucide="users" class="w-4 h-4"></i> 對照表管理
           </button>
@@ -3447,7 +4077,7 @@ export default {
     `;
 
     createIcons({
-      icons: { Tag, Users, Shield, FileSpreadsheet, List, Database, LayoutDashboard, Layers },
+      icons: { Tag, Users, Shield, FileSpreadsheet, List, Database, LayoutDashboard, Layers, MapPin },
       attrs: { class: 'w-4 h-4' }
     });
 
@@ -3473,6 +4103,8 @@ export default {
       renderStatuses(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'route_templates') {
       renderRouteTemplates(content, currentSettings, this.saveSettings.bind(this));
+    } else if (activeTab === 'areas') {
+      renderAreas(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'mapping') {
       renderMapping(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'schema') {
@@ -3489,49 +4121,91 @@ export default {
   },
 
   renderUsers(container) {
+    const areas = currentSettings.areas || [];
+
     container.innerHTML = `
       <div class="flex justify-between items-center mb-6">
         <div>
           <h2 class="text-lg font-bold text-slate-800">帳號管理</h2>
-          <p class="text-sm text-slate-500 mt-1">設定登入系統的帳號與角色。</p>
+          <p class="text-sm text-slate-500 mt-1">設定登入系統的帳號、角色與可見區域。</p>
         </div>
       </div>
 
-      <div class="flex gap-2 mb-6">
-        <input type="text" id="new-user-name" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="帳號">
-        <input type="text" id="new-user-pass" class="w-1/3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="密碼">
-        <select id="new-user-role" class="w-1/6 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
-          <option value="user">一般使用者</option>
-          <option value="admin">管理員</option>
-        </select>
-        <button id="btn-add-user" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
-          <i data-lucide="plus" class="w-4 h-4"></i> 新增
-        </button>
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 flex flex-col gap-3">
+        <div class="text-sm font-semibold text-slate-700">新增帳號</div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="new-user-name" class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="帳號">
+          <input type="text" id="new-user-pass" class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="密碼">
+          <select id="new-user-role" class="w-full sm:w-40 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none">
+            <option value="user">一般使用者</option>
+            <option value="admin">管理員</option>
+          </select>
+        </div>
+        <div id="new-user-areas-wrapper" class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-slate-600">可見區域（不勾選 = 全部區域；admin 不受限）</label>
+          <div class="flex flex-wrap gap-2">
+            ${areas.length === 0 ? '<span class="text-xs text-slate-400">尚未建立任何區域</span>' : ''}
+            ${areas.map(a => `
+              <label class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-brand">
+                <input type="checkbox" class="new-user-area-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${a.id}">
+                <span class="text-slate-700">${a.name}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button id="btn-add-user" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i> 新增帳號
+          </button>
+        </div>
       </div>
 
       <div class="flex flex-col gap-2">
-        ${currentSettings.users.map((u, index) => `
-          <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <div class="w-1/3 font-bold text-slate-800">${u.username}</div>
-            <div class="w-1/3 text-slate-500 font-mono text-sm">••••••••</div>
-            <div class="w-1/6">
-              <span class="px-2 py-1 text-xs font-medium rounded-md ${u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
+        ${currentSettings.users.map((u, index) => {
+          const uAreas = Array.isArray(u.allowedAreas) ? u.allowedAreas : [];
+          const areaLabels = uAreas.map(id => {
+            const a = areas.find(x => x.id === id);
+            return a ? a.name : id;
+          });
+          const isAdmin = u.role === 'admin';
+          return `
+            <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+              <div class="w-1/4 font-bold text-slate-800">${u.username}</div>
+              <div class="w-1/4 text-slate-500 font-mono text-sm">••••••••</div>
+              <div class="w-1/6">
+                <span class="px-2 py-1 text-xs font-medium rounded-md ${isAdmin ? 'bg-brand/10 text-brand' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
+              </div>
+              <div class="flex-1 flex flex-wrap gap-1">
+                ${isAdmin
+                  ? '<span class="text-xs text-slate-400">不受區域限制</span>'
+                  : (uAreas.length === 0
+                      ? '<span class="text-xs text-slate-400">全部區域</span>'
+                      : areaLabels.map(l => `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">${l}</span>`).join('')
+                    )
+                }
+              </div>
+              <div class="flex items-center gap-1">
+                <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-user" data-index="${index}">
+                  <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-user" data-index="${index}" ${u.username === 'admin' ? 'disabled title="無法刪除預設 admin"' : ''}>
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
             </div>
-            <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors btn-del-user" data-index="${index}" ${u.username === 'admin' ? 'disabled title="無法刪除預設 admin"' : ''}>
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `;
 
-    createIcons({ icons: { Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
+    createIcons({ icons: { Plus, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
 
+    // 新增使用者
     document.getElementById('btn-add-user')?.addEventListener('click', async () => {
       const name = document.getElementById('new-user-name').value.trim();
       const pass = document.getElementById('new-user-pass').value.trim();
       const role = document.getElementById('new-user-role').value;
-      
+
       if (!name || !pass) {
         showToast('請填寫帳號與密碼', 'error');
         return;
@@ -3540,11 +4214,17 @@ export default {
         showToast('帳號已存在', 'error');
         return;
       }
-      currentSettings.users.push({ username: name, password: pass, role });
+
+      const allowedAreas = role === 'admin'
+        ? []
+        : Array.from(document.querySelectorAll('.new-user-area-checkbox:checked')).map(cb => cb.value);
+
+      currentSettings.users.push({ username: name, password: pass, role, allowedAreas });
       await this.saveSettings();
       showToast('新增成功', 'success');
     });
 
+    // 刪除使用者
     document.querySelectorAll('.btn-del-user').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         if (e.currentTarget.disabled) return;
@@ -3552,6 +4232,99 @@ export default {
         currentSettings.users.splice(idx, 1);
         await this.saveSettings();
         showToast('刪除成功', 'success');
+      });
+    });
+
+    // 編輯使用者
+    document.querySelectorAll('.btn-edit-user').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.dataset.index);
+        const user = currentSettings.users[idx];
+        const isAdmin = user.role === 'admin';
+        const userAreas = Array.isArray(user.allowedAreas) ? user.allowedAreas : [];
+
+        const content = `
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-slate-700">帳號</label>
+              <input type="text" id="edit-user-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" value="${user.username}" ${user.username === 'admin' ? 'disabled' : ''}>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-slate-700">密碼</label>
+              <input type="text" id="edit-user-pass" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" value="${user.password}">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-slate-700">角色</label>
+              <select id="edit-user-role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" ${user.username === 'admin' ? 'disabled' : ''}>
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>一般使用者</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>管理員</option>
+              </select>
+            </div>
+            <div id="edit-user-areas-wrapper" class="flex flex-col gap-1.5 ${isAdmin ? 'hidden' : ''}">
+              <label class="text-sm font-medium text-slate-700">可見區域（不勾選 = 全部區域）</label>
+              <div class="flex flex-wrap gap-2">
+                ${areas.length === 0 ? '<span class="text-xs text-slate-400">尚未建立任何區域</span>' : ''}
+                ${areas.map(a => `
+                  <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-brand">
+                    <input type="checkbox" class="edit-user-area-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${a.id}" ${userAreas.includes(a.id) ? 'checked' : ''}>
+                    <span class="text-slate-700">${a.name}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const footer = `
+          <div class="flex justify-end gap-3">
+            <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+            <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">儲存</button>
+          </div>
+        `;
+
+        const { close, element } = openModal({ title: '編輯帳號', content, footer });
+
+        // 角色切換時顯示/隱藏區域選擇
+        element.querySelector('#edit-user-role')?.addEventListener('change', (ev) => {
+          const wrapper = element.querySelector('#edit-user-areas-wrapper');
+          if (ev.target.value === 'admin') {
+            wrapper.classList.add('hidden');
+          } else {
+            wrapper.classList.remove('hidden');
+          }
+        });
+
+        element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+
+        element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+          const newName = element.querySelector('#edit-user-name').value.trim();
+          const newPass = element.querySelector('#edit-user-pass').value.trim();
+          const newRole = element.querySelector('#edit-user-role').value;
+
+          if (!newName || !newPass) {
+            showToast('帳號與密碼不能為空', 'error');
+            return;
+          }
+          if (newName !== user.username && currentSettings.users.some(u => u.username === newName)) {
+            showToast('帳號已存在', 'error');
+            return;
+          }
+
+          const newAllowedAreas = newRole === 'admin'
+            ? []
+            : Array.from(element.querySelectorAll('.edit-user-area-checkbox:checked')).map(cb => cb.value);
+
+          currentSettings.users[idx] = {
+            username: newName,
+            password: newPass,
+            role: newRole,
+            allowedAreas: newAllowedAreas
+          };
+
+          await this.saveSettings();
+          showToast('已更新帳號', 'success');
+          close();
+        });
       });
     });
   },
@@ -3626,7 +4399,7 @@ export default {
     fileInput?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = async (evt) => {
         try {
@@ -3634,7 +4407,7 @@ export default {
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          
+
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
           if (jsonData.length < 2) {
             showToast('Excel 檔案沒有資料', 'error');
@@ -3666,7 +4439,7 @@ export default {
           }
 
           showToast(`匯入完成！新增 ${addedCount} 筆，更新 ${updatedCount} 筆。`, 'success');
-          fileInput.value = ''; 
+          fileInput.value = '';
         } catch (error) {
           console.error('Import Error:', error);
           showToast(`匯入失敗：${error.message || '請檢查檔案格式'}`, 'error');
@@ -3691,8 +4464,8 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1792927100
-W: UPGRADE-004
+V: 1792936000
+W: UPGRADE-005
 ═══ */```
 
 <!-- === FILE END: ./src/pages/settings.js === -->
@@ -3922,12 +4695,13 @@ W: webapp-20261026-001#32
 ## 📄 ./src/ui/layout.js
 
 ```js
-import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database } from 'lucide';
+~~~javascript
+import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database, MapPin } from 'lucide';
 
 /**
  * 繪製 App Shell 骨架（側邊欄、頂部導覽列）
  * @param {Object} options
- * @param {Object} options.user 當前登入使用者 (需含 username, role)
+ * @param {Object} options.user 當前登入使用者 (需含 username, role, allowedAreas)
  * @param {function} options.onLogout 登出回呼
  * @param {function} options.onNavigate 切換視圖回呼 (接收 route)
  */
@@ -4024,7 +4798,7 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
 
   // 渲染圖示
   createIcons({
-    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Database },
+    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Database, MapPin },
     attrs: { class: 'w-5 h-5' }
   });
 
@@ -4055,19 +4829,28 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
   overlay?.addEventListener('click', closeDrawer);
 
   // 渲染導覽選單
-  renderNavItems(user.role, onNavigate, closeDrawer);
+  renderNavItems(user, onNavigate, closeDrawer);
 }
 
 /**
  * 繪製導覽選單項目
+ * 依使用者 role 與 allowedAreas 過濾顯示
  */
-function renderNavItems(role, onNavigate, closeDrawer) {
+function renderNavItems(user, onNavigate, closeDrawer) {
+  const role = user.role;
+  const allowedAreas = Array.isArray(user.allowedAreas) ? user.allowedAreas : [];
+
+  // 是否顯示「生產區域」：admin 永遠顯示；user 若 allowedAreas 為空（向後相容）也顯示
+  // 若 user 明確指定 allowedAreas 但陣列為空，代表未被授權任何區域 → 隱藏選單
+  const showAreaMenu = role === 'admin' || allowedAreas.length > 0 || allowedAreas.length === 0;
+
   const routes = [
     { id: 'kanban', label: '工單進度表', icon: 'layout-dashboard', roles: ['admin', 'user'] },
     { id: 'table', label: '管理總表', icon: 'table', roles: ['admin', 'user'] },
     { id: 'overview', label: '總狀態', icon: 'pie-chart', roles: ['admin', 'user'] },
     { id: 'category', label: '類別視圖', icon: 'layers', roles: ['admin', 'user'] },
     { id: 'salesperson', label: '銷售員', icon: 'users', roles: ['admin', 'user'] },
+    { id: 'area', label: '生產區域', icon: 'map-pin', roles: ['admin', 'user'], visible: showAreaMenu },
     { id: 'settings', label: '系統設定', icon: 'settings', roles: ['admin'] },
     { id: 'admin-data', label: '資料總管', icon: 'database', roles: ['admin'] }
   ];
@@ -4078,6 +4861,7 @@ function renderNavItems(role, onNavigate, closeDrawer) {
 
   routes.forEach(route => {
     if (!route.roles.includes(role)) return;
+    if (route.visible === false) return;
 
     // 側邊欄項目
     if (sidebarNav) {
@@ -4108,8 +4892,8 @@ function renderNavItems(role, onNavigate, closeDrawer) {
       mobileNav.appendChild(btn);
     }
 
-    // 頂部 Segmented Control 項目 (排除 admin-data 以免太擠)
-    if (topControl && route.id !== 'admin-data') {
+    // 頂部 Segmented Control 項目 (排除 admin-data 與 area 以免太擠)
+    if (topControl && route.id !== 'admin-data' && route.id !== 'area') {
       const segment = document.createElement('div');
       segment.className = 'segment-btn';
       segment.dataset.route = route.id;
@@ -4120,7 +4904,7 @@ function renderNavItems(role, onNavigate, closeDrawer) {
   });
 
   createIcons({
-    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers, Database },
+    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers, Database, MapPin },
     attrs: { class: 'w-5 h-5' }
   });
 }
@@ -4214,8 +4998,8 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/layout.js
-V: 1792917900
-W: UPGRADE-003
+V: 1792935600
+W: UPGRADE-005
 ═══ */```
 
 <!-- === FILE END: ./src/ui/layout.js === -->
