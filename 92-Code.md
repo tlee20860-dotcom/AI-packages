@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 21:45:56 (HKT)
+> 生成時間：2026-10-30 22:38:31 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -128,16 +128,19 @@ jobs:
   <!-- 系統掛載點，確保在手機與桌機都能正確撐滿高度 -->
   <div id="app-root" class="w-full h-[100dvh] overflow-hidden"></div>
 
+  <!-- 引入 SortableJS 用於支援手機觸控拖曳排序 -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
   <!-- 系統啟動入口 (Vite 會自動處理 Module 依賴) -->
   <script type="module" src="/src/engine/main.js"></script>
 </body>
 </html>
 
-<!-- ═══ EOF ═══
+<!--
 F: AI-WA-UPWO/index.html
-V: 1792923100
-W: UPGRADE-004
-═══ -->```
+V: 1792946000
+W: UPGRADE-005
+-->```
 
 <!-- === FILE END: ./index.html === -->
 
@@ -1628,6 +1631,17 @@ function renderStatusBlock(status, orders, allStatuses) {
   `;
 }
 
+/**
+ * 取得工單的類別 (優先從 data.category，其次從工單號前兩碼)
+ */
+function getOrderCategory(order) {
+  if (order.data && order.data.category) {
+    return String(order.data.category).toUpperCase();
+  }
+  const match = String(order.id).match(/^[a-zA-Z]+/);
+  return match ? match[0].toUpperCase() : '其他';
+}
+
 export default {
   async render() {
     const user = AppState.getUser();
@@ -1679,12 +1693,13 @@ export default {
       return id && !id.includes('***') && !id.includes('訂單');
     });
 
-    // 2. 建立「全域」工序 → 區域映射（基於全部 areas，不受權限影響）
-    //    這一步必須用全部 areas，否則未授權區域的工序會被誤判為「未分配」而外洩。
-    const statusToArea = {};
+    // 2. 建立「全域」工序 → 區域映射
+    // 因為一個工序可以綁定多個區域，所以值為 Array
+    const statusToAreaIds = {};
     areas.forEach(area => {
       (area.statuses || []).forEach(s => {
-        statusToArea[s] = area.id;
+        if (!statusToAreaIds[s]) statusToAreaIds[s] = [];
+        statusToAreaIds[s].push(area.id);
       });
     });
 
@@ -1701,11 +1716,11 @@ export default {
     }
     const visibleAreaIds = new Set(visibleAreas.map(a => a.id));
 
-    // 4. 真正未綁定的工序 = allStatuses 中不在 statusToArea 者
-    const unassignedStatuses = allStatuses.filter(s => !statusToArea[s]);
+    // 4. 真正未綁定的工序 = allStatuses 中不在 statusToAreaIds 者
+    const unassignedStatuses = allStatuses.filter(s => !statusToAreaIds[s]);
 
-    // 5. 收集「未知工序」：工單 status 不在 allStatuses 也不在 statusToArea
-    const knownStatuses = new Set([...allStatuses, ...Object.keys(statusToArea)]);
+    // 5. 收集「未知工序」：工單 status 不在 allStatuses 也不在 statusToAreaIds
+    const knownStatuses = new Set([...allStatuses, ...Object.keys(statusToAreaIds)]);
     const unknownStatuses = new Set();
     cleanOrders.forEach(o => {
       if (o.status && !knownStatuses.has(o.status)) {
@@ -1732,27 +1747,40 @@ export default {
     // 7. 分派工單
     cleanOrders.forEach(order => {
       const status = order.status;
-      const areaId = statusToArea[status];
+      const areaIds = statusToAreaIds[status] || [];
+      const orderCategory = getOrderCategory(order);
 
-      if (areaId) {
-        // 屬於某區域的工序
-        if (visibleAreaIds.has(areaId) && ordersByArea[areaId] && ordersByArea[areaId][status]) {
+      let isAssignedToAnyArea = false;
+
+      // 檢查該工序所屬的所有區域
+      areaIds.forEach(areaId => {
+        isAssignedToAnyArea = true; // 標記此工序有被綁定到某個區域
+
+        // 如果該區域不在當前使用者的可見範圍內，直接跳過
+        if (!visibleAreaIds.has(areaId)) return;
+
+        const area = areas.find(a => a.id === areaId);
+        if (!area) return;
+
+        // 類別過濾：若區域有設定類別，則必須與工單類別相符
+        const areaCategory = area.category ? String(area.category).toUpperCase() : '';
+        const categoryMatch = !areaCategory || areaCategory === orderCategory;
+
+        if (categoryMatch && ordersByArea[areaId] && ordersByArea[areaId][status]) {
           ordersByArea[areaId][status].push(order);
         }
-        // 未授權區域的工單：完全不出現（不進未分配）
-        return;
-      }
+      });
 
-      // 未綁定任何區域的工序
-      if (status && unassignedOrders[status]) {
-        unassignedOrders[status].push(order);
-        return;
+      // 如果該工序完全沒有被綁定到任何區域，則進入「未分配區域」
+      if (!isAssignedToAnyArea) {
+        if (status && unassignedOrders[status]) {
+          unassignedOrders[status].push(order);
+        } else {
+          const key = status || '__EMPTY__';
+          if (!unknownOrders[key]) unknownOrders[key] = [];
+          unknownOrders[key].push(order);
+        }
       }
-
-      // 未知工序（status 不在 allStatuses 也不在 statusToArea）
-      const key = status || '__EMPTY__';
-      if (!unknownOrders[key]) unknownOrders[key] = [];
-      unknownOrders[key].push(order);
     });
 
     // 8. 組裝 HTML
@@ -1789,12 +1817,17 @@ export default {
         renderStatusBlock(status, areaOrders[status] || [], allStatuses)
       ).join('');
 
+      const categoryLabel = area.category 
+        ? `<span class="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-bold">${area.category}</span>` 
+        : '';
+
       return `
         <div class="glass-card p-4 flex flex-col gap-3">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <i data-lucide="map-pin" class="w-5 h-5 text-brand"></i>
             <h2 class="text-base font-bold text-slate-800">${area.name}</h2>
-            <span class="text-xs px-2 py-0.5 bg-brand/10 text-brand rounded font-medium">${totalCount} 單</span>
+            ${categoryLabel}
+            <span class="text-xs px-2 py-0.5 bg-brand/10 text-brand rounded font-medium ml-auto">${totalCount} 單</span>
           </div>
           ${totalCount === 0 ? `<div class="text-sm text-slate-400 py-2">暫無工單</div>` : statusBlocks}
         </div>
@@ -1817,11 +1850,11 @@ export default {
     let unassignedHtml = '';
     if (unassignedTotal > 0) {
       unassignedHtml = `
-        <div class="glass-card p-4 flex flex-col gap-3 border-dashed">
+        <div class="glass-card p-4 flex flex-col gap-3 border-dashed border-2 border-slate-200 shadow-none">
           <div class="flex items-center gap-2">
             <i data-lucide="inbox" class="w-5 h-5 text-slate-400"></i>
-            <h2 class="text-base font-bold text-slate-800">未分配區域</h2>
-            <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">${unassignedTotal} 單</span>
+            <h2 class="text-base font-bold text-slate-600">未分配區域</h2>
+            <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-medium ml-auto">${unassignedTotal} 單</span>
           </div>
           ${unassignedBlocks}
           ${unknownBlocks}
@@ -1860,7 +1893,7 @@ export default {
 
 /*
 F: AI-WA-UPWO/src/pages/area.js
-V: 1792937600
+V: 1792951000
 W: UPGRADE-005
 */```
 
@@ -2680,14 +2713,14 @@ W: UPGRADE-004
 ```js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
-import { createIcons, Plus, Trash2, Edit2, X, MapPin, ChevronUp, ChevronDown } from 'lucide';
+import { createIcons, Plus, Trash2, Edit2, X, MapPin, GripVertical } from 'lucide';
 
 /**
  * 渲染「區域管理」頁籤
  * - 新增／改名／刪除區域
- * - 上下按鈕排序區域
- * - 雙清單綁定工序（上下按鈕排序）
- * - 一個工序最多屬於一個區域（已在其他區域的工序顯示為已綁定並禁用）
+ * - 區域支援綁定「負責類別」(category)
+ * - 拖曳排序區域（使用 SortableJS 支援手機觸控）
+ * - 雙清單拖曳綁定工序（工序可重複綁定於多個區域）
  *
  * @param {HTMLElement} container 目標容器
  * @param {Object} currentSettings settings/main 的內容（含 areas、statuses）
@@ -2701,12 +2734,12 @@ export function renderAreas(container, currentSettings, saveSettings) {
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">區域管理</h2>
-        <p class="text-sm text-slate-500 mt-1">使用上下箭頭排序。新增區域並綁定工序。一個工序最多屬於一個區域；未綁定的工序會歸入「未分配區域」。</p>
+        <p class="text-sm text-slate-500 mt-1">可拖曳排序。綁定負責類別與工序，若無設定類別則顯示全部。</p>
       </div>
     </div>
 
     <div class="flex gap-2 mb-6">
-      <input type="text" id="new-area-name" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="區域名稱 (例如：四色印刷機)">
+      <input type="text" id="new-area-name" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand" placeholder="區域名稱 (例如：UG印刷區)">
       <button id="btn-add-area" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
         <i data-lucide="plus" class="w-4 h-4"></i> 新增區域
       </button>
@@ -2716,22 +2749,17 @@ export function renderAreas(container, currentSettings, saveSettings) {
       ${areas.length === 0 ? '<div class="text-slate-400 text-sm py-4 text-center">尚無區域，請先新增</div>' : ''}
       ${areas.map((area, index) => {
         const boundStatuses = area.statuses || [];
-        const isFirst = index === 0;
-        const isLast = index === areas.length - 1;
         return `
           <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm area-item" data-index="${index}">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
-                <div class="flex flex-col items-center gap-0.5 mr-1">
-                  <button class="p-1 text-slate-400 hover:text-brand btn-move-area-up ${isFirst ? 'opacity-30' : ''}" data-index="${index}" ${isFirst ? 'disabled' : ''}>
-                    <i data-lucide="chevron-up" class="w-4 h-4"></i>
-                  </button>
-                  <button class="p-1 text-slate-400 hover:text-brand btn-move-area-down ${isLast ? 'opacity-30' : ''}" data-index="${index}" ${isLast ? 'disabled' : ''}>
-                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                  </button>
-                </div>
+                <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300 cursor-grab"></i>
                 <i data-lucide="map-pin" class="w-5 h-5 text-brand"></i>
                 <span class="font-bold text-slate-800 area-name">${area.name}</span>
+                ${area.category 
+                  ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">類別：${area.category}</span>` 
+                  : `<span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded">不分類別</span>`
+                }
                 <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded">${boundStatuses.length} 個工序</span>
               </div>
               <div class="flex items-center gap-2">
@@ -2756,7 +2784,26 @@ export function renderAreas(container, currentSettings, saveSettings) {
     </div>
   `;
 
-  createIcons({ icons: { Plus, Trash2, Edit2, MapPin, ChevronUp, ChevronDown }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Plus, Trash2, Edit2, MapPin, GripVertical }, attrs: { class: 'w-4 h-4' } });
+
+  // ── 初始化區域拖曳排序 (SortableJS) ──
+  const areaList = document.getElementById('area-list');
+  if (areaList && areas.length > 1) {
+    new Sortable(areaList, {
+      animation: 150,
+      handle: '.cursor-grab',
+      ghostClass: 'opacity-50',
+      forceFallback: true,
+      fallbackTolerance: 3,
+      onEnd: async function (evt) {
+        const newOrderIndexes = Array.from(areaList.children).map(el => parseInt(el.dataset.index));
+        const newAreas = newOrderIndexes.map(i => currentSettings.areas[i]);
+        currentSettings.areas = newAreas;
+        await saveSettings();
+        showToast('區域順序已更新', 'success');
+      }
+    });
+  }
 
   // ── 新增區域 ──
   document.getElementById('btn-add-area')?.addEventListener('click', async () => {
@@ -2772,7 +2819,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
     }
     const id = 'area_' + Date.now().toString(36);
     if (!currentSettings.areas) currentSettings.areas = [];
-    currentSettings.areas.push({ id, name, statuses: [] });
+    currentSettings.areas.push({ id, name, category: '', statuses: [] });
     await saveSettings();
     showToast('區域已新增', 'success');
   });
@@ -2795,43 +2842,11 @@ export function renderAreas(container, currentSettings, saveSettings) {
     });
   });
 
-  // ── 區域上下排序 ──
-  document.querySelectorAll('.btn-move-area-up').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const idx = parseInt(e.currentTarget.dataset.index);
-      if (idx > 0) {
-        [currentSettings.areas[idx - 1], currentSettings.areas[idx]] = [currentSettings.areas[idx], currentSettings.areas[idx - 1]];
-        await saveSettings();
-        showToast('區域順序已更新', 'success');
-      }
-    });
-  });
-
-  document.querySelectorAll('.btn-move-area-down').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const idx = parseInt(e.currentTarget.dataset.index);
-      if (idx < currentSettings.areas.length - 1) {
-        [currentSettings.areas[idx + 1], currentSettings.areas[idx]] = [currentSettings.areas[idx], currentSettings.areas[idx + 1]];
-        await saveSettings();
-        showToast('區域順序已更新', 'success');
-      }
-    });
-  });
-
-  // ── 編輯區域（改名 + 雙清單綁定工序） ──
+  // ── 編輯區域（改名 + 類別 + 雙清單綁定工序） ──
   document.querySelectorAll('.btn-edit-area').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.dataset.index);
       const area = areas[idx];
-
-      // 建立「其他區域已綁定」的工序映射（用於禁用與提示）
-      const otherAreaStatusMap = {};
-      currentSettings.areas.forEach((a, i) => {
-        if (i === idx) return;
-        (a.statuses || []).forEach(s => {
-          otherAreaStatusMap[s] = a.name;
-        });
-      });
 
       const content = `
         <div class="flex flex-col gap-4">
@@ -2839,8 +2854,12 @@ export function renderAreas(container, currentSettings, saveSettings) {
             <label class="text-sm font-medium text-slate-700">區域名稱</label>
             <input type="text" id="edit-area-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${area.name}">
           </div>
-          <div class="flex flex-col gap-2">
-            <p class="text-sm text-slate-500">點擊左側加入右側，或使用上下箭頭調整順序。已綁定至其他區域的工序需先從該區域移除。</p>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-slate-700">負責類別 (留空為通用)</label>
+            <input type="text" id="edit-area-category" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${area.category || ''}" placeholder="例：UG">
+          </div>
+          <div class="flex flex-col gap-2 mt-2">
+            <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。同一工序可加入多個區域。</p>
             <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
               <!-- 左側：可選工序 -->
               <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
@@ -2867,6 +2886,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
       const { close, element } = openModal({ title: `編輯區域`, content, footer });
 
       let currentSteps = Array.from(area.statuses || []);
+      let sortableInstance = null;
 
       const renderModalLists = () => {
         const availableList = element.querySelector('#modal-available-list');
@@ -2878,34 +2898,20 @@ export function renderAreas(container, currentSettings, saveSettings) {
         if (availableStatuses.length === 0) {
           availableList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">所有工序已加入</div>';
         } else {
-          availableList.innerHTML = availableStatuses.map(status => {
-            const boundTo = otherAreaStatusMap[status];
-            const isBlocked = !!boundTo;
-            return `
-              <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 ${isBlocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-brand transition-colors'} available-item" data-step="${status}" data-blocked="${isBlocked ? '1' : '0'}">
-                <span class="flex-1 font-medium text-slate-700">${status}</span>
-                ${isBlocked
-                  ? `<span class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded whitespace-nowrap">已綁定：${boundTo}</span>`
-                  : `<i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>`
-                }
-              </div>
-            `;
-          }).join('');
+          availableList.innerHTML = availableStatuses.map(status => `
+            <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 cursor-pointer hover:border-brand transition-colors available-item" data-step="${status}">
+              <span class="flex-1 font-medium text-slate-700">${status}</span>
+              <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
+            </div>
+          `).join('');
         }
 
         if (currentSteps.length === 0) {
           selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
         } else {
           selectedList.innerHTML = currentSteps.map((step, i) => `
-            <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item">
-              <div class="flex flex-col items-center gap-0.5">
-                <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${i === 0 ? 'opacity-30' : ''}" data-idx="${i}" ${i === 0 ? 'disabled' : ''}>
-                  <i data-lucide="chevron-up" class="w-4 h-4"></i>
-                </button>
-                <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${i === currentSteps.length - 1 ? 'opacity-30' : ''}" data-idx="${i}" ${i === currentSteps.length - 1 ? 'disabled' : ''}>
-                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                </button>
-              </div>
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item" data-step="${step}">
+              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-grab"></i>
               <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${i + 1}.</span>${step}</span>
               <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -2914,15 +2920,11 @@ export function renderAreas(container, currentSettings, saveSettings) {
           `).join('');
         }
 
-        createIcons({ icons: { Plus, ChevronUp, ChevronDown, X }, attrs: { class: 'w-4 h-4' } });
+        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
 
         // 左側點擊加入
         availableList.querySelectorAll('.available-item').forEach(item => {
           item.addEventListener('click', () => {
-            if (item.dataset.blocked === '1') {
-              showToast('此工序已綁定至其他區域，請先移除該綁定', 'error');
-              return;
-            }
             const step = item.dataset.step;
             if (!currentSteps.includes(step)) {
               currentSteps.push(step);
@@ -2940,27 +2942,25 @@ export function renderAreas(container, currentSettings, saveSettings) {
           });
         });
 
-        // 右側上移
-        selectedList.querySelectorAll('.btn-move-up').forEach(btn => {
-          btn.addEventListener('click', (ev) => {
-            const i = parseInt(ev.currentTarget.dataset.idx);
-            if (i > 0) {
-              [currentSteps[i - 1], currentSteps[i]] = [currentSteps[i], currentSteps[i - 1]];
-              renderModalLists();
-            }
-          });
-        });
+        // 銷毀舊的 Sortable 實例
+        if (sortableInstance) {
+          sortableInstance.destroy();
+        }
 
-        // 右側下移
-        selectedList.querySelectorAll('.btn-move-down').forEach(btn => {
-          btn.addEventListener('click', (ev) => {
-            const i = parseInt(ev.currentTarget.dataset.idx);
-            if (i < currentSteps.length - 1) {
-              [currentSteps[i + 1], currentSteps[i]] = [currentSteps[i], currentSteps[i + 1]];
+        // 右側拖曳排序 (SortableJS)
+        if (currentSteps.length > 0) {
+          sortableInstance = new Sortable(selectedList, {
+            animation: 150,
+            handle: '.cursor-grab',
+            ghostClass: 'opacity-50',
+            forceFallback: true,
+            fallbackTolerance: 3,
+            onEnd: () => {
+              currentSteps = Array.from(selectedList.children).map(el => el.dataset.step);
               renderModalLists();
             }
           });
-        });
+        }
       };
 
       renderModalLists();
@@ -2969,6 +2969,8 @@ export function renderAreas(container, currentSettings, saveSettings) {
 
       element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
         const newName = element.querySelector('#edit-area-name').value.trim();
+        const newCategory = element.querySelector('#edit-area-category').value.trim().toUpperCase();
+        
         if (!newName) {
           showToast('區域名稱不能為空', 'error');
           return;
@@ -2979,6 +2981,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
         }
 
         currentSettings.areas[idx].name = newName;
+        currentSettings.areas[idx].category = newCategory;
         currentSettings.areas[idx].statuses = currentSteps;
 
         await saveSettings();
@@ -2991,7 +2994,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
 
 /*
 F: AI-WA-UPWO/src/pages/settings-area.js
-V: 1792945000
+V: 1792950000
 W: UPGRADE-005
 */```
 
@@ -3006,18 +3009,18 @@ import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
-import { createIcons, Plus, GripVertical, Trash2, Edit2, Star, Settings2, X, Check, ChevronUp, ChevronDown } from 'lucide';
+import { createIcons, Plus, GripVertical, Trash2, Edit2, Star, Settings2, X, Check } from 'lucide';
 
 /**
  * 渲染狀態管理頁籤
- * 改為上下按鈕排序以支援手機操作
+ * 恢復為 SortableJS 拖曳排序（支援手機觸控）
  */
 export function renderStatuses(container, currentSettings, saveSettings) {
   container.innerHTML = `
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">工序狀態管理</h2>
-        <p class="text-sm text-slate-500 mt-1">使用上下箭頭排序。修改名稱時會同步更新歷史工單與區域綁定。</p>
+        <p class="text-sm text-slate-500 mt-1">可拖曳排序。修改名稱時會同步更新歷史工單與區域綁定。</p>
       </div>
     </div>
     
@@ -3030,15 +3033,8 @@ export function renderStatuses(container, currentSettings, saveSettings) {
 
     <div class="inset-panel p-4 flex flex-col gap-2" id="status-list">
       ${currentSettings.statuses.map((status, index) => `
-        <div class="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm status-item" data-index="${index}">
-          <div class="flex items-center gap-1 mr-1">
-            <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${index === 0 ? 'opacity-30' : ''}" data-index="${index}" ${index === 0 ? 'disabled' : ''}>
-              <i data-lucide="chevron-up" class="w-4 h-4"></i>
-            </button>
-            <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${index === currentSettings.statuses.length - 1 ? 'opacity-30' : ''}" data-index="${index}" ${index === currentSettings.statuses.length - 1 ? 'disabled' : ''}>
-              <i data-lucide="chevron-down" class="w-4 h-4"></i>
-            </button>
-          </div>
+        <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm status-item" data-index="${index}">
+          <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300 cursor-grab"></i>
           <span class="flex-1 font-medium text-slate-700 status-name">${status}</span>
           <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-status" data-status="${status}">
             <i data-lucide="edit-2" class="w-4 h-4"></i>
@@ -3051,7 +3047,23 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     </div>
   `;
 
-  createIcons({ icons: { Plus, ChevronUp, ChevronDown, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Plus, GripVertical, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
+
+  // 初始化 SortableJS（狀態排序）
+  const statusList = document.getElementById('status-list');
+  if (statusList) {
+    new Sortable(statusList, {
+      animation: 150,
+      handle: '.cursor-grab',
+      ghostClass: 'opacity-50',
+      onEnd: async function (evt) {
+        const newOrder = Array.from(statusList.children).map(el => el.querySelector('.status-name').textContent);
+        currentSettings.statuses = newOrder;
+        await saveSettings();
+        showToast('排序已更新', 'success');
+      }
+    });
+  }
 
   // 新增狀態
   document.getElementById('btn-add-status')?.addEventListener('click', async () => {
@@ -3065,29 +3077,6 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     currentSettings.statuses.push(val);
     await saveSettings();
     showToast('新增成功', 'success');
-  });
-
-  // 上下移動狀態
-  document.querySelectorAll('.btn-move-up').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const idx = parseInt(e.currentTarget.dataset.index);
-      if (idx > 0) {
-        [currentSettings.statuses[idx - 1], currentSettings.statuses[idx]] = [currentSettings.statuses[idx], currentSettings.statuses[idx - 1]];
-        await saveSettings();
-        showToast('排序已更新', 'success');
-      }
-    });
-  });
-
-  document.querySelectorAll('.btn-move-down').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const idx = parseInt(e.currentTarget.dataset.index);
-      if (idx < currentSettings.statuses.length - 1) {
-        [currentSettings.statuses[idx + 1], currentSettings.statuses[idx]] = [currentSettings.statuses[idx], currentSettings.statuses[idx + 1]];
-        await saveSettings();
-        showToast('排序已更新', 'success');
-      }
-    });
   });
 
   // 修改狀態
@@ -3274,7 +3263,7 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
         </div>
 
         <div class="flex flex-col gap-2 mt-4">
-          <p class="text-sm text-slate-500">點擊左側加入右側，或使用上下箭頭調整順序。</p>
+          <p class="text-sm text-slate-500">點擊左側加入右側，或長按左側把手拖曳調整順序。</p>
           <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
             <!-- 左側：可選工序 -->
             <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
@@ -3300,6 +3289,7 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
       const { close, element } = openModal({ title: `編輯模板`, content, footer });
       
       let currentSteps = Array.from(tmpl.steps);
+      let sortableInstance = null;
 
       const renderModalLists = () => {
         const availableList = element.querySelector('#modal-available-list');
@@ -3324,15 +3314,8 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
           selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
         } else {
           selectedList.innerHTML = currentSteps.map((step, i) => `
-            <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item">
-              <div class="flex flex-col items-center gap-0.5">
-                <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${i === 0 ? 'opacity-30' : ''}" data-idx="${i}" ${i === 0 ? 'disabled' : ''}>
-                  <i data-lucide="chevron-up" class="w-4 h-4"></i>
-                </button>
-                <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${i === currentSteps.length - 1 ? 'opacity-30' : ''}" data-idx="${i}" ${i === currentSteps.length - 1 ? 'disabled' : ''}>
-                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                </button>
-              </div>
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item" data-step="${step}">
+              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-grab"></i>
               <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${i + 1}.</span>${step}</span>
               <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -3341,7 +3324,7 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
           `).join('');
         }
 
-        createIcons({ icons: { Plus, ChevronUp, ChevronDown, X }, attrs: { class: 'w-4 h-4' } });
+        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
         
         // 綁定左側點擊加入
         availableList.querySelectorAll('.available-item').forEach(item => {
@@ -3363,27 +3346,25 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
           });
         });
 
-        // 綁定右側上移
-        selectedList.querySelectorAll('.btn-move-up').forEach(btn => {
-          btn.addEventListener('click', (ev) => {
-            const i = parseInt(ev.currentTarget.dataset.idx);
-            if (i > 0) {
-              [currentSteps[i - 1], currentSteps[i]] = [currentSteps[i], currentSteps[i - 1]];
-              renderModalLists();
-            }
-          });
-        });
+        // 銷毀舊的 Sortable 實例
+        if (sortableInstance) {
+          sortableInstance.destroy();
+        }
 
-        // 綁定右側下移
-        selectedList.querySelectorAll('.btn-move-down').forEach(btn => {
-          btn.addEventListener('click', (ev) => {
-            const i = parseInt(ev.currentTarget.dataset.idx);
-            if (i < currentSteps.length - 1) {
-              [currentSteps[i + 1], currentSteps[i]] = [currentSteps[i], currentSteps[i + 1]];
-              renderModalLists();
+        // 綁定右側拖曳 (使用 SortableJS，加入 forceFallback 解決手機滾動衝突)
+        if (currentSteps.length > 0) {
+          sortableInstance = new Sortable(selectedList, {
+            animation: 150,
+            handle: '.cursor-grab',
+            ghostClass: 'opacity-50',
+            forceFallback: true,
+            fallbackTolerance: 3,
+            onEnd: () => {
+              currentSteps = Array.from(selectedList.children).map(el => el.dataset.step);
+              renderModalLists(); // 重新渲染以更新序號
             }
           });
-        });
+        }
       };
 
       renderModalLists();
@@ -3589,7 +3570,7 @@ export function renderMapping(container, currentSettings, saveSettings) {
 
 /*
 F: AI-WA-UPWO/src/pages/settings-basic.js
-V: 1792944000
+V: 1792948800
 W: UPGRADE-005
 */```
 
