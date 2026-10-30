@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 20:03:28 (HKT)
+> 生成時間：2026-10-30 21:45:56 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1132,7 +1132,6 @@ W: UPGRADE-004
 ## 📄 ./src/engine/router.js
 
 ```js
-~~~javascript
 import { AppState } from '../config/state.js';
 import { renderAppShell, updateNavbar } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
@@ -1258,11 +1257,11 @@ export function initRouter() {
   handleRoute();
 }
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/engine/router.js
-V: 1792935200
+V: 1792938400
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/engine/router.js === -->
 
@@ -1575,7 +1574,6 @@ W: UPGRADE-003
 ## 📄 ./src/pages/area.js
 
 ```js
-~~~javascript
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { renderPageLayout } from '../ui/layout.js';
@@ -1859,13 +1857,12 @@ export default {
     window.removeEventListener('refresh-area', this.updateUI.bind(this));
   }
 };
-~~~
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/area.js
-V: 1792934400
+V: 1792937600
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/pages/area.js === -->
 
@@ -2216,7 +2213,6 @@ W: UPGRADE-004
 ## 📄 ./src/pages/login.js
 
 ```js
-~~~javascript
 import { AppState } from '../config/state.js';
 import { getCollection } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
@@ -2357,11 +2353,11 @@ export default {
   }
 };
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/login.js
-V: 1792936800
+V: 1792942400
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/pages/login.js === -->
 
@@ -2682,15 +2678,15 @@ W: UPGRADE-004
 ## 📄 ./src/pages/settings-area.js
 
 ```js
-~~~javascript
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
-import { createIcons, Plus, GripVertical, Trash2, Edit2, X, MapPin, AlertCircle } from 'lucide';
+import { createIcons, Plus, Trash2, Edit2, X, MapPin, ChevronUp, ChevronDown } from 'lucide';
 
 /**
  * 渲染「區域管理」頁籤
  * - 新增／改名／刪除區域
- * - 雙清單拖曳綁定工序
+ * - 上下按鈕排序區域
+ * - 雙清單綁定工序（上下按鈕排序）
  * - 一個工序最多屬於一個區域（已在其他區域的工序顯示為已綁定並禁用）
  *
  * @param {HTMLElement} container 目標容器
@@ -2705,7 +2701,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">區域管理</h2>
-        <p class="text-sm text-slate-500 mt-1">新增區域並綁定工序。一個工序最多屬於一個區域；未綁定的工序會歸入「未分配區域」。</p>
+        <p class="text-sm text-slate-500 mt-1">使用上下箭頭排序。新增區域並綁定工序。一個工序最多屬於一個區域；未綁定的工序會歸入「未分配區域」。</p>
       </div>
     </div>
 
@@ -2716,16 +2712,26 @@ export function renderAreas(container, currentSettings, saveSettings) {
       </button>
     </div>
 
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3" id="area-list">
       ${areas.length === 0 ? '<div class="text-slate-400 text-sm py-4 text-center">尚無區域，請先新增</div>' : ''}
       ${areas.map((area, index) => {
         const boundStatuses = area.statuses || [];
+        const isFirst = index === 0;
+        const isLast = index === areas.length - 1;
         return `
-          <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+          <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm area-item" data-index="${index}">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
+                <div class="flex flex-col items-center gap-0.5 mr-1">
+                  <button class="p-1 text-slate-400 hover:text-brand btn-move-area-up ${isFirst ? 'opacity-30' : ''}" data-index="${index}" ${isFirst ? 'disabled' : ''}>
+                    <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                  </button>
+                  <button class="p-1 text-slate-400 hover:text-brand btn-move-area-down ${isLast ? 'opacity-30' : ''}" data-index="${index}" ${isLast ? 'disabled' : ''}>
+                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                  </button>
+                </div>
                 <i data-lucide="map-pin" class="w-5 h-5 text-brand"></i>
-                <span class="font-bold text-slate-800">${area.name}</span>
+                <span class="font-bold text-slate-800 area-name">${area.name}</span>
                 <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded">${boundStatuses.length} 個工序</span>
               </div>
               <div class="flex items-center gap-2">
@@ -2750,7 +2756,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
     </div>
   `;
 
-  createIcons({ icons: { Plus, Trash2, Edit2, MapPin }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Plus, Trash2, Edit2, MapPin, ChevronUp, ChevronDown }, attrs: { class: 'w-4 h-4' } });
 
   // ── 新增區域 ──
   document.getElementById('btn-add-area')?.addEventListener('click', async () => {
@@ -2789,6 +2795,29 @@ export function renderAreas(container, currentSettings, saveSettings) {
     });
   });
 
+  // ── 區域上下排序 ──
+  document.querySelectorAll('.btn-move-area-up').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      if (idx > 0) {
+        [currentSettings.areas[idx - 1], currentSettings.areas[idx]] = [currentSettings.areas[idx], currentSettings.areas[idx - 1]];
+        await saveSettings();
+        showToast('區域順序已更新', 'success');
+      }
+    });
+  });
+
+  document.querySelectorAll('.btn-move-area-down').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      if (idx < currentSettings.areas.length - 1) {
+        [currentSettings.areas[idx + 1], currentSettings.areas[idx]] = [currentSettings.areas[idx], currentSettings.areas[idx + 1]];
+        await saveSettings();
+        showToast('區域順序已更新', 'success');
+      }
+    });
+  });
+
   // ── 編輯區域（改名 + 雙清單綁定工序） ──
   document.querySelectorAll('.btn-edit-area').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -2811,7 +2840,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
             <input type="text" id="edit-area-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${area.name}">
           </div>
           <div class="flex flex-col gap-2">
-            <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。已綁定至其他區域的工序需先從該區域移除。</p>
+            <p class="text-sm text-slate-500">點擊左側加入右側，或使用上下箭頭調整順序。已綁定至其他區域的工序需先從該區域移除。</p>
             <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
               <!-- 左側：可選工序 -->
               <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
@@ -2868,8 +2897,15 @@ export function renderAreas(container, currentSettings, saveSettings) {
           selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
         } else {
           selectedList.innerHTML = currentSteps.map((step, i) => `
-            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
-              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
+            <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item">
+              <div class="flex flex-col items-center gap-0.5">
+                <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${i === 0 ? 'opacity-30' : ''}" data-idx="${i}" ${i === 0 ? 'disabled' : ''}>
+                  <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                </button>
+                <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${i === currentSteps.length - 1 ? 'opacity-30' : ''}" data-idx="${i}" ${i === currentSteps.length - 1 ? 'disabled' : ''}>
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
               <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${i + 1}.</span>${step}</span>
               <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -2878,7 +2914,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
           `).join('');
         }
 
-        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+        createIcons({ icons: { Plus, ChevronUp, ChevronDown, X }, attrs: { class: 'w-4 h-4' } });
 
         // 左側點擊加入
         availableList.querySelectorAll('.available-item').forEach(item => {
@@ -2904,25 +2940,25 @@ export function renderAreas(container, currentSettings, saveSettings) {
           });
         });
 
-        // 右側拖曳排序
-        let dragged = null;
-        selectedList.querySelectorAll('.step-item').forEach(item => {
-          item.addEventListener('dragstart', function() {
-            dragged = this;
-            setTimeout(() => this.classList.add('opacity-50'), 0);
+        // 右側上移
+        selectedList.querySelectorAll('.btn-move-up').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const i = parseInt(ev.currentTarget.dataset.idx);
+            if (i > 0) {
+              [currentSteps[i - 1], currentSteps[i]] = [currentSteps[i], currentSteps[i - 1]];
+              renderModalLists();
+            }
           });
-          item.addEventListener('dragend', function() {
-            this.classList.remove('opacity-50');
-            dragged = null;
-            currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
-            renderModalLists();
-          });
-          item.addEventListener('dragover', function(ev) {
-            ev.preventDefault();
-            if (this === dragged) return;
-            const rect = this.getBoundingClientRect();
-            const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-            selectedList.insertBefore(dragged, next ? this.nextSibling : this);
+        });
+
+        // 右側下移
+        selectedList.querySelectorAll('.btn-move-down').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const i = parseInt(ev.currentTarget.dataset.idx);
+            if (i < currentSteps.length - 1) {
+              [currentSteps[i + 1], currentSteps[i]] = [currentSteps[i], currentSteps[i + 1]];
+              renderModalLists();
+            }
           });
         });
       };
@@ -2952,13 +2988,12 @@ export function renderAreas(container, currentSettings, saveSettings) {
     });
   });
 }
-~~~
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/settings-area.js
-V: 1792934800
+V: 1792945000
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/pages/settings-area.js === -->
 
@@ -2967,22 +3002,22 @@ W: UPGRADE-005
 ## 📄 ./src/pages/settings-basic.js
 
 ```js
-~~~javascript
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
-import { createIcons, Plus, GripVertical, Trash2, Edit2, Star, Settings2, X, Check } from 'lucide';
+import { createIcons, Plus, GripVertical, Trash2, Edit2, Star, Settings2, X, Check, ChevronUp, ChevronDown } from 'lucide';
 
 /**
  * 渲染狀態管理頁籤
+ * 改為上下按鈕排序以支援手機操作
  */
 export function renderStatuses(container, currentSettings, saveSettings) {
   container.innerHTML = `
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">工序狀態管理</h2>
-        <p class="text-sm text-slate-500 mt-1">可拖曳排序。修改名稱時會同步更新歷史工單與區域綁定。</p>
+        <p class="text-sm text-slate-500 mt-1">使用上下箭頭排序。修改名稱時會同步更新歷史工單與區域綁定。</p>
       </div>
     </div>
     
@@ -2995,8 +3030,15 @@ export function renderStatuses(container, currentSettings, saveSettings) {
 
     <div class="inset-panel p-4 flex flex-col gap-2" id="status-list">
       ${currentSettings.statuses.map((status, index) => `
-        <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm status-item" draggable="true" data-index="${index}">
-          <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300 cursor-grab"></i>
+        <div class="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm status-item" data-index="${index}">
+          <div class="flex items-center gap-1 mr-1">
+            <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${index === 0 ? 'opacity-30' : ''}" data-index="${index}" ${index === 0 ? 'disabled' : ''}>
+              <i data-lucide="chevron-up" class="w-4 h-4"></i>
+            </button>
+            <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${index === currentSettings.statuses.length - 1 ? 'opacity-30' : ''}" data-index="${index}" ${index === currentSettings.statuses.length - 1 ? 'disabled' : ''}>
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+          </div>
           <span class="flex-1 font-medium text-slate-700 status-name">${status}</span>
           <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg transition-colors btn-edit-status" data-status="${status}">
             <i data-lucide="edit-2" class="w-4 h-4"></i>
@@ -3009,7 +3051,7 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     </div>
   `;
 
-  createIcons({ icons: { Plus, GripVertical, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Plus, ChevronUp, ChevronDown, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
 
   // 新增狀態
   document.getElementById('btn-add-status')?.addEventListener('click', async () => {
@@ -3023,6 +3065,29 @@ export function renderStatuses(container, currentSettings, saveSettings) {
     currentSettings.statuses.push(val);
     await saveSettings();
     showToast('新增成功', 'success');
+  });
+
+  // 上下移動狀態
+  document.querySelectorAll('.btn-move-up').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      if (idx > 0) {
+        [currentSettings.statuses[idx - 1], currentSettings.statuses[idx]] = [currentSettings.statuses[idx], currentSettings.statuses[idx - 1]];
+        await saveSettings();
+        showToast('排序已更新', 'success');
+      }
+    });
+  });
+
+  document.querySelectorAll('.btn-move-down').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index);
+      if (idx < currentSettings.statuses.length - 1) {
+        [currentSettings.statuses[idx + 1], currentSettings.statuses[idx]] = [currentSettings.statuses[idx], currentSettings.statuses[idx + 1]];
+        await saveSettings();
+        showToast('排序已更新', 'success');
+      }
+    });
   });
 
   // 修改狀態
@@ -3101,37 +3166,6 @@ export function renderStatuses(container, currentSettings, saveSettings) {
       }
     });
   });
-
-  // 拖曳排序
-  const list = document.getElementById('status-list');
-  if (list) {
-    let draggedItem = null;
-
-    list.querySelectorAll('.status-item').forEach(item => {
-      item.addEventListener('dragstart', function() {
-        draggedItem = this;
-        setTimeout(() => this.classList.add('opacity-50'), 0);
-      });
-      item.addEventListener('dragend', function() {
-        this.classList.remove('opacity-50');
-        draggedItem = null;
-        const newOrder = Array.from(list.querySelectorAll('.status-item')).map(el => el.querySelector('.status-name').textContent);
-        currentSettings.statuses = newOrder;
-        const saveHandler = async () => {
-          await saveSettings();
-          showToast('排序已更新', 'success');
-        };
-        saveHandler.call(this);
-      });
-      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        if (this === draggedItem) return;
-        const rect = this.getBoundingClientRect();
-        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-        list.insertBefore(draggedItem, next ? this.nextSibling : this);
-      });
-    });
-  }
 }
 
 /**
@@ -3240,7 +3274,7 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
         </div>
 
         <div class="flex flex-col gap-2 mt-4">
-          <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。</p>
+          <p class="text-sm text-slate-500">點擊左側加入右側，或使用上下箭頭調整順序。</p>
           <div class="flex flex-col md:flex-row gap-4 h-[40vh]">
             <!-- 左側：可選工序 -->
             <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
@@ -3289,10 +3323,17 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
         if (currentSteps.length === 0) {
           selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
         } else {
-          selectedList.innerHTML = currentSteps.map((step, idx) => `
-            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
-              <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
-              <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${idx + 1}.</span>${step}</span>
+          selectedList.innerHTML = currentSteps.map((step, i) => `
+            <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item">
+              <div class="flex flex-col items-center gap-0.5">
+                <button class="p-1 text-slate-400 hover:text-brand btn-move-up ${i === 0 ? 'opacity-30' : ''}" data-idx="${i}" ${i === 0 ? 'disabled' : ''}>
+                  <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                </button>
+                <button class="p-1 text-slate-400 hover:text-brand btn-move-down ${i === currentSteps.length - 1 ? 'opacity-30' : ''}" data-idx="${i}" ${i === currentSteps.length - 1 ? 'disabled' : ''}>
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${i + 1}.</span>${step}</span>
               <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
                 <i data-lucide="x" class="w-4 h-4"></i>
               </button>
@@ -3300,7 +3341,7 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
           `).join('');
         }
 
-        createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+        createIcons({ icons: { Plus, ChevronUp, ChevronDown, X }, attrs: { class: 'w-4 h-4' } });
         
         // 綁定左側點擊加入
         availableList.querySelectorAll('.available-item').forEach(item => {
@@ -3322,25 +3363,25 @@ export function renderRouteTemplates(container, currentSettings, saveSettings) {
           });
         });
 
-        // 綁定右側拖曳
-        let dragged = null;
-        selectedList.querySelectorAll('.step-item').forEach(item => {
-          item.addEventListener('dragstart', function() {
-            dragged = this;
-            setTimeout(() => this.classList.add('opacity-50'), 0);
+        // 綁定右側上移
+        selectedList.querySelectorAll('.btn-move-up').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const i = parseInt(ev.currentTarget.dataset.idx);
+            if (i > 0) {
+              [currentSteps[i - 1], currentSteps[i]] = [currentSteps[i], currentSteps[i - 1]];
+              renderModalLists();
+            }
           });
-          item.addEventListener('dragend', function() {
-            this.classList.remove('opacity-50');
-            dragged = null;
-            currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
-            renderModalLists(); // 重新渲染以更新序號
-          });
-          item.addEventListener('dragover', function(ev) {
-            ev.preventDefault();
-            if (this === dragged) return;
-            const rect = this.getBoundingClientRect();
-            const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-            selectedList.insertBefore(dragged, next ? this.nextSibling : this);
+        });
+
+        // 綁定右側下移
+        selectedList.querySelectorAll('.btn-move-down').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            const i = parseInt(ev.currentTarget.dataset.idx);
+            if (i < currentSteps.length - 1) {
+              [currentSteps[i + 1], currentSteps[i]] = [currentSteps[i], currentSteps[i + 1]];
+              renderModalLists();
+            }
           });
         });
       };
@@ -3546,11 +3587,11 @@ export function renderMapping(container, currentSettings, saveSettings) {
   });
 }
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/settings-basic.js
-V: 1792936400
+V: 1792944000
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/pages/settings-basic.js === -->
 
@@ -3851,7 +3892,6 @@ W: UPGRADE-004
 ## 📄 ./src/pages/settings.js
 
 ```js
-~~~javascript
 import * as XLSX from 'xlsx';
 import { AppState } from '../config/state.js';
 import { listenDocument, getDocument, getCollection } from '../db/read.js';
@@ -4462,11 +4502,11 @@ export default {
   }
 };
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1792936000
+V: 1792941600
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/pages/settings.js === -->
 
@@ -4695,7 +4735,6 @@ W: webapp-20261026-001#32
 ## 📄 ./src/ui/layout.js
 
 ```js
-~~~javascript
 import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database, MapPin } from 'lucide';
 
 /**
@@ -4996,11 +5035,11 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
   });
 }
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/ui/layout.js
-V: 1792935600
+V: 1792939200
 W: UPGRADE-005
-═══ */```
+*/```
 
 <!-- === FILE END: ./src/ui/layout.js === -->
 
