@@ -1,5 +1,5 @@
 > 體系版本：SV10
-> 生成時間：2026-10-30 00:52:34 (HKT)
+> 生成時間：2026-10-30 09:43:50 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -82,6 +82,7 @@
         const OWNER = 'tlee20860-dotcom';
         const INFRA_REPO = 'AI-infra';
         const WORKFLOW_ID = 'setup-structure.yml';
+        const BACKUP_WORKFLOW_ID = 'copy-backup.yml';
         const CONFIG_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/validate-config.json`;
         const FORBIDDEN_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt`;
         const REPOS_URL = `https://raw.githubusercontent.com/${OWNER}/AI-infra/main/config/repos.json`;
@@ -91,6 +92,7 @@
         let triggerTime = 0;
         let pollInterval = null;
         let deployPollInterval = null;
+        let backupPollInterval = null;
         let hasUnpackedChanges = false;
 
         let globalForbiddenWords = [];
@@ -107,9 +109,11 @@
             if (currentToken) {
                 checkBuildStatus();
                 checkLatestDeployStatus();
+                checkLatestBackupStatus();
             } else {
                 updateStatus('build-status', '', '等待操作');
                 updateStatus('deploy-status', '', '等待操作');
+                updateStatus('backup-status', '', '等待操作');
             }
 
             if ('serviceWorker' in navigator) {
@@ -183,7 +187,7 @@
         }
         function setActive(id) {
             tokenList.forEach(t => { t.isActive = (t.id === id); if (t.isActive) currentToken = t.token.trim(); });
-            saveTokensToLocal(); renderTokens(); checkBuildStatus(); checkLatestDeployStatus();
+            saveTokensToLocal(); renderTokens(); checkBuildStatus(); checkLatestDeployStatus(); checkLatestBackupStatus();
         }
         function deleteToken(id) {
             if (!confirm('確定刪除？')) return;
@@ -374,6 +378,62 @@
             }
         }
 
+        // ── 一鍵全量備份 ──
+        async function triggerBackup() {
+            if (!currentToken) return alert('請先設定 Token');
+            if (!confirm('這將備份所有帶有 ai-systems 標籤的倉庫到 AI-Backup，確定嗎？')) return;
+            
+            const btn = document.getElementById('btn-backup');
+            btn.disabled = true;
+            updateStatus('backup-status', 'running', '發送備份指令...');
+            
+            try {
+                await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${BACKUP_WORKFLOW_ID}/dispatches`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            repos: 'ALL',
+                            target_repo: `${OWNER}/AI-Backup`
+                        }
+                    })
+                });
+                updateStatus('backup-status', 'running', '等待排隊...');
+                if (backupPollInterval) clearInterval(backupPollInterval);
+                setTimeout(checkLatestBackupStatus, 3000);
+                backupPollInterval = setInterval(checkLatestBackupStatus, 8000);
+            } catch (error) {
+                updateStatus('backup-status', 'failure', error.message);
+                btn.disabled = false;
+            }
+        }
+
+        async function checkLatestBackupStatus() {
+            if (!currentToken) return;
+            try {
+                const data = await githubAPI(`/repos/${OWNER}/${INFRA_REPO}/actions/workflows/${BACKUP_WORKFLOW_ID}/runs?per_page=1`);
+                if (data.workflow_runs && data.workflow_runs.length > 0) {
+                    const run = data.workflow_runs[0];
+                    const createdAt = new Date(run.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' });
+                    
+                    if (run.status === 'in_progress' || run.status === 'queued') {
+                        updateStatus('backup-status', 'running', '備份中...');
+                    } else if (run.conclusion === 'success') {
+                        updateStatus('backup-status', 'success', `上次成功 (${createdAt})`);
+                        document.getElementById('btn-backup').disabled = false;
+                        if (backupPollInterval) { clearInterval(backupPollInterval); backupPollInterval = null; }
+                    } else {
+                        updateStatus('backup-status', 'failure', `上次失敗 (${createdAt})`);
+                        document.getElementById('btn-backup').disabled = false;
+                        if (backupPollInterval) { clearInterval(backupPollInterval); backupPollInterval = null; }
+                    }
+                } else {
+                    updateStatus('backup-status', '', '尚無備份紀錄');
+                }
+            } catch (error) {
+                updateStatus('backup-status', 'failure', '狀態查詢失敗');
+            }
+        }
+
         // ── 取舊檔（含快取）──
         async function fetchOldContent(repo, filePath) {
             const cacheKey = `${repo}/${filePath}`;
@@ -472,14 +532,15 @@
             let repo = "", filePath = "", fullPath = "未知路徑";
             const rules = globalConfig.console_rules || {};
 
-            let eofMatch = content.match(/F:\s*([^\s\n]+)\s*\nV:\s*\d+\s*\nW:\s*[^\s\n]+/);
+            // 修復：允許註解符號包裹 F: 標記
+            let eofMatch = content.match(/(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*F:\s*([^\s\n]+)\s*\n(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*V:\s*\d+\s*\n(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*W:\s*[^\s\n]+/);
             let pathMatch = null;
             
             if (eofMatch) {
-                pathMatch = eofMatch[0].match(/F:\s*([^\s\n]+)/);
+                pathMatch = eofMatch;
             } else {
-                // Bug-5 修復：fallback 必須是獨立行，避免誤抓內文
-                pathMatch = content.match(/^F:\s*"?([^\s"\n]+)"?$/m);
+                // Bug-5 修復：fallback 必須是獨立行，允許註解符號包裹
+                pathMatch = content.match(/^(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*F:\s*"?([^\s"\n]+)"?\s*(?:\*\/|-->)?$/m);
             }
 
             // 防呆：如果是 PARTIAL_REPLACE，NEW 區塊必須包含 EOF
@@ -853,6 +914,14 @@
             </div>
             
             <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <button class="btn-success" id="btn-backup" onclick="triggerBackup()">📦 一鍵全量備份</button>
+                <div class="status-box">
+                    <div class="status-dot" id="backup-status-dot"></div>
+                    <div id="backup-status-text">等待操作</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
                 <select id="deploy-repo-select" onchange="checkLatestDeployStatus()" style="margin-bottom: 8px;">
                     <option value="">載入專案中...</option>
                 </select>
@@ -943,7 +1012,7 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792915400
+V: 1792916600
 W: ai-system-005
 ═══ -->```
 

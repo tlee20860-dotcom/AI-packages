@@ -1,5 +1,5 @@
 > 體系版本：SV10
-> 生成時間：2026-10-30 00:52:32 (HKT)
+> 生成時間：2026-10-30 09:43:48 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -820,13 +820,9 @@ W: ai-system-005
 | K-37 | 體系 | `CODE_FILE_EXTS` 未含 `.ts`／`.tsx`／`.mjs`；日後引入會退回舊行為 | 低 | 待處理 | ai-system-005 |
 | K-38 | 體系 | 代碼檔逐行檢查致 `...`（Python Ellipsis、JS 散佈運算子）與 `.yml` 的 `...` 文件結束符被誤判 | 低 | 待處理（report 模式不擋打包） | ai-system-005 |
 
-| K-36 | 體系 | AI 偽造解鎖密語（自行輸出「方案已落實…」） | 中 | 待處理（需持續校正） | ai-system-005 |
-| K-37 | 體系 | `validate_delivery.py` 的 `CODE_FILE_EXTS` 未含 `.ts`／`.tsx`／`.mjs` 等副檔名；若日後引入，該類檔會退回「跳過代碼塊」舊行為。 | 低 | 待處理 | ai-system-005 |
-| K-38 | 體系 | 代碼檔逐行檢查導致 `...`（Python Ellipsis、JS 散佈運算子）與 `.yml` 的 `...` 文件結束符被誤判；report 模式不擋打包，可接受。 | 低 | 待處理 | ai-system-005 |
-
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792915900
+V: 1792916700
 W: ai-system-005
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
@@ -911,10 +907,11 @@ W: ai-system-005
 | 來源檔 | 原檔路徑 |
 | 補充 | DEBT 加「解決對話」；PROGRESS 加「完成日期」；CONCLUSION 加「結案日期」 |
 
+/* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-ARCHIVE.md
-V: 1792912600
-W: ai-system-004
-<!-- === FILE END: AI-General/docs/records/SYSTEM-ARCHIVE.md === -->
+V: 1792916800
+W: ai-system-005
+═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-ARCHIVE.md === -->
 
 <!-- === FILE START: AI-kernel/docs/r-rules/R-04-learning.md === -->
