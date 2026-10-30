@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 22:38:30 (HKT)
+> 生成時間：2026-10-30 23:56:48 (HKT)
 > ⚠️ 給 AI 的強制指示：上次體系對話編號為 ai-system-005，本次請依 A-00 §2.9 推算並套用。
 
 # AI 對話系統 - 體系狀態包
@@ -508,9 +508,12 @@ W: ai-system-005
 | K-37 | 體系 | `CODE_FILE_EXTS` 未含 `.ts`／`.tsx`／`.mjs`；日後引入會退回舊行為 | 低 | 待處理 | ai-system-005 |
 | K-38 | 體系 | 代碼檔逐行檢查致 `...`（Python Ellipsis、JS 散佈運算子）與 `.yml` 的 `...` 文件結束符被誤判 | 低 | 待處理（report 模式不擋打包） | ai-system-005 |
 
-/* ═══ EOF ═══
+| K-39 | 體系 | 前端控制台曾因模糊匹配與強制發布繞過驗證，導致源檔被 `<<<<<<< OLD` 標記污染。 | 高 | 已解決（已加入雙分頁物理隔離與 Dry-Run 預演機制） | ai-system-006 |
+| K-28 | 體系 | AI 未嚴格遵守 F-002（路徑未用波浪號包裹）與 R-001（偽造密語 `等待確認`）。 | 中 | 已解決（前端已加入強制校驗與分頁物理隔離，大幅降低誤判風險） | ai-system-006 |
+
+/* EOF
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1792916700
-W: ai-system-005
-═══ */
+V: 1792933800
+W: ai-system-006
+EOF */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->

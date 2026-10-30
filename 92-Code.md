@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 22:38:31 (HKT)
+> 生成時間：2026-10-30 23:56:49 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -2049,6 +2049,7 @@ let currentStatus = '排產中';
 let currentCategory = 'ALL';
 let schema = [];
 let viewConfig = {};
+let route_templates = [];
 
 export default {
   async render() {
@@ -2060,8 +2061,17 @@ export default {
         schema = settingsDoc.schema || [];
         viewConfig = settingsDoc.view_configs || {};
         currentStatus = (settingsDoc.statuses && settingsDoc.statuses[0]) || '排產中';
+        route_templates = settingsDoc.route_templates || [];
       }
     } catch (err) {}
+
+    // 注入 CSS 隱藏齒輪按鈕（因為進度表不負責編輯流程，統一在管理總表）
+    if (!document.getElementById('kanban-hide-edit-route')) {
+      const style = document.createElement('style');
+      style.id = 'kanban-hide-edit-route';
+      style.innerHTML = `[data-action="edit-route"] { display: none !important; }`;
+      document.head.appendChild(style);
+    }
 
     renderPageLayout({
       title: '生產進度控制台',
@@ -2145,6 +2155,7 @@ export default {
       visibleFields: visibleFields,
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'kanban',
+      route_templates: route_templates,
       onAction: async (action, id, newStatus) => {
         if (action === 'delete') {
           if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
@@ -2199,9 +2210,19 @@ export default {
             const orderCategory = order.data.category || '其他';
             
             // 優先找類別相符的，再找通用預設 (category 為空)
-            let matchedTemplate = routeTemplates.find(t => t.category === orderCategory);
+            let matchedTemplate = routeTemplates.find(t => {
+              if (t.categories && t.categories.length > 0) {
+                return t.categories.includes(orderCategory);
+              }
+              // 相容舊資料格式
+              if (t.category) {
+                return t.category === orderCategory;
+              }
+              return false;
+            });
+            
             if (!matchedTemplate) {
-              matchedTemplate = routeTemplates.find(t => !t.category || t.category === '');
+              matchedTemplate = routeTemplates.find(t => !t.categories && !t.category);
             }
 
             // 若找到模板且不為空，套用模板；否則套用全站狀態
@@ -2230,14 +2251,18 @@ export default {
     if (unsubscribe) unsubscribe();
     window.removeEventListener('refresh-kanban', this.updateUI.bind(this));
     window.removeEventListener('settings-updated', this.updateUI.bind(this));
+    
+    // 移除隱藏齒輪的 CSS
+    const style = document.getElementById('kanban-hide-edit-route');
+    if (style) style.remove();
   }
 };
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/kanban.js
-V: 1792926500
-W: UPGRADE-004
-═══ */```
+V: 1792956000
+W: UPGRADE-005
+*/```
 
 <!-- === FILE END: ./src/pages/kanban.js === -->
 
@@ -4504,12 +4529,13 @@ import { exportToExcel, exportToPDF } from '../lib/io.js';
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { renderOrderView } from '../ui/order-view.js';
-import { createIcons, Download, FileText } from 'lucide';
+import { createIcons, Download, FileText, Plus } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
 let schema = [];
 let viewConfig = {};
+let route_templates = [];
 let currentCategory = 'ALL';
 
 export default {
@@ -4521,14 +4547,18 @@ export default {
       if (settingsDoc) {
         schema = settingsDoc.schema || [];
         viewConfig = settingsDoc.view_configs || {};
+        route_templates = settingsDoc.route_templates || [];
       }
     } catch (err) {}
 
     renderPageLayout({
       title: '管理總表',
-      subtitle: '所有工單的狀態與時間追蹤列表',
+      subtitle: '所有工單的狀態、時間與流程追蹤列表',
       headerActions: `
         <div class="flex items-center gap-2">
+          <button id="btn-new-route" class="bg-brand text-white border border-brand px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand-hover flex items-center gap-2 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> 快速新增流程
+          </button>
           <button id="btn-export-excel" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
             <i data-lucide="download" class="w-4 h-4"></i> Excel
           </button>
@@ -4553,9 +4583,30 @@ export default {
       this.updateUI();
     });
 
+    // 快速新增流程（不綁定特定工單）
+    document.getElementById('btn-new-route')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('open-route-builder', { 
+        detail: { orderId: null, defaultCategory: '' } 
+      }));
+    });
+
+    // 監聽工單資料
     window.addEventListener('refresh-table', this.updateUI.bind(this));
-    window.addEventListener('settings-updated', this.updateUI.bind(this));
-    createIcons({ icons: { Download, FileText }, attrs: { class: 'w-4 h-4' } });
+    
+    // 監聽系統設定（當新增流程或修改視圖配置時刷新）
+    window.addEventListener('settings-updated', async () => {
+      try {
+        const settingsDoc = await getDocument('settings', 'main');
+        if (settingsDoc) {
+          schema = settingsDoc.schema || [];
+          viewConfig = settingsDoc.view_configs || {};
+          route_templates = settingsDoc.route_templates || [];
+          this.updateUI();
+        }
+      } catch (err) {}
+    });
+
+    createIcons({ icons: { Download, FileText, Plus }, attrs: { class: 'w-4 h-4' } });
 
     this.initDataListener();
   },
@@ -4581,10 +4632,15 @@ export default {
     }
 
     // 依使用者設定的順序對齊欄位
-    const visibleFields = (viewConfig['table'] || []).map(key => {
+    let visibleFields = (viewConfig['table'] || []).map(key => {
       const field = schema.find(f => f.key === key);
       return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
+
+    // 強制插入「生產流程」欄位（若不存在）
+    if (!visibleFields.some(f => f.key === 'route_select')) {
+      visibleFields.unshift({ key: 'route_select', label: '生產流程', isVisible: true });
+    }
 
     renderOrderView({
       containerId: 'table-container',
@@ -4592,6 +4648,7 @@ export default {
       visibleFields: visibleFields,
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'table',
+      route_templates: route_templates, // 傳入模板資料
       onAction: async (action, id, newStatus) => {
         if (action === 'delete') {
           if (await openConfirm({ title: '刪除', message: `確定刪除 ${id}？`, isDanger: true })) {
@@ -4628,11 +4685,11 @@ export default {
   }
 };
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/pages/table.js
-V: 1792926600
-W: UPGRADE-004
-═══ */```
+V: 1792955000
+W: UPGRADE-005
+*/```
 
 <!-- === FILE END: ./src/pages/table.js === -->
 
@@ -5175,12 +5232,24 @@ W: UPGRADE-004
 ## 📄 ./src/ui/order-view-editor.js
 
 ```js
-import { updateDocument } from '../db/write.js';
-import { getDocument } from '../db/read.js';
+import { updateDocument, setDocument } from '../db/write.js';
+import { getDocument, getCollection } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
+import { openRouteBuilder } from './route-builder.js';
 import { AppState } from '../config/state.js';
 import { createIcons, GripVertical, Plus, X } from 'lucide';
+
+/**
+ * 取得工單類別 (優先從 data.category，其次從工單號前兩碼)
+ */
+function getOrderCategory(order) {
+  if (order.data && order.data.category) {
+    return String(order.data.category).toUpperCase();
+  }
+  const match = String(order.id).match(/^[a-zA-Z]+/);
+  return match ? match[0].toUpperCase() : '其他';
+}
 
 /**
  * 處理行內編輯事件
@@ -5208,6 +5277,98 @@ window.addEventListener('inline-edit', async (e) => {
   } catch (error) {
     console.error('[Inline Edit Error]', error);
     showToast('更新失敗，請檢查網路或稍後再試', 'error');
+  }
+});
+
+/**
+ * 處理下拉選單切換生產流程事件
+ */
+window.addEventListener('change-route', async (e) => {
+  const { id, templateName } = e.detail;
+  if (!id || !templateName) return;
+
+  try {
+    const settings = await getDocument('settings', 'main');
+    const templates = settings.route_templates || [];
+    const template = templates.find(t => t.name === templateName);
+
+    if (!template) {
+      showToast('找不到該流程模板', 'error');
+      return;
+    }
+
+    const orderDoc = await getDocument('work_orders', id);
+    if (!orderDoc) return;
+
+    let newStatus = orderDoc.status;
+    // 如果新流程不包含當前狀態，則退回第一步
+    if (!template.steps.includes(newStatus)) {
+      newStatus = template.steps[0];
+    }
+
+    await updateDocument('work_orders', id, {
+      route: template.steps,
+      status: newStatus,
+      statusUpdateDate: new Date().toISOString()
+    });
+    
+    showToast(`已套用流程：${template.name}`, 'success');
+  } catch (err) {
+    console.error('[Change Route Error]', err);
+    showToast('套用失敗', 'error');
+  }
+});
+
+/**
+ * 處理開啟快速新增流程彈窗事件
+ */
+window.addEventListener('open-route-builder', async (e) => {
+  const { orderId, defaultCategory } = e.detail;
+  
+  try {
+    const settings = await getDocument('settings', 'main');
+    if (!settings) return;
+
+    // 獲取現有的所有類別 (掃描所有工單)
+    const allOrders = await getCollection('work_orders');
+    const categories = new Set();
+    allOrders.forEach(o => {
+      const cat = getOrderCategory(o);
+      if (cat !== '其他') categories.add(cat);
+    });
+
+    openRouteBuilder({
+      currentSettings: settings,
+      availableCategories: Array.from(categories),
+      defaultCategory: defaultCategory,
+      onSave: async (newTemplate) => {
+        // 1. 儲存新模板到 settings
+        const latestSettings = await getDocument('settings', 'main');
+        if (!latestSettings.route_templates) latestSettings.route_templates = [];
+        latestSettings.route_templates.push(newTemplate);
+        await setDocument('settings', 'main', latestSettings);
+
+        // 2. 套用到當前工單
+        if (orderId) {
+          await updateDocument('work_orders', orderId, {
+            route: newTemplate.steps,
+            status: newTemplate.steps[0],
+            statusUpdateDate: new Date().toISOString()
+          });
+          showToast('已新增並套用流程', 'success');
+        } else {
+          showToast('已新增流程', 'success');
+        }
+        
+        // 觸發刷新
+        window.dispatchEvent(new Event('settings-updated'));
+        const pageKey = window.location.hash.replace('#', '') || 'table';
+        window.dispatchEvent(new Event(`refresh-${pageKey}`));
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('讀取資料失敗', 'error');
   }
 });
 
@@ -5257,7 +5418,7 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // 3. 點擊編輯製程 ⚙️
+  // 3. 點擊編輯製程 ⚙️ (保留給管理總表或特定頁面使用)
   const editRouteBtn = e.target.closest('button[data-action="edit-route"]');
   if (editRouteBtn) {
     const id = editRouteBtn.dataset.id;
@@ -5285,7 +5446,7 @@ document.addEventListener('click', async (e) => {
     }
 
     const templateOptions = routeTemplates.map((t, i) => {
-      const label = t.category ? `[${t.category}] ${t.name}` : `[通用] ${t.name}`;
+      const label = t.categories && t.categories.length > 0 ? `[${t.categories.join(',')}] ${t.name}` : `[通用] ${t.name}`;
       return `<option value="${i}">${label}</option>`;
     }).join('');
 
@@ -5326,6 +5487,7 @@ document.addEventListener('click', async (e) => {
     const { close, element } = openModal({ title: `編輯製程路線 (${id})`, content, footer });
     
     let currentSteps = Array.from(currentRoute);
+    let sortableInstance = null;
 
     const renderModalLists = () => {
       const availableList = element.querySelector('#modal-available-list');
@@ -5350,8 +5512,8 @@ document.addEventListener('click', async (e) => {
         selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
       } else {
         selectedList.innerHTML = currentSteps.map((step, idx) => `
-          <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 cursor-grab step-item" draggable="true" data-step="${step}">
-            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300"></i>
+          <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 step-item" data-step="${step}">
+            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-grab"></i>
             <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${idx + 1}.</span>${step}</span>
             <button class="text-slate-400 hover:text-rose-500 btn-remove-step" data-step="${step}">
               <i data-lucide="x" class="w-4 h-4"></i>
@@ -5382,27 +5544,21 @@ document.addEventListener('click', async (e) => {
         });
       });
 
-      // 綁定右側拖曳
-      let dragged = null;
-      selectedList.querySelectorAll('.step-item').forEach(item => {
-        item.addEventListener('dragstart', function() {
-          dragged = this;
-          setTimeout(() => this.classList.add('opacity-50'), 0);
+      // SortableJS 拖曳
+      if (sortableInstance) sortableInstance.destroy();
+      if (currentSteps.length > 0) {
+        sortableInstance = new Sortable(selectedList, {
+          animation: 150,
+          handle: '.cursor-grab',
+          ghostClass: 'opacity-50',
+          forceFallback: true,
+          fallbackTolerance: 3,
+          onEnd: () => {
+            currentSteps = Array.from(selectedList.children).map(el => el.dataset.step);
+            renderModalLists();
+          }
         });
-        item.addEventListener('dragend', function() {
-          this.classList.remove('opacity-50');
-          dragged = null;
-          currentSteps = Array.from(selectedList.querySelectorAll('.step-item')).map(el => el.dataset.step);
-          renderModalLists(); // 重新渲染以更新序號
-        });
-        item.addEventListener('dragover', function(ev) {
-          ev.preventDefault();
-          if (this === dragged) return;
-          const rect = this.getBoundingClientRect();
-          const next = (ev.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-          selectedList.insertBefore(dragged, next ? this.nextSibling : this);
-        });
-      });
+      }
     };
 
     renderModalLists();
@@ -5467,11 +5623,11 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/ui/order-view-editor.js
-V: 1792927300
-W: UPGRADE-004
-═══ */```
+V: 1792954000
+W: UPGRADE-005
+*/```
 
 <!-- === FILE END: ./src/ui/order-view-editor.js === -->
 
@@ -5481,7 +5637,7 @@ W: UPGRADE-004
 
 ```js
 import { AppState } from '../config/state.js';
-import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search, ChevronLeft, ChevronRight, Settings } from 'lucide';
+import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search, ChevronLeft, ChevronRight, Settings, Plus } from 'lucide';
 
 /**
  * 將 Excel 日期轉為 YYYY-MM-DD，並防呆過濾
@@ -5505,8 +5661,16 @@ const viewStates = {};
 
 /**
  * 核心渲染器：完全數據驅動
+ * @param {Object} options
+ * @param {string} options.containerId 容器 ID
+ * @param {Array} options.orders 工單陣列
+ * @param {Array} options.visibleFields 顯示欄位
+ * @param {boolean} options.isAdmin 是否為管理員
+ * @param {string} options.pageKey 頁面識別碼
+ * @param {Array} options.route_templates 所有的生產流程模板
+ * @param {Function} options.onAction 動作回呼
  */
-export function renderOrderView({ containerId, orders, visibleFields = [], isAdmin = false, pageKey, onAction }) {
+export function renderOrderView({ containerId, orders, visibleFields = [], isAdmin = false, pageKey, route_templates = [], onAction }) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -5567,6 +5731,16 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
       if (actionBtn) {
         if (onAction) onAction('delete', actionBtn.dataset.id);
       }
+
+      // 快速新增流程
+      const addRouteBtn = e.target.closest('[data-action="open-route-builder"]');
+      if (addRouteBtn) {
+        const id = addRouteBtn.dataset.id;
+        const cat = addRouteBtn.dataset.category;
+        window.dispatchEvent(new CustomEvent('open-route-builder', { 
+          detail: { orderId: id, defaultCategory: cat } 
+        }));
+      }
     });
 
     // 輸入事件 (全域搜尋)
@@ -5581,7 +5755,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
       }
     });
 
-    // 改變事件 (行內編輯)
+    // 改變事件 (行內編輯 & 下拉選單)
     document.addEventListener('change', (e) => {
       // 行內編輯（日期或文字）
       const inlineInput = e.target.closest('input[data-action="inline-edit"]');
@@ -5594,6 +5768,18 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
         window.dispatchEvent(new CustomEvent('inline-edit', { 
           detail: { id, key, value } 
         }));
+        return;
+      }
+
+      // 切換生產流程下拉選單
+      const routeSelect = e.target.closest('select[data-action="select-route"]');
+      if (routeSelect) {
+        const id = routeSelect.dataset.id;
+        const templateName = routeSelect.value;
+        window.dispatchEvent(new CustomEvent('change-route', { 
+          detail: { id, templateName } 
+        }));
+        return;
       }
     });
 
@@ -5693,6 +5879,39 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
               `;
             }
             
+            // 處理生產流程下拉選單
+            if (f.key === 'route_select') {
+              const orderCat = getOrderCategory(order);
+              // 過濾出符合該工單類別的模板（或無類別限制的通用模板）
+              const availableTemplates = (route_templates || []).filter(t => {
+                if (!t.categories || t.categories.length === 0) return true;
+                return t.categories.includes(orderCat);
+              });
+
+              // 尋找目前吻合的模板
+              let currentMatchName = '';
+              availableTemplates.forEach(t => {
+                if (JSON.stringify(t.steps) === JSON.stringify(order.route)) {
+                  currentMatchName = t.name;
+                }
+              });
+
+              return `
+                <div class="text-sm flex flex-col gap-1">
+                  <span class="text-slate-400">${f.label}:</span>
+                  <div class="flex items-center gap-2">
+                    <select data-action="select-route" data-id="${order.id}" class="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand">
+                      <option value="">(自訂流程)</option>
+                      ${availableTemplates.map(t => `<option value="${t.name}" ${t.name === currentMatchName ? 'selected' : ''}>${t.name}</option>`).join('')}
+                    </select>
+                    <button data-action="open-route-builder" data-id="${order.id}" data-category="${orderCat}" class="p-1.5 bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors" title="快速新增流程">
+                      <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }
+
             // 判斷是否可編輯
             if (f.isEditable) {
               const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
@@ -5768,6 +5987,36 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                       </td>
                     `;
                   }
+
+                  // 處理生產流程下拉選單 (表格模式)
+                  if (f.key === 'route_select') {
+                    const orderCat = getOrderCategory(order);
+                    const availableTemplates = (route_templates || []).filter(t => {
+                      if (!t.categories || t.categories.length === 0) return true;
+                      return t.categories.includes(orderCat);
+                    });
+
+                    let currentMatchName = '';
+                    availableTemplates.forEach(t => {
+                      if (JSON.stringify(t.steps) === JSON.stringify(order.route)) {
+                        currentMatchName = t.name;
+                      }
+                    });
+
+                    return `
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center gap-1">
+                          <select data-action="select-route" data-id="${order.id}" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand w-32 md:w-40">
+                            <option value="">(自訂流程)</option>
+                            ${availableTemplates.map(t => `<option value="${t.name}" ${t.name === currentMatchName ? 'selected' : ''}>${t.name}</option>`).join('')}
+                          </select>
+                          <button data-action="open-route-builder" data-id="${order.id}" data-category="${orderCat}" class="p-1.5 bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors" title="快速新增流程">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                          </button>
+                        </div>
+                      </td>
+                    `;
+                  }
                   
                   // 判斷是否可編輯
                   if (f.isEditable) {
@@ -5798,7 +6047,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
   }
 
   container.innerHTML = viewToggleHtml + contentHtml;
-  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Settings }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Settings, Plus }, attrs: { class: 'w-4 h-4' } });
 }
 
 /**
@@ -5817,13 +6066,213 @@ function getOrderValue(order, key) {
   return order[key] !== undefined ? order[key] : '';
 }
 
-/* ═══ EOF ═══
+/**
+ * 取得工單類別
+ */
+function getOrderCategory(order) {
+  if (order.data && order.data.category) {
+    return String(order.data.category).toUpperCase();
+  }
+  const match = String(order.id).match(/^[a-zA-Z]+/);
+  return match ? match[0].toUpperCase() : '其他';
+}
+
+/*
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1792925500
-W: UPGRADE-004
-═══ */```
+V: 1792953000
+W: UPGRADE-005
+*/```
 
 <!-- === FILE END: ./src/ui/order-view.js === -->
+
+<!-- === FILE START: ./src/ui/route-builder.js === -->
+
+## 📄 ./src/ui/route-builder.js
+
+```js
+import { openModal } from './modal.js';
+import { showToast } from './toast.js';
+import { createIcons, Plus, GripVertical, X } from 'lucide';
+
+/**
+ * 建立並顯示「生產流程編輯器」的彈窗
+ * @param {Object} options
+ * @param {Object} options.currentSettings 當前的 settings 資料
+ * @param {Array<string>} options.availableCategories 可選的類別清單
+ * @param {string} options.defaultCategory 預設帶入的類別
+ * @param {Function} options.onSave 儲存回呼 async (newTemplate) => {}
+ */
+export function openRouteBuilder({ currentSettings, availableCategories = [], defaultCategory = '', onSave }) {
+  const statuses = currentSettings.statuses || [];
+  const categories = [...new Set(availableCategories)].sort();
+
+  const content = `
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">流程名稱</label>
+        <input type="text" id="builder-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" placeholder="例如：標準生產流程">
+      </div>
+      
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">對應類別 (可多選，留空為通用)</label>
+        <div class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto p-1">
+          ${categories.length === 0 ? '<span class="text-xs text-slate-400">目前尚無工單類別</span>' : ''}
+          ${categories.map(c => `
+            <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-brand">
+              <input type="checkbox" class="builder-cat-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${c}" ${c === defaultCategory ? 'checked' : ''}>
+              <span class="text-slate-700">${c}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <p class="text-sm text-slate-500">點擊左側加入右側，或拖曳右側調整順序。</p>
+        <div class="flex flex-col md:flex-row gap-4 h-[35vh]">
+          <!-- 左側：可選工序 -->
+          <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col">
+            <h4 class="font-bold text-sm text-slate-700 mb-2">可選工序</h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="builder-available-list"></div>
+          </div>
+          <!-- 右側：預計工序順序 -->
+          <div class="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex flex-col shadow-sm">
+            <h4 class="font-bold text-sm text-slate-700 mb-2">預計工序順序</h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-2" id="builder-selected-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const footer = `
+    <div class="flex justify-end gap-3">
+      <button id="builder-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+      <button id="builder-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover shadow-md shadow-brand/20 active:scale-95 transition-all">儲存並套用</button>
+    </div>
+  `;
+
+  const { close, element } = openModal({ title: '新增生產流程', content, footer });
+
+  let currentSteps = [];
+  let sortableInstance = null;
+
+  const renderLists = () => {
+    const availableList = element.querySelector('#builder-available-list');
+    const selectedList = element.querySelector('#builder-selected-list');
+
+    const availableStatuses = statuses.filter(s => !currentSteps.includes(s));
+
+    if (availableStatuses.length === 0) {
+      availableList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">所有工序已加入</div>';
+    } else {
+      availableList.innerHTML = availableStatuses.map(status => `
+        <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 cursor-pointer hover:border-brand transition-colors builder-available-item" data-step="${status}">
+          <span class="flex-1 font-medium text-slate-700">${status}</span>
+          <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
+        </div>
+      `).join('');
+    }
+
+    if (currentSteps.length === 0) {
+      selectedList.innerHTML = '<div class="text-slate-400 text-sm text-center py-4">請從左側加入工序</div>';
+    } else {
+      selectedList.innerHTML = currentSteps.map((step, idx) => `
+        <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 builder-step-item" data-step="${step}">
+          <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-grab"></i>
+          <span class="flex-1 font-medium text-slate-700"><span class="text-slate-400 mr-1">${idx + 1}.</span>${step}</span>
+          <button class="text-slate-400 hover:text-rose-500 builder-remove-step" data-step="${step}">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    createIcons({ icons: { Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
+
+    // 左側點擊加入
+    availableList.querySelectorAll('.builder-available-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const step = item.dataset.step;
+        if (!currentSteps.includes(step)) {
+          currentSteps.push(step);
+          renderLists();
+        }
+      });
+    });
+
+    // 右側移除
+    selectedList.querySelectorAll('.builder-remove-step').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        const step = ev.currentTarget.dataset.step;
+        currentSteps = currentSteps.filter(s => s !== step);
+        renderLists();
+      });
+    });
+
+    // Sortable
+    if (sortableInstance) sortableInstance.destroy();
+    if (currentSteps.length > 0) {
+      sortableInstance = new Sortable(selectedList, {
+        animation: 150,
+        handle: '.cursor-grab',
+        ghostClass: 'opacity-50',
+        forceFallback: true,
+        fallbackTolerance: 3,
+        onEnd: () => {
+          currentSteps = Array.from(selectedList.children).map(el => el.dataset.step);
+          renderLists();
+        }
+      });
+    }
+  };
+
+  renderLists();
+
+  element.querySelector('#builder-cancel-btn').addEventListener('click', close);
+
+  element.querySelector('#builder-confirm-btn').addEventListener('click', async () => {
+    const name = element.querySelector('#builder-name').value.trim();
+    const selectedCategories = Array.from(element.querySelectorAll('.builder-cat-checkbox:checked')).map(cb => cb.value);
+
+    if (!name) {
+      showToast('請輸入流程名稱', 'error');
+      return;
+    }
+    if (currentSteps.length === 0) {
+      showToast('流程工序不能為空', 'error');
+      return;
+    }
+
+    const btn = element.querySelector('#builder-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = '儲存中...';
+
+    try {
+      const newTemplate = {
+        name,
+        category: selectedCategories.join(','), // 相容舊格式，或改用 categories 陣列。這裡先以字串儲存供顯示
+        categories: selectedCategories, // 新格式：陣列
+        steps: currentSteps
+      };
+
+      await onSave(newTemplate);
+      close();
+    } catch (err) {
+      console.error(err);
+      showToast('儲存失敗', 'error');
+      btn.disabled = false;
+      btn.textContent = '儲存並套用';
+    }
+  });
+}
+
+/*
+F: AI-WA-UPWO/src/ui/route-builder.js
+V: 1792952000
+W: UPGRADE-005
+*/```
+
+<!-- === FILE END: ./src/ui/route-builder.js === -->
 
 <!-- === FILE START: ./src/ui/toast.js === -->
 

@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 22:38:32 (HKT)
+> 生成時間：2026-10-30 23:56:49 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -25,8 +25,8 @@
 | AI-General | docs/records/PROGRESS.md | 1792917000 | ai-system-005 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792916800 | ai-system-005 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792932800 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792916700 | ai-system-005 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792929700 | ai-system-006 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792933800 | ai-system-006 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792933000 | ai-system-006 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792916900 | ai-system-005 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792917200 | ai-system-005 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792913300 | ai-system-005 |
@@ -128,6 +128,7 @@
 | AI-WA-UPWO | src/ui/modal.js |
 | AI-WA-UPWO | src/ui/order-view-editor.js |
 | AI-WA-UPWO | src/ui/order-view.js |
+| AI-WA-UPWO | src/ui/route-builder.js |
 | AI-WA-UPWO | src/ui/toast.js |
 | AI-WA-UPWO | tailwind.config.js |
 | AI-WA-UPWO | vite.config.js |
@@ -322,6 +323,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 220 |
+| 92-Code.md | 240 |
 | 92-P.md | 12 |
 | 92-SP.md | 20 |

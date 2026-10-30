@@ -1,5 +1,5 @@
 > 體系版本：SV11
-> 生成時間：2026-10-30 22:38:34 (HKT)
+> 生成時間：2026-10-30 23:56:51 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -64,9 +64,12 @@
         .success-panel { background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
         .error-list { font-size: 0.85rem; margin-bottom: 10px; white-space: pre-wrap; font-family: monospace; }
         
-        .compare-card { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 8px; }
-        .compare-card-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .compare-card pre { font-size: 0.75rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; font-family: monospace; color: var(--text); background: #f8fafc; padding: 6px; border-radius: 4px; }
+        /* 左右對比區塊 */
+        .compare-container { display: flex; flex-direction: row; gap: 10px; margin-bottom: 15px; }
+        .compare-card { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; }
+        .compare-card-title { font-size: 0.8rem; font-weight: bold; color: var(--text); background: #f1f5f9; padding: 8px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+        .char-count { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); background: #e2e8f0; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .compare-card pre { font-size: 0.75rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; font-family: monospace; color: var(--text); padding: 8px; flex: 1; margin: 0; }
         
         .highlight-error { color: #dc2626; background-color: #fee2e2; font-weight: bold; border-radius: 2px; padding: 0 2px; }
         
@@ -633,11 +636,27 @@
             let isAppend = false;
             let isPartial = false;
 
-            const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
-            const patchMatch = content.match(patchRegex);
-            
-            if (content.includes('<<<<<<< OLD')) {
+            // 修復：優先判定 [APPEND]，避免歷史檔內含 <<<<<<< OLD 被誤判
+            if (/^\s*\[APPEND\]/m.test(content)) {
+                isAppend = true;
+                if (oldContent) {
+                    let base = oldContent;
+                    const eofBlockRegex = /(?:\/\*\s*|<!--\s*|#\s*)*[═=]+\s*EOF\s*[═=]+[\s\S]*?(?:\*\/|-->|#)\s*$/;
+                    if (eofBlockRegex.test(base)) base = base.replace(eofBlockRegex, '').trim();
+                    else {
+                        const mdEofRegex = /\n*F:\s*[^\n]+\s*\nV:\s*\d+\s*\nW:\s*[^\n]+\s*$/m;
+                        if (mdEofRegex.test(base)) base = base.replace(mdEofRegex, '').trim();
+                    }
+                    let appendContent = content.replace(/^\s*\[APPEND\]\s*/, '').trim();
+                    finalContent = base + "\n\n" + appendContent;
+                } else {
+                    finalContent = content.replace(/^\s*\[APPEND\]\s*/, '').trim();
+                }
+            } else if (content.includes('<<<<<<< OLD')) {
                 isPartial = true;
+                const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
+                const patchMatch = content.match(patchRegex);
+                
                 if (!patchMatch) {
                     errors.push("局部替換格式錯誤：缺少 ======= 或 >>>>>>> NEW 標記。");
                     errorTargets.push(null);
@@ -645,7 +664,6 @@
                     const oldStr = patchMatch[1];
                     const newStr = patchMatch[2];
                     
-                    // 嚴格要求 NEW 區塊必須包含 EOF，不自動補
                     if (!hasValidEof(newStr, filePath)) {
                         errors.push("局部替換的 NEW 區塊缺少 F/V/W 標記。這會導致無法追蹤修改者，請要求 AI 補齊後重新發布。");
                         errorTargets.push(null);
@@ -660,23 +678,41 @@
                         finalContent = newStr;
                     }
                 }
-            } else if (/^\s*\[APPEND\]/m.test(content) && oldContent) {
-                isAppend = true;
-                let base = oldContent;
-                const eofBlockRegex = /(?:\/\*\s*|<!--\s*|#\s*)*[═=]+\s*EOF\s*[═=]+[\s\S]*?(?:\*\/|-->|#)\s*$/;
-                if (eofBlockRegex.test(base)) base = base.replace(eofBlockRegex, '').trim();
-                else {
-                    const mdEofRegex = /\n*F:\s*[^\n]+\s*\nV:\s*\d+\s*\nW:\s*[^\n]+\s*$/m;
-                    if (mdEofRegex.test(base)) base = base.replace(mdEofRegex, '').trim();
-                }
-                let appendContent = content.replace(/^\s*\[APPEND\]\s*/, '').trim();
-                finalContent = base + "\n\n" + appendContent;
             }
 
             if (errors.length === 0 && !hasValidEof(finalContent, filePath)) {
                 errors.push(`替換或追加後的最終結果缺少 EOF (F/V/W)。已終止發布。`);
                 errorTargets.push(null);
             }
+
+            // 共用更新對比區的函數
+            const updateCompareUI = (containerId) => {
+                const container = document.getElementById(containerId);
+                container.style.display = 'flex';
+                
+                const oldPre = container.querySelector('.old-content-view');
+                const newPre = container.querySelector('.new-content-view');
+                const oldCount = container.querySelector('.old-char-count');
+                const newCount = container.querySelector('.new-char-count');
+                const targetsToHighlight = errorTargets.filter(t => t);
+
+                if (oldContent !== null) {
+                    oldPre.innerHTML = highlightText(oldContent, targetsToHighlight);
+                    oldCount.textContent = `${oldContent.length} 字`;
+                } else {
+                    oldPre.textContent = oldContentStatus || '讀取中…';
+                    oldCount.textContent = `0 字`;
+                }
+                
+                // 如果檢查失敗，右邊顯示貼上的原始內容；如果成功，右邊顯示最終處理後的內容
+                if (containerId === 'error-compare') {
+                    newPre.innerHTML = highlightText(content, targetsToHighlight);
+                    newCount.textContent = `${content.length} 字`;
+                } else {
+                    newPre.textContent = finalContent;
+                    newCount.textContent = `${finalContent.length} 字`;
+                }
+            };
 
             if (errors.length > 0) {
                 errorPanel.style.display = 'block';
@@ -687,29 +723,7 @@
                 errors.forEach((err, i) => { displayErrors += markError(err, errorTargets[i], oldContent) + '\n'; });
                 document.getElementById('error-list').textContent = header + displayErrors;
 
-                const compareCards = document.getElementById('compare-cards');
-                compareCards.style.display = 'block';
-
-                const oldCard = document.getElementById('old-content-card');
-                const oldPre = document.getElementById('old-content-view');
-                const newPre = document.getElementById('new-content-view');
-                const targetsToHighlight = errorTargets.filter(t => t);
-
-                const oldCharCount = document.getElementById('old-char-count');
-                const newCharCount = document.getElementById('new-char-count');
-
-                if (oldContent !== null) {
-                    oldCard.classList.remove('loading');
-                    oldPre.innerHTML = highlightText(oldContent, targetsToHighlight);
-                    oldCharCount.textContent = `(${oldContent.length} 字)`;
-                } else {
-                    oldCard.classList.add('loading');
-                    oldPre.textContent = oldContentStatus || '讀取中…';
-                    oldCharCount.textContent = `(0 字)`;
-                }
-                newPre.innerHTML = highlightText(content, targetsToHighlight);
-                newCharCount.textContent = `(${content.length} 字)`;
-
+                updateCompareUI('error-compare');
                 if (repo && filePath && allowedRepos.includes(repo)) forceBtn.style.display = 'block';
             } else {
                 previewCache = { finalContent, isAppend, isPartial };
@@ -719,24 +733,7 @@
                 inputArea.style.display = 'none';
                 forceBtn.style.display = 'none';
 
-                const previewDiv = document.getElementById('preview-result');
-                const previewTitle = document.getElementById('preview-title');
-                const previewContentPre = document.getElementById('preview-content');
-                const previewCharCount = document.getElementById('preview-char-count');
-
-                previewDiv.style.display = 'block';
-                const oldLen = oldContent ? oldContent.length : 0;
-
-                if (isAppend || isPartial) {
-                    previewTitle.textContent = '👁️ 發布後的最終檔案預覽（請確認結構無誤）';
-                    previewContentPre.style.display = 'block';
-                    previewContentPre.textContent = finalContent;
-                    previewCharCount.textContent = `(舊檔 ${oldLen} 字 ➜ 新檔 ${finalContent.length} 字)`;
-                } else {
-                    previewTitle.textContent = '✅ 完整檔覆蓋確認（已隱藏內容以節省空間）';
-                    previewContentPre.style.display = 'none';
-                    previewCharCount.textContent = `(舊檔 ${oldLen} 字 ➜ 新檔 ${finalContent.length} 字)`;
-                }
+                updateCompareUI('success-compare');
             }
         }
 
@@ -748,8 +745,9 @@
             document.getElementById('input-area').style.display = 'block';
             document.getElementById('btn-publish').style.display = 'none';
             document.getElementById('btn-reset-next').style.display = 'none';
-            document.getElementById('compare-cards').style.display = 'none';
-            document.getElementById('preview-result').style.display = 'none';
+            
+            document.getElementById('error-compare').style.display = 'none';
+            document.getElementById('success-compare').style.display = 'none';
             
             const btn = document.getElementById('btn-publish');
             btn.disabled = false; btn.textContent = '🚀 確認發布到倉庫';
@@ -799,13 +797,20 @@
                         if (existing && existing.sha) oldContent = decodeURIComponent(escape(atob(existing.content.replace(/\n/g, ''))));
                     } catch(e) {}
                     
-                    const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
-                    const patchMatch = content.match(patchRegex);
-                    
-                    if (content.includes('<<<<<<< OLD')) {
+                    if (/^\s*\[APPEND\]/m.test(content)) {
+                        isAppend = true;
+                        if (oldContent) {
+                            let base = oldContent.replace(/(?:\/\*\s*|<!--\s*|#\s*)*[═=]+\s*EOF\s*[═=]+[\s\S]*?(?:\*\/|-->|#)\s*$/, '').trim();
+                            finalContent = base + "\n\n" + content.replace(/^\s*\[APPEND\]\s*/, '').trim();
+                        } else {
+                            finalContent = content.replace(/^\s*\[APPEND\]\s*/, '').trim();
+                        }
+                    } else if (content.includes('<<<<<<< OLD')) {
+                        const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
+                        const patchMatch = content.match(patchRegex);
+                        
                         if (!patchMatch) {
                             if (isForce) {
-                                // 修復：強制發布時，若匹配失敗則當作完整檔放行
                                 finalContent = content;
                                 isPartial = false;
                             } else {
@@ -818,10 +823,6 @@
                             if (oldContent && !oldContent.includes(oldStr)) throw new Error('找不到要替換的目標字串。');
                             finalContent = oldContent ? oldContent.replace(oldStr, newStr) : newStr;
                         }
-                    } else if (/^\s*\[APPEND\]/m.test(content) && oldContent) {
-                        isAppend = true;
-                        let base = oldContent.replace(/(?:\/\*\s*|<!--\s*|#\s*)*[═=]+\s*EOF\s*[═=]+[\s\S]*?(?:\*\/|-->|#)\s*$/, '').trim();
-                        finalContent = base + "\n\n" + content.replace(/^\s*\[APPEND\]\s*/, '').trim();
                     } else {
                         finalContent = content;
                     }
@@ -856,7 +857,7 @@
                 document.getElementById('error-panel').style.display = 'none';
                 document.getElementById('success-panel').style.display = 'block';
                 document.getElementById('btn-reset-next').style.display = 'block';
-                document.getElementById('preview-result').style.display = 'none';
+                document.getElementById('success-compare').style.display = 'none';
 
                 hasUnpackedChanges = true;
                 updateStatus('build-status', 'running', '有新檔案！請點擊打包');
@@ -987,20 +988,20 @@
             <div style="font-weight:bold; margin-bottom:10px;">❌ 檢查未通過</div>
             <div class="error-list" id="error-list"></div>
             
-            <div id="compare-cards" style="display:none; margin-bottom:10px;">
-                <div class="compare-card" id="old-content-card">
+            <div id="error-compare" class="compare-container" style="display:none;">
+                <div class="compare-card">
                     <div class="compare-card-title">
-                        <span>📦 倉庫現有內容（舊檔）</span>
-                        <span id="old-char-count" style="font-weight: normal; color: var(--text-muted);">(0 字)</span>
+                        <span>📦 舊檔</span>
+                        <span class="char-count old-char-count">(0 字)</span>
                     </div>
-                    <pre id="old-content-view"></pre>
+                    <pre class="old-content-view"></pre>
                 </div>
                 <div class="compare-card">
                     <div class="compare-card-title">
-                        <span>📝 本次貼上內容（新檔）</span>
-                        <span id="new-char-count" style="font-weight: normal; color: var(--text-muted);">(0 字)</span>
+                        <span>📝 新檔</span>
+                        <span class="char-count new-char-count">(0 字)</span>
                     </div>
-                    <pre id="new-content-view"></pre>
+                    <pre class="new-content-view"></pre>
                 </div>
             </div>
             
@@ -1015,12 +1016,21 @@
             <input type="hidden" id="target-repo">
             <input type="hidden" id="target-file-path">
             
-            <div id="preview-result" style="display:none; margin-bottom:15px;">
-                <div style="font-size:0.85rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display: flex; justify-content: space-between;">
-                    <span id="preview-title">👁️ 發布後的最終檔案預覽（請確認結構無誤）</span>
-                    <span id="preview-char-count" style="font-weight: normal; color: var(--text-muted);">(0 字)</span>
+            <div id="success-compare" class="compare-container" style="display:none;">
+                <div class="compare-card">
+                    <div class="compare-card-title">
+                        <span>📦 舊檔</span>
+                        <span class="char-count old-char-count">(0 字)</span>
+                    </div>
+                    <pre class="old-content-view"></pre>
                 </div>
-                <pre id="preview-content" style="max-height:200px; overflow-y:auto; font-size:0.75rem; background:#fff; padding:8px; border-radius:5px; border:1px solid var(--border); white-space:pre-wrap;"></pre>
+                <div class="compare-card">
+                    <div class="compare-card-title">
+                        <span>✅ 最終結果</span>
+                        <span class="char-count new-char-count">(0 字)</span>
+                    </div>
+                    <pre class="new-content-view"></pre>
+                </div>
             </div>
 
             <button class="btn-success" id="btn-publish" onclick="publishFile(false)">🚀 確認發布到倉庫</button>
@@ -1062,7 +1072,7 @@
 </html>
 <!-- ═══ EOF ═══
 F: AI-infra/index.html
-V: 1792932600
+V: 1792933600
 W: ai-system-006
 ═══ -->```
 
