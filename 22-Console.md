@@ -1,5 +1,5 @@
 > 體系版本：SV12
-> 生成時間：2026-10-31 01:18:22 (HKT)
+> 生成時間：2026-10-31 09:19:30 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -547,6 +547,16 @@
             if (eofMatch) pathMatch = eofMatch;
             else pathMatch = content.match(/^(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*F:\s*"?([^\s"\n]+)"?\s*(?:\*\/|-->)?$/m);
 
+            // 新增：若為 JSON，嘗試解析 _EOF 取得路徑
+            if (!pathMatch && content.trim().startsWith('{')) {
+                try {
+                    const data = JSON.parse(content);
+                    if (data._EOF && data._EOF.F) {
+                        pathMatch = [null, data._EOF.F];
+                    }
+                } catch(e) {}
+            }
+
             if (!pathMatch) {
                 errors.push("找不到 F: 路徑標記。請確認 AI 是否漏寫 EOF。");
                 errorTargets.push(null);
@@ -596,12 +606,8 @@
             }
 
             let specificRule = (globalConfig.file_specific_rules && globalConfig.file_specific_rules[`${repo}/${filePath}`]) || {};
-            let isRecordFile = false;
-            if (rules.record_auto_exempt !== false && repo === rules.record_exempt_repo) {
-                const exemptPaths = rules.record_exempt_paths || [];
-                isRecordFile = exemptPaths.some(p => filePath.includes(p));
-            }
-
+            
+            // 依 R-027，移除檔案級語法豁免，全檔案一律檢查禁用詞
             let cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
             cleanContent = cleanContent.replace(/「[^」]*」/g, '').replace(/`[^`]*`/g, '');
 
@@ -626,14 +632,13 @@
                 }
             }
 
-            if (!isRecordFile) {
-                globalForbiddenWords.forEach(word => {
-                    if (cleanContent.includes(word)) {
-                        errors.push(`發現禁用詞彙或偷懶樣式：「${word}」`);
-                        errorTargets.push(word);
-                    }
-                });
-            }
+            // 全面執行禁用詞檢查
+            globalForbiddenWords.forEach(word => {
+                if (cleanContent.includes(word)) {
+                    errors.push(`發現禁用詞彙或偷懶樣式：「${word}」`);
+                    errorTargets.push(word);
+                }
+            });
 
             const simplified = globalConfig.simplified_chars || [];
             if (specificRule.check_simplified !== false && simplified.length > 0) {
@@ -754,6 +759,7 @@
             document.getElementById('dep-alert').style.display = 'none';
             document.getElementById('input-area').style.display = 'block';
             document.getElementById('btn-publish').style.display = 'block';
+            document.getElementById('btn-force-publish').style.display = 'none';
             document.getElementById('btn-reset-next').style.display = 'none';
             
             document.getElementById('error-compare').style.display = 'none';
@@ -763,7 +769,6 @@
             btn.disabled = false; btn.textContent = '🚀 確認發布到倉庫';
 
             const forceBtn = document.getElementById('btn-force-publish');
-            forceBtn.style.display = 'none';
             forceBtn.disabled = false;
             forceBtn.textContent = '🚨 強制發布（忽略錯誤）';
 
@@ -864,7 +869,11 @@
                 const forceTag = isForce ? '（強制發布）' : '';
                 
                 document.getElementById('success-message').innerHTML = `🎉 已成功寫入${forceTag}：<br><b>${repo}/${filePath}</b><br><span style="font-size:0.85rem; color:#047857; font-weight:normal;">⏱️ 寫入時間：${timeStr}</span>`;
-                targetBtn.style.display = 'none';
+                
+                // 隱藏所有發布按鈕，防止重複點擊
+                document.getElementById('btn-publish').style.display = 'none';
+                document.getElementById('btn-force-publish').style.display = 'none';
+                
                 document.getElementById('error-panel').style.display = 'none';
                 document.getElementById('dep-alert').style.display = 'none';
                 document.getElementById('success-panel').style.display = 'block';
@@ -1091,8 +1100,8 @@
 </html>
 <!-- EOF
 F: AI-infra/index.html
-V: 1792936400
-W: ai-system-006
+V: 1792940400
+W: ai-system-007
 EOF -->```
 
 <!-- === FILE END: index.html === -->

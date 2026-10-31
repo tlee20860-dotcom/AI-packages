@@ -1,5 +1,5 @@
 > 體系版本：SV12
-> 生成時間：2026-10-31 01:18:21 (HKT)
+> 生成時間：2026-10-31 09:19:28 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -27,15 +27,15 @@
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792936600 | ai-system-006 |
 | AI-General | docs/records/SYSTEM-DEBT.md | 1792937000 | ai-system-006 |
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792933000 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792936000 | ai-system-006 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792941000 | ai-system-007 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792936800 | ai-system-006 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792913300 | ai-system-005 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1792938600 | ai-system-007 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792932400 | ai-system-006 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792915200 | ai-system-005 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792937400 | ai-system-006 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792934200 | ai-system-006 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792938000 | ai-system-007 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
