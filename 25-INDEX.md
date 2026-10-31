@@ -1,5 +1,5 @@
 > 體系版本：SV12
-> 生成時間：2026-10-31 10:14:02 (HKT)
+> 生成時間：2026-10-31 12:01:20 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -120,12 +120,14 @@
 | AI-WA-UPWO | src/pages/salesperson.js |
 | AI-WA-UPWO | src/pages/settings-area.js |
 | AI-WA-UPWO | src/pages/settings-basic.js |
+| AI-WA-UPWO | src/pages/settings-category.js |
 | AI-WA-UPWO | src/pages/settings-schema.js |
 | AI-WA-UPWO | src/pages/settings.js |
 | AI-WA-UPWO | src/pages/table.js |
 | AI-WA-UPWO | src/style.css |
 | AI-WA-UPWO | src/ui/layout.js |
 | AI-WA-UPWO | src/ui/modal.js |
+| AI-WA-UPWO | src/ui/order-detail-modal.js |
 | AI-WA-UPWO | src/ui/order-view-editor.js |
 | AI-WA-UPWO | src/ui/order-view.js |
 | AI-WA-UPWO | src/ui/route-builder.js |
@@ -323,6 +325,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 240 |
+| 92-Code.md | 268 |
 | 92-P.md | 12 |
 | 92-SP.md | 20 |
