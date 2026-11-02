@@ -1,5 +1,5 @@
-> 體系版本：SV12
-> 生成時間：2026-10-31 12:21:55 (HKT)
+> 體系版本：SV13
+> 生成時間：2026-11-02 13:15:48 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,39 +15,39 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1792930200 | ai-system-006 |
+| AI-General | docs/p92/P-Architecture.md | 1792989700 | UPGRADE-006 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1792930000 | ai-system-006 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1792930300 | ai-system-006 |
-| AI-General | docs/p92/WF-PROGRESS.md | 1792928200 | UPGRADE-004 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1792989400 | UPGRADE-006 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1792989500 | UPGRADE-007 |
+| AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1792936200 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792937200 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792936600 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1792937000 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792933000 | ai-system-006 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792941000 | ai-system-007 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1792936800 | ai-system-006 |
+| AI-General | docs/records/PROGRESS.md | 1792943400 | ai-system-007 |
+| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1792944000 | ai-system-007 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1792944600 | ai-system-007 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792941600 | ai-system-007 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1792942800 | ai-system-008 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1792990000 | UPGRADE-006 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1792938600 | ai-system-007 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1792932400 | ai-system-006 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1792915200 | ai-system-005 |
-| AI-kernel | docs/r-rules/R-04-learning.md | 1792937400 | ai-system-006 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1792990400 | UPGRADE-006 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792938000 | ai-system-007 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
 | AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792902800 | ai-system-20261026-001#8 |
-| AI-kernel | docs/skills/W/W-00-startup.md | 1792928700 | UPGRADE-004 |
+| AI-kernel | docs/skills/W/W-00-startup.md | 1792989000 | UPGRADE-006 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
 | AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
-| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792928500 | UPGRADE-004 |
+| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792989100 | UPGRADE-006 |
 | AI-kernel | docs/skills/W/W-04-pwa.md | 1792928800 | UPGRADE-004 |
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792928400 | UPGRADE-004 |
-| AI-kernel | docs/skills/W/W-06-sop.md | 1792928600 | UPGRADE-004 |
-| AI-kernel | docs/skills/W/W-07-errors.md | 1792928900 | UPGRADE-004 |
+| AI-kernel | docs/skills/W/W-06-sop.md | 1792989200 | UPGRADE-006 |
+| AI-kernel | docs/skills/W/W-07-errors.md | 1792989300 | UPGRADE-006 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792913600 | ai-system-005 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
@@ -106,6 +106,7 @@
 | AI-WA-UPWO | src/config/state.js |
 | AI-WA-UPWO | src/db/read.js |
 | AI-WA-UPWO | src/db/write.js |
+| AI-WA-UPWO | src/domain/formula-engine.js |
 | AI-WA-UPWO | src/domain/parser.js |
 | AI-WA-UPWO | src/domain/stats.js |
 | AI-WA-UPWO | src/engine/main.js |
@@ -114,6 +115,7 @@
 | AI-WA-UPWO | src/pages/admin-data.js |
 | AI-WA-UPWO | src/pages/area.js |
 | AI-WA-UPWO | src/pages/category.js |
+| AI-WA-UPWO | src/pages/data-entry.js |
 | AI-WA-UPWO | src/pages/kanban.js |
 | AI-WA-UPWO | src/pages/login.js |
 | AI-WA-UPWO | src/pages/overview.js |
@@ -129,6 +131,7 @@
 | AI-WA-UPWO | src/ui/layout.js |
 | AI-WA-UPWO | src/ui/modal.js |
 | AI-WA-UPWO | src/ui/order-detail-modal.js |
+| AI-WA-UPWO | src/ui/order-editor.js |
 | AI-WA-UPWO | src/ui/order-view-editor.js |
 | AI-WA-UPWO | src/ui/order-view.js |
 | AI-WA-UPWO | src/ui/route-builder.js |
@@ -316,16 +319,16 @@
 | 02-RP.md | 80 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
-| 10-WP.md | 52 |
+| 10-WP.md | 56 |
 | 20-SP-Sys.md | 36 |
 | 21-INFRA.md | 56 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 44 |
+| 24-HISTORY.md | 48 |
 | 90-Code.md | 388 |
 | 90-P.md | 24 |
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 288 |
+| 92-Code.md | 320 |
 | 92-P.md | 12 |
-| 92-SP.md | 20 |
+| 92-SP.md | 24 |

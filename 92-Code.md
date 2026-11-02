@@ -1,5 +1,5 @@
-> 體系版本：SV12
-> 生成時間：2026-10-31 12:21:55 (HKT)
+> 體系版本：SV13
+> 生成時間：2026-11-02 13:15:47 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -648,6 +648,110 @@ W: webapp-20261026-001#16
 
 <!-- === FILE END: ./src/db/write.js === -->
 
+<!-- === FILE START: ./src/domain/formula-engine.js === -->
+
+## 📄 ./src/domain/formula-engine.js
+
+```js
+/**
+ * 公式引擎（純函數，不碰 DOM、不碰 Firebase）
+ * 職責：根據系統設定的公式與表單輸入值，計算出目標欄位的結果。
+ * 
+ * 公式語法：使用 {{欄位Key}} 作為佔位符，例如 "{{quantity}} * {{price}}"。
+ */
+
+/**
+ * 將公式字串轉換為可執行的 JS 表達式字串
+ * @param {string} formula 原始公式字串
+ * @param {Object} formData 表單輸入資料 (key-value)
+ * @returns {string} 轉換後的 JS 表達式
+ */
+function parseFormula(formula, formData) {
+  // 使用正規表達式尋找 {{...}} 佔位符
+  return formula.replace(/\{\{([^}]+)\}\}/g, (match, fieldKey) => {
+    const key = fieldKey.trim();
+    const rawValue = formData[key];
+
+    // 若值為空或未定義，視為 0 以利計算
+    if (rawValue === undefined || rawValue === null || rawValue === '') {
+      return '0';
+    }
+
+    // 嘗試轉為數字。若可轉換，直接插入數字；若不可轉換（如文字），則包裹引號
+    const num = Number(rawValue);
+    if (!isNaN(num) && isFinite(num)) {
+      return num;
+    }
+
+    // 非數字的情況，作為字串字面量傳入（防範語法錯誤）
+    // 使用 JSON.stringify 確保特殊字元（如引號）被安全轉義
+    return JSON.stringify(rawValue);
+  });
+}
+
+/**
+ * 計算所有設定的公式
+ * @param {Object} formulas 公式設定物件，格式為 { targetKey: "formula string" }
+ * @param {Object} formData 表單輸入資料，格式為 { fieldKey: value }
+ * @returns {Object} 計算結果物件，格式為 { targetKey: result }
+ */
+export function evaluate(formulas, formData) {
+  const results = {};
+
+  if (!formulas || typeof formulas !== 'object') {
+    return results;
+  }
+
+  for (const [targetKey, formula] of Object.entries(formulas)) {
+    if (!formula || typeof formula !== 'string') {
+      continue;
+    }
+
+    // 若公式中沒有任何佔位符，則直接跳過（可能是無效的字串）
+    if (!formula.includes('{{')) {
+      continue;
+    }
+
+    try {
+      // 1. 解析公式，替換佔位符為實際值
+      const expression = parseFormula(formula, formData);
+
+      // 2. 動態執行表達式（使用 Function 建構子，避免全域汙染）
+      // 注意：此處存在理論上的 XSS 風險，但公式由管理員在設定頁輸入，且系統僅供內部使用，風險可控。
+      // 若需最高安全性，應改寫為 AST 解析，但目前以輕量實作為主。
+      const result = new Function(`return (${expression});`)();
+
+      // 3. 處理結果型別
+      if (typeof result === 'boolean') {
+        // 布林值轉為「是/否」以便顯示
+        results[targetKey] = result ? '是' : '否';
+      } else if (typeof result === 'number') {
+        // 數字去除浮點數誤差，最多保留兩位小數
+        if (Number.isInteger(result)) {
+          results[targetKey] = String(result);
+        } else {
+          results[targetKey] = result.toFixed(2);
+        }
+      } else {
+        results[targetKey] = String(result);
+      }
+    } catch (err) {
+      console.warn(`[Formula Engine] 公式計算失敗: ${targetKey} -> ${formula}`, err);
+      results[targetKey] = '計算錯誤';
+    }
+  }
+
+  return results;
+}
+
+/*
+F: AI-WA-UPWO/src/domain/formula-engine.js
+V: 1792991000
+W: UPGRADE-007
+*/```
+
+<!-- === FILE END: ./src/domain/formula-engine.js === -->
+
 <!-- === FILE START: ./src/domain/parser.js === -->
 
 ## 📄 ./src/domain/parser.js
@@ -972,14 +1076,16 @@ W: UPGRADE-002
 
 ```js
 import { initRouter } from './router.js';
-import { getCollection, listenDocument } from '../db/read.js';
+import { getCollection, listenDocument, listenCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
 import { AppState } from '../config/state.js';
 import '../ui/order-view-editor.js';
 
+let orderCache = {}; // 用於比對工單狀態是否改變
+let isFirstLoad = true;
+
 /**
  * 系統啟動入口
- * 負責等待 DOM 載入完成後，初始化路由、背景任務與 PWA
  */
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('app-root');
@@ -1000,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initRouter();
     console.log('[System] UPGRADE-WO 系統啟動成功。');
 
-    // 2. 全域監聽設定檔變更（確保工序、模板等即時同步）
+    // 2. 全域監聽設定檔變更
     listenSettingsUpdates();
 
     // 3. 背景任務：自動修正歷史錯誤日期
@@ -1008,6 +1114,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. 註冊 Service Worker (PWA)
     registerServiceWorker();
+    
+    // 5. 初始化通知權限與監聽
+    initNotifications();
     
   } catch (error) {
     console.error('[System Error] 系統啟動失敗:', error);
@@ -1035,6 +1144,138 @@ function listenSettingsUpdates() {
     // 派發事件，通知所有前台頁面重新渲染
     window.dispatchEvent(new Event('settings-updated'));
   });
+}
+
+/**
+ * 初始化瀏覽器通知權限與監聽
+ */
+function initNotifications() {
+  if (!("Notification" in window)) {
+    console.log("此瀏覽器不支援桌面通知");
+    return;
+  }
+
+  // 請求權限
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('[Notification] 已獲得通知權限');
+      }
+    });
+  }
+
+  // 僅在已登入狀態下監聽工單變化
+  // 透過 setInterval 檢查登入狀態，確保登入後才開始監聽
+  const checkUserInterval = setInterval(() => {
+    const user = AppState.getUser();
+    if (user) {
+      clearInterval(checkUserInterval);
+      startOrderNotificationListener(user);
+    }
+  }, 1000);
+}
+
+/**
+ * 監聽工單變化並發送通知
+ */
+async function startOrderNotificationListener(user) {
+  // 預先取得設定（區域設定）
+  let currentSettings = null;
+  try {
+    const settingsData = await getCollection('settings');
+    currentSettings = settingsData.find(s => s.id === 'main');
+  } catch (err) {
+    console.warn('[Notification] 無法讀取系統設定，通知可能無法運作', err);
+  }
+
+  listenCollection('work_orders', (orders) => {
+    const newCache = {};
+    
+    // 第一次載入只建立快取，不發送通知
+    if (isFirstLoad) {
+      orders.forEach(o => { newCache[o.id] = o.status; });
+      orderCache = newCache;
+      isFirstLoad = false;
+      return;
+    }
+
+    let notificationsToSend = [];
+
+    orders.forEach(order => {
+      newCache[order.id] = order.status;
+      const oldStatus = orderCache[order.id];
+
+      // 若狀態有改變（且舊狀態存在）
+      if (oldStatus && oldStatus !== order.status) {
+        // 檢查是否應該通知當前使用者
+        if (shouldNotify(user, order, currentSettings)) {
+          notificationsToSend.push(`工單 ${order.id} 已更新至：${order.status}`);
+        }
+      }
+    });
+
+    orderCache = newCache;
+
+    // 發送通知
+    if (notificationsToSend.length > 0 && Notification.permission === 'granted') {
+      // 如果一次有多筆，只彈出第一筆並顯示總數，避免洗版
+      let bodyText = notificationsToSend[0];
+      if (notificationsToSend.length > 1) {
+        bodyText += ` (及其他 ${notificationsToSend.length - 1} 筆更新)`;
+      }
+
+      try {
+        new Notification('UPGRADE-WO 進度更新', {
+          body: bodyText,
+          icon: '/icons/icon.png'
+        });
+      } catch (e) {
+        console.warn('發送通知失敗 (可能被瀏覽器靜音):', e);
+      }
+    }
+  });
+}
+
+/**
+ * 判斷當前使用者是否需要收到該工單的通知
+ */
+function shouldNotify(user, order, settings) {
+  if (!user) return false;
+
+  // 管理員與一般使用者預設不推播（避免太吵）
+  if (user.role === 'admin' || user.role === 'viewer') return false;
+
+  // 生產員：檢查新狀態是否在該使用者負責的區域內
+  if (user.role === 'worker') {
+    if (!settings || !settings.areas) return false;
+    const allowedAreas = Array.isArray(user.allowedAreas) ? user.allowedAreas : [];
+    if (allowedAreas.length === 0) return false; // 未設定可見區域，不通知
+
+    const matchedAreas = settings.areas.filter(a => allowedAreas.includes(a.id));
+    // 檢查該工單的新狀態，是否存在於任何一個該使用者負責的區域中
+    for (const area of matchedAreas) {
+      if ((area.statuses || []).includes(order.status)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 銷售員：檢查該工單是否屬於該銷售員（或他負責的銷售員）
+  if (user.role === 'sales') {
+    const orderReps = order.salesReps || [];
+    const allowedSales = Array.isArray(user.allowedSales) ? user.allowedSales : [];
+
+    // 如果他有被指定可見的銷售員，檢查工單是否包含在內
+    if (allowedSales.length > 0) {
+      return orderReps.some(rep => allowedSales.includes(rep));
+    } else {
+      // 如果沒指定，檢查工單的銷售員名字是否等於他的登入帳號
+      return orderReps.includes(user.username);
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -1122,11 +1363,11 @@ function registerServiceWorker() {
   }
 }
 
-/* ═══ EOF ═══
+/*
 F: AI-WA-UPWO/src/engine/main.js
-V: 1792926100
-W: UPGRADE-004
-═══ */```
+V: 1792985000
+W: UPGRADE-005
+*/```
 
 <!-- === FILE END: ./src/engine/main.js === -->
 
@@ -1149,6 +1390,7 @@ import SettingsPage from '../pages/settings.js';
 import CategoryPage from '../pages/category.js';
 import AdminDataPage from '../pages/admin-data.js';
 import AreaPage from '../pages/area.js';
+import DataEntryPage from '../pages/data-entry.js'; // 新增
 
 const routes = {
   login: LoginPage,
@@ -1159,7 +1401,8 @@ const routes = {
   settings: SettingsPage,
   category: CategoryPage,
   'admin-data': AdminDataPage,
-  area: AreaPage
+  area: AreaPage,
+  'data-entry': DataEntryPage // 新增路由
 };
 
 let currentPageInstance = null;
@@ -1202,8 +1445,8 @@ function handleRoute() {
       return;
     }
 
-    // 一般使用者 (viewer)：不能進入系統設定與資料總管
-    if (role === 'viewer' && (hash === 'settings' || hash === 'admin-data')) {
+    // 一般使用者 (viewer)：不能進入系統設定、資料總管與資料錄入
+    if (role === 'viewer' && (hash === 'settings' || hash === 'admin-data' || hash === 'data-entry')) {
       showToast('您沒有權限訪問此頁面', 'error');
       window.location.hash = '#kanban';
       return;
@@ -1285,8 +1528,8 @@ export function initRouter() {
 
 /*
 F: AI-WA-UPWO/src/engine/router.js
-V: 1792978000
-W: UPGRADE-005
+V: 1792994000
+W: UPGRADE-007
 */```
 
 <!-- === FILE END: ./src/engine/router.js === -->
@@ -2121,6 +2364,333 @@ W: UPGRADE-005
 
 <!-- === FILE END: ./src/pages/category.js === -->
 
+<!-- === FILE START: ./src/pages/data-entry.js === -->
+
+## 📄 ./src/pages/data-entry.js
+
+```js
+import { AppState } from '../config/state.js';
+import { getDocument, getCollection, listenCollection } from '../db/read.js';
+import { setDocument, updateDocument } from '../db/write.js';
+import { renderPageLayout } from '../ui/layout.js';
+import { showToast } from '../ui/toast.js';
+import { renderOrderEditor } from '../ui/order-editor.js';
+import { createIcons, Search, Plus, FileText, ArrowLeft, Layers } from 'lucide';
+
+let currentSettings = null;
+let isViewMode = false;
+let currentOrder = null;
+let sidebarOrders = [];
+let unsubscribeOrders = null;
+
+export default {
+  async render() {
+    const user = AppState.getUser();
+    if (!user) return;
+
+    // 1. 載入系統設定
+    try {
+      currentSettings = await getDocument('settings', 'main');
+    } catch (err) {
+      showToast('無法載入系統設定', 'error');
+      return;
+    }
+
+    if (!currentSettings) {
+      showToast('系統設定為空，請先初始化', 'error');
+      return;
+    }
+
+    // 2. 初始化頁面佈局
+    renderPageLayout({
+      title: '資料錄入',
+      subtitle: '手動建立新工單或載入現有工單進行編輯',
+      headerActions: `
+        <div class="flex items-center gap-3">
+          <button id="btn-new-order" class="bg-brand text-white border border-brand px-4 py-2 rounded-[10px] text-sm font-medium hover:bg-brand-hover flex items-center gap-2 shadow-sm transition-colors">
+            <i data-lucide="plus" class="w-4 h-4"></i> 新增工單
+          </button>
+        </div>
+      `,
+      controls: '',
+      listContainerId: 'data-entry-container'
+    });
+
+    createIcons({ icons: { Plus, Search, FileText, ArrowLeft, Layers }, attrs: { class: 'w-4 h-4' } });
+
+    // 3. 繪製佈局容器
+    const container = document.getElementById('data-entry-container');
+    const layoutMode = currentSettings.form_layout || 'B'; // 預設為 B (分頁)
+
+    if (layoutMode === 'C') {
+      // 模式 C：左右對照
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row gap-4 h-[calc(100vh-200px)]">
+          <!-- 左側：工單清單 -->
+          <div class="w-full md:w-1/3 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 border-b border-slate-100 bg-slate-50">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </div>
+                <input type="text" id="sidebar-search" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" placeholder="搜尋單號...">
+              </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1" id="sidebar-list">
+              <div class="text-center text-slate-400 text-sm py-4">載入中...</div>
+            </div>
+          </div>
+          <!-- 右側：表單區 -->
+          <div class="w-full md:w-2/3 h-full" id="editor-container"></div>
+        </div>
+      `;
+      
+      // 啟動左側清單監聽
+      this.initSidebarList();
+      document.getElementById('sidebar-search')?.addEventListener('input', (e) => {
+        this.filterSidebar(e.target.value);
+      });
+
+    } else {
+      // 模式 A 或 B：單一表單區
+      container.innerHTML = `
+        <div class="max-w-5xl mx-auto h-[calc(100vh-200px)]">
+          <div id="editor-container" class="h-full"></div>
+        </div>
+      `;
+    }
+
+    // 4. 綁定新增按鈕
+    document.getElementById('btn-new-order')?.addEventListener('click', () => {
+      this.loadNewOrder();
+    });
+
+    // 5. 初始載入表單 (預設為新增)
+    this.loadNewOrder();
+  },
+
+  /**
+   * 初始化左側清單 (模式 C 專用)
+   */
+  initSidebarList() {
+    if (unsubscribeOrders) unsubscribeOrders();
+    unsubscribeOrders = listenCollection('work_orders', (orders) => {
+      // 過濾垃圾資料
+      sidebarOrders = orders.filter(o => o.id && !String(o.id).includes('***'));
+      // 由新到舊排序
+      sidebarOrders.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+      this.renderSidebarList(sidebarOrders);
+    });
+  },
+
+  renderSidebarList(orders) {
+    const listEl = document.getElementById('sidebar-list');
+    if (!listEl) return;
+
+    if (orders.length === 0) {
+      listEl.innerHTML = '<div class="text-center text-slate-400 text-sm py-4">無資料</div>';
+      return;
+    }
+
+    listEl.innerHTML = orders.map(o => `
+      <button class="w-full text-left p-3 rounded-lg border ${currentOrder?.id === o.id ? 'bg-brand/5 border-brand/30' : 'bg-white border-transparent hover:bg-slate-50'} transition-colors flex flex-col gap-1" data-id="${o.id}">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-slate-800 text-sm">${o.id}</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">${o.source === 'manual' ? '手動' : 'Excel'}</span>
+        </div>
+        <div class="flex justify-between items-center text-xs text-slate-500">
+          <span>${o.data?.customerNameZh || o.data?.customCategory || '無客戶名'}</span>
+          <span>${o.status || '無狀態'}</span>
+        </div>
+      </button>
+    `).join('');
+
+    listEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        await this.loadOrder(id);
+      });
+    });
+  },
+
+  filterSidebar(keyword) {
+    const kw = String(keyword).toLowerCase().trim();
+    if (!kw) {
+      this.renderSidebarList(sidebarOrders);
+      return;
+    }
+    const filtered = sidebarOrders.filter(o => String(o.id).toLowerCase().includes(kw));
+    this.renderSidebarList(filtered);
+  },
+
+  /**
+   * 載入新工單表單 (清空)
+   */
+  loadNewOrder() {
+    currentOrder = null;
+    isViewMode = false;
+    
+    // 高亮左側清單 (若有)
+    if (currentSettings.form_layout === 'C') {
+      this.renderSidebarList(sidebarOrders); 
+    }
+
+    const container = document.getElementById('editor-container');
+    if (!container) return;
+
+    renderOrderEditor({
+      container: container,
+      schema: currentSettings.schema || [],
+      formulas: currentSettings.formulas || {},
+      viewConfig: currentSettings.view_configs?.['data-entry'] || [],
+      layoutMode: currentSettings.form_layout || 'B',
+      initialData: null,
+      isViewMode: false,
+      onSave: this.handleSave.bind(this),
+      onCancel: () => {
+        if (currentSettings.form_layout === 'C') {
+          // 若在 C 模式，取消就清空右側
+          this.loadNewOrder();
+        } else {
+          // 若在其他模式，取消就跳轉回總表或回首頁
+          window.location.hash = '#kanban';
+        }
+      }
+    });
+  },
+
+  /**
+   * 載入指定工單
+   */
+  async loadOrder(id) {
+    try {
+      const orderDoc = await getDocument('work_orders', id);
+      if (!orderDoc) {
+        showToast('找不到該工單', 'error');
+        return;
+      }
+
+      currentOrder = orderDoc;
+      isViewMode = true;
+
+      if (currentSettings.form_layout === 'C') {
+        this.renderSidebarList(sidebarOrders);
+      }
+
+      this.renderEditor();
+      showToast('已載入工單資料', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('載入失敗', 'error');
+    }
+  },
+
+  /**
+   * 渲染表單 (依據當前 currentOrder 與 isViewMode)
+   */
+  renderEditor() {
+    const container = document.getElementById('editor-container');
+    if (!container) return;
+
+    renderOrderEditor({
+      container: container,
+      schema: currentSettings.schema || [],
+      formulas: currentSettings.formulas || {},
+      viewConfig: currentSettings.view_configs?.['data-entry'] || [],
+      layoutMode: currentSettings.form_layout || 'B',
+      initialData: currentOrder,
+      isViewMode: isViewMode,
+      onSave: this.handleSave.bind(this),
+      onCancel: () => {
+        if (isViewMode) {
+          // 若在檢視模式下取消，就清空表單
+          this.loadNewOrder();
+        } else {
+          // 若在編輯模式下取消，就恢復為檢視模式
+          isViewMode = true;
+          this.renderEditor();
+        }
+      }
+    });
+  },
+
+  /**
+   * 處理儲存邏輯
+   */
+  async handleSave(formData) {
+    // 1. 基本驗證
+    if (!formData.id || String(formData.id).trim() === '') {
+      showToast('工單號碼為必填欄位', 'error');
+      return;
+    }
+    
+    const orderId = String(formData.id).trim();
+    formData.id = orderId; // 確保乾淨
+
+    try {
+      // 2. 檢查是否為新增 (若 currentOrder 為 null 或 id 不同)
+      if (!currentOrder || currentOrder.id !== orderId) {
+        // 進一步檢查資料庫是否已存在該 ID (防重複)
+        const existing = await getDocument('work_orders', orderId);
+        if (existing) {
+          showToast(`工單 ${orderId} 已存在，已切換為編輯模式`, 'info');
+          // 載入該工單資料，並切換為編輯模式
+          currentOrder = existing;
+          isViewMode = false;
+          this.renderEditor();
+          return;
+        }
+
+        // 確認為全新工單
+        formData.source = 'manual';
+        formData.status = currentSettings.statuses?.[0] || '排產中';
+        formData.route = currentSettings.statuses ? [...currentSettings.statuses] : [];
+        formData.uploadDate = new Date().toISOString().split('T')[0];
+        formData.statusUpdateDate = formData.uploadDate;
+
+        await setDocument('work_orders', orderId, formData);
+        showToast('工單新增成功', 'success');
+      } else {
+        // 3. 更新現有工單
+        // 為了避免覆蓋非顯示欄位，這裡直接使用 formData (它包含了所有初始值與表單修改值)
+        await updateDocument('work_orders', orderId, formData);
+        showToast('工單更新成功', 'success');
+      }
+
+      // 4. 儲存後行為
+      // 重新拉取最新資料以確保同步
+      currentOrder = await getDocument('work_orders', orderId);
+      isViewMode = true; // 切換為檢視模式
+      
+      if (currentSettings.form_layout === 'C') {
+        // 更新左側清單的高亮
+        this.renderSidebarList(sidebarOrders);
+      }
+      
+      this.renderEditor();
+
+    } catch (err) {
+      console.error('[Save Error]', err);
+      showToast('儲存失敗，請查看 Console', 'error');
+    }
+  },
+
+  destroy() {
+    if (unsubscribeOrders) {
+      unsubscribeOrders();
+      unsubscribeOrders = null;
+    }
+  }
+};
+
+/*
+F: AI-WA-UPWO/src/pages/data-entry.js
+V: 1792993000
+W: UPGRADE-007
+*/```
+
+<!-- === FILE END: ./src/pages/data-entry.js === -->
+
 <!-- === FILE START: ./src/pages/kanban.js === -->
 
 ## 📄 ./src/pages/kanban.js
@@ -2596,19 +3166,20 @@ export default {
 
         // 若資料庫完全沒有資料（全新專案），提供預設的 admin 帳號作為 Fallback
         if (usersList.length === 0) {
-          usersList = [{ username: "admin", password: "123456", role: "admin", allowedAreas: [] }];
+          usersList = [{ username: "admin", password: "123456", role: "admin", allowedAreas: [], allowedSales: [] }];
         }
 
         // 比對帳密
         const user = usersList.find(u => u.username === usernameInput && u.password === passwordInput);
 
         if (user) {
-          // 登入成功：將 allowedAreas 一併存入 AppState（供區域頁面權限過濾使用）
+          // 登入成功：將 allowedAreas 與 allowedSales 一併存入 AppState
           showToast(`歡迎回來，${user.username}`, 'success');
           AppState.setUser({
             username: user.username,
             role: user.role,
-            allowedAreas: Array.isArray(user.allowedAreas) ? user.allowedAreas : []
+            allowedAreas: Array.isArray(user.allowedAreas) ? user.allowedAreas : [],
+            allowedSales: Array.isArray(user.allowedSales) ? user.allowedSales : []
           });
           
           // 觸發自訂事件，讓 router 接手後續畫面切換
@@ -2636,7 +3207,7 @@ export default {
 
 /*
 F: AI-WA-UPWO/src/pages/login.js
-V: 1792942400
+V: 1792986000
 W: UPGRADE-005
 */```
 
@@ -2921,6 +3492,7 @@ let unsubscribe = null;
 let currentOrders = [];
 let schema = [];
 let viewConfig = {};
+let areas = [];
 let currentRep = '';
 
 export default {
@@ -2933,6 +3505,7 @@ export default {
       if (settingsDoc) {
         schema = settingsDoc.schema || [];
         viewConfig = settingsDoc.view_configs || {};
+        areas = settingsDoc.areas || [];
       }
     } catch (err) {}
 
@@ -2947,7 +3520,17 @@ export default {
     });
 
     window.addEventListener('refresh-salesperson', this.updateUI.bind(this));
-    window.addEventListener('settings-updated', this.updateUI.bind(this));
+    window.addEventListener('settings-updated', async () => {
+      try {
+        const settingsDoc = await getDocument('settings', 'main');
+        if (settingsDoc) {
+          schema = settingsDoc.schema || [];
+          viewConfig = settingsDoc.view_configs || {};
+          areas = settingsDoc.areas || [];
+          this.updateUI();
+        }
+      } catch (err) {}
+    });
 
     this.initDataListener();
   },
@@ -2969,8 +3552,6 @@ export default {
       if (user.role === 'sales') {
         if (allowedSales.length > 0) {
           reps = reps.filter(r => allowedSales.includes(r));
-        } else {
-          // 若未設定授權，預設可看全部（向後相容）
         }
       }
 
@@ -3034,10 +3615,15 @@ export default {
     const filtered = currentOrders.filter(o => (o.salesReps || ['未填寫']).includes(currentRep));
 
     // 依使用者設定的順序對齊欄位
-    const visibleFields = (viewConfig['salesperson'] || []).map(key => {
+    let visibleFields = (viewConfig['salesperson'] || []).map(key => {
       const field = schema.find(f => f.key === key);
       return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
+
+    // 強制加入「區域」欄位，插在「發票」之後（或最前面）
+    if (!visibleFields.some(f => f.key === 'area_name')) {
+      visibleFields.splice(1, 0, { key: 'area_name', label: '所在區域', isVisible: true });
+    }
 
     renderOrderView({
       containerId: 'salesperson-container',
@@ -3045,7 +3631,9 @@ export default {
       visibleFields: visibleFields,
       isAdmin: AppState.getUser()?.role === 'admin',
       pageKey: 'salesperson',
-      isReadOnly: true, // 設定為唯讀，銷售員不能修改
+      isReadOnly: true, // 設定為唯讀
+      groupBy: 'status', // 按工序分區塊顯示
+      areas: areas, // 傳入區域資料供比對
       onAction: async (action, id, newStatus) => {
         // 唯讀模式下不會觸發這些
       }
@@ -3061,7 +3649,7 @@ export default {
 
 /*
 F: AI-WA-UPWO/src/pages/salesperson.js
-V: 1792984000
+V: 1792988000
 W: UPGRADE-005
 */```
 
@@ -5576,7 +6164,7 @@ W: webapp-20261026-001#32
 ## 📄 ./src/ui/layout.js
 
 ```js
-import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database, MapPin, Menu } from 'lucide';
+import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database, MapPin, Menu, FileEdit } from 'lucide';
 
 /**
  * 繪製 App Shell 骨架（側邊欄、頂部導覽列）
@@ -5692,7 +6280,7 @@ export function renderAppShell({ user, onLogout, onNavigate }) {
 
   // 渲染圖示
   createIcons({
-    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Database, MapPin, Menu },
+    icons: { Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Database, MapPin, Menu, FileEdit },
     attrs: { class: 'w-5 h-5' }
   });
 
@@ -5752,6 +6340,7 @@ function renderNavItems(user, onNavigate, closeDrawer) {
 
   const routes = [
     { id: 'kanban', label: '工單進度表', icon: 'layout-dashboard', roles: ['admin', 'viewer'] },
+    { id: 'data-entry', label: '資料錄入', icon: 'file-edit', roles: ['admin'] }, // 新增
     { id: 'table', label: '管理總表', icon: 'table', roles: ['admin', 'viewer'] },
     { id: 'overview', label: '總狀態', icon: 'pie-chart', roles: ['admin', 'viewer'] },
     { id: 'category', label: '類別視圖', icon: 'layers', roles: ['admin', 'viewer'] },
@@ -5797,8 +6386,8 @@ function renderNavItems(user, onNavigate, closeDrawer) {
       mobileNav.appendChild(btn);
     }
 
-    // 頂部 Segmented Control 項目 (排除 admin-data 與 area 以免太擠，且僅限 admin/viewer)
-    if (topControl && route.id !== 'admin-data' && route.id !== 'area' && route.roles.includes('admin')) {
+    // 頂部 Segmented Control 項目 (排除 admin-data, area, data-entry 以免太擠，且僅限 admin/viewer)
+    if (topControl && route.id !== 'admin-data' && route.id !== 'area' && route.id !== 'data-entry' && route.roles.includes('admin')) {
       const segment = document.createElement('div');
       segment.className = 'segment-btn';
       segment.dataset.route = route.id;
@@ -5809,7 +6398,7 @@ function renderNavItems(user, onNavigate, closeDrawer) {
   });
 
   createIcons({
-    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers, Database, MapPin },
+    icons: { LayoutDashboard, Table, PieChart, Users, Settings, Layers, Database, MapPin, FileEdit },
     attrs: { class: 'w-5 h-5' }
   });
 }
@@ -5903,8 +6492,8 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
 
 /*
 F: AI-WA-UPWO/src/ui/layout.js
-V: 1792979000
-W: UPGRADE-005
+V: 1792995000
+W: UPGRADE-007
 */```
 
 <!-- === FILE END: ./src/ui/layout.js === -->
@@ -6324,6 +6913,301 @@ W: UPGRADE-005
 */```
 
 <!-- === FILE END: ./src/ui/order-detail-modal.js === -->
+
+<!-- === FILE START: ./src/ui/order-editor.js === -->
+
+## 📄 ./src/ui/order-editor.js
+
+```js
+import { createIcons, Save, RotateCcw, Search, Plus, Layers, List, Columns } from 'lucide';
+import { showToast } from './toast.js';
+import { evaluate } from '../domain/formula-engine.js';
+
+/**
+ * 渲染工單錄入/編輯表單
+ * @param {Object} options
+ * @param {HTMLElement} options.container 目標容器
+ * @param {Object} options.schema 系統欄位設定
+ * @param {Object} options.formulas 公式設定
+ * @param {Object} options.viewConfig 視圖配置 (決定要顯示的欄位與順序)
+ * @param {string} options.layoutMode 佈局模式 'A' (一頁到底) | 'B' (分頁) | 'C' (左右對照)
+ * @param {Object} options.initialData 初始資料 (若為編輯模式，帶入現有資料；若為新增，為 null)
+ * @param {boolean} options.isViewMode 是否為檢視模式 (唯讀)
+ * @param {Function} options.onSave 儲存回呼 async (data) => {}
+ * @param {Function} options.onCancel 取消回呼
+ */
+export function renderOrderEditor({ 
+  container, 
+  schema, 
+  formulas, 
+  viewConfig, 
+  layoutMode = 'B', 
+  initialData = null, 
+  isViewMode = false,
+  onSave,
+  onCancel
+}) {
+  if (!container) return;
+
+  // 1. 決定要顯示的欄位
+  let displayFields = [];
+  if (viewConfig && viewConfig.length > 0) {
+    displayFields = viewConfig.map(key => schema.find(f => f.key === key)).filter(Boolean);
+  } else {
+    // Fallback: 若無配置，顯示所有 isEditable 欄位
+    displayFields = schema.filter(f => f.isEditable);
+  }
+
+  // 2. 準備表單初始資料
+  // 將初始資料攤平，方便表單綁定 (核心欄位在外層，data 在內層)
+  const formData = {};
+  displayFields.forEach(f => {
+    if (initialData) {
+      if (initialData.data && initialData.data[f.key] !== undefined) {
+        formData[f.key] = initialData.data[f.key];
+      } else if (initialData[f.key] !== undefined) {
+        formData[f.key] = initialData[f.key];
+      } else {
+        formData[f.key] = '';
+      }
+    } else {
+      formData[f.key] = '';
+    }
+  });
+
+  // 3. 繪製 HTML
+  let html = `
+    <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden flex flex-col h-full">
+      <!-- Header (固定) -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <h2 class="text-lg font-bold text-slate-800">${initialData ? '編輯工單' : '新增工單'}</h2>
+          <span class="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded">${isViewMode ? '檢視模式' : '編輯模式'}</span>
+          ${layoutMode === 'B' ? `
+          <div class="ml-4 flex bg-slate-200 p-0.5 rounded-lg">
+            <button class="tab-btn px-3 py-1 text-sm rounded-md font-medium bg-white text-brand shadow-sm" data-tab="basic">基本</button>
+            <button class="tab-btn px-3 py-1 text-sm rounded-md font-medium text-slate-600 hover:text-slate-800" data-tab="amount">金額</button>
+            <button class="tab-btn px-3 py-1 text-sm rounded-md font-medium text-slate-600 hover:text-slate-800" data-tab="status">狀態與日期</button>
+          </div>
+          ` : ''}
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="editor-btn-cancel" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+            取消
+          </button>
+          <button id="editor-btn-save" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover shadow-md shadow-brand/20 transition-all flex items-center gap-2 ${isViewMode ? 'hidden' : ''}">
+            <i data-lucide="save" class="w-4 h-4"></i> 儲存
+          </button>
+        </div>
+      </div>
+
+      <!-- Body (滾動) -->
+      <div class="flex-1 overflow-y-auto p-6 bg-slate-50/30 min-h-0 relative" id="editor-body">
+  `;
+
+  // 根據佈局模式決定 Body 內部結構
+  if (layoutMode === 'C') {
+    // 模式 C：左右對照 (左側留白或放清單，這裡由外部處理，這裡只負責右側表單區)
+    // 假設外部已經提供了一個左右分欄的容器，這裡我們只渲染表單區塊
+    html += `
+      <div class="max-w-4xl mx-auto flex flex-col gap-6">
+        ${renderFormGroups(displayFields, formData, isViewMode, '')} 
+      </div>
+    `;
+  } else if (layoutMode === 'A') {
+    // 模式 A：一頁到底 (加上折疊面板)
+    html += `
+      <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+           <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 flex items-center gap-2 cursor-pointer accordion-header">
+             <i data-lucide="layers" class="w-4 h-4"></i> 基本與金額資料
+           </div>
+           <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 accordion-content">
+              ${renderFormGroups(displayFields, formData, isViewMode, 'A')}
+           </div>
+        </div>
+      </div>
+    `;
+  } else {
+    // 模式 B：分頁 Tabs (預設)
+    // 依規則簡單分類：基本(id, salesRep, customCategory...) / 金額(amount...) / 狀態日期(status, dueDate...)
+    // 為簡化實作，此處假設我們會用 data-tab 屬性來控制顯示。
+    // 實際應用中，如果 schema 有分類屬性，應該讀取它；若無，則按 key 猜測。
+    html += `
+      <div class="max-w-4xl mx-auto relative h-full">
+        <!-- Tab 1: Basic -->
+        <div class="form-tab-content grid grid-cols-1 md:grid-cols-2 gap-6" data-content="basic">
+          ${renderFormGroups(displayFields.filter(isBasicField), formData, isViewMode, 'B')}
+        </div>
+        
+        <!-- Tab 2: Amount -->
+        <div class="form-tab-content hidden grid-cols-1 md:grid-cols-2 gap-6" data-content="amount">
+          ${renderFormGroups(displayFields.filter(isAmountField), formData, isViewMode, 'B')}
+        </div>
+
+        <!-- Tab 3: Status & Date -->
+        <div class="form-tab-content hidden grid-cols-1 md:grid-cols-2 gap-6" data-content="status">
+          ${renderFormGroups(displayFields.filter(isStatusField), formData, isViewMode, 'B')}
+        </div>
+      </div>
+    `;
+  }
+
+  html += `
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+  createIcons({ icons: { Save, RotateCcw, Layers, List, Columns }, attrs: { class: 'w-4 h-4' } });
+
+  // 4. 綁定事件
+
+  const bodyEl = container.querySelector('#editor-body');
+  const inputs = bodyEl.querySelectorAll('input, select, textarea');
+  
+  // 4.1 即時計算 (當輸入值改變時)
+  const handleInputChange = (e) => {
+    const target = e.target;
+    const key = target.dataset.key;
+    if (!key) return;
+
+    formData[key] = target.value;
+
+    // 如果有設定公式，執行計算
+    if (formulas && Object.keys(formulas).length > 0) {
+      const results = evaluate(formulas, formData);
+      
+      // 將計算結果寫回表單（如果該欄位有在畫面上）
+      Object.entries(results).forEach(([resKey, resVal]) => {
+        const resInput = bodyEl.querySelector(`[data-key="${resKey}"]`);
+        if (resInput) {
+          resInput.value = resVal;
+          formData[resKey] = resVal; // 同步更新記憶體資料
+          
+          // 加上視覺提示
+          resInput.classList.add('bg-emerald-50', 'text-emerald-700');
+          setTimeout(() => resInput.classList.remove('bg-emerald-50', 'text-emerald-700'), 500);
+        }
+      });
+    }
+  };
+
+  inputs.forEach(input => {
+    input.addEventListener('input', handleInputChange);
+    input.addEventListener('change', handleInputChange); // 處理 select 和 date
+  });
+
+  // 4.2 分頁切換 (模式 B)
+  if (layoutMode === 'B') {
+    const tabBtns = container.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // 切換按鈕樣式
+        tabBtns.forEach(b => {
+          b.classList.remove('bg-white', 'text-brand', 'shadow-sm');
+          b.classList.add('text-slate-600');
+        });
+        btn.classList.add('bg-white', 'text-brand', 'shadow-sm');
+        btn.classList.remove('text-slate-600');
+
+        // 切換內容顯示
+        const targetTab = btn.dataset.tab;
+        bodyEl.querySelectorAll('.form-tab-content').forEach(content => {
+          if (content.dataset.content === targetTab) {
+            content.classList.remove('hidden');
+            content.classList.add('grid');
+          } else {
+            content.classList.add('hidden');
+            content.classList.remove('grid');
+          }
+        });
+      });
+    });
+  }
+
+  // 4.3 取消按鈕
+  container.querySelector('#editor-btn-cancel')?.addEventListener('click', () => {
+    if (onCancel) onCancel();
+  });
+
+  // 4.4 儲存按鈕
+  container.querySelector('#editor-btn-save')?.addEventListener('click', async () => {
+    if (onSave) {
+      // 收集所有欄位資料（包含隱藏的）
+      // 注意：此處僅收集 displayFields 中的資料，若有些欄位未顯示但有初始值，需保留。
+      const finalData = { ...initialData }; // 從初始資料開始
+      
+      // 確保核心結構存在
+      if (!finalData.data) finalData.data = {};
+      if (!finalData.id) finalData.id = formData['id']; // 必填
+
+      // 將表單當前值寫入
+      displayFields.forEach(f => {
+        const val = formData[f.key];
+        if (f.isSystem) {
+          finalData[f.key] = val;
+        } else {
+          finalData.data[f.key] = val;
+        }
+      });
+
+      await onSave(finalData);
+    }
+  });
+}
+
+/**
+ * 輔助函數：渲染輸入欄位群組
+ * 若無明確分類，則按順序平鋪。
+ */
+function renderFormGroups(fields, data, isViewMode, layoutMode) {
+  if (!fields || fields.length === 0) return '<div class="text-slate-400 text-sm col-span-2">此區塊無欄位</div>';
+  
+  return fields.map(f => {
+    const value = data[f.key] !== undefined ? data[f.key] : '';
+    const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
+    const disabledAttr = isViewMode ? 'disabled' : '';
+    const baseClass = `w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors ${isViewMode ? 'opacity-70 bg-slate-100 cursor-not-allowed' : ''}`;
+
+    return `
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-slate-700">${f.label}</label>
+        <input 
+          type="${inputType}" 
+          data-key="${f.key}" 
+          value="${value}" 
+          class="${baseClass}" 
+          placeholder="請輸入${f.label}"
+          ${disabledAttr}
+        >
+      </div>
+    `;
+  }).join('');
+}
+
+// 輔助函數：簡易欄位分類器 (針對模式 B)
+// 實際專案中可透過 schema 的額外屬性來定義，此處先寫死常見邏輯
+function isBasicField(f) {
+  const basicKeys = ['id', 'customerNameZh', 'customerNameEn', 'salesRep', 'customCategory'];
+  return basicKeys.includes(f.key) || f.key.startsWith('field_') && !f.label.includes('金額');
+}
+function isAmountField(f) {
+  const amountKeys = ['amount', 'quantity', 'price', 'cost'];
+  return amountKeys.includes(f.key) || f.label.includes('金額') || f.label.includes('費用') || f.label.includes('單價');
+}
+function isStatusField(f) {
+  const statusKeys = ['status', 'dueDate', 'uploadDate', 'statusUpdateDate', 'route'];
+  return statusKeys.includes(f.key);
+}
+
+/*
+F: AI-WA-UPWO/src/ui/order-editor.js
+V: 1792992000
+W: UPGRADE-007
+*/```
+
+<!-- === FILE END: ./src/ui/order-editor.js === -->
 
 <!-- === FILE START: ./src/ui/order-view-editor.js === -->
 
@@ -6799,12 +7683,13 @@ const viewStates = {};
  * @param {boolean} options.isAdmin 是否為管理員
  * @param {string} options.pageKey 頁面識別碼
  * @param {Array} options.route_templates 所有的生產流程模板
- * @param {boolean} options.isReadOnly 是否為唯讀模式（隱藏所有編輯）
- * @param {boolean} options.allowStatusChange 是否允許更改狀態（生產員專用，只顯示上下步，隱藏其他編輯）
- * @param {string} options.groupBy 分組模式（例如：'status'，若為空則不分组）
+ * @param {Array} options.areas 所有的生產區域（用於顯示 area_name）
+ * @param {boolean} options.isReadOnly 是否為唯讀模式
+ * @param {boolean} options.allowStatusChange 是否允許更改狀態
+ * @param {string} options.groupBy 分組模式（例如：'status'）
  * @param {Function} options.onAction 動作回呼
  */
-export function renderOrderView({ containerId, orders, visibleFields = [], isAdmin = false, pageKey, route_templates = [], isReadOnly = false, allowStatusChange = false, groupBy = null, onAction }) {
+export function renderOrderView({ containerId, orders, visibleFields = [], isAdmin = false, pageKey, route_templates = [], areas = [], isReadOnly = false, allowStatusChange = false, groupBy = null, onAction }) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -6953,6 +7838,25 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     return;
   }
 
+  // 輔助函數：取得工單所屬的區域名稱
+  const getOrderAreaName = (order) => {
+    const matchedAreas = areas.filter(a => (a.statuses || []).includes(order.status));
+    const orderCat = getOrderCategory(order);
+    
+    const validAreas = matchedAreas.filter(a => {
+      let areaCats = [];
+      if (Array.isArray(a.categories)) {
+        areaCats = a.categories.map(c => String(c).toUpperCase());
+      } else if (typeof a.category === 'string' && a.category.trim() !== '') {
+        areaCats = a.category.split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
+      }
+      return areaCats.length === 0 || areaCats.includes(orderCat);
+    });
+
+    if (validAreas.length === 0) return '-';
+    return validAreas.map(a => a.name).join(', ');
+  };
+
   // 輔助渲染函數：單一工單卡片
   const renderCard = (order) => {
     return `
@@ -6963,8 +7867,11 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
           if (f.key === 'id') {
             return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <button data-action="open-order-detail" data-id="${order.id}" class="font-bold text-brand hover:underline text-base">${val || '-'}</button></div>`;
           }
+          if (f.key === 'area_name') {
+            const areaName = getOrderAreaName(order);
+            return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <span class="font-bold text-slate-700">${areaName}</span></div>`;
+          }
           if (f.key === 'status') {
-            // 若完全唯讀且不允許改狀態，顯示純文字
             if (isReadOnly && !allowStatusChange) {
               return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <span class="font-bold text-slate-700">${order.status}</span></div>`;
             }
@@ -6977,8 +7884,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             const prevStep = isFirst ? '' : route[idx - 1];
             const nextStep = isLast ? '' : route[idx + 1];
             const routeStr = JSON.stringify(route).replace(/"/g, '&quot;');
-
-            // 判斷是否顯示齒輪 (只有 !isReadOnly 且 !allowStatusChange 才顯示)
             const showGear = !isReadOnly && !allowStatusChange;
 
             return `
@@ -7038,7 +7943,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             `;
           }
 
-          // 判斷是否可編輯 (若允許改狀態但唯讀其他欄位，此處會被擋下)
           if (f.isEditable && !isReadOnly && !allowStatusChange) {
             const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
             const displayVal = f.type === 'date' ? formatExcelDate(val) : val;
@@ -7085,6 +7989,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                   const val = getOrderValue(order, f.key);
                   if (f.key === 'id') {
                     return `<td class="px-4 py-3 whitespace-nowrap"><button data-action="open-order-detail" data-id="${order.id}" class="font-bold text-brand hover:underline text-base">${val || '-'}</button></td>`;
+                  }
+                  if (f.key === 'area_name') {
+                    const areaName = getOrderAreaName(order);
+                    return `<td class="px-4 py-3 whitespace-nowrap font-medium text-slate-600">${areaName}</td>`;
                   }
                   if (f.key === 'status') {
                     if (isReadOnly && !allowStatusChange) {
@@ -7250,7 +8158,7 @@ function getOrderValue(order, key) {
 
 /*
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1792980000
+V: 1792987000
 W: UPGRADE-005
 */```
 
