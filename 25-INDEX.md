@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-02 15:45:08 (HKT)
+> 生成時間：2026-11-02 20:20:28 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,11 +15,11 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1793019000 | UPGRADE-006 |
+| AI-General | docs/p92/P-Architecture.md | 1793074000 | UPGRADE-007 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1793018000 | UPGRADE-006 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1793017000 | UPGRADE-006 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1793073000 | UPGRADE-007 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1793072000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792943400 | ai-system-007 |
@@ -43,11 +43,11 @@
 | AI-kernel | docs/skills/W/W-00-startup.md | 1792989000 | UPGRADE-006 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
 | AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
-| AI-kernel | docs/skills/W/W-03-esmodule.md | 1792989100 | UPGRADE-006 |
+| AI-kernel | docs/skills/W/W-03-esmodule.md | 1793075000 | UPGRADE-007 |
 | AI-kernel | docs/skills/W/W-04-pwa.md | 1792928800 | UPGRADE-004 |
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792928400 | UPGRADE-004 |
-| AI-kernel | docs/skills/W/W-06-sop.md | 1792989200 | UPGRADE-006 |
-| AI-kernel | docs/skills/W/W-07-errors.md | 1792989300 | UPGRADE-006 |
+| AI-kernel | docs/skills/W/W-06-sop.md | 1793076000 | UPGRADE-007 |
+| AI-kernel | docs/skills/W/W-07-errors.md | 1793077000 | UPGRADE-007 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792913600 | ai-system-005 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
@@ -128,7 +128,10 @@
 | AI-WA-UPWO | src/pages/settings-basic.js |
 | AI-WA-UPWO | src/pages/settings-category.js |
 | AI-WA-UPWO | src/pages/settings-form.js |
+| AI-WA-UPWO | src/pages/settings-material.js |
 | AI-WA-UPWO | src/pages/settings-schema.js |
+| AI-WA-UPWO | src/pages/settings-supplier.js |
+| AI-WA-UPWO | src/pages/settings-system.js |
 | AI-WA-UPWO | src/pages/settings.js |
 | AI-WA-UPWO | src/pages/table.js |
 | AI-WA-UPWO | src/style.css |
@@ -333,6 +336,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 344 |
+| 92-Code.md | 388 |
 | 92-P.md | 12 |
-| 92-SP.md | 24 |
+| 92-SP.md | 28 |
