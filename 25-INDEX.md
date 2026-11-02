@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-02 13:15:48 (HKT)
+> 生成時間：2026-11-02 15:45:08 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,11 +15,11 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1792989700 | UPGRADE-006 |
+| AI-General | docs/p92/P-Architecture.md | 1793019000 | UPGRADE-006 |
 | AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
 | AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1792989400 | UPGRADE-006 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1792989500 | UPGRADE-007 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1793018000 | UPGRADE-006 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1793017000 | UPGRADE-006 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792943400 | ai-system-007 |
@@ -106,7 +106,9 @@
 | AI-WA-UPWO | src/config/state.js |
 | AI-WA-UPWO | src/db/read.js |
 | AI-WA-UPWO | src/db/write.js |
+| AI-WA-UPWO | src/domain/data-diff.js |
 | AI-WA-UPWO | src/domain/formula-engine.js |
+| AI-WA-UPWO | src/domain/global-search.js |
 | AI-WA-UPWO | src/domain/parser.js |
 | AI-WA-UPWO | src/domain/stats.js |
 | AI-WA-UPWO | src/engine/main.js |
@@ -120,10 +122,12 @@
 | AI-WA-UPWO | src/pages/login.js |
 | AI-WA-UPWO | src/pages/overview.js |
 | AI-WA-UPWO | src/pages/salesperson.js |
+| AI-WA-UPWO | src/pages/search.js |
 | AI-WA-UPWO | src/pages/settings-area-status.js |
 | AI-WA-UPWO | src/pages/settings-area.js |
 | AI-WA-UPWO | src/pages/settings-basic.js |
 | AI-WA-UPWO | src/pages/settings-category.js |
+| AI-WA-UPWO | src/pages/settings-form.js |
 | AI-WA-UPWO | src/pages/settings-schema.js |
 | AI-WA-UPWO | src/pages/settings.js |
 | AI-WA-UPWO | src/pages/table.js |
@@ -329,6 +333,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 320 |
+| 92-Code.md | 344 |
 | 92-P.md | 12 |
 | 92-SP.md | 24 |
