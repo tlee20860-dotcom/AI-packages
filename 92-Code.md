@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-02 20:35:32 (HKT)
+> 生成時間：2026-11-02 21:09:45 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -881,9 +881,9 @@ W: UPGRADE-007
 function flattenOrder(order) {
   const flat = {};
   
-  // 頂層屬性
+  // 頂層屬性（排除物件型別與 materials 陣列，避免產生 [object Object] 汙染搜尋字串）
   Object.keys(order).forEach(key => {
-    if (key !== 'data' && key !== 'diff' && typeof order[key] !== 'object') {
+    if (key !== 'data' && key !== 'diff' && key !== 'materials' && typeof order[key] !== 'object') {
       flat[key] = String(order[key] || '');
     }
   });
@@ -892,6 +892,16 @@ function flattenOrder(order) {
   if (order.data) {
     Object.keys(order.data).forEach(key => {
       flat[`data.${key}`] = String(order.data[key] || '');
+    });
+  }
+
+  // 工單物料明細（materials 陣列）：將物料名稱與備註納入可搜尋範圍
+  if (Array.isArray(order.materials)) {
+    order.materials.forEach((mat, idx) => {
+      if (mat && typeof mat === 'object') {
+        if (mat.name !== undefined) flat[`materials.${idx}.name`] = String(mat.name || '');
+        if (mat.note !== undefined) flat[`materials.${idx}.note`] = String(mat.note || '');
+      }
     });
   }
 
@@ -973,8 +983,8 @@ export function searchOrders(orders, keyword = '', filters = {}) {
 
 /*
 F: AI-WA-UPWO/src/domain/global-search.js
-V: 1793004000
-W: UPGRADE-007
+V: 1793082000
+W: UPGRADE-008
 */```
 
 <!-- === FILE END: ./src/domain/global-search.js === -->
