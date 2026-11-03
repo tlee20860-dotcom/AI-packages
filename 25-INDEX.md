@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-02 21:09:45 (HKT)
+> 生成時間：2026-11-03 13:15:46 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -127,6 +127,7 @@
 | AI-WA-UPWO | src/pages/settings-area.js |
 | AI-WA-UPWO | src/pages/settings-basic.js |
 | AI-WA-UPWO | src/pages/settings-category.js |
+| AI-WA-UPWO | src/pages/settings-database.js |
 | AI-WA-UPWO | src/pages/settings-form.js |
 | AI-WA-UPWO | src/pages/settings-material.js |
 | AI-WA-UPWO | src/pages/settings-schema.js |
@@ -336,6 +337,6 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 388 |
+| 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |

@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-02 21:09:45 (HKT)
+> 生成時間：2026-11-03 13:15:45 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1420,7 +1420,6 @@ import { updateDocument } from '../db/write.js';
 import { AppState } from '../config/state.js';
 import '../ui/order-view-editor.js';
 
-// 💡 更新：全新的四大設定中心預設配置
 const defaultNavConfig = [
   { id: 'kanban', label: '工單進度表', icon: 'layout-dashboard', showSidebar: true, showTop: true, isEnabled: true },
   { id: 'search', label: '全域搜尋', icon: 'search', showSidebar: true, showTop: false, isEnabled: true },
@@ -1429,7 +1428,7 @@ const defaultNavConfig = [
   { id: 'category', label: '類別視圖', icon: 'layers', showSidebar: true, showTop: true, isEnabled: true },
   { id: 'salesperson', label: '銷售員', icon: 'users', showSidebar: true, showTop: true, isEnabled: true },
   { id: 'area', label: '生產區域', icon: 'map-pin', showSidebar: true, showTop: false, isEnabled: true },
-  { id: 'settings-material', label: '物料管理', icon: 'package', showSidebar: true, showTop: false, isEnabled: true },
+  { id: 'settings-material', label: '資料庫中心', icon: 'database', showSidebar: true, showTop: false, isEnabled: true },
   { id: 'settings', label: '生產管理設定', icon: 'settings', showSidebar: true, showTop: false, isEnabled: true },
   { id: 'settings-form', label: '工單管理設定', icon: 'sliders', showSidebar: true, showTop: false, isEnabled: true },
   { id: 'settings-system', label: '系統管理設定', icon: 'shield', showSidebar: true, showTop: false, isEnabled: true }
@@ -1472,21 +1471,26 @@ function listenSettingsUpdates() {
     if (!data) return;
     
     let needSave = false;
+    let updatePayload = {};
     
     if (data.statuses) AppState.setStatuses(data.statuses);
     
+    // 1. 導覽列遷移
     if (data.nav_config && Array.isArray(data.nav_config)) {
-      // 💡 自動遷移：如果用戶的舊配置中還有 data-entry 或 admin-data，自動轉換為新結構
       let configUpdated = false;
       const migratedConfig = data.nav_config.map(item => {
         if (item.id === 'admin-data') {
           configUpdated = true;
-          return null; // 移除舊的 admin-data
+          return null; 
+        }
+        if (item.id === 'settings-material' && item.label === '物料管理') {
+          item.label = '資料庫中心';
+          item.icon = 'database';
+          configUpdated = true;
         }
         return item;
       }).filter(Boolean);
 
-      // 檢查是否缺少新的設定頁面
       const newSettingsPages = ['settings-material', 'settings-system'];
       newSettingsPages.forEach(id => {
         if (!migratedConfig.some(c => c.id === id)) {
@@ -1499,22 +1503,68 @@ function listenSettingsUpdates() {
       });
 
       if (configUpdated) {
-        data.nav_config = migratedConfig;
+        updatePayload.nav_config = migratedConfig;
         needSave = true;
       }
-
       AppState.setNavConfig(data.nav_config);
     } else {
       AppState.setNavConfig(defaultNavConfig);
-      data.nav_config = defaultNavConfig;
+      updatePayload.nav_config = defaultNavConfig;
+      needSave = true;
+    }
+
+    // 2. 💡 低程式碼資料庫無損遷移
+    let currentDbs = Array.isArray(data.custom_databases) ? [...data.custom_databases] : [];
+    let dbsChanged = false;
+
+    // 確保供應商存在
+    if (!currentDbs.some(db => db.id === 'db_suppliers')) {
+      currentDbs.push({
+        id: 'db_suppliers',
+        name: '外發供應商',
+        fields: data.supplier_schema || [],
+        items: data.suppliers || []
+      });
+      dbsChanged = true;
+    }
+
+    // 確保物料存在
+    if (!currentDbs.some(db => db.id === 'db_materials')) {
+      currentDbs.push({
+        id: 'db_materials',
+        name: '物料資料',
+        fields: data.material_schema || [],
+        items: data.materials || []
+      });
+      dbsChanged = true;
+    }
+
+    // 確保銷售員存在
+    if (!currentDbs.some(db => db.id === 'db_sales')) {
+      const salesItems = (data.sales_mapping || []).map((sm, i) => ({
+        id: 'sm_' + i,
+        name: sm.name,
+        data: { aliases: (sm.aliases || []).join(', ') }
+      }));
+      currentDbs.push({
+        id: 'db_sales',
+        name: '銷售員對照表',
+        fields: [{ key: 'aliases', label: '別名 (逗號隔開)', type: 'string' }],
+        items: salesItems
+      });
+      dbsChanged = true;
+    }
+
+    if (dbsChanged) {
+      updatePayload.custom_databases = currentDbs;
       needSave = true;
     }
 
     if (needSave) {
       try {
-        await updateDocument('settings', 'main', { nav_config: data.nav_config });
+        await updateDocument('settings', 'main', updatePayload);
       } catch (err) {
-        console.warn('無法儲存預設導覽配置', err);
+        console.warn('無法儲存預設或遷移配置', err);
       }
     }
     
@@ -1598,7 +1648,7 @@ function registerServiceWorker() {
 
 /*
 F: AI-WA-UPWO/src/engine/main.js
-V: 1793060000
+V: 1793089000
 W: UPGRADE-007
 */```
 
@@ -1631,11 +1681,11 @@ import SearchPage from '../pages/search.js';
 import SettingsPage from '../pages/settings.js';
 import SettingsFormPage from '../pages/settings-form.js';
 
-// 引入物料與系統管理的子渲染函數
-import { renderMaterials } from '../pages/settings-material.js';
+// 💡 引入全新的資料庫中心與系統管理
+import { renderDatabaseCenter } from '../pages/settings-database.js';
 import { renderSystemUsers, renderSystemData } from '../pages/settings-system.js';
 
-// 💡 將物料與系統管理包裝成標準 Page 模組
+// 💡 將資料庫中心包裝成標準 Page 模組
 const SettingsMaterialPage = {
   async render() {
     const user = AppState.getUser();
@@ -1650,8 +1700,8 @@ const SettingsMaterialPage = {
     } catch(e) {}
     
     renderPageLayout({
-      title: '物料管理設定',
-      subtitle: '管理物料主檔、自訂欄位與詳細資料',
+      title: '資料庫中心',
+      subtitle: '建立與管理系統中所有自訂資料庫（如：外發商、物料、客戶）',
       headerActions: '',
       stats: [],
       controls: '',
@@ -1660,15 +1710,14 @@ const SettingsMaterialPage = {
 
     const container = document.getElementById('settings-material-container');
     
-    // 傳入儲存函數，僅更新物料相關欄位，保護原有資料
+    // 傳入儲存函數，僅更新資料庫相關欄位，保護原有資料
     const saveSettings = async (dataToSave) => {
       await updateDocument('settings', 'main', dataToSave);
-      // 重新載入資料並刷新畫面
       const updated = await getDocument('settings', 'main');
-      renderMaterials(container, updated || {}, saveSettings);
+      renderDatabaseCenter(container, updated || {}, saveSettings);
     };
 
-    renderMaterials(container, currentSettings, saveSettings);
+    renderDatabaseCenter(container, currentSettings, saveSettings);
   }
 };
 
@@ -1802,7 +1851,6 @@ function handleRoute() {
       return;
     }
 
-    // 一般使用者不能進入設定相關頁面
     const isSettingsPage = ['settings', 'settings-form', 'settings-material', 'settings-system', 'admin-data'].includes(hash);
     if (role === 'viewer' && isSettingsPage) {
       showToast('您沒有權限訪問此頁面', 'error');
@@ -1810,7 +1858,6 @@ function handleRoute() {
       return;
     }
 
-    // 路由守衛：攔截已停用的頁面
     const navConfig = AppState.getNavConfig();
     if (navConfig) {
       const routeConfig = navConfig.find(r => r.id === hash);
@@ -1882,7 +1929,7 @@ export function initRouter() {
 
 /*
 F: AI-WA-UPWO/src/engine/router.js
-V: 1793058000
+V: 1793087000
 W: UPGRADE-007
 */```
 
@@ -1921,14 +1968,6 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
     return '';
   };
 
-  // 輔助函數：將 materials 陣列轉為字串
-  const formatMaterials = (mats) => {
-    if (Array.isArray(mats) && mats.length > 0) {
-      return mats.map(m => `${m.name || '未知物料'} * ${m.qty || 0}`).join(', ');
-    }
-    return '';
-  };
-
   // 輔助函數：取得所有資料庫中出現的動態欄位 Key (用於「全部工單」)
   const getAllDataKeys = () => {
     const keys = new Set();
@@ -1947,17 +1986,15 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
       '工單號碼': order.id,
       '狀態': order.status,
       '製程路線': formatRoute(order.route),
-      '外發供應商': order.supplierName || '', // 💡 新增外發供應商
       '銷售員': (order.salesReps || []).join(', '),
       '開單日期': order.uploadDate || '',
       '交貨日期': order.dueDate || '',
       '狀態更新日': order.statusUpdateDate || '',
-      '工單物料': formatMaterials(order.materials),
       '來源': order.source === 'manual' ? '手動' : 'Excel',
       '核對狀態': order.diff ? '有差異' : '正常'
     };
 
-    // 加入 Schema 定義的欄位
+    // 加入 Schema 定義的欄位 (包含關聯欄位)
     schema.forEach(field => {
       if (!field.isSystem) {
         row[field.label] = order.data && order.data[field.key] !== undefined ? order.data[field.key] : '';
@@ -1967,10 +2004,15 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
     // 加入 Schema 未定義但在資料中存在的欄位
     allDataKeys.forEach(key => {
       const schemaField = schema.find(f => f.key === key);
-      if (!schemaField) {
+      if (!schemaField && key !== 'category') {
         row[key] = order.data && order.data[key] !== undefined ? order.data[key] : '';
       }
     });
+
+    // 向下相容舊資料的 supplierName (若有在根目錄)
+    if (order.supplierName && !row['外發供應商']) {
+      row['外發供應商'] = order.supplierName;
+    }
 
     return row;
   });
@@ -1988,21 +2030,12 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
     targetFields = [
       { key: 'id', label: '工單號碼' },
       { key: 'status', label: '狀態' },
-      { key: 'supplierName', label: '外發供應商' }, // 💡 預設加入
       { key: 'salesReps', label: '銷售員' },
       { key: 'uploadDate', label: '開單日期' },
-      { key: 'dueDate', label: '交貨日期' },
-      { key: 'materials', label: '工單物料' }
+      { key: 'dueDate', label: '交貨日期' }
     ];
+    // 加入所有自訂欄位
     schema.filter(f => !f.isSystem).forEach(f => targetFields.push(f));
-  }
-
-  // 確保自訂匯出欄位中，如果有物料或外發欄位，也能正確處理
-  if (!targetFields.some(f => f.key === 'materials')) {
-    targetFields.push({ key: 'materials', label: '工單物料' });
-  }
-  if (!targetFields.some(f => f.key === 'supplierName')) {
-    targetFields.push({ key: 'supplierName', label: '外發供應商' });
   }
 
   for (const status of statuses) {
@@ -2017,8 +2050,6 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
           row['工單號碼'] = order.id;
         } else if (f.key === 'status') {
           row['狀態'] = order.status;
-        } else if (f.key === 'supplierName') {
-          row['外發供應商'] = order.supplierName || ''; // 💡 處理外發供應商
         } else if (f.key === 'salesReps') {
           row['銷售員'] = (order.salesReps || []).join(', ');
         } else if (f.key === 'uploadDate') {
@@ -2027,8 +2058,6 @@ export function exportToExcel(orders, statuses, filename = '工單清單', schem
           row['交貨日期'] = order.dueDate || '';
         } else if (f.key === 'route') {
           row['製程路線'] = formatRoute(order.route);
-        } else if (f.key === 'materials') {
-          row['工單物料'] = formatMaterials(order.materials); 
         } else if (f.isSystem) {
           row[f.label] = order[f.key] || '';
         } else {
@@ -2120,19 +2149,15 @@ export function exportToPDF(orders, statuses, filename = '工單清單', schema 
       doc.text(salesRep, 70, yPos);
       doc.text(dueDate, 120, yPos);
 
-      // 組合額外資訊（包含物料與外發）
+      // 組合額外資訊（包含自訂欄位）
       let extraInfoArr = [];
-      if (order.supplierName) {
-        extraInfoArr.push(`外發: ${order.supplierName}`);
-      }
-      if (Array.isArray(order.materials) && order.materials.length > 0) {
-        const matStr = order.materials.map(m => `${m.name}*${m.qty}`).join(', ');
-        extraInfoArr.push(`物料: ${matStr}`);
-      }
       const customFields = schema.filter(f => !f.isSystem);
+      
       customFields.forEach(f => {
         const val = order.data && order.data[f.key] !== undefined ? order.data[f.key] : '-';
-        extraInfoArr.push(`${f.label}: ${val}`);
+        if (val) {
+          extraInfoArr.push(`${f.label}: ${val}`);
+        }
       });
 
       if (extraInfoArr.length > 0) {
@@ -2157,7 +2182,7 @@ export function exportToPDF(orders, statuses, filename = '工單清單', schema 
 
 /*
 F: AI-WA-UPWO/src/lib/io.js
-V: 1793069000
+V: 1793086000
 W: UPGRADE-007
 */```
 
@@ -5500,6 +5525,406 @@ W: UPGRADE-007
 
 <!-- === FILE END: ./src/pages/settings-category.js === -->
 
+<!-- === FILE START: ./src/pages/settings-database.js === -->
+
+## 📄 ./src/pages/settings-database.js
+
+```js
+import { showToast } from '../ui/toast.js';
+import { openConfirm, openModal } from '../ui/modal.js';
+import { createIcons, Plus, Trash2, Edit2, Settings2, Database, GripVertical, X, Check } from 'lucide';
+
+let activeDbId = '';
+
+export function renderDatabaseCenter(container, currentSettings, saveSettings) {
+  if (!Array.isArray(currentSettings.custom_databases)) {
+    currentSettings.custom_databases = [];
+  }
+
+  const databases = currentSettings.custom_databases;
+
+  // 如果沒有選中的 DB，自動選第一個
+  if (databases.length > 0 && (!activeDbId || !databases.some(db => db.id === activeDbId))) {
+    activeDbId = databases[0].id;
+  }
+
+  // 💡 統一的儲存與雙向同步邏輯
+  const updateAndSave = async (newDbs) => {
+    let payload = { custom_databases: newDbs };
+    
+    // 雙向同步回舊的 sales_mapping
+    const salesDb = newDbs.find(db => db.id === 'db_sales');
+    if (salesDb) {
+      payload.sales_mapping = salesDb.items.map(item => {
+        const aliasStr = item.data && item.data.aliases ? item.data.aliases : '';
+        return {
+          name: item.name,
+          aliases: aliasStr.split(',').map(s => s.trim()).filter(Boolean)
+        };
+      });
+    }
+
+    await saveSettings(payload);
+    
+    // 局部更新畫面，不重新載入整個頁面
+    currentSettings.custom_databases = newDbs;
+    if (payload.sales_mapping) currentSettings.sales_mapping = payload.sales_mapping;
+    
+    renderDatabaseCenter(container, currentSettings, saveSettings);
+  };
+
+  // 渲染主框架
+  container.innerHTML = `
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">資料庫中心</h2>
+        <p class="text-sm text-slate-500 mt-1">建立自訂資料庫（如：客戶、機台），並可於工單表單中綁定為下拉選單。</p>
+      </div>
+      <div>
+        <button id="btn-add-database" class="btn-primary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增資料庫
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-[20px] border border-slate-200/60 shadow-soft overflow-hidden min-h-[500px] flex flex-col md:flex-row">
+      <!-- 左側選單 -->
+      <div class="w-full md:w-56 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50 p-3 flex flex-row md:flex-col gap-1 flex-shrink-0 overflow-x-auto md:overflow-y-auto">
+        ${databases.length === 0 ? '<div class="text-sm text-slate-400 p-4 text-center">尚無資料庫</div>' : ''}
+        ${databases.map(db => `
+          <button class="db-tab-btn whitespace-nowrap text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3 ${db.id === activeDbId ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'}" data-id="${db.id}">
+            <i data-lucide="database" class="w-4 h-4"></i> ${db.name}
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- 右側內容 -->
+      <div class="flex-1 p-6 md:p-8 flex flex-col relative" id="db-content"></div>
+    </div>
+  `;
+
+  createIcons({ icons: { Plus, Database }, attrs: { class: 'w-4 h-4' } });
+
+  // 綁定 Tab 切換
+  container.querySelectorAll('.db-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      activeDbId = e.currentTarget.dataset.id;
+      renderDatabaseCenter(container, currentSettings, saveSettings);
+    });
+  });
+
+  // 綁定新增資料庫
+  document.getElementById('btn-add-database')?.addEventListener('click', () => {
+    const content = `
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-slate-700">資料庫名稱</label>
+          <input type="text" id="new-db-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" placeholder="例如：客戶資料、供應商資料">
+        </div>
+      </div>
+    `;
+    const footer = `
+      <div class="flex justify-end gap-3">
+        <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">建立</button>
+      </div>
+    `;
+
+    const { close, element } = openModal({ title: '新增資料庫', content, footer });
+
+    element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+    element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+      const name = element.querySelector('#new-db-name').value.trim();
+      if (!name) {
+        showToast('請輸入名稱', 'error');
+        return;
+      }
+
+      const newDb = {
+        id: 'db_' + Date.now().toString(36),
+        name: name,
+        fields: [],
+        items: []
+      };
+
+      const newDbs = [...databases, newDb];
+      activeDbId = newDb.id;
+      await updateAndSave(newDbs);
+      showToast('資料庫已建立', 'success');
+      close();
+    });
+  });
+
+  // 💡 將渲染右側內容的邏輯寫在此處，確保能存取 currentSettings 與 updateAndSave
+  const renderActiveDbContent = () => {
+    const contentContainer = document.getElementById('db-content');
+    if (!contentContainer) return;
+
+    const db = currentSettings.custom_databases.find(d => d.id === activeDbId);
+    if (!db) {
+      contentContainer.innerHTML = `<div class="flex items-center justify-center h-full text-slate-400">請選擇或建立一個資料庫</div>`;
+      return;
+    }
+
+    contentContainer.innerHTML = `
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">${db.name} <span class="text-xs font-normal text-slate-400 ml-2">共 ${db.items.length} 筆資料</span></h3>
+          <p class="text-sm text-slate-500 mt-1">管理此資料庫的欄位與資料項目。</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-manage-db-fields" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
+            <i data-lucide="settings-2" class="w-4 h-4"></i> 設定欄位
+          </button>
+          <button id="btn-del-database" class="bg-rose-50 text-rose-600 border border-rose-100 px-3 py-2 rounded-lg text-sm font-medium hover:bg-rose-100 flex items-center gap-2 shadow-sm">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> 刪除資料庫
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-6">
+        <input type="text" id="new-db-item-name" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand" placeholder="新增資料名稱 (主標題)">
+        <button id="btn-add-db-item" class="btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增資料
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        <div class="flex flex-col gap-2">
+          ${db.items.length === 0 ? '<div class="text-slate-400 text-sm text-center py-8">尚無資料</div>' : ''}
+          ${db.items.map((item, index) => {
+            const summary = (db.fields || []).map(f => {
+              const val = item.data ? item.data[f.key] : '';
+              if (!val) return '';
+              return `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mr-2">${f.label}: ${val}</span>`;
+            }).join('');
+
+            return `
+              <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group">
+                <div class="flex flex-col gap-1">
+                  <span class="font-bold text-slate-800">${item.name}</span>
+                  <div class="flex flex-wrap gap-y-1">${summary}</div>
+                </div>
+                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button class="p-1.5 text-slate-400 hover:text-brand hover:bg-slate-50 rounded-lg btn-edit-db-item" data-index="${index}">
+                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                  </button>
+                  <button class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg btn-del-db-item" data-index="${index}">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    createIcons({ icons: { Settings2, Trash2, Plus, Edit2 }, attrs: { class: 'w-4 h-4' } });
+
+    // 刪除資料庫
+    contentContainer.querySelector('#btn-del-database')?.addEventListener('click', async () => {
+      const confirmed = await openConfirm({
+        title: '刪除資料庫',
+        message: `確定要刪除「${db.name}」嗎？這將會刪除底下所有資料，且無法復原。`,
+        isDanger: true
+      });
+      if (!confirmed) return;
+
+      const newDbs = currentSettings.custom_databases.filter(d => d.id !== activeDbId);
+      activeDbId = newDbs.length > 0 ? newDbs[0].id : '';
+      await updateAndSave(newDbs);
+      showToast('資料庫已刪除', 'success');
+    });
+
+    // 設定欄位
+    contentContainer.querySelector('#btn-manage-db-fields')?.addEventListener('click', () => {
+      renderDbFieldsModal(db);
+    });
+
+    // 新增資料
+    contentContainer.querySelector('#btn-add-db-item')?.addEventListener('click', () => {
+      const nameInput = contentContainer.querySelector('#new-db-item-name');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const newItem = { id: 'item_' + Date.now().toString(36), name: name, data: {} };
+      const newDbs = JSON.parse(JSON.stringify(currentSettings.custom_databases));
+      const targetDb = newDbs.find(d => d.id === activeDbId);
+      targetDb.items.push(newItem);
+      
+      updateAndSave(newDbs).then(() => showToast('資料已新增', 'success'));
+    });
+
+    // 編輯資料
+    contentContainer.querySelectorAll('.btn-edit-db-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.dataset.index);
+        const item = db.items[idx];
+        const fields = db.fields || [];
+
+        if (fields.length === 0) {
+          showToast('該資料庫尚未設定自訂欄位，請先點擊「設定欄位」', 'info');
+          return;
+        }
+
+        const content = `
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-slate-700">資料名稱 (主標題)</label>
+              <input type="text" id="edit-item-name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${item.name}">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              ${fields.map(f => {
+                const val = item.data ? item.data[f.key] : '';
+                const inputType = f.type === 'number' ? 'number' : 'text';
+                return `
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-medium text-slate-700">${f.label}</label>
+                    <input type="${inputType}" class="edit-item-data-input w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" 
+                      data-key="${f.key}" value="${val || ''}" placeholder="請輸入${f.label}">
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        const footer = `
+          <div class="flex justify-end gap-3">
+            <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+            <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">儲存</button>
+          </div>
+        `;
+
+        const { close, element } = openModal({ title: `編輯資料 - ${item.name}`, content, footer });
+
+        element.querySelector('#modal-cancel-btn').addEventListener('click', close);
+        element.querySelector('#modal-confirm-btn').addEventListener('click', async () => {
+          const newName = element.querySelector('#edit-item-name').value.trim();
+          if (!newName) {
+            showToast('名稱不能為空', 'error');
+            return;
+          }
+
+          const newData = {};
+          element.querySelectorAll('.edit-item-data-input').forEach(input => {
+            newData[input.dataset.key] = input.value;
+          });
+
+          const newDbs = JSON.parse(JSON.stringify(currentSettings.custom_databases));
+          const targetItem = newDbs.find(d => d.id === activeDbId).items[idx];
+          targetItem.name = newName;
+          targetItem.data = newData;
+
+          await updateAndSave(newDbs);
+          showToast('資料已更新', 'success');
+          close();
+        });
+      });
+    });
+
+    // 刪除資料
+    contentContainer.querySelectorAll('.btn-del-db-item').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const idx = parseInt(e.currentTarget.dataset.index);
+        const confirmed = await openConfirm({
+          title: '刪除資料',
+          message: `確定要刪除「${db.items[idx].name}」嗎？`,
+          isDanger: true
+        });
+        if (!confirmed) return;
+
+        const newDbs = JSON.parse(JSON.stringify(currentSettings.custom_databases));
+        newDbs.find(d => d.id === activeDbId).items.splice(idx, 1);
+        await updateAndSave(newDbs);
+        showToast('已刪除', 'success');
+      });
+    });
+  };
+
+  // 設定欄位彈窗
+  const renderDbFieldsModal = (db) => {
+    const content = `
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-2">
+          <input type="text" id="new-db-field-label" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none" placeholder="新增欄位名稱 (例如：電話)">
+          <select id="new-db-field-type" class="w-24 px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none">
+            <option value="string">文字</option>
+            <option value="number">數字</option>
+          </select>
+          <button id="btn-add-db-field" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">新增</button>
+        </div>
+
+        <div class="flex flex-col gap-2 mt-4" id="db-fields-list">
+          ${(db.fields || []).map((f, i) => `
+            <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+              <div class="flex flex-col">
+                <span class="font-bold text-slate-700">${f.label}</span>
+                <span class="text-xs text-slate-400 font-mono">${f.key} (${f.type === 'number' ? '數字' : '文字'})</span>
+              </div>
+              <button class="p-1.5 text-slate-400 hover:text-rose-500 btn-del-db-field" data-key="${f.key}">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `).join('')}
+          ${(db.fields || []).length === 0 ? '<div class="text-slate-400 text-sm text-center py-4">尚未建立自訂欄位</div>' : ''}
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <div class="flex justify-end gap-3">
+        <button id="modal-close-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">完成</button>
+      </div>
+    `;
+
+    const { close, element } = openModal({ title: `設定欄位 - ${db.name}`, content, footer });
+
+    element.querySelector('#modal-close-btn').addEventListener('click', close);
+
+    element.querySelector('#btn-add-db-field')?.addEventListener('click', async () => {
+      const label = element.querySelector('#new-db-field-label').value.trim();
+      const type = element.querySelector('#new-db-field-type').value;
+      if (!label) return;
+
+      const newDbs = JSON.parse(JSON.stringify(currentSettings.custom_databases));
+      const targetDb = newDbs.find(d => d.id === db.id);
+      if (!targetDb.fields) targetDb.fields = [];
+      targetDb.fields.push({ key: 'field_' + Date.now().toString(36), label, type });
+      
+      await updateAndSave(newDbs);
+      close();
+      showToast('欄位已新增，請重新點擊「設定欄位」', 'success');
+    });
+
+    element.querySelectorAll('.btn-del-db-field').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const key = e.currentTarget.dataset.key;
+        
+        const newDbs = JSON.parse(JSON.stringify(currentSettings.custom_databases));
+        const targetDb = newDbs.find(d => d.id === db.id);
+        targetDb.fields = targetDb.fields.filter(f => f.key !== key);
+        
+        await updateAndSave(newDbs);
+        close();
+        showToast('欄位已刪除', 'success');
+      });
+    });
+  };
+
+  // 執行渲染
+  renderActiveDbContent();
+}
+
+/*
+F: AI-WA-UPWO/src/pages/settings-database.js
+V: 1793091000
+W: UPGRADE-007
+*/```
+
+<!-- === FILE END: ./src/pages/settings-database.js === -->
+
 <!-- === FILE START: ./src/pages/settings-form.js === -->
 
 ## 📄 ./src/pages/settings-form.js
@@ -6247,7 +6672,7 @@ W: UPGRADE-007
 ```js
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
-import { createIcons, Plus, Trash2, Edit2, LayoutDashboard, Table, PieChart, Layers, Users, GripVertical, X, Check, FileEdit, Download } from 'lucide';
+import { createIcons, Plus, Trash2, Edit2, LayoutDashboard, Table, PieChart, Layers, Users, GripVertical, X, Check, FileEdit, Download, Database } from 'lucide';
 
 let activeViewPage = 'kanban';
 
@@ -6257,25 +6682,41 @@ let activeViewPage = 'kanban';
 export function renderSchema(container, currentSettings, saveSettings) {
   const sysFields = currentSettings.schema.filter(f => f.isSystem);
   const customFields = currentSettings.schema.filter(f => !f.isSystem);
+  const dbs = currentSettings.custom_databases || [];
+
+  // 生成資料庫選項
+  const dbOptions = dbs.map(db => `<option value="${db.id}">${db.name}</option>`).join('');
 
   container.innerHTML = `
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">動態欄位管理</h2>
-        <p class="text-sm text-slate-500 mt-1">定義系統欄位。新增後可至「視圖配置」決定顯示於何處。</p>
+        <p class="text-sm text-slate-500 mt-1">定義系統欄位。可綁定關聯資料庫，自動生成下拉選單。</p>
       </div>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-2 mb-6">
-      <input type="text" id="new-field-label" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="新增欄位名稱 (例如：利潤)">
-      <select id="new-field-type" class="w-full sm:w-32 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
-        <option value="string">文字</option>
-        <option value="number">數字</option>
-        <option value="date">日期</option>
-      </select>
-      <button id="btn-add-field" class="btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap">
-        <i data-lucide="plus" class="w-4 h-4"></i> 新增
-      </button>
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+      <div class="text-sm font-semibold text-slate-700 mb-3">新增自訂欄位</div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="new-field-label" class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none" placeholder="欄位名稱 (例如：外發廠商)">
+        <select id="new-field-type" class="w-full sm:w-48 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none">
+          <option value="string">文字輸入</option>
+          <option value="number">數字輸入</option>
+          <option value="date">日期輸入</option>
+          <option value="relation">🔗 關聯資料庫 (下拉)</option>
+        </select>
+        <button id="btn-add-field" class="btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap">
+          <i data-lucide="plus" class="w-4 h-4"></i> 新增
+        </button>
+      </div>
+      
+      <!-- 關聯資料庫選擇區塊 (預設隱藏) -->
+      <div id="relation-target-wrapper" class="hidden mt-3 flex-col gap-1.5">
+        <label class="text-sm font-medium text-slate-700">選擇要綁定的資料庫：</label>
+        <select id="new-field-relation-db" class="w-full sm:w-64 px-4 py-2 bg-white border border-brand/50 rounded-xl text-sm focus:outline-none">
+          ${dbs.length === 0 ? '<option value="">請先至資料庫中心建立資料庫</option>' : dbOptions}
+        </select>
+      </div>
     </div>
 
     <div class="mb-4 text-sm font-semibold text-slate-600">系統核心欄位</div>
@@ -6298,11 +6739,18 @@ export function renderSchema(container, currentSettings, saveSettings) {
     <div class="mb-4 text-sm font-semibold text-slate-600">自訂欄位</div>
     <div class="flex flex-col gap-2">
       ${customFields.length === 0 ? '<div class="text-slate-400 text-sm py-2">目前尚無自訂欄位</div>' : ''}
-      ${customFields.map((f, index) => `
+      ${customFields.map((f, index) => {
+        const isRel = f.type === 'relation';
+        const relDb = isRel ? dbs.find(d => d.id === f.db_id) : null;
+        const typeLabel = isRel 
+          ? `🔗 關聯：${relDb ? relDb.name : '未知資料庫'}` 
+          : (f.type === 'date' ? '日期' : f.type === 'number' ? '數字' : '文字');
+
+        return `
         <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
           <div class="w-1/3 font-bold text-slate-800 flex items-center gap-2">
             ${f.label}
-            <span class="text-[10px] font-normal px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded">${f.type === 'date' ? '日期' : f.type === 'number' ? '數字' : '文字'}</span>
+            <span class="text-[10px] font-normal px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded ${isRel ? 'text-brand bg-brand/10' : ''}">${typeLabel}</span>
           </div>
           <div class="w-1/3 flex items-center gap-4">
             <span class="text-slate-500 font-mono text-xs">${f.key}</span>
@@ -6320,22 +6768,48 @@ export function renderSchema(container, currentSettings, saveSettings) {
             </button>
           </div>
         </div>
-      `).join('')}
+      `}).join('')}
     </div>
   `;
 
-  createIcons({ icons: { Plus, Trash2, Edit2 }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Plus, Trash2, Edit2, Database }, attrs: { class: 'w-4 h-4' } });
+
+  // 切換欄位類型時，顯示/隱藏關聯資料庫選擇
+  const typeSelect = document.getElementById('new-field-type');
+  const relWrapper = document.getElementById('relation-target-wrapper');
+  
+  typeSelect?.addEventListener('change', (e) => {
+    if (e.target.value === 'relation') {
+      relWrapper.classList.remove('hidden');
+      relWrapper.classList.add('flex');
+    } else {
+      relWrapper.classList.add('hidden');
+      relWrapper.classList.remove('flex');
+    }
+  });
 
   document.getElementById('btn-add-field')?.addEventListener('click', async () => {
     const input = document.getElementById('new-field-label');
-    const typeSelect = document.getElementById('new-field-type');
     const val = input.value.trim();
     const type = typeSelect.value;
     
     if (!val) return;
     
+    let db_id = null;
+    if (type === 'relation') {
+      const dbSelect = document.getElementById('new-field-relation-db');
+      db_id = dbSelect.value;
+      if (!db_id) {
+        showToast('請先建立並選擇關聯資料庫', 'error');
+        return;
+      }
+    }
+    
     const key = 'field_' + Date.now().toString(36);
-    currentSettings.schema.push({ key, label: val, type: type, isSystem: false, isEditable: true });
+    const newField = { key, label: val, type: type, isSystem: false, isEditable: true };
+    if (db_id) newField.db_id = db_id;
+
+    currentSettings.schema.push(newField);
     await saveSettings();
     showToast('新增成功，可至視圖配置勾選顯示', 'success');
   });
@@ -6355,6 +6829,7 @@ export function renderSchema(container, currentSettings, saveSettings) {
     });
   });
 
+  // 修改欄位名稱
   document.querySelectorAll('.btn-edit-field').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const key = e.currentTarget.dataset.key;
@@ -6371,6 +6846,7 @@ export function renderSchema(container, currentSettings, saveSettings) {
     });
   });
 
+  // 刪除欄位
   document.querySelectorAll('.btn-del-field').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const key = e.currentTarget.dataset.key;
@@ -6403,20 +6879,15 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
     { key: 'category', label: '類別視圖', icon: 'layers' },
     { key: 'salesperson', label: '銷售員視圖', icon: 'users' },
     { key: 'data-entry', label: '資料錄入表單', icon: 'file-edit' },
-    { key: 'export', label: '匯出 Excel 欄位', icon: 'download' } // 💡 新增匯出設定
+    { key: 'export', label: '匯出 Excel 欄位', icon: 'download' }
   ];
 
-  // 確保 view_configs['export'] 存在，避免報錯
   if (!currentSettings.view_configs['export']) {
-    // 預設匯出欄位
     currentSettings.view_configs['export'] = ['id', 'status', 'customerNameZh', 'amount', 'dueDate'];
   }
 
-  // 取得當前頁面已顯示的欄位（保持自訂順序）
   const activeFields = currentSettings.view_configs[activeViewPage] || [];
   const visibleSchema = activeFields.map(k => currentSettings.schema.find(f => f.key === k)).filter(Boolean);
-  
-  // 取得未顯示的欄位（存在於 schema 但不在 activeFields 中）
   const hiddenSchema = currentSettings.schema.filter(f => !activeFields.includes(f.key));
 
   container.innerHTML = `
@@ -6441,7 +6912,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
           ${visibleSchema.map(f => `
             <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-grab visible-item" draggable="true" data-key="${f.key}">
               <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300"></i>
-              <span class="flex-1 font-medium text-slate-700">${f.label}</span>
+              <span class="flex-1 font-medium text-slate-700">${f.label} ${f.type === 'relation' ? '🔗' : ''}</span>
               <button class="p-1 text-slate-400 hover:text-rose-500 btn-remove-field" data-key="${f.key}">
                 <i data-lucide="x" class="w-4 h-4"></i>
               </button>
@@ -6459,7 +6930,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
           ${hiddenSchema.length === 0 ? '<div class="text-slate-400 text-sm text-center py-8">所有欄位已顯示</div>' : ''}
           ${hiddenSchema.map(f => `
             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:border-brand transition-colors hidden-item" data-key="${f.key}">
-              <span class="flex-1 font-medium text-slate-600">${f.label}</span>
+              <span class="flex-1 font-medium text-slate-600">${f.label} ${f.type === 'relation' ? '🔗' : ''}</span>
               <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
             </div>
           `).join('')}
@@ -6470,13 +6941,11 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
 
   createIcons({ icons: { Check, Plus, GripVertical, X }, attrs: { class: 'w-4 h-4' } });
 
-  // 頁面切換
   document.getElementById('view-page-select')?.addEventListener('change', (e) => {
     activeViewPage = e.target.value;
     renderViewConfig(container, currentSettings, saveSettings);
   });
 
-  // 加入欄位 (從未顯示區)
   container.querySelectorAll('.hidden-item').forEach(item => {
     item.addEventListener('click', async () => {
       const key = item.dataset.key;
@@ -6486,13 +6955,11 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
     });
   });
 
-  // 移除欄位 (從已顯示區)
   container.querySelectorAll('.btn-remove-field').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      e.stopPropagation(); // 防止觸發拖曳
+      e.stopPropagation();
       const key = btn.dataset.key;
 
-      // 💡 防呆：防止使用者移除「發票 (id)」欄位，否則工單號碼會消失，無法點擊開啟詳細資料
       if (key === 'id') {
         showToast('「發票」為系統主鍵，不可從視圖中移除', 'error');
         return;
@@ -6504,7 +6971,6 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
     });
   });
 
-  // 拖曳排序
   const list = document.getElementById('visible-list');
   if (list) {
     let draggedItem = null;
@@ -6520,7 +6986,6 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
         this.classList.remove('opacity-50');
         draggedItem = null;
         
-        // 收集新順序
         const newOrder = Array.from(list.querySelectorAll('.visible-item')).map(el => el.dataset.key);
         currentSettings.view_configs[activeViewPage] = newOrder;
         
@@ -6541,7 +7006,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
 
 /*
 F: AI-WA-UPWO/src/pages/settings-schema.js
-V: 1793012000
+V: 1793082000
 W: UPGRADE-007
 */```
 
@@ -7214,11 +7679,10 @@ import { showToast } from '../ui/toast.js';
 import { createIcons, Tag, Users, Shield, FileSpreadsheet, List, Database, LayoutDashboard, Layers, MapPin, Activity, GitBranch, Truck } from 'lucide';
 
 // 引入拆分出去的模組
-import { renderStatuses, renderMapping, renderRouteTemplates } from './settings-basic.js';
+import { renderStatuses, renderRouteTemplates } from './settings-basic.js';
 import { renderAreas } from './settings-area.js';
 import { renderCategories } from './settings-category.js';
 import { renderAreaStatuses } from './settings-area-status.js';
-import { renderSuppliers } from './settings-supplier.js'; // 💡 引入供應商模組
 
 let unsubscribe = null;
 export let currentSettings = { statuses: [], sales_mapping: [], users: [], route_templates: [], areas: [], categories: [], areaStatuses: [], suppliers: [], supplier_schema: [] };
@@ -7234,7 +7698,7 @@ export default {
 
     renderPageLayout({
       title: '生產管理設定',
-      subtitle: '管理工序、類別、製程路線圖、區域與外發供應商',
+      subtitle: '管理工序、類別、製程路線圖與區域',
       headerActions: '',
       stats: [],
       controls: '',
@@ -7257,7 +7721,7 @@ export default {
           areas: Array.isArray(data.areas) ? data.areas : [],
           categories: Array.isArray(data.categories) ? data.categories : [],
           areaStatuses: Array.isArray(data.areaStatuses) ? data.areaStatuses : ['正常', '壞機', '休息中'],
-          suppliers: Array.isArray(data.suppliers) ? data.suppliers : [], // 💡 初始化供應商
+          suppliers: Array.isArray(data.suppliers) ? data.suppliers : [],
           supplier_schema: Array.isArray(data.supplier_schema) ? data.supplier_schema : []
         });
 
@@ -7266,9 +7730,6 @@ export default {
         
         // 遷移：areaStatuses 不存在
         if (!Array.isArray(data.areaStatuses)) needSave = true;
-
-        // 遷移：suppliers 不存在
-        if (!Array.isArray(data.suppliers)) needSave = true;
 
         // 遷移：每個使用者補 allowedAreas, allowedSales 欄位，並升級舊角色
         if (Array.isArray(currentSettings.users)) {
@@ -7412,15 +7873,6 @@ export default {
           <button class="tab-btn ${activeTab === 'area_statuses' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="area_statuses">
             <i data-lucide="activity" class="w-4 h-4"></i> 區域狀態
           </button>
-          
-          <div class="border-t border-slate-200/60 my-2"></div>
-          
-          <button class="tab-btn ${activeTab === 'mapping' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="mapping">
-            <i data-lucide="users" class="w-4 h-4"></i> 銷售員對照表
-          </button>
-          <button class="tab-btn ${activeTab === 'suppliers' ? 'bg-white text-brand shadow-sm border border-slate-200/50' : 'text-slate-600 hover:bg-slate-100 border border-transparent'} text-left px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-3" data-tab="suppliers">
-            <i data-lucide="truck" class="w-4 h-4"></i> 外發供應商
-          </button>
         </div>
 
         <div class="flex-1 p-6 md:p-8" id="settings-content"></div>
@@ -7428,7 +7880,7 @@ export default {
     `;
 
     createIcons({
-      icons: { Tag, Users, Layers, MapPin, Activity, GitBranch, Truck },
+      icons: { Tag, Users, Layers, MapPin, Activity, GitBranch },
       attrs: { class: 'w-4 h-4' }
     });
 
@@ -7459,24 +7911,17 @@ export default {
       renderAreas(content, currentSettings, this.saveSettings.bind(this));
     } else if (activeTab === 'area_statuses') {
       renderAreaStatuses(content, currentSettings, this.saveSettings.bind(this));
-    } else if (activeTab === 'mapping') {
-      renderMapping(content, currentSettings, this.saveSettings.bind(this));
-    } else if (activeTab === 'suppliers') {
-      renderSuppliers(content, currentSettings, this.saveSettings.bind(this));
     }
   },
 
   async saveSettings() {
-    // 確保只更新生產相關設定，絕對不洗掉表單或物料設定
     const dataToSave = {
       statuses: currentSettings.statuses,
       sales_mapping: currentSettings.sales_mapping,
       route_templates: currentSettings.route_templates,
       areas: currentSettings.areas,
       categories: currentSettings.categories,
-      areaStatuses: currentSettings.areaStatuses,
-      suppliers: currentSettings.suppliers,
-      supplier_schema: currentSettings.supplier_schema
+      areaStatuses: currentSettings.areaStatuses
     };
     await updateDocument('settings', 'main', dataToSave);
     this.renderTabs();
@@ -7492,7 +7937,7 @@ export default {
 
 /*
 F: AI-WA-UPWO/src/pages/settings.js
-V: 1793065000
+V: 1793088000
 W: UPGRADE-007
 */```
 
@@ -8480,10 +8925,8 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
 
   const title = orderId ? '編輯工單' : '新增工單';
 
-  // 使用三層架構的 Modal，內容區留空由 renderOrderEditor 填充
   const content = `<div id="modal-editor-container" class="w-full"></div>`;
   
-  // footer 留空，因為 order-editor 自帶儲存與取消按鈕
   const { close, element } = openModal({ title, content, footer: '', size: 'max-w-5xl' });
 
   const container = element.querySelector('#modal-editor-container');
@@ -8494,11 +8937,10 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
     formulas: currentSettings.formulas || {},
     viewConfig: currentSettings.view_configs?.['data-entry'] || currentSettings.view_configs?.['table'] || [],
     routeTemplates: currentSettings.route_templates || [],
-    materials: currentSettings.materials || [],
-    suppliers: currentSettings.suppliers || [], // 💡 傳入外發供應商主檔
-    layoutMode: 'A', // 彈窗內預設用平鋪模式最順暢
+    customDatabases: currentSettings.custom_databases || [], // 💡 傳入自訂資料庫
+    layoutMode: 'A',
     initialData: initialData,
-    isViewMode: false, // 直接進入編輯模式
+    isViewMode: false,
     onSave: async (formData) => {
       const targetId = formData.id || orderId;
       
@@ -8508,8 +8950,21 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
       }
 
       try {
+        // 💡 儲存前處理：將關聯欄位的 ID 轉換為名稱，讓匯出 Excel 時能顯示人類看得懂的文字
+        (currentSettings.schema || []).forEach(field => {
+          if (field.type === 'relation' && !field.isSystem && formData.data && formData.data[field.key]) {
+            const val = formData.data[field.key];
+            const db = (currentSettings.custom_databases || []).find(d => d.id === field.db_id);
+            if (db) {
+              const item = db.items.find(i => i.id === val || i.name === val);
+              if (item) {
+                formData.data[field.key] = item.name; // 轉存名稱
+              }
+            }
+          }
+        });
+
         if (!orderId) {
-          // 新增
           const existing = await getDocument('work_orders', targetId);
           if (existing) {
             showToast(`工單 ${targetId} 已存在`, 'error');
@@ -8521,19 +8976,15 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
             formData.route = currentSettings.statuses ? [...currentSettings.statuses] : [];
             formData.status = currentSettings.statuses?.[0] || '排產中';
           }
-          // 手動新增時，開單日期強制抓今天
           formData.uploadDate = new Date().toISOString().split('T')[0];
           formData.statusUpdateDate = formData.uploadDate;
 
           await setDocument('work_orders', targetId, formData);
           showToast('工單新增成功', 'success');
         } else {
-          // 更新
-          // 注意：formData 包含了從 order-editor 傳來的所有欄位，其中也包含 materials 與 supplierName
-          // 為了避免覆蓋 Excel 匯入的 uploadDate，如果工單來源是 excel，則不更新 uploadDate
           const existing = await getDocument('work_orders', targetId);
           if (existing && existing.source === 'excel') {
-            delete formData.uploadDate; // 保留 Excel 的開單日期
+            delete formData.uploadDate;
           }
           
           await updateDocument('work_orders', targetId, formData);
@@ -8555,7 +9006,7 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
 
 /*
 F: AI-WA-UPWO/src/ui/order-detail-modal.js
-V: 1793068000
+V: 1793085000
 W: UPGRADE-007
 */```
 
@@ -8566,7 +9017,7 @@ W: UPGRADE-007
 ## 📄 ./src/ui/order-editor.js
 
 ```js
-import { createIcons, Save, RotateCcw, Plus, Trash2 } from 'lucide';
+import { createIcons, Save, RotateCcw } from 'lucide';
 import { showToast } from './toast.js';
 import { evaluate } from '../domain/formula-engine.js';
 
@@ -8583,18 +9034,13 @@ function normalizeRoute(route) {
   return [];
 }
 
-/**
- * 渲染工單錄入/編輯表單
- * @param {Object} options
- */
 export function renderOrderEditor({ 
   container, 
   schema, 
   formulas, 
   viewConfig, 
   routeTemplates = [],
-  materials = [], 
-  suppliers = [], // 💡 接收供應商主檔
+  customDatabases = [], // 💡 接收自訂資料庫
   layoutMode = 'B', 
   initialData = null, 
   isViewMode = false,
@@ -8603,7 +9049,6 @@ export function renderOrderEditor({
 }) {
   if (!container) return;
 
-  // 1. 決定要顯示的欄位
   let displayFields = [];
   if (viewConfig && viewConfig.length > 0) {
     displayFields = viewConfig.map(key => schema.find(f => f.key === key)).filter(Boolean);
@@ -8611,18 +9056,6 @@ export function renderOrderEditor({
     displayFields = schema.filter(f => f.isEditable);
   }
 
-  // 名詞替換：若欄位為 route，強制覆寫 Label
-  displayFields = displayFields.map(f => {
-    if (f.key === 'route') {
-      return Object.assign({}, f, { label: '製程路線圖' });
-    }
-    if (f.key === 'supplierName') {
-      return Object.assign({}, f, { label: '外發供應商' });
-    }
-    return f;
-  });
-
-  // 2. 準備表單初始資料
   const formData = {};
   displayFields.forEach(f => {
     if (initialData) {
@@ -8638,20 +9071,14 @@ export function renderOrderEditor({
     }
   });
 
-  // 準備工單物料資料
-  let currentMaterials = Array.isArray(initialData?.materials) ? JSON.parse(JSON.stringify(initialData.materials)) : [];
-  
-  // 取得當前工單類別，用於過濾物料
   const getOrderCategory = () => {
     return (initialData && initialData.data && initialData.data.category) 
       ? String(initialData.data.category).toUpperCase() 
       : (formData['id'] ? String(formData['id']).match(/^[a-zA-Z]+/)?.[0]?.toUpperCase() : '其他') || '其他';
   };
 
-  // 3. 繪製 HTML
   let html = `
     <div class="bg-transparent flex flex-col">
-      <!-- Header (固定) -->
       <div class="px-2 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between flex-shrink-0 gap-3">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-bold text-slate-800">${initialData ? '編輯工單資料' : '新增工單資料'}</h2>
@@ -8667,40 +9094,18 @@ export function renderOrderEditor({
         </div>
       </div>
 
-      <!-- Body (不設滾動，由 Modal 提供) -->
       <div class="py-4 relative" id="editor-body">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           ${displayFields.map(f => {
             const value = formData[f.key] !== undefined ? formData[f.key] : '';
-            
-            // 💡 特殊處理：外發供應商 (supplierName) 渲染為下拉選單
-            if (f.key === 'supplierName') {
-              // 檢查目前的值是否在供應商清單中，若不在則加入一個自訂選項（例如從 Excel 匯入的未知廠商）
-              const isKnown = suppliers.some(s => s.name === value);
-              const customOption = (value && !isKnown) ? `<option value="${value}" selected>${value} (自訂)</option>` : '';
-              
-              const disabledAttr = isViewMode ? 'disabled' : '';
-              const baseClass = `w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm ${isViewMode ? 'opacity-70 bg-slate-100 cursor-not-allowed' : ''}`;
+            const disabledAttr = isViewMode ? 'disabled' : '';
+            const baseClass = `w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm ${isViewMode ? 'opacity-70 bg-slate-100 cursor-not-allowed' : ''}`;
 
-              return `
-                <div class="flex flex-col gap-1.5">
-                  <label class="text-sm font-medium text-slate-700">${f.label}</label>
-                  <select data-key="${f.key}" class="${baseClass}" ${disabledAttr}>
-                    <option value="">(無 / 自行生產)</option>
-                    ${customOption}
-                    ${suppliers.map(s => `<option value="${s.name}" ${s.name === value ? 'selected' : ''}>${s.name}</option>`).join('')}
-                  </select>
-                </div>
-              `;
-            }
-
-            // 特殊處理：製程路線圖 (route) 渲染為下拉選單
+            // 1. 處理製程路線圖 (route)
             if (f.key === 'route') {
               const orderCategory = getOrderCategory();
-
-              // 嚴格過濾符合該類別的模板
               const availableTemplates = routeTemplates.filter(t => {
-                if (!t.categories || t.categories.length === 0) return true; // 通用
+                if (!t.categories || t.categories.length === 0) return true;
                 if (Array.isArray(t.categories)) return t.categories.map(c => String(c).toUpperCase()).includes(orderCategory);
                 if (typeof t.category === 'string' && t.category.trim() !== '') return t.category.toUpperCase() === orderCategory;
                 return false;
@@ -8713,9 +9118,6 @@ export function renderOrderEditor({
                 if (matched) currentMatchName = matched.name;
               }
 
-              const disabledAttr = isViewMode ? 'disabled' : '';
-              const baseClass = `w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm ${isViewMode ? 'opacity-70 bg-slate-100 cursor-not-allowed' : ''}`;
-
               return `
                 <div class="flex flex-col gap-1.5">
                   <label class="text-sm font-medium text-slate-700">${f.label}</label>
@@ -8727,155 +9129,45 @@ export function renderOrderEditor({
               `;
             }
 
-            // 一般欄位渲染
-            const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
-            const disabledAttr = isViewMode ? 'disabled' : '';
-            const baseClass = `w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand transition-colors shadow-sm ${isViewMode ? 'opacity-70 bg-slate-100 cursor-not-allowed' : ''}`;
+            // 2. 💡 處理關聯資料庫 (relation)
+            if (f.type === 'relation') {
+              const targetDb = customDatabases.find(db => db.id === f.db_id);
+              const items = targetDb ? targetDb.items : [];
+              
+              // 處理舊資料可能是存 name 而不是 id 的情況
+              const isIdMatch = items.some(item => item.id === value);
+              const selectedItem = items.find(item => item.id === value || item.name === value);
+              const selectedValue = selectedItem ? selectedItem.id : value;
 
+              return `
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-medium text-slate-700">${f.label} <span class="text-xs text-brand">🔗</span></label>
+                  <select data-key="${f.key}" class="${baseClass}" ${disabledAttr}>
+                    <option value="">(請選擇)</option>
+                    ${!targetDb ? '<option value="">找不到關聯資料庫</option>' : ''}
+                    ${items.map(item => `<option value="${item.id}" ${item.id === selectedValue ? 'selected' : ''}>${item.name}</option>`).join('')}
+                  </select>
+                </div>
+              `;
+            }
+
+            // 3. 一般欄位渲染
+            const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
             return `
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-slate-700">${f.label}</label>
-                <input 
-                  type="${inputType}" 
-                  data-key="${f.key}" 
-                  value="${value}" 
-                  class="${baseClass}" 
-                  placeholder="請輸入${f.label}"
-                  ${disabledAttr}
-                >
+                <input type="${inputType}" data-key="${f.key}" value="${value}" class="${baseClass}" placeholder="請輸入${f.label}" ${disabledAttr}>
               </div>
             `;
           }).join('')}
-        </div>
-
-        <!-- 💡 工單物料明細區塊 -->
-        <div class="mt-8 border-t border-slate-200 pt-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-bold text-slate-800">工單物料明細</h3>
-            ${!isViewMode ? `
-              <button id="btn-add-material" class="text-sm text-brand hover:text-brand-hover font-medium flex items-center gap-1">
-                <i data-lucide="plus" class="w-4 h-4"></i> 新增物料
-              </button>
-            ` : ''}
-          </div>
-          
-          <div class="overflow-x-auto w-full">
-            <table class="w-full text-left border-collapse min-w-[500px]" id="material-table">
-              <thead>
-                <tr class="border-b border-slate-200 text-sm text-slate-500">
-                  <th class="pb-2 font-medium">物料名稱</th>
-                  <th class="pb-2 font-medium w-24">數量</th>
-                  <th class="pb-2 font-medium">備註</th>
-                  ${!isViewMode ? `<th class="pb-2 w-12"></th>` : ''}
-                </tr>
-              </thead>
-              <tbody id="material-tbody">
-                <!-- 由 JS 渲染 -->
-              </tbody>
-            </table>
-            <div id="material-empty" class="text-center text-slate-400 text-sm py-4 hidden">尚未新增任何物料</div>
-          </div>
         </div>
       </div>
     </div>
   `;
 
   container.innerHTML = html;
-  createIcons({ icons: { Save, RotateCcw, Plus, Trash2 }, attrs: { class: 'w-4 h-4' } });
+  createIcons({ icons: { Save, RotateCcw }, attrs: { class: 'w-4 h-4' } });
 
-  // 4. 物料渲染與事件綁定
-  const tbody = container.querySelector('#material-tbody');
-  const emptyMsg = container.querySelector('#material-empty');
-
-  const renderMaterialsTable = () => {
-    if (currentMaterials.length === 0) {
-      tbody.innerHTML = '';
-      emptyMsg.classList.remove('hidden');
-      return;
-    }
-    emptyMsg.classList.add('hidden');
-
-    const orderCategory = getOrderCategory();
-
-    tbody.innerHTML = currentMaterials.map((mat, idx) => {
-      // 過濾符合類別的物料
-      const availableMaterials = materials.filter(m => {
-        if (!m.categories || m.categories.length === 0) return true;
-        return m.categories.map(c => String(c).toUpperCase()).includes(orderCategory);
-      });
-
-      // 如果該物料不在清單中（可能是舊資料），則加入一個自訂選項
-      const isKnown = availableMaterials.some(m => m.id === mat.materialId);
-      const customMatOption = (!isKnown && mat.materialId) ? `<option value="${mat.materialId}" selected>${mat.name || '未知物料'} (自訂)</option>` : '';
-
-      return `
-        <tr class="border-b border-slate-100 last:border-0" data-index="${idx}">
-          <td class="py-2 pr-2">
-            <select class="mat-name-select w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" ${isViewMode ? 'disabled' : ''}>
-              <option value="">請選擇物料</option>
-              ${customMatOption}
-              ${availableMaterials.map(m => `<option value="${m.id}" ${mat.materialId === m.id ? 'selected' : ''}>${m.name}</option>`).join('')}
-            </select>
-          </td>
-          <td class="py-2 pr-2">
-            <input type="number" class="mat-qty-input w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${mat.qty || ''}" placeholder="0" ${isViewMode ? 'disabled' : ''}>
-          </td>
-          <td class="py-2 pr-2">
-            <input type="text" class="mat-note-input w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${mat.note || ''}" placeholder="選填" ${isViewMode ? 'disabled' : ''}>
-          </td>
-          ${!isViewMode ? `
-          <td class="py-2 text-center">
-            <button class="btn-del-mat text-slate-400 hover:text-rose-500 p-1" data-index="${idx}">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </td>
-          ` : ''}
-        </tr>
-      `;
-    }).join('');
-
-    createIcons({ icons: { Trash2 }, attrs: { class: 'w-4 h-4' } });
-
-    // 綁定事件
-    tbody.querySelectorAll('.mat-name-select').forEach(select => {
-      select.addEventListener('change', (e) => {
-        const idx = parseInt(e.target.closest('tr').dataset.index);
-        currentMaterials[idx].materialId = e.target.value;
-      });
-    });
-
-    tbody.querySelectorAll('.mat-qty-input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const idx = parseInt(e.target.closest('tr').dataset.index);
-        currentMaterials[idx].qty = e.target.value;
-      });
-    });
-
-    tbody.querySelectorAll('.mat-note-input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const idx = parseInt(e.target.closest('tr').dataset.index);
-        currentMaterials[idx].note = e.target.value;
-      });
-    });
-
-    tbody.querySelectorAll('.btn-del-mat').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.currentTarget.dataset.index);
-        currentMaterials.splice(idx, 1);
-        renderMaterialsTable();
-      });
-    });
-  };
-
-  renderMaterialsTable();
-
-  // 新增物料按鈕
-  container.querySelector('#btn-add-material')?.addEventListener('click', () => {
-    currentMaterials.push({ materialId: '', qty: '', note: '' });
-    renderMaterialsTable();
-  });
-
-  // 5. 其他表單事件 (公式計算與路線圖連動)
   const bodyEl = container.querySelector('#editor-body');
   const inputs = bodyEl.querySelectorAll('input[data-key], select[data-key]');
   
@@ -8923,12 +9215,10 @@ export function renderOrderEditor({
     input.addEventListener('change', handleInputChange);
   });
 
-  // 取消按鈕
   container.querySelector('#editor-btn-cancel')?.addEventListener('click', () => {
     if (onCancel) onCancel();
   });
 
-  // 儲存按鈕
   container.querySelector('#editor-btn-save')?.addEventListener('click', async () => {
     if (onSave) {
       const finalData = Object.assign({}, initialData); 
@@ -8950,28 +9240,18 @@ export function renderOrderEditor({
       displayFields.forEach(f => {
         if (f.key === 'route' || f.key === 'status') return;
         
-        const val = formData[f.key];
+        let val = formData[f.key];
         
-        // 處理核心欄位與動態欄位
-        if (f.key === 'supplierName') {
-           finalData.supplierName = val; // 外發商存在根目錄
-        } else if (f.isSystem) {
+        // 如果是關聯欄位，我們儲存 ID。但為了讓匯出顯示名稱，我們可以額外存一個 map 或是保留原本的字串？
+        // 為了架構單純，這裡依然存 ID。若要顯示名稱，由 UI 讀取 customDatabases 轉換。
+        // 但為了向下相容舊的 supplierName (存 name)，這裡不強制轉換，直接存 val。
+        
+        if (f.isSystem) {
           finalData[f.key] = val;
         } else {
           finalData.data[f.key] = val;
         }
       });
-
-      // 整理物料資料，並附帶物料名稱（方便匯出與顯示）
-      finalData.materials = currentMaterials.map(m => {
-        const matchedMat = materials.find(x => x.id === m.materialId);
-        return {
-          materialId: m.materialId,
-          name: matchedMat ? matchedMat.name : '未知物料',
-          qty: m.qty,
-          note: m.note
-        };
-      }).filter(m => m.materialId !== ''); // 過濾掉沒有選物料的空行
 
       await onSave(finalData);
     }
@@ -8980,7 +9260,7 @@ export function renderOrderEditor({
 
 /*
 F: AI-WA-UPWO/src/ui/order-editor.js
-V: 1793067000
+V: 1793084000
 W: UPGRADE-007
 */```
 
@@ -9520,7 +9800,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     ];
   }
 
-  // 💡 名詞替換：若欄位 key 為 route_select 或 route，一律顯示為「製程路線圖」
+  // 名詞替換：若欄位 key 為 route_select 或 route，一律顯示為「製程路線圖」
   displayFields = displayFields.map(f => {
     if (f.key === 'route_select' || f.key === 'route') {
       return Object.assign({}, f, { label: '製程路線圖' });
@@ -9672,6 +9952,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
           const diffHtml = renderDiffIcon(order, f.key);
           
           if (f.key === 'id') {
+            // 💡 若為唯讀，單號不生成按鈕
+            if (isReadOnly) {
+              return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <span class="font-bold text-slate-700 text-base">${val || '-'}</span></div>`;
+            }
             return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <button data-action="open-order-detail" data-id="${order.id}" class="font-bold text-brand hover:underline text-base">${val || '-'}</button></div>`;
           }
           
@@ -9713,7 +9997,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             `;
           }
 
-          // 💡 顯示製程路線圖（取代原本的下拉選單）
+          // 顯示製程路線圖（取代原本的下拉選單）
           if (f.key === 'route_select') {
             const orderCat = getOrderCategory(order);
             const availableTemplates = (route_templates || []).filter(t => {
@@ -9743,7 +10027,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             return `<div class="text-sm flex flex-col gap-1"><span class="text-slate-400">${f.label}:</span> <span class="font-medium text-slate-700">${displayVal || '-'}</span>${diffHtml}</div>`;
           }
 
-          // 💡 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
+          // 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
           return `<div class="text-sm flex items-center"><span class="text-slate-400">${f.label}:</span> <span class="font-medium text-slate-700 ml-1">${val || '-'}</span>${diffHtml}</div>`;
         }).join('')}
         ${isAdmin ? `
@@ -9778,6 +10062,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                   const diffHtml = renderDiffIcon(order, f.key);
 
                   if (f.key === 'id') {
+                    // 💡 若為唯讀，單號不生成按鈕
+                    if (isReadOnly) {
+                      return `<td class="px-4 py-3 whitespace-nowrap font-bold text-slate-700">${val || '-'}</td>`;
+                    }
                     return `<td class="px-4 py-3 whitespace-nowrap"><button data-action="open-order-detail" data-id="${order.id}" class="font-bold text-brand hover:underline text-base">${val || '-'}</button></td>`;
                   }
                   
@@ -9818,7 +10106,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                     `;
                   }
 
-                  // 💡 顯示製程路線圖（取代原本的下拉選單）
+                  // 顯示製程路線圖（取代原本的下拉選單）
                   if (f.key === 'route_select') {
                     const orderCat = getOrderCategory(order);
                     const availableTemplates = (route_templates || []).filter(t => {
@@ -9843,7 +10131,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                     return `<td class="px-4 py-3 whitespace-nowrap text-slate-600">${displayVal || '-'}${diffHtml}</td>`;
                   }
 
-                  // 💡 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
+                  // 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
                   return `<td class="px-4 py-3 whitespace-nowrap">${val || '-'}${diffHtml}</td>`;
                 }).join('')}
                 ${isAdmin ? `
@@ -9924,7 +10212,7 @@ function getOrderValue(order, key) {
 
 /*
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1793042000
+V: 1793092000
 W: UPGRADE-007
 */```
 
