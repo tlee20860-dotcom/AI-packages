@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-04 23:03:59 (HKT)
+> 生成時間：2026-11-05 07:17:00 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -135,7 +135,7 @@ CONFIG_PATH = "AI-kernel/docs/r-rules/validate-config.json"
 FORBIDDEN_PATH = "AI-kernel/docs/r-rules/forbidden_words.txt"
 
 # 代碼檔案副檔名清單：這些檔案不做代碼塊跳過，逐行檢查禁用詞
-CODE_FILE_EXTS = (".py", ".js", ".css", ".html", ".yml", ".yaml", ".json", ".sh")
+CODE_FILE_EXTS = (".py", ".js", ".css", ".html", ".yml", ".yaml", ".json", ".sh", ".vue")
 
 DEFAULT_CONFIG = {
     "ignore_patterns": ["external/old-AI-WA-FAMILY/*", "external/AI-OS/*"],
@@ -245,11 +245,18 @@ def check_eof(content, filepath):
             return None, m.group(3)
         return "缺少註解包裹的 EOF（F/V/W）", "Unknown"
 
+def check_proposal_matrix(content, filepath):
+    if filepath.startswith("AI-kernel/docs/r-rules/") or filepath.startswith("AI-kernel/docs/a-guide/"):
+        if filepath.endswith(".md"):
+            if not re.search(r"<!--\s*===\s*關聯規則防呆矩陣\s*===", content):
+                return "缺少 <!-- === 關聯規則防呆矩陣 === --> 區塊（請依 R-005 規範補齊）"
+    return None
+
 def check_content_lines(content, filepath, forbidden_words, specific_rule):
     """
     檢查檔案內容。
     - .md 檔案：跳過代碼塊內的檢查（避免規則範例被誤判）
-    - 代碼檔案（.py/.js/.css/.html/.yml/.yaml/.json/.sh）：不跳過，逐行檢查
+    - 代碼檔案（.py/.js/.css/.html/.yml/.yaml/.json/.sh/.vue）：不跳過，逐行檢查
       （因為代碼檔案內的註解與字串也可能含禁用詞，需全量掃描）
     """
     problems = []
@@ -316,7 +323,7 @@ def main():
             report.append(f"[WARN] {path}: 異常減少 {stats['deleted']} 行，且無 [allow-delete] 標記。")
             warn += 1
 
-        if not path.endswith((".md", ".py", ".js", ".css", ".html", ".yml", ".yaml", ".json", ".sh", ".txt")):
+        if not path.endswith((".md", ".py", ".js", ".css", ".html", ".yml", ".yaml", ".json", ".sh", ".txt", ".vue")):
             continue
 
         total += 1
@@ -333,6 +340,16 @@ def main():
         eof_err, writer = check_eof(content, path)
         if eof_err:
             report.append(f"[ERROR] {path} (編寫者: {writer})\n  - {eof_err}")
+            bad += 1
+
+        matrix_err = check_proposal_matrix(content, path)
+        if matrix_err:
+            report.append(f"[ERROR] {path} (編寫者: {writer})\n  - {matrix_err}")
+            bad += 1
+
+        # 檢查 JSON 檔案是否誤用了局部替換標記
+        if path.endswith(".json") and "<<<<<<< OLD" in content:
+            report.append(f"[ERROR] {path} (編寫者: {writer})\n  - JSON 檔案不支援局部替換標記 (<<<<<<< OLD)，請使用完整檔。")
             bad += 1
 
         content_errs = check_content_lines(content, path, forbidden_words, specific_rule)
@@ -356,8 +373,8 @@ if __name__ == "__main__":
 
 # EOF
 # F: AI-infra/.github/scripts/validate_delivery.py
-# V: 1792938000
-# W: ai-system-007
+# V: 1793010000
+# W: ai-system-009
 # EOF```
 
 <!-- === FILE END: .github/scripts/validate_delivery.py === -->
@@ -711,7 +728,7 @@ jobs:
               (
                 cd "external/${SAFE_NAME}" || exit 0
                 # 移除 .github 的排除，並加入 .yml 與 .yaml，確保專案 AI 能讀取 CI/CD 腳本
-                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" \) \
+                find . -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" -o -name "*.vue" \) \
                   -not -path "./.git/*" \
                   -not -path "./node_modules/*" \
                   -not -path "./docs/*" | sort | while read -r f; do
@@ -915,11 +932,11 @@ jobs:
             git push
           )
 
-# ═══ EOF ═══
+# EOF
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1792913000
-# W: ai-system-005
-# ═══ EOF ═══```
+# V: 1793010000
+# W: ai-system-009
+# EOF```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
 

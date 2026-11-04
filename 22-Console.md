@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-04 23:04:02 (HKT)
+> 生成時間：2026-11-05 07:17:02 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -22,7 +22,7 @@
             --primary: #6366f1; --primary-hover: #4f46e5; --bg: #f8fafc;
             --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b;
             --success: #10b981; --danger: #ef4444; --border: #e2e8f0;
-            --warning: #f59e0b;
+            --warning: #f59e0b; --diff-add: #dcfce7; --diff-del: #fee2e2;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
@@ -32,17 +32,9 @@
         .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; color: var(--text); }
         .subtitle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
         
-        .sticky-header { 
-            position: relative; 
-            background: var(--bg); 
-            z-index: 100; 
-            padding-top: 15px; 
-            margin-top: -15px;
-            margin-bottom: 15px; 
-        }
+        .sticky-header { position: relative; background: var(--bg); z-index: 100; padding-top: 15px; margin-top: -15px; margin-bottom: 15px; }
         
         input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; font-family: inherit; }
-        
         textarea { resize: vertical; min-height: 150px; max-height: 400px; font-family: monospace; overflow-y: auto; }
         
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
@@ -65,12 +57,10 @@
         .success-panel { background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
         .error-list { font-size: 0.85rem; margin-bottom: 10px; white-space: pre-wrap; font-family: monospace; }
         
-        /* 依賴提醒面板 */
         .dep-alert { display: none; background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; }
         .dep-alert-title { font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .dep-alert-btn { margin-top: 10px; background-color: #f59e0b; color: white; width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; }
 
-        /* 左右對比區塊 */
         .compare-container { display: flex; flex-direction: row; gap: 10px; margin-bottom: 15px; }
         .compare-card { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; }
         .compare-card-title { font-size: 0.8rem; font-weight: bold; color: var(--text); background: #f1f5f9; padding: 8px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
@@ -78,6 +68,9 @@
         .compare-card pre { font-size: 0.75rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; font-family: monospace; color: var(--text); padding: 8px; flex: 1; margin: 0; }
         
         .highlight-error { color: #dc2626; background-color: #fee2e2; font-weight: bold; border-radius: 2px; padding: 0 2px; }
+        .diff-line { display: block; }
+        .diff-add-line { background-color: var(--diff-add); color: #166534; }
+        .diff-del-line { background-color: var(--diff-del); color: #991b1b; }
         
         details { margin-bottom: 15px; }
         summary { cursor: pointer; font-weight: bold; padding: 12px 15px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); outline: none; display: flex; align-items: center; gap: 8px; }
@@ -98,7 +91,6 @@
         const FORBIDDEN_URL = `https://raw.githubusercontent.com/${OWNER}/AI-kernel/main/docs/r-rules/forbidden_words.txt`;
         const REPOS_URL = `https://raw.githubusercontent.com/${OWNER}/AI-infra/main/config/repos.json`;
 
-        // 體系核心檔案依賴對照表
         const DEPENDENCY_MAP = {
             "AI-kernel/docs/r-rules/R-00-rules.md": [
                 "AI-kernel/docs/r-rules/R-05-dsl-map.md",
@@ -481,7 +473,9 @@
             return null;
         }
 
-        function hasValidEof(content, filePath) {
+        function hasValid
+
+Eof(content, filePath) {
             if (filePath && filePath.endsWith('.json')) {
                 try {
                     const data = JSON.parse(content);
@@ -512,6 +506,27 @@
             return safeText;
         }
 
+        function renderDiff(oldText, newText) {
+            const oldLines = oldText.split('\n');
+            const newLines = newText.split('\n');
+            let html = '';
+            
+            let i = 0, j = 0;
+            while (i < oldLines.length || j < newLines.length) {
+                if (i < oldLines.length && j < newLines.length && oldLines[i] === newLines[j]) {
+                    html += `<span class="diff-line">${escapeHTML(oldLines[i])}</span>`;
+                    i++; j++;
+                } else if (j < newLines.length && (i >= oldLines.length || !oldLines.includes(newLines[j]))) {
+                    html += `<span class="diff-line diff-add-line">+ ${escapeHTML(newLines[j])}</span>`;
+                    j++;
+                } else {
+                    html += `<span class="diff-line diff-del-line">- ${escapeHTML(oldLines[i])}</span>`;
+                    i++;
+                }
+            }
+            return html;
+        }
+
         function markError(msg, target, oldContent) {
             let mark = '';
             if (oldContent === null) mark = '〔新檔案〕';
@@ -528,17 +543,20 @@
             const inputArea = document.getElementById('input-area');
             const forceBtn = document.getElementById('btn-force-publish');
             const depAlert = document.getElementById('dep-alert');
+            const structErrorWarning = document.getElementById('struct-error-warning');
             
             errorPanel.style.display = 'none';
             successPanel.style.display = 'none';
             forceBtn.style.display = 'none';
             depAlert.style.display = 'none';
+            structErrorWarning.style.display = 'none';
 
             if (!content.trim()) return alert('請先貼上內容');
 
             let errors = [];
             let errorTargets = [];
             let repo = "", filePath = "", fullPath = "未知路徑";
+            let isStructuralError = false;
             const rules = globalConfig.console_rules || {};
 
             let eofMatch = content.match(/(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*F:\s*([^\s\n]+)\s*\n(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*V:\s*\d+\s*\n(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*W:\s*[^\s\n]+/);
@@ -547,7 +565,6 @@
             if (eofMatch) pathMatch = eofMatch;
             else pathMatch = content.match(/^(?:#\s*|\/\/\s*|\/\*\s*|<!--\s*)*F:\s*"?([^\s"\n]+)"?\s*(?:\*\/|-->)?$/m);
 
-            // 新增：若為 JSON，嘗試解析 _EOF 取得路徑
             if (!pathMatch && content.trim().startsWith('{')) {
                 try {
                     const data = JSON.parse(content);
@@ -560,12 +577,14 @@
             if (!pathMatch) {
                 errors.push("找不到 F: 路徑標記。請確認 AI 是否漏寫 EOF。");
                 errorTargets.push(null);
+                isStructuralError = true;
             } else {
                 fullPath = pathMatch[1];
                 const pathParts = fullPath.split('/');
                 if (pathParts.length < 2) {
                     errors.push(`路徑格式錯誤：${fullPath}。必須包含倉庫名。`);
                     errorTargets.push(null);
+                    isStructuralError = true;
                 } else {
                     repo = pathParts[0];
                     filePath = pathParts.slice(1).join('/');
@@ -577,6 +596,7 @@
                             errors.push(`未知的倉庫目標：${repo}。`);
                         }
                         errorTargets.push(null);
+                        isStructuralError = true;
                         document.getElementById('target-repo').value = '';
                         document.getElementById('target-file-path').value = '';
                         document.getElementById('target-path-display').textContent = `目標：無效（${repo}）`;
@@ -591,9 +611,17 @@
             if (currentInputMode === 'full' && content.includes('<<<<<<< OLD')) {
                 errors.push("您在「完整檔」版面貼上了局部替換語法。請切換至「增量/局部替換」分頁。");
                 errorTargets.push(null);
+                isStructuralError = true;
             } else if (currentInputMode === 'patch' && !content.includes('<<<<<<< OLD') && !/^\s*\[APPEND\]/m.test(content)) {
                 errors.push("您在「增量/局部替換」版面，但內容缺乏 [APPEND] 或 <<<<<<< OLD 標記。");
                 errorTargets.push(null);
+                isStructuralError = true;
+            }
+
+            if (filePath.endsWith('.json') && content.includes('<<<<<<< OLD')) {
+                errors.push("JSON 檔案不支援局部替換，請使用完整檔 (FULL) 交付。");
+                errorTargets.push(null);
+                isStructuralError = true;
             }
 
             if (filePath.endsWith('.html') && repo !== 'AI-infra') {
@@ -602,12 +630,19 @@
                 if (doctypeCount > 1 || htmlTagCount > 1) {
                     errors.push(`檔案結構異常：多個 <!DOCTYPE html> 或 <html> 標籤。`);
                     errorTargets.push(null);
+                    isStructuralError = true;
+                }
+            }
+
+            if (fullPath.startsWith('AI-kernel/docs/r-rules/') || fullPath.startsWith('AI-kernel/docs/a-guide/')) {
+                if (fullPath.endsWith('.md') && !content.includes('<!-- === 關聯規則防呆矩陣 === -->') && !content.includes('<!-- === 關聯規則防呆矩陣 ===')) {
+                    errors.push("缺少關聯規則防呆矩陣（請依 R-005 規範補齊）。");
+                    errorTargets.push('<!-- === 關聯規則防呆矩陣 === -->');
                 }
             }
 
             let specificRule = (globalConfig.file_specific_rules && globalConfig.file_specific_rules[`${repo}/${filePath}`]) || {};
             
-            // 依 R-027，移除檔案級語法豁免，全檔案一律檢查禁用詞
             let cleanContent = content.replace(/```[\s\S]*?```/g, '').replace(/~~~[\s\S]*?~~~/g, '');
             cleanContent = cleanContent.replace(/「[^」]*」/g, '').replace(/`[^`]*`/g, '');
 
@@ -632,7 +667,6 @@
                 }
             }
 
-            // 全面執行禁用詞檢查
             globalForbiddenWords.forEach(word => {
                 if (cleanContent.includes(word)) {
                     errors.push(`發現禁用詞彙或偷懶樣式：「${word}」`);
@@ -671,38 +705,66 @@
                 }
             } else if (content.includes('<<<<<<< OLD')) {
                 isPartial = true;
-                const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
-                const patchMatch = content.match(patchRegex);
                 
-                if (!patchMatch) {
-                    errors.push("局部替換格式錯誤：缺少 ======= 或 >>>>>>> NEW 標記。");
-                    errorTargets.push(null);
+                if (oldContent) {
+                    const eofRegex = /(?:\/\*\s*|<!--\s*|#\s*)*[═=]*\s*EOF\s*[═=]*[\s\S]*?(?:\*\/|-->|#)?\s*$/i;
+                    let newEofMatch = content.match(eofRegex);
+                    let newEofStr = newEofMatch ? newEofMatch[0] : '';
+                    
+                    let base = oldContent.replace(eofRegex, '').trim();
+                    let patchContent = content.replace(eofRegex, '').trim();
+                    
+                    base = base.replace(/\r\n/g, '\n');
+                    
+                    const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/g;
+                    let match;
+                    let matchCount = 0;
+                    let hasMatchError = false;
+                    
+                    while ((match = patchRegex.exec(patchContent)) !== null) {
+                        matchCount++;
+                        let oldStr = match[1].replace(/\r\n/g, '\n');
+                        let newStr = match[2].replace(/\r\n/g, '\n');
+                        
+                        const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const oldStrPattern = new RegExp(escapeRegExp(oldStr).replace(/\\n/g, '\\s*\\n\\s*'), 'g');
+                        
+                        if (base.search(oldStrPattern) !== -1) {
+                            base = base.replace(oldStrPattern, newStr);
+                        } else if (base.includes(oldStr)) {
+                            base = base.split(oldStr).join(newStr);
+                        } else {
+                            errors.push(`找不到要替換的目標字串 (OLD)：\n${oldStr.substring(0, 50)}...`);
+                            errorTargets.push(null);
+                            hasMatchError = true;
+                            isStructuralError = true;
+                        }
+                    }
+                    
+                    if (matchCount === 0) {
+                        errors.push("局部替換格式錯誤：找不到完整的 OLD/NEW 標記。");
+                        errorTargets.push(null);
+                        isStructuralError = true;
+                    } else if (!newEofStr) {
+                        errors.push("局部替換缺少獨立的 EOF 區塊。");
+                        errorTargets.push(null);
+                        isStructuralError = true;
+                    } else if (!hasMatchError) {
+                        finalContent = base.trim() + "\n\n" + newEofStr.trim();
+                    }
                 } else {
-                    const oldStr = patchMatch[1];
-                    const newStr = patchMatch[2];
-                    
-                    if (!hasValidEof(newStr, filePath)) {
-                        errors.push("局部替換的 NEW 區塊缺少 F/V/W 標記。這會導致無法追蹤修改者，請要求 AI 補齊後重新發布。");
-                        errorTargets.push(null);
-                    }
-                    
-                    if (oldContent && !oldContent.includes(oldStr)) {
-                        errors.push("找不到要替換的目標字串 (OLD)。請檢查 OLD 內容是否與倉庫一字不差。");
-                        errorTargets.push(null);
-                    } else if (oldContent) {
-                        finalContent = oldContent.replace(oldStr, newStr);
-                    } else {
-                        finalContent = newStr;
-                    }
+                    errors.push("找不到倉庫舊檔，無法執行局部替換。");
+                    errorTargets.push(null);
+                    isStructuralError = true;
                 }
             }
 
             if (errors.length === 0 && !hasValidEof(finalContent, filePath)) {
                 errors.push(`替換或追加後的最終結果缺少 EOF (F/V/W)。已終止發布。`);
                 errorTargets.push(null);
+                isStructuralError = true;
             }
 
-            // 填寫字數與預覽
             const targetsToHighlight = errorTargets.filter(t => t);
             
             if (errors.length > 0) {
@@ -720,23 +782,30 @@
                 errors.forEach((err, i) => { displayErrors += markError(err, errorTargets[i], oldContent) + '\n'; });
                 document.getElementById('error-list').textContent = header + displayErrors;
 
-                if (repo && filePath && allowedRepos.includes(repo)) forceBtn.style.display = 'block';
+                if (isStructuralError) {
+                    structErrorWarning.style.display = 'block';
+                    forceBtn.style.display = 'none'; // 物理阻斷
+                } else if (repo && filePath && allowedRepos.includes(repo)) {
+                    forceBtn.style.display = 'block';
+                }
             } else {
                 successPanel.style.display = 'block';
                 previewCache = { finalContent, isAppend, isPartial };
                 
                 document.getElementById('success-compare').style.display = 'flex';
                 
-                // 左側舊檔
                 document.getElementById('old-char-count-success').textContent = `(${oldContent ? oldContent.length : 0} 字)`;
                 document.getElementById('old-content-view-success').innerHTML = oldContent !== null ? highlightText(oldContent, []) : oldContentStatus;
                 
-                // 右側最終結果
                 const oldLen = oldContent ? oldContent.length : 0;
                 document.getElementById('final-char-count').textContent = `(舊檔 ${oldLen} 字 ➜ 新檔 ${finalContent.length} 字)`;
-                document.getElementById('final-content-view').textContent = finalContent;
+                
+                if (isPartial && oldContent) {
+                    document.getElementById('final-content-view').innerHTML = renderDiff(oldContent, finalContent);
+                } else {
+                    document.getElementById('final-content-view').textContent = finalContent;
+                }
 
-                // 依賴提醒邏輯
                 if (DEPENDENCY_MAP[fullPath]) {
                     depAlert.style.display = 'block';
                     window._currentDeps = { trigger: fullPath, required: DEPENDENCY_MAP[fullPath] };
@@ -761,6 +830,7 @@
             document.getElementById('btn-publish').style.display = 'block';
             document.getElementById('btn-force-publish').style.display = 'none';
             document.getElementById('btn-reset-next').style.display = 'none';
+            document.getElementById('struct-error-warning').style.display = 'none';
             
             document.getElementById('error-compare').style.display = 'none';
             document.getElementById('success-compare').style.display = 'none';
@@ -816,28 +886,51 @@
                     if (/^\s*\[APPEND\]/m.test(content)) {
                         isAppend = true;
                         if (oldContent) {
-                            let base = oldContent.replace(/(?:\/\*\s*|<!--\s*|#\s*)*[═=]+\s*EOF\s*[═=]+[\s\S]*?(?:\*\/|-->|#)\s*$/, '').trim();
+                            let base = oldContent.replace(/(?:\/\*\s*|<!--\s*|#\s*)*[═=]*\s*EOF\s*[═=]*[\s\S]*?(?:\*\/|-->|#)?\s*$/i, '').trim();
                             finalContent = base + "\n\n" + content.replace(/^\s*\[APPEND\]\s*/, '').trim();
                         } else {
                             finalContent = content.replace(/^\s*\[APPEND\]\s*/, '').trim();
                         }
                     } else if (content.includes('<<<<<<< OLD')) {
-                        const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/;
-                        const patchMatch = content.match(patchRegex);
-                        
-                        if (!patchMatch) {
-                            if (isForce) {
-                                finalContent = content;
-                                isPartial = false;
-                            } else {
-                                throw new Error('偵測到 <<<<<<< OLD 標記，但格式不完整。已拒絕發布。');
+                        isPartial = true;
+                        if (oldContent) {
+                            const eofRegex = /(?:\/\*\s*|<!--\s*|#\s*)*[═=]*\s*EOF\s*[═=]*[\s\S]*?(?:\*\/|-->|#)?\s*$/i;
+                            let newEofStr = content.match(eofRegex) ? content.match(eofRegex)[0] : '';
+                            let base = oldContent.replace(eofRegex, '').trim().replace(/\r\n/g, '\n');
+                            let patchContent = content.replace(eofRegex, '').trim();
+                            
+                            const patchRegex = /<<<<<<< OLD\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> NEW/g;
+                            let match;
+                            let matchCount = 0;
+                            let hasMatchError = false;
+                            
+                            while ((match = patchRegex.exec(patchContent)) !== null) {
+                                matchCount++;
+                                let oldStr = match[1].replace(/\r\n/g, '\n');
+                                let newStr = match[2].replace(/\r\n/g, '\n');
+                                const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                const oldStrPattern = new RegExp(escapeRegExp(oldStr).replace(/\\n/g, '\\s*\\n\\s*'), 'g');
+                                
+                                if (base.search(oldStrPattern) !== -1) {
+                                    base = base.replace(oldStrPattern, newStr);
+                                } else if (base.includes(oldStr)) {
+                                    base = base.split(oldStr).join(newStr);
+                                } else {
+                                    hasMatchError = true;
+                                }
                             }
+                            
+                            // 物理防線：無論是否強制發布，只要匹配失敗或格式錯誤，直接丟出錯誤，阻斷寫入！
+                            if (matchCount === 0) {
+                                throw new Error('局部替換格式錯誤：找不到完整的 OLD/NEW 標記。禁止發布。');
+                            }
+                            if (hasMatchError) {
+                                throw new Error('找不到要替換的目標字串 (OLD)。禁止發布以免污染源碼。');
+                            }
+                            
+                            finalContent = base.trim() + "\n\n" + (newEofStr ? newEofStr.trim() : '');
                         } else {
-                            isPartial = true;
-                            const oldStr = patchMatch[1];
-                            const newStr = patchMatch[2];
-                            if (oldContent && !oldContent.includes(oldStr)) throw new Error('找不到要替換的目標字串。');
-                            finalContent = oldContent ? oldContent.replace(oldStr, newStr) : newStr;
+                            throw new Error("找不到倉庫舊檔，無法執行局部替換。");
                         }
                     } else {
                         finalContent = content;
@@ -870,7 +963,6 @@
                 
                 document.getElementById('success-message').innerHTML = `🎉 已成功寫入${forceTag}：<br><b>${repo}/${filePath}</b><br><span style="font-size:0.85rem; color:#047857; font-weight:normal;">⏱️ 寫入時間：${timeStr}</span>`;
                 
-                // 隱藏所有發布按鈕，防止重複點擊
                 document.getElementById('btn-publish').style.display = 'none';
                 document.getElementById('btn-force-publish').style.display = 'none';
                 
@@ -1006,6 +1098,10 @@
         </div>
 
         <div class="error-panel" id="error-panel">
+            <div id="struct-error-warning" style="display:none; background-color:#dc2626; color:white; padding:15px; border-radius:8px; margin-bottom:15px; font-weight:bold; text-align:center; font-size:1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                ⚠️ 系統偵測到結構性錯誤（如 OLD 找不到、JSON 誤用補丁）。<br>
+                已物理阻斷發布功能。請修正內容或改用完整檔。
+            </div>
             <div style="font-weight:bold; margin-bottom:10px;">❌ 檢查未通過</div>
             <div class="error-list" id="error-list"></div>
             
@@ -1054,7 +1150,6 @@
                 </div>
             </div>
 
-            <!-- 依賴提醒面板 -->
             <div id="dep-alert" class="dep-alert">
                 <div class="dep-alert-title">⚠️ 連動更新提醒</div>
                 <div>此檔案有依賴其他檔案，請複製下方指令貼回對話，由 AI 為您處理後續更新。</div>
@@ -1100,8 +1195,8 @@
 </html>
 <!-- EOF
 F: AI-infra/index.html
-V: 1792940400
-W: ai-system-007
+V: 1793010000
+W: ai-system-009
 EOF -->```
 
 <!-- === FILE END: index.html === -->
@@ -1142,8 +1237,8 @@ EOF -->```
 ## 📄 sw.js
 
 ```js
-// 將版號提升到 v10，強迫手機清空舊快取並載入最新的 index.html
-const CACHE_NAME = 'ai-console-v10'; 
+// 將版號提升到 v11，強迫手機清空舊快取並載入最新的 index.html
+const CACHE_NAME = 'ai-console-v11'; 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -1208,8 +1303,8 @@ self.addEventListener('fetch', (event) => {
 
 /* ═══ EOF ═══
 F: AI-infra/sw.js
-V: 1792910300
-W: ai-system-004
+V: 1793010000
+W: ai-system-009
 ═══ */```
 
 <!-- === FILE END: sw.js === -->

@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-04 23:04:00 (HKT)
+> 生成時間：2026-11-05 07:17:00 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -30,13 +30,13 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1792941600 | ai-system-007 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1792942800 | ai-system-008 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1792990000 | UPGRADE-006 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1792938600 | ai-system-007 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1792932400 | ai-system-006 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1792915200 | ai-system-005 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1792990400 | UPGRADE-006 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1792938000 | ai-system-007 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -89,7 +89,12 @@
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
 | AI-WA-FS | README.md |
+| AI-WA-FS | index.html |
 | AI-WA-FS | meta.json |
+| AI-WA-FS | package.json |
+| AI-WA-FS | src/App.vue |
+| AI-WA-FS | src/config/supabase.js |
+| AI-WA-FS | vite.config.js |
 | AI-WA-UPWO | .env.example |
 | AI-WA-UPWO | .github/workflows/deploy.yml |
 | AI-WA-UPWO | .github/workflows/notify.yml |
@@ -326,13 +331,13 @@
 | 生成物檔案 | 大小 (KB) |
 |---|---|
 | 00-IP.md | 8 |
-| 01-AP.md | 24 |
-| 02-RP.md | 80 |
+| 01-AP.md | 28 |
+| 02-RP.md | 84 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 56 |
 | 20-SP-Sys.md | 36 |
-| 21-INFRA.md | 56 |
+| 21-INFRA.md | 60 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 48 |
 | 90-Code.md | 388 |
@@ -343,6 +348,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
-| 93-Code.md | 4 |
+| 93-Code.md | 8 |
 | 93-P.md | 4 |
 | 93-SP.md | 4 |
