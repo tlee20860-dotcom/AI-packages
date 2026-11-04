@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-03 13:15:46 (HKT)
+> 生成時間：2026-11-04 23:04:00 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,6 +21,7 @@
 | AI-General | docs/p92/WF-CONCLUSION.md | 1793073000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-HANDOFF.md | 1793072000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
+| AI-General | docs/p93/WF-HANDOFF.md | 1793804067 | init-93#1 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792943400 | ai-system-007 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
@@ -87,6 +88,8 @@
 | AI-OS | E-01-engine.md |
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
+| AI-WA-FS | README.md |
+| AI-WA-FS | meta.json |
 | AI-WA-UPWO | .env.example |
 | AI-WA-UPWO | .github/workflows/deploy.yml |
 | AI-WA-UPWO | .github/workflows/notify.yml |
@@ -340,3 +343,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
+| 93-Code.md | 4 |
+| 93-P.md | 4 |
+| 93-SP.md | 4 |

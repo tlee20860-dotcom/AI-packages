@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-03 13:15:46 (HKT)
+> 生成時間：2026-11-04 23:03:59 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -1380,6 +1380,13 @@ jobs:
     "code": "UPGRADE",
     "display": "UPGRADE-WO",
     "pkg_no": "92"
+  },
+  {
+    "repo": "tlee20860-dotcom/AI-WA-FS",
+    "domain": "W",
+    "code": "FS",
+    "display": "家庭入帳V3",
+    "pkg_no": "93"
   }
 ]
 }

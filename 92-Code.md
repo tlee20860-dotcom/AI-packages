@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-03 13:15:45 (HKT)
+> 生成時間：2026-11-04 23:03:59 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -5941,7 +5941,8 @@ import { createIcons, LayoutDashboard, List, FileEdit, FunctionSquare, CheckSqua
 import { renderSchema, renderViewConfig } from './settings-schema.js';
 
 let unsubscribe = null;
-export let currentSettings = { schema: [], view_configs: {}, form_layout: 'B', formulas: {}, diff_fields: ['amount'], nav_config: [] };
+// 💡 修正：加入 custom_databases
+export let currentSettings = { schema: [], view_configs: {}, form_layout: 'B', formulas: {}, diff_fields: ['amount'], nav_config: [], custom_databases: [] };
 let activeTab = 'layout';
 
 export default {
@@ -5974,7 +5975,8 @@ export default {
           form_layout: data.form_layout || 'B',
           formulas: data.formulas || {},
           diff_fields: Array.isArray(data.diff_fields) ? data.diff_fields : ['amount'],
-          nav_config: Array.isArray(data.nav_config) ? data.nav_config : []
+          nav_config: Array.isArray(data.nav_config) ? data.nav_config : [],
+          custom_databases: Array.isArray(data.custom_databases) ? data.custom_databases : [] // 💡 補上這行
         };
       }
       this.renderTabs();
@@ -6331,7 +6333,7 @@ export default {
 
 /*
 F: AI-WA-UPWO/src/pages/settings-form.js
-V: 1793057000
+V: 1793093000
 W: UPGRADE-007
 */```
 
