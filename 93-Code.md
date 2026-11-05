@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-05 07:17:00 (HKT)
+> 生成時間：2026-11-05 08:19:59 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -168,6 +168,326 @@ W: ai-wa-fs-001
 ═══ */```
 
 <!-- === FILE END: ./src/config/supabase.js === -->
+
+<!-- === FILE START: ./src/main.js === -->
+
+## 📄 ./src/main.js
+
+```js
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import zhTw from 'element-plus/es/locale/lang/zh-tw'
+import App from './App.vue'
+import router from './router'
+import './style.css'
+
+const app = createApp(App)
+
+// 啟用 Element Plus 並設定繁體中文語系
+app.use(ElementPlus, { locale: zhTw })
+
+// 啟用路由系統
+app.use(router)
+
+app.mount('#app')
+
+/* ═══ EOF ═══
+F: AI-WA-FS/src/main.js
+V: 1793804500
+W: ai-wa-fs-001
+═══ */```
+
+<!-- === FILE END: ./src/main.js === -->
+
+<!-- === FILE START: ./src/router/index.js === -->
+
+## 📄 ./src/router/index.js
+
+```js
+import { createRouter, createWebHistory } from 'vue-router'
+import { supabase } from '@/config/supabase'
+import LoginView from '@/views/LoginView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+
+const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: DashboardView,
+    meta: { requiresAuth: true }
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+// 路由守衛：確保未登入者無法進入系統內部
+router.beforeEach(async (to, from, next) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  
+  if (requiresAuth && !session) {
+    // 需要登入但沒有 Session，強制跳轉到登入頁
+    next('/login')
+  } else if (to.path === '/login' && session) {
+    // 已經登入卻想進登入頁，跳轉回首頁
+    next('/')
+  } else {
+    next()
+  }
+})
+
+export default router
+
+/* ═══ EOF ═══
+F: AI-WA-FS/src/router/index.js
+V: 1793804400
+W: ai-wa-fs-001
+═══ */```
+
+<!-- === FILE END: ./src/router/index.js === -->
+
+<!-- === FILE START: ./src/style.css === -->
+
+## 📄 ./src/style.css
+
+```css
+:root {
+  --primary-color: #409EFF;
+  --bg-color: #F2F3F5;
+  --text-main: #303133;
+  --text-secondary: #909399;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 覆寫 Element Plus 部分預設樣式，讓介面更清爽 */
+.el-card {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 隱藏手機端滾動條，保持美觀 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══ EOF ═══
+F: AI-WA-FS/src/style.css
+V: 1793804110
+W: ai-wa-fs-001
+═══ */```
+
+<!-- === FILE END: ./src/style.css === -->
+
+<!-- === FILE START: ./src/views/DashboardView.vue === -->
+
+## 📄 ./src/views/DashboardView.vue
+
+```vue
+<template>
+  <div class="dashboard-container">
+    <el-card class="header-card">
+      <div class="header-content">
+        <h2>工作台 (Dashboard)</h2>
+        <el-button type="danger" plain @click="handleLogout">登出</el-button>
+      </div>
+      <p class="welcome-text">歡迎回來！這裡之後會顯示您的總資產與待辦事項。</p>
+    </el-card>
+  </div>
+</template>
+
+<script setup>
+import { supabase } from '@/config/supabase'
+import { ElMessage } from 'element-plus'
+
+const handleLogout = async () => {
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    ElMessage.error('登出失敗：' + error.message)
+  } else {
+    ElMessage.success('已安全登出')
+    window.location.reload() // 重新載入以回到登入頁
+  }
+}
+</script>
+
+<style scoped>
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.header-content h2 {
+  margin: 0;
+  color: var(--text-main);
+}
+.welcome-text {
+  margin: 0;
+  color: var(--text-secondary);
+}
+</style>
+<!-- ═══ EOF ═══
+F: AI-WA-FS/src/views/DashboardView.vue
+V: 1793804300
+W: ai-wa-fs-001
+═══ -->```
+
+<!-- === FILE END: ./src/views/DashboardView.vue === -->
+
+<!-- === FILE START: ./src/views/LoginView.vue === -->
+
+## 📄 ./src/views/LoginView.vue
+
+```vue
+<template>
+  <div class="login-container">
+    <el-card class="login-card">
+      <div class="login-header">
+        <h2>家庭入帳 V3</h2>
+        <p>請輸入您的專屬帳號登入</p>
+      </div>
+      
+      <el-form @submit.prevent="handleLogin">
+        <el-form-item>
+          <el-input 
+            v-model="account" 
+            placeholder="請輸入帳號 (例如: 老公)" 
+            size="large"
+            prefix-icon="User"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-input 
+            v-model="password" 
+            type="password" 
+            placeholder="請輸入密碼" 
+            size="large"
+            show-password
+            prefix-icon="Lock"
+          />
+        </el-form-item>
+        
+        <el-button 
+          type="primary" 
+          native-type="submit" 
+          :loading="loading" 
+          class="login-btn"
+          size="large"
+        >
+          登入
+        </el-button>
+      </el-form>
+    </el-card>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { supabase } from '@/config/supabase'
+import { ElMessage } from 'element-plus'
+
+const account = ref('')
+const password = ref('')
+const loading = ref(false)
+
+const handleLogin = async () => {
+  if (!account.value || !password.value) {
+    ElMessage.warning('請輸入帳號與密碼')
+    return
+  }
+
+  loading.value = true
+  try {
+    // 如果使用者輸入的帳號沒有 @，系統自動在背後補上虛擬 Email 後綴
+    const virtualEmail = account.value.includes('@') 
+      ? account.value 
+      : `${account.value}@family.local`
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: virtualEmail,
+      password: password.value,
+    })
+
+    if (error) throw error
+    
+    ElMessage.success('登入成功！')
+    window.location.reload() // 登入成功後重新整理，觸發路由跳轉到首頁
+    
+  } catch (error) {
+    ElMessage.error('登入失敗：帳號或密碼錯誤')
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped>
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg-color);
+}
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.login-header h2 {
+  margin: 0 0 10px 0;
+  color: var(--text-main);
+}
+.login-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.login-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+</style>
+<!-- ═══ EOF ═══
+F: AI-WA-FS/src/views/LoginView.vue
+V: 1793804700
+W: ai-wa-fs-001
+═══ -->```
+
+<!-- === FILE END: ./src/views/LoginView.vue === -->
 
 <!-- === FILE START: ./vite.config.js === -->
 

@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-05 07:17:00 (HKT)
+> 生成時間：2026-11-05 08:19:59 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -94,6 +94,11 @@
 | AI-WA-FS | package.json |
 | AI-WA-FS | src/App.vue |
 | AI-WA-FS | src/config/supabase.js |
+| AI-WA-FS | src/main.js |
+| AI-WA-FS | src/router/index.js |
+| AI-WA-FS | src/style.css |
+| AI-WA-FS | src/views/DashboardView.vue |
+| AI-WA-FS | src/views/LoginView.vue |
 | AI-WA-FS | vite.config.js |
 | AI-WA-UPWO | .env.example |
 | AI-WA-UPWO | .github/workflows/deploy.yml |
@@ -348,6 +353,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
-| 93-Code.md | 8 |
+| 93-Code.md | 12 |
 | 93-P.md | 4 |
 | 93-SP.md | 4 |
