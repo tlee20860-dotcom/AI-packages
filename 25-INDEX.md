@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-05 09:06:45 (HKT)
+> 生成時間：2026-11-06 07:45:14 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -89,6 +89,7 @@
 | AI-OS | E-02-domains.md |
 | AI-OS | meta.json |
 | AI-WA-FS | README.md |
+| AI-WA-FS | functions/api/supabase/[[path]].js |
 | AI-WA-FS | index.html |
 | AI-WA-FS | meta.json |
 | AI-WA-FS | package.json |
@@ -97,7 +98,9 @@
 | AI-WA-FS | src/main.js |
 | AI-WA-FS | src/router/index.js |
 | AI-WA-FS | src/style.css |
+| AI-WA-FS | src/views/CashflowView.vue |
 | AI-WA-FS | src/views/DashboardView.vue |
+| AI-WA-FS | src/views/InsuranceView.vue |
 | AI-WA-FS | src/views/LoginView.vue |
 | AI-WA-FS | vite.config.js |
 | AI-WA-UPWO | .env.example |
@@ -353,6 +356,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
-| 93-Code.md | 12 |
+| 93-Code.md | 28 |
 | 93-P.md | 4 |
 | 93-SP.md | 4 |
