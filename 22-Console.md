@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-05 08:22:59 (HKT)
+> 生成時間：2026-11-05 09:06:47 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -473,9 +473,7 @@
             return null;
         }
 
-        function hasValid
-
-Eof(content, filePath) {
+        function hasValidEof(content, filePath) {
             if (filePath && filePath.endsWith('.json')) {
                 try {
                     const data = JSON.parse(content);

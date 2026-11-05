@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-05 08:22:57 (HKT)
+> 生成時間：2026-11-05 09:06:45 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -102,48 +102,19 @@ W: ai-wa-fs-001
 
 ```vue
 <template>
-  <div class="app-container">
-    <div class="loading-box">
-      <h1>家庭入帳 V3</h1>
-      <p>系統初始化中... 準備載入資料庫</p>
-      <el-button type="primary" @click="testConnection">測試按鈕</el-button>
-    </div>
-  </div>
+  <router-view />
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus'
-
-const testConnection = () => {
-  ElMessage.success('Vue 與 Element Plus 已成功載入！')
-}
+// 路由系統已在 main.js 掛載，這裡作為根容器
 </script>
 
 <style>
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Noto Sans TC', sans-serif;
-  background-color: #F2F3F5;
-  color: #333;
-}
-.app-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-.loading-box {
-  text-align: center;
-  padding: 40px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
+/* 全域樣式已在 style.css 定義，這裡保持簡潔 */
 </style>
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/App.vue
-V: 1793804090
+V: 1793804600
 W: ai-wa-fs-001
 ═══ -->```
 
@@ -380,7 +351,7 @@ W: ai-wa-fs-001
         <el-form-item>
           <el-input 
             v-model="account" 
-            placeholder="請輸入帳號 (例如: 老公)" 
+            placeholder="請輸入帳號 (例如: admin)" 
             size="large"
             prefix-icon="User"
           />
@@ -427,23 +398,27 @@ const handleLogin = async () => {
 
   loading.value = true
   try {
-    // 如果使用者輸入的帳號沒有 @，系統自動在背後補上虛擬 Email 後綴
-    const virtualEmail = account.value.includes('@') 
-      ? account.value 
-      : `${account.value}@family.local`
+    const cleanAccount = account.value.trim()
+    // 👇 這裡把網域改成了合法的 fs-app.com
+    const virtualEmail = cleanAccount.includes('@') 
+      ? cleanAccount 
+      : `${cleanAccount}@fs-app.com`
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: virtualEmail,
       password: password.value,
     })
 
-    if (error) throw error
+    if (error) {
+      ElMessage.error('登入失敗：' + error.message)
+      throw error
+    }
     
     ElMessage.success('登入成功！')
-    window.location.reload() // 登入成功後重新整理，觸發路由跳轉到首頁
+    window.location.reload()
     
   } catch (error) {
-    ElMessage.error('登入失敗：帳號或密碼錯誤')
+    console.error('詳細錯誤:', error)
   } finally {
     loading.value = false
   }
@@ -451,35 +426,12 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: var(--bg-color);
-}
-.login-card {
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
-}
-.login-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.login-header h2 {
-  margin: 0 0 10px 0;
-  color: var(--text-main);
-}
-.login-header p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-.login-btn {
-  width: 100%;
-  margin-top: 10px;
-}
+.login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: var(--bg-color); }
+.login-card { width: 100%; max-width: 400px; padding: 20px; }
+.login-header { text-align: center; margin-bottom: 30px; }
+.login-header h2 { margin: 0 0 10px 0; color: var(--text-main); }
+.login-header p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+.login-btn { width: 100%; margin-top: 10px; }
 </style>
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/LoginView.vue
@@ -496,36 +448,13 @@ W: ai-wa-fs-001
 ```js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: '/',
   plugins: [
-    vue(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'AI-WA-FS 家庭財務系統',
-        short_name: 'AI-WA-FS',
-        description: '家庭財務與保險基金管理',
-        theme_color: '#0F172A',
-        background_color: '#0F172A',
-        display: 'standalone',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
+    vue()
+    // 暫時移除 VitePWA 外掛，避免開發階段網路請求被快取干擾
   ],
   resolve: {
     alias: {
