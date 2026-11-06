@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-07 00:26:31 (HKT)
+> 生成時間：2026-11-07 01:18:30 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -1002,7 +1002,7 @@ const exportExcel = async () => {
 
     const allItems = []
 
-    // 收集收入 (無對象分組，通常只有成員)
+    // 收集收入
     rawIncomes.value.forEach(i => {
       allItems.push({
         year_month: i.year_month,
@@ -1035,7 +1035,7 @@ const exportExcel = async () => {
         allItems.push({
           year_month: ip.year_month,
           type: '保險',
-          payer: '保險公司',
+          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
           name: `保險供款：${p.name}`,
           category: '保險',
           amount: Number(p.monthly_average),
@@ -1187,7 +1187,7 @@ onMounted(() => fetchData())
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/AnnualReportView.vue
-V: 1793971600
+V: 1793972300
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -2573,6 +2573,10 @@ W: ai-wa-fs-001
 
         <div class="card-body">
           <div class="info-row">
+            <span class="label">持有人</span>
+            <span class="value">{{ p.holder_name || '家庭共用' }}</span>
+          </div>
+          <div class="info-row">
             <span class="label">本期月均</span>
             <span class="value text-blue">HK$ {{ p.monthly_average.toLocaleString() }}</span>
           </div>
@@ -2606,6 +2610,25 @@ W: ai-wa-fs-001
         <el-form-item label="保險公司">
           <el-input v-model="form.company" placeholder="例如：宏利" />
         </el-form-item>
+        
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="持有人" required>
+              <el-select v-model="form.holder_name" style="width: 100%" placeholder="請選擇">
+                <el-option v-for="m in members" :key="m.id" :label="m.name" :value="m.name" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="保單類型" required>
+              <el-radio-group v-model="form.type">
+                <el-radio label="normal">普通保險</el-radio>
+                <el-radio label="fund_insurance">基金保險</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="開始日期" required>
@@ -2618,6 +2641,7 @@ W: ai-wa-fs-001
             </el-form-item>
           </el-col>
         </el-row>
+        
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="繳費頻率" required>
@@ -2633,12 +2657,7 @@ W: ai-wa-fs-001
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="保單類型" required>
-          <el-radio-group v-model="form.type">
-            <el-radio label="normal">普通保險</el-radio>
-            <el-radio label="fund_insurance">基金保險</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        
         <div v-if="form.premium_amount > 0" class="preview-box">
           <el-icon><InfoFilled /></el-icon>
           <span>系統將自動平攤：每月約 <strong>HK$ {{ computedMonthlyAverage.toLocaleString() }}</strong></span>
@@ -2662,6 +2681,7 @@ import { Loading, InfoFilled, MoreFilled, Money } from '@element-plus/icons-vue'
 
 const policies = ref([])
 const payments = ref([]) 
+const members = ref([]) // 🆕 儲存成員列表
 const loading = ref(true)
 const dialogVisible = ref(false)
 const submitting = ref(false)
@@ -2689,14 +2709,15 @@ const getProgress = (p) => {
   }
 }
 
-const form = ref({ id: null, name: '', company: '', start_date: '', total_years: 10, payment_freq: '月繳', premium_amount: 0, type: 'normal' })
+const form = ref({ id: null, name: '', company: '', holder_name: '', start_date: '', total_years: 10, payment_freq: '月繳', premium_amount: 0, type: 'normal' })
 const computedMonthlyAverage = computed(() => form.value.payment_freq === '年繳' ? Math.round((form.value.premium_amount || 0) / 12) : (form.value.premium_amount || 0))
 
 const fetchData = async () => {
   loading.value = true
-  const [policiesRes, paymentsRes] = await Promise.all([
+  const [policiesRes, paymentsRes, membersRes] = await Promise.all([
     supabase.from('insurance_policies').select('*').order('created_at', { ascending: false }),
-    supabase.from('insurance_payments').select('*')
+    supabase.from('insurance_payments').select('*'),
+    supabase.from('members').select('*').order('created_at', { ascending: true })
   ])
 
   if (policiesRes.error) ElMessage.error('載入保單失敗')
@@ -2705,12 +2726,17 @@ const fetchData = async () => {
   if (paymentsRes.error) ElMessage.error('載入狀態失敗')
   else payments.value = paymentsRes.data || []
 
+  if (!membersRes.error && membersRes.data) {
+    members.value = membersRes.data
+  }
+
   loading.value = false
 }
 
 const openAddDialog = () => {
   isEdit.value = false
-  form.value = { id: null, name: '', company: '', start_date: new Date().toISOString().split('T')[0], total_years: 10, payment_freq: '月繳', premium_amount: 0, type: 'normal' }
+  const defaultHolder = members.value.length > 0 ? members.value[0].name : ''
+  form.value = { id: null, name: '', company: '', holder_name: defaultHolder, start_date: new Date().toISOString().split('T')[0], total_years: 10, payment_freq: '月繳', premium_amount: 0, type: 'normal' }
   dialogVisible.value = true
 }
 
@@ -2736,13 +2762,66 @@ const deletePolicy = async (id, name) => {
   }
 }
 
+// 自動比對並補齊歷史繳費紀錄
+const syncInsurancePayments = async (policy) => {
+  if (!policy || !policy.start_date) return
+  
+  try {
+    const start = new Date(policy.start_date)
+    const now = new Date()
+    
+    // 收集需要的年月
+    const requiredMonths = []
+    let current = new Date(start.getFullYear(), start.getMonth(), 1)
+    const end = new Date(now.getFullYear(), now.getMonth(), 1)
+    
+    while (current <= end) {
+      const yyyy = current.getFullYear()
+      const mm = String(current.getMonth() + 1).padStart(2, '0')
+      requiredMonths.push(`${yyyy}-${mm}`)
+      current.setMonth(current.getMonth() + 1)
+    }
+
+    if (requiredMonths.length === 0) return
+
+    // 查詢現有紀錄
+    const { data: existingData, error: fetchErr } = await supabase
+      .from('insurance_payments')
+      .select('year_month')
+      .eq('policy_id', policy.id)
+
+    if (fetchErr) throw fetchErr
+
+    const existingMonths = new Set((existingData || []).map(d => d.year_month))
+    
+    // 比對缺失的月份
+    const missingMonths = requiredMonths.filter(m => !existingMonths.has(m))
+
+    if (missingMonths.length > 0) {
+      const toInsert = missingMonths.map(ym => ({
+        policy_id: policy.id,
+        year_month: ym,
+        status: '未轉'
+      }))
+      
+      const { error: insErr } = await supabase.from('insurance_payments').insert(toInsert)
+      if (insErr) throw insErr
+    }
+  } catch (err) {
+    console.error('同步歷史繳費紀錄失敗', err)
+  }
+}
+
 const submitForm = async () => {
   if (!form.value.name || !form.value.start_date || form.value.premium_amount <= 0) return ElMessage.warning('請填寫完整資訊')
+  if (!form.value.holder_name) return ElMessage.warning('請選擇持有人')
+  
   submitting.value = true
   
   const payload = {
     name: form.value.name, 
     company: form.value.company, 
+    holder_name: form.value.holder_name, // 🆕 寫入持有人
     start_date: form.value.start_date,
     total_years: form.value.total_years, 
     payment_freq: form.value.payment_freq,
@@ -2754,8 +2833,11 @@ const submitForm = async () => {
   if (isEdit.value) {
     // 更新
     const { error } = await supabase.from('insurance_policies').update(payload).eq('id', form.value.id)
-    if (error) ElMessage.error('更新失敗：' + error.message)
-    else {
+    if (error) {
+      ElMessage.error('更新失敗：' + error.message)
+    } else {
+      // 編輯後同步補齊
+      await syncInsurancePayments({ id: form.value.id, start_date: form.value.start_date })
       ElMessage.success('✅ 保單已更新')
       dialogVisible.value = false
       fetchData()
@@ -2771,41 +2853,8 @@ const submitForm = async () => {
     if (error) {
       ElMessage.error('新增失敗：' + error.message)
     } else {
-      // 🆕 自動生成歷史待辦
-      try {
-        const start = new Date(form.value.start_date)
-        const now = new Date()
-        
-        // 計算要生成到哪一個月
-        const endMonthStr = currentYearMonth.value // 生成到當前月份
-        
-        let current = new Date(start.getFullYear(), start.getMonth(), 1)
-        const end = new Date(now.getFullYear(), now.getMonth(), 1)
-        
-        const paymentsToInsert = []
-        
-        while (current <= end) {
-          const yyyy = current.getFullYear()
-          const mm = String(current.getMonth() + 1).padStart(2, '0')
-          const ym = `${yyyy}-${mm}`
-          
-          paymentsToInsert.push({
-            policy_id: newPolicy.id,
-            year_month: ym,
-            status: '未轉'
-          })
-          
-          current.setMonth(current.getMonth() + 1)
-        }
-
-        if (paymentsToInsert.length > 0) {
-          const { error: insErr } = await supabase.from('insurance_payments').insert(paymentsToInsert)
-          if (insErr) console.error('自動生成歷史紀錄失敗', insErr)
-        }
-      } catch (e) {
-        console.error('生成歷史邏輯錯誤', e)
-      }
-
+      // 新增後生成歷史
+      await syncInsurancePayments(newPolicy)
       ElMessage.success('✅ 保單已新增，並已生成歷史待辦')
       dialogVisible.value = false
       fetchData()
@@ -2849,7 +2898,7 @@ onMounted(() => fetchData())
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/InsuranceView.vue
-V: 1793971500
+V: 1793972100
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -3667,7 +3716,7 @@ const allPendingItems = computed(() => {
           type: 'insurance',
           year_month: ip.year_month,
           name: `保險供款：${p.name}`,
-          payer: '保險公司', // 保險沒有對象，給個預設
+          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
           category: '保險',
           amount: Number(p.monthly_average),
           created_at: ip.created_at
@@ -3710,7 +3759,7 @@ const doneItems = computed(() => {
           type: 'insurance',
           year_month: ip.year_month,
           name: `保險供款：${p.name}`,
-          payer: '保險公司',
+          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
           amount: Number(p.monthly_average)
         })
       }
@@ -3950,7 +3999,7 @@ onMounted(() => fetchData())
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/SettlementView.vue
-V: 1793971400
+V: 1793972200
 W: ai-wa-fs-002
 ═══ -->```
 
