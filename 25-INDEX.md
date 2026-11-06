@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-06 08:19:09 (HKT)
+> 生成時間：2026-11-06 10:05:06 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,7 +21,13 @@
 | AI-General | docs/p92/WF-CONCLUSION.md | 1793073000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-HANDOFF.md | 1793072000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
-| AI-General | docs/p93/WF-HANDOFF.md | 1793804067 | init-93#1 |
+| AI-General | docs/p93/P-Architecture.md | 1793812300 | ai-wa-fs-001 |
+| AI-General | docs/p93/P-Data.md | 1793812200 | ai-wa-fs-001 |
+| AI-General | docs/p93/P-Evolution.md | 1793812400 | ai-wa-fs-001 |
+| AI-General | docs/p93/P-SQL.md | 1793812500 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-CONCLUSION.md | 1793812000 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-HANDOFF.md | 1793811700 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-PROGRESS.md | 1793812100 | ai-wa-fs-001 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1792943400 | ai-system-007 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
@@ -41,7 +47,7 @@
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
 | AI-kernel | docs/review/ROLE-BOUNDARY.md | 1792902800 | ai-system-20261026-001#8 |
-| AI-kernel | docs/skills/W/W-00-startup.md | 1792989000 | UPGRADE-006 |
+| AI-kernel | docs/skills/W/W-00-startup.md | 1793811900 | ai-wa-fs-001 |
 | AI-kernel | docs/skills/W/W-01-firebase.md | 1792581002 | ai-system-20261021-004#2 |
 | AI-kernel | docs/skills/W/W-02-functions.md | 1792901240 | webapp-20261025-001#5 |
 | AI-kernel | docs/skills/W/W-03-esmodule.md | 1793075000 | UPGRADE-007 |
@@ -49,6 +55,7 @@
 | AI-kernel | docs/skills/W/W-05-schema.md | 1792928400 | UPGRADE-004 |
 | AI-kernel | docs/skills/W/W-06-sop.md | 1793076000 | UPGRADE-007 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1793077000 | UPGRADE-007 |
+| AI-kernel | docs/skills/W/W-08-vue-supabase.md | 1793811800 | ai-wa-fs-001 |
 | AI-kernel | docs/u-profile/U-00-profile.md | 1792913600 | ai-system-005 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
@@ -98,11 +105,14 @@
 | AI-WA-FS | src/main.js |
 | AI-WA-FS | src/router/index.js |
 | AI-WA-FS | src/style.css |
+| AI-WA-FS | src/views/AnnualReportView.vue |
 | AI-WA-FS | src/views/CashflowView.vue |
 | AI-WA-FS | src/views/DashboardView.vue |
 | AI-WA-FS | src/views/FundView.vue |
 | AI-WA-FS | src/views/InsuranceView.vue |
 | AI-WA-FS | src/views/LoginView.vue |
+| AI-WA-FS | src/views/SettingsView.vue |
+| AI-WA-FS | src/views/SettlementView.vue |
 | AI-WA-FS | vite.config.js |
 | AI-WA-UPWO | .env.example |
 | AI-WA-UPWO | .github/workflows/deploy.yml |
@@ -344,7 +354,7 @@
 | 02-RP.md | 84 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
-| 10-WP.md | 56 |
+| 10-WP.md | 60 |
 | 20-SP-Sys.md | 36 |
 | 21-INFRA.md | 60 |
 | 23-CHK.md | 12 |
@@ -357,6 +367,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
-| 93-Code.md | 56 |
-| 93-P.md | 4 |
-| 93-SP.md | 4 |
+| 93-Code.md | 120 |
+| 93-P.md | 24 |
+| 93-SP.md | 32 |
