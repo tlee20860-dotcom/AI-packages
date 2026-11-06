@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 20:07:16 (HKT)
+> 生成時間：2026-11-07 00:15:53 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -100,6 +100,7 @@
 | AI-WA-FS | index.html |
 | AI-WA-FS | meta.json |
 | AI-WA-FS | package.json |
+| AI-WA-FS | public/README.md |
 | AI-WA-FS | src/App.vue |
 | AI-WA-FS | src/config/supabase.js |
 | AI-WA-FS | src/main.js |
