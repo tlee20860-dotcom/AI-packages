@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 16:01:36 (HKT)
+> 生成時間：2026-11-06 18:58:24 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -23,20 +23,20 @@
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
 | AI-General | docs/p93/P-Architecture.md | 1793812300 | ai-wa-fs-001 |
 | AI-General | docs/p93/P-Data.md | 1793812200 | ai-wa-fs-001 |
-| AI-General | docs/p93/P-Evolution.md | 1793812400 | ai-wa-fs-001 |
 | AI-General | docs/p93/P-SQL.md | 1793812500 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-CONCLUSION.md | 1793812000 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-Evolution.md | 1793812400 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-HANDOFF.md | 1793811700 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-PROGRESS.md | 1793812100 | ai-wa-fs-001 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1793815000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
 | AI-General | docs/records/SYSTEM-CONCLUSION.md | 1793815000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1793815000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793815000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1793952000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793947000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1793815000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1792990000 | UPGRADE-006 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1793010000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1793953000 | ai-system-009 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1793945000 | ai-system-009 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
@@ -56,7 +56,7 @@
 | AI-kernel | docs/skills/W/W-06-sop.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1793077000 | UPGRADE-007 |
 | AI-kernel | docs/skills/W/W-08-vue-supabase.md | 1793811800 | ai-wa-fs-001 |
-| AI-kernel | docs/u-profile/U-00-profile.md | 1792913600 | ai-system-005 |
+| AI-kernel | docs/u-profile/U-00-profile.md | 1793946000 | ai-system-009 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
 | 目錄/路徑 | 檔案名稱 |
@@ -351,22 +351,22 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 28 |
-| 02-RP.md | 72 |
+| 02-RP.md | 84 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 60 |
-| 20-SP-Sys.md | 36 |
+| 20-SP-Sys.md | 40 |
 | 21-INFRA.md | 60 |
 | 23-CHK.md | 12 |
 | 24-HISTORY.md | 52 |
 | 90-Code.md | 388 |
-| 90-P.md | 24 |
+| 90-P.md | 32 |
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
 | 92-Code.md | 400 |
-| 92-P.md | 12 |
+| 92-P.md | 28 |
 | 92-SP.md | 28 |
 | 93-Code.md | 120 |
-| 93-P.md | 24 |
+| 93-P.md | 32 |
 | 93-SP.md | 32 |

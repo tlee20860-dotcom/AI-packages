@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 16:01:36 (HKT)
+> 生成時間：2026-11-06 18:58:24 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -194,7 +194,9 @@ def is_ignored(path, config):
             return True
     return False
 
-def check_eof(content, filepath):
+def check_
+
+eof(content, filepath):
     if filepath.endswith(".json"):
         try:
             data = json.loads(content)
@@ -347,9 +349,9 @@ def main():
             report.append(f"[ERROR] {path} (編寫者: {writer})\n  - {matrix_err}")
             bad += 1
 
-        # 檢查 JSON 檔案是否誤用了局部替換標記
-        if path.endswith(".json") and "<<<<<<< OLD" in content:
-            report.append(f"[ERROR] {path} (編寫者: {writer})\n  - JSON 檔案不支援局部替換標記 (<<<<<<< OLD)，請使用完整檔。")
+        # 嚴格單軌制：檢查是否殘留局部替換標記
+        if "<<<<<<< OLD" in content or ">>>>>>> NEW" in content:
+            report.append(f"[ERROR] {path} (編寫者: {writer})\n  - 檔案內殘留局部替換標記 (<<<<<<< OLD / >>>>>>> NEW)，已全面廢除增量與局部替換。")
             bad += 1
 
         content_errs = check_content_lines(content, path, forbidden_words, specific_rule)
@@ -685,7 +687,7 @@ jobs:
             echo "# 專案狀態包：${SAFE_NAME}" >> "$OUTPUT"
             echo "" >> "$OUTPUT"
 
-            # 打包進度與技術檔 (使用 *P-*.md 匹配)
+            # 打包進度與技術檔 (過渡期相容 WF-*.md 與 *P-*.md)
             for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/*P-*.md; do
               if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
             done
@@ -701,7 +703,7 @@ jobs:
             OUTPUT_P="build-repo/${PKG_NO}-P.md"
             OUTPUT_CODE="build-repo/${PKG_NO}-Code.md"
 
-            # 防呆：專案技術檔 (P)
+            # 防呆：專案技術檔 (過渡期相容 WF-*.md 與 *P-*.md)
             PROJ_DIR="AI-General/docs/p${PKG_NO}"
             if [ -d "$PROJ_DIR" ]; then
               echo "> 體系版本：${{ env.SYS_VER }}" > "$OUTPUT_P"
@@ -710,8 +712,8 @@ jobs:
               echo "# 專案技術總集：${SAFE_NAME}" >> "$OUTPUT_P"
               echo "" >> "$OUTPUT_P"
               
-              # 打包 P 檔至專案技術包 (使用 *P-*.md 匹配)
-              for f in "$PROJ_DIR"/*P-*.md; do
+              # 打包 WF 檔與舊 P 檔至專案技術包
+              for f in "$PROJ_DIR"/WF-*.md "$PROJ_DIR"/*P-*.md; do
                 if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT_P" || true; fi
               done
             else
@@ -809,6 +811,18 @@ jobs:
 
           for f in $SRC_FILES; do
             bash .github/workflows/append_file.sh "$f" "$OUTPUT" || { rm -f "$OUTPUT"; exit 1; }
+          done
+
+          # 打包專案歷史 (WF-EVOLUTION.md)
+          jq -c '.[]' /tmp/projects.json | while read -r row; do
+            PKG_NO=$(echo "$row" | jq -r '.pkg_no')
+            PROJ_DIR="AI-General/docs/p${PKG_NO}"
+            EVO_FILE="${PROJ_DIR}/WF-EVOLUTION.md"
+            if [ -f "$EVO_FILE" ]; then
+              echo "## 📦 專案歷史：${PKG_NO}" >> "$OUTPUT"
+              bash .github/workflows/append_file.sh "$EVO_FILE" "$OUTPUT" || true
+              echo "" >> "$OUTPUT"
+            fi
           done
 
       - name: "Step 9.4: 生成全庫總索引 (25-INDEX.md)"
@@ -934,7 +948,7 @@ jobs:
 
 # EOF
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1793010000
+# V: 1793951000
 # W: ai-system-009
 # EOF```
 
@@ -1428,14 +1442,13 @@ jobs:
     "base_system_repos": ["AI-kernel", "AI-General", "AI-infra"],
     "record_exempt_paths": ["docs/records/", "/WF-", "/p"],
     "record_exempt_repo": "AI-General",
-    "record_auto_exempt": false,
     "show_file_path_in_error": true,
     "error_header_format": "📄 檔案：{path}\n------------------------\n"
   },
   "_EOF": {
     "F": "AI-kernel/docs/r-rules/validate-config.json",
-    "V": 1792913900,
-    "W": "ai-system-005"
+    "V": 1793954000,
+    "W": "ai-system-009"
   }
 }```
 
