@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 18:58:24 (HKT)
+> 生成時間：2026-11-06 19:05:35 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -29,13 +29,13 @@
 | AI-General | docs/p93/WF-HANDOFF.md | 1793811700 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-PROGRESS.md | 1793812100 | ai-wa-fs-001 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1793815000 | ai-system-009 |
+| AI-General | docs/records/PROGRESS.md | 1793956000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1793815000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1793952000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793947000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1793815000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1793953000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1793957000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1793959000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793960000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1793955000 | ai-system-009 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1793958000 | ai-system-009 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1793945000 | ai-system-009 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1793010000 | ai-system-009 |

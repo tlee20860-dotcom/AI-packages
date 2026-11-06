@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 18:58:24 (HKT)
+> 生成時間：2026-11-06 19:05:35 (HKT)
 > ⚠️ 給 AI 的指示：本包為歷史台帳與進化史，供查閱與追溯；不含會變動的 STATE-INDEX。
 
 # 歷史檔案包 (HISTORY)
@@ -261,7 +261,7 @@
 
 ---
 
-### 2026-11-06：v2.3 單軌制與 WF 大一統（SV14）
+### 2026-11-06：SV14 單軌制與 WF 大一統（SV14）
 
 | 項目 | 內容 |
 |---|---|
@@ -285,7 +285,7 @@
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-EVOLUTION.md
-V: 1793947000
+V: 1793960000
 W: ai-system-009
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-EVOLUTION.md === -->
@@ -361,7 +361,7 @@ W: ai-system-009
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-REJECTED.md
-V: 1793953000
+V: 1793958000
 W: ai-system-009
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-REJECTED.md === -->
@@ -374,7 +374,7 @@ W: ai-system-009
 
 <!-- === 關聯規則防呆矩陣 ===
 | 本次修改項 | 命中關聯條文 | 具體防呆約束／隔離措施 | 檢核結果 |
-| 新增 K-47 | R-025 防硬編碼 | 明定過渡期暫時相容舊 P 檔，待未來全面拔除 | PASS |
+| 洗淨重複段落 | F-007 單軌制 | 徹底移除舊版 APPEND 造成的重複結構 | PASS |
 ======================== -->
 
 用途：記錄體系與專案的技術債，供跨對話追蹤。
@@ -467,7 +467,7 @@ W: ai-system-009
 
 /* ═══ EOF ═══
 F: AI-General/docs/records/SYSTEM-DEBT.md
-V: 1793952000
+V: 1793959000
 W: ai-system-009
 ═══ */
 <!-- === FILE END: AI-General/docs/records/SYSTEM-DEBT.md === -->
