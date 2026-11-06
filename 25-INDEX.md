@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-06 19:46:48 (HKT)
+> 生成時間：2026-11-06 20:07:16 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -21,13 +21,13 @@
 | AI-General | docs/p92/WF-CONCLUSION.md | 1793073000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-HANDOFF.md | 1793072000 | UPGRADE-007 |
 | AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
-| AI-General | docs/p93/P-Architecture.md | 1793812300 | ai-wa-fs-001 |
-| AI-General | docs/p93/P-Data.md | 1793812200 | ai-wa-fs-001 |
-| AI-General | docs/p93/P-SQL.md | 1793812500 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-ARCH.md | 1793968000 | ai-wa-fs-002 |
 | AI-General | docs/p93/WF-CONCLUSION.md | 1793812000 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-DATA.md | 1793968100 | ai-wa-fs-002 |
 | AI-General | docs/p93/WF-Evolution.md | 1793812400 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-HANDOFF.md | 1793811700 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-PROGRESS.md | 1793812100 | ai-wa-fs-001 |
+| AI-General | docs/p93/WF-SQL.md | 1793968200 | ai-wa-fs-002 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
 | AI-General | docs/records/PROGRESS.md | 1793956000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
