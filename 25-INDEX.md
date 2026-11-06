@@ -1,5 +1,5 @@
 > 體系版本：SV13
-> 生成時間：2026-11-06 07:45:14 (HKT)
+> 生成時間：2026-11-06 08:19:09 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -100,6 +100,7 @@
 | AI-WA-FS | src/style.css |
 | AI-WA-FS | src/views/CashflowView.vue |
 | AI-WA-FS | src/views/DashboardView.vue |
+| AI-WA-FS | src/views/FundView.vue |
 | AI-WA-FS | src/views/InsuranceView.vue |
 | AI-WA-FS | src/views/LoginView.vue |
 | AI-WA-FS | vite.config.js |
@@ -356,6 +357,6 @@
 | 92-Code.md | 400 |
 | 92-P.md | 12 |
 | 92-SP.md | 28 |
-| 93-Code.md | 28 |
+| 93-Code.md | 56 |
 | 93-P.md | 4 |
 | 93-SP.md | 4 |
