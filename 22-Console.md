@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-07 01:18:33 (HKT)
+> 生成時間：2026-11-08 10:06:12 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -672,6 +672,7 @@
                 }
             } else {
                 successPanel.style.display = 'block';
+                document.getElementById('success-message').innerHTML = '✅ 體檢通過！請確認內容與路徑無誤。';
                 previewCache = { finalContent: content };
                 
                 document.getElementById('success-compare').style.display = 'flex';
@@ -681,7 +682,7 @@
                 
                 const oldLen = oldContent ? oldContent.length : 0;
                 document.getElementById('final-char-count').textContent = `(舊檔 ${oldLen} 字 ➜ 新檔 ${content.length} 字)`;
-                document.getElementById('final-content-view').innerHTML = oldContent !== null ? renderDiff(oldContent, content) : content;
+                document.getElementById('final-content-view').innerHTML = oldContent !== null ? renderDiff(oldContent, content) : highlightText(content, []);
 
                 if (DEPENDENCY_MAP[fullPath]) {
                     depAlert.style.display = 'block';
@@ -701,6 +702,7 @@
             document.getElementById('file-input-full').value = '';
             document.getElementById('error-panel').style.display = 'none';
             document.getElementById('success-panel').style.display = 'none';
+            document.getElementById('success-message').innerHTML = '✅ 體檢通過！';
             document.getElementById('dep-alert').style.display = 'none';
             document.getElementById('input-area').style.display = 'block';
             document.getElementById('btn-publish').style.display = 'block';
@@ -1067,7 +1069,7 @@
 </html>
 <!-- EOF
 F: AI-infra/index.html
-V: 1793960000
+V: 1793976000
 W: ai-system-010
 EOF -->```
 

@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-07 01:18:30 (HKT)
+> 生成時間：2026-11-08 10:06:10 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -102,7 +102,7 @@ W: ai-wa-fs-001
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="入帳 V3">
-  <link rel="apple-touch-icon" href="/pwa-192x192.png">
+  <link rel="apple-touch-icon" href="/1000125065.png">
   
   <!-- 字型載入 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,8 +116,8 @@ W: ai-wa-fs-001
 </html>
 <!-- ═══ EOF ═══
 F: AI-WA-FS/index.html
-V: 1793810300
-W: ai-wa-fs-001
+V: 1793973300
+W: ai-wa-fs-002
 ═══ -->```
 
 <!-- === FILE END: ./index.html === -->
@@ -220,15 +220,19 @@ W: ai-wa-fs-001
       >
         <el-menu-item index="/">
           <el-icon><HomeFilled /></el-icon>
-          <template #title>總覽儀表板</template>
+          <template #title>年度總覽</template>
         </el-menu-item>
         <el-menu-item index="/cashflow">
           <el-icon><Money /></el-icon>
-          <template #title>收支流水</template>
+          <template #title>月度總覽</template>
+        </el-menu-item>
+        <el-menu-item index="/member-report">
+          <el-icon><User /></el-icon>
+          <template #title>成員收支</template>
         </el-menu-item>
         <el-menu-item index="/settlement">
           <el-icon><Tickets /></el-icon>
-          <template #title>待辦中心</template>
+          <template #title>待辦與紀錄中心</template>
         </el-menu-item>
         <el-menu-item index="/insurance">
           <el-icon><Umbrella /></el-icon>
@@ -255,7 +259,7 @@ W: ai-wa-fs-001
         <el-button class="menu-toggle" text @click="toggleMenu">
           <el-icon :size="20"><Menu /></el-icon>
         </el-button>
-        <div class="header-title">歡迎回來</div>
+        <div class="header-title">歡迎回來，{{ currentUsername }}</div>
         <el-button type="danger" plain size="small" class="logout-btn" @click="handleLogout">登出</el-button>
       </el-header>
       
@@ -267,13 +271,26 @@ W: ai-wa-fs-001
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { supabase } from '@/config/supabase'
-import { HomeFilled, Money, Umbrella, Menu, TrendCharts, Document, Setting, Tickets } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { HomeFilled, Money, Umbrella, Menu, TrendCharts, Document, Setting, Tickets, User } from '@element-plus/icons-vue'
 
+const router = useRouter()
 const isCollapse = ref(false)
 const isMobile = ref(false)
 const isMobileOpen = ref(false)
+
+// 取得當前登入帳號名稱
+const currentUsername = computed(() => {
+  const userStr = localStorage.getItem('app_user')
+  if (!userStr) return '使用者'
+  try {
+    const user = JSON.parse(userStr)
+    return user.username || '使用者'
+  } catch (e) {
+    return '使用者'
+  }
+})
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768
@@ -296,9 +313,9 @@ const onMenuSelect = () => {
   }
 }
 
-const handleLogout = async () => {
-  await supabase.auth.signOut()
-  window.location.href = '/login'
+const handleLogout = () => {
+  localStorage.removeItem('app_user')
+  router.replace('/login')
 }
 
 onMounted(() => {
@@ -429,7 +446,7 @@ body { margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; backgroun
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/App.vue
-V: 1793971100
+V: 1793995000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -529,6 +546,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/member-report',
+    name: 'MemberReport',
+    component: () => import('@/views/MemberReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/settlement',
     name: 'Settlement',
     component: () => import('@/views/SettlementView.vue'),
@@ -578,8 +601,8 @@ export default router
 
 /* ═══ EOF ═══
 F: AI-WA-FS/src/router/index.js
-V: 1793810700
-W: ai-wa-fs-001
+V: 1793974100
+W: ai-wa-fs-002
 ═══ */```
 
 <!-- === FILE END: ./src/router/index.js === -->
@@ -797,36 +820,6 @@ W: ai-wa-fs-002
       </div>
     </div>
 
-    <!-- 統計卡片 -->
-    <el-row :gutter="20" class="mb-24" v-loading="loading">
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">{{ viewTitle }}總收入</div>
-          <div class="stat-value text-green">HK$ {{ totalIncome.toLocaleString() }}</div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">{{ viewTitle }}總支出</div>
-          <div class="stat-value text-red">HK$ {{ totalExpense.toLocaleString() }}</div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">{{ viewTitle }}保險支出</div>
-          <div class="stat-value text-orange">HK$ {{ totalInsurance.toLocaleString() }}</div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">{{ viewTitle }}淨結餘</div>
-          <div class="stat-value" :class="netBalance >= 0 ? 'text-green' : 'text-red'">
-            {{ netBalance >= 0 ? '+' : '' }} HK$ {{ netBalance.toLocaleString() }}
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
     <!-- 月度/單月明細表格 -->
     <el-card shadow="never" class="table-card" v-loading="loading">
       <div class="table-wrapper">
@@ -851,11 +844,19 @@ W: ai-wa-fs-002
               <span class="text-orange">HK$ {{ scope.row.insurance.toLocaleString() }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="balance" label="當月結餘" align="right">
+          <el-table-column prop="balance" label="當月淨收支" align="right">
             <template #default="scope">
               <span :class="scope.row.balance >= 0 ? 'text-green' : 'text-red'" class="font-bold">
                 {{ scope.row.balance >= 0 ? '+' : '' }} HK$ {{ scope.row.balance.toLocaleString() }}
               </span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="actualBalance" label="實際銀行結餘" align="right">
+            <template #default="scope">
+              <span v-if="scope.row.actualBalance !== null" class="font-bold font-monospace">
+                HK$ {{ scope.row.actualBalance.toLocaleString() }}
+              </span>
+              <span v-else class="text-muted">-</span>
             </template>
           </el-table-column>
         </el-table>
@@ -875,7 +876,7 @@ import { saveAs } from 'file-saver'
 const currentYear = new Date().getFullYear().toString()
 const selectedYear = ref(currentYear)
 const viewMode = ref('year') // 'year' | 'month'
-const selectedMonth = ref(String(new Date().getMonth() + 1).padStart(2, '0')) // 01~12
+const selectedMonth = ref(String(new Date().getMonth() + 1).padStart(2, '0'))
 
 const loading = ref(false)
 const exporting = ref(false)
@@ -884,13 +885,17 @@ const monthlyData = ref([])
 const rawIncomes = ref([])
 const rawExpenses = ref([])
 const rawInsurancePayments = ref([])
+const rawBalances = ref([])
 const policies = ref([])
 
+// 動態標題：顯示年份或年月
 const viewTitle = computed(() => {
-  return viewMode.value === 'year' ? `年度` : `${parseInt(selectedMonth.value)} 月`
+  return viewMode.value === 'year' 
+    ? `${selectedYear.value} 年` 
+    : `${selectedYear.value} 年 ${parseInt(selectedMonth.value)} 月`
 })
 
-// 統計加總
+// 保留這些變數是為了下方表格的「底部總計列」
 const totalIncome = computed(() => monthlyData.value.reduce((sum, item) => sum + item.income, 0))
 const totalExpense = computed(() => monthlyData.value.reduce((sum, item) => sum + item.expense, 0))
 const totalInsurance = computed(() => monthlyData.value.reduce((sum, item) => sum + item.insurance, 0))
@@ -900,17 +905,16 @@ const fetchData = async () => {
   loading.value = true
   
   try {
-    // 構建查詢前綴
     const prefix = viewMode.value === 'year' 
       ? `${selectedYear.value}-%` 
       : `${selectedYear.value}-${selectedMonth.value}%`
 
-    // 平行抓取：收入、支出(已處理)、保險(已轉)、保單主檔
-    const [incRes, expRes, insRes, polRes] = await Promise.all([
+    const [incRes, expRes, insRes, polRes, balRes] = await Promise.all([
       supabase.from('incomes').select('*').like('year_month', prefix),
       supabase.from('expenses').select('*').like('year_month', prefix).eq('status', '已處理'),
       supabase.from('insurance_payments').select('*').like('year_month', prefix).eq('status', '已轉'),
-      supabase.from('insurance_policies').select('*')
+      supabase.from('insurance_policies').select('*'),
+      supabase.from('monthly_balances').select('*').like('year_month', prefix)
     ])
 
     if (incRes.error) throw incRes.error
@@ -921,22 +925,21 @@ const fetchData = async () => {
     rawExpenses.value = expRes.data || []
     rawInsurancePayments.value = insRes.data || []
     policies.value = polRes.data || []
+    rawBalances.value = balRes.data || []
 
     const policyMap = {}
     policies.value.forEach(p => { policyMap[p.id] = Number(p.monthly_average) })
 
-    // 初始化資料結構
     let tempData = []
     if (viewMode.value === 'year') {
       tempData = Array.from({ length: 12 }, (_, i) => ({
-        month: i + 1, income: 0, expense: 0, insurance: 0, balance: 0
+        month: i + 1, income: 0, expense: 0, insurance: 0, balance: 0, actualBalance: null
       }))
     } else {
       const m = parseInt(selectedMonth.value)
-      tempData = [{ month: m, income: 0, expense: 0, insurance: 0, balance: 0 }]
+      tempData = [{ month: m, income: 0, expense: 0, insurance: 0, balance: 0, actualBalance: null }]
     }
 
-    // 填入資料
     const getMonthIndex = (ym) => {
       const m = parseInt(ym.split('-')[1])
       return viewMode.value === 'year' ? m - 1 : 0
@@ -958,7 +961,11 @@ const fetchData = async () => {
       if (tempData[idx]) tempData[idx].insurance += amount
     })
 
-    // 計算結餘
+    rawBalances.value.forEach(item => {
+      const idx = getMonthIndex(item.year_month)
+      if (tempData[idx]) tempData[idx].actualBalance = Number(item.actual_balance)
+    })
+
     tempData.forEach(item => {
       item.balance = item.income - item.expense - item.insurance
     })
@@ -972,7 +979,6 @@ const fetchData = async () => {
   }
 }
 
-// 表格底部加總列
 const getSummaries = (param) => {
   const { columns } = param
   const sums = []
@@ -990,19 +996,19 @@ const getSummaries = (param) => {
   return sums
 }
 
-// 匯出 Excel
+// 重寫 Excel 匯出：13 個分頁
 const exportExcel = async () => {
   if (monthlyData.value.length === 0) return ElMessage.warning('無資料可匯出')
   exporting.value = true
 
   try {
-    // 1. 整理匯出明細
+    const workbook = new ExcelJS.Workbook()
     const policyMap = {}
     policies.value.forEach(p => { policyMap[p.id] = p })
 
+    // 收集所有明細資料，並補齊標準欄位
     const allItems = []
 
-    // 收集收入
     rawIncomes.value.forEach(i => {
       allItems.push({
         year_month: i.year_month,
@@ -1015,7 +1021,6 @@ const exportExcel = async () => {
       })
     })
 
-    // 收集支出
     rawExpenses.value.forEach(e => {
       allItems.push({
         year_month: e.year_month,
@@ -1028,14 +1033,13 @@ const exportExcel = async () => {
       })
     })
 
-    // 收集保險
     rawInsurancePayments.value.forEach(ip => {
       const p = policyMap[ip.policy_id]
       if (p) {
         allItems.push({
           year_month: ip.year_month,
           type: '保險',
-          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
+          payer: p.holder_name || '家庭共用',
           name: `保險供款：${p.name}`,
           category: '保險',
           amount: Number(p.monthly_average),
@@ -1044,103 +1048,97 @@ const exportExcel = async () => {
       }
     })
 
-    // 2. 建立 Excel 工作簿
-    const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet('收支明細')
+    // 輔助函式：生成單一工作表
+    const buildWorksheet = (ws, items, title) => {
+      ws.columns = [
+        { header: '月份', key: 'year_month', width: 12 },
+        { header: '類型', key: 'type', width: 10 },
+        { header: '對象', key: 'payer', width: 15 },
+        { header: '項目名稱', key: 'name', width: 30 },
+        { header: '類別', key: 'category', width: 15 },
+        { header: '金額', key: 'amount', width: 15, style: { numFmt: '#,##0.00' } },
+        { header: '狀態', key: 'status', width: 12 }
+      ]
 
-    worksheet.columns = [
-      { header: '月份', key: 'year_month', width: 12 },
-      { header: '類型', key: 'type', width: 10 },
-      { header: '對象', key: 'payer', width: 15 },
-      { header: '項目名稱', key: 'name', width: 30 },
-      { header: '類別', key: 'category', width: 15 },
-      { header: '金額', key: 'amount', width: 15, style: { numFmt: '#,##0.00' } },
-      { header: '狀態', key: 'status', width: 12 }
-    ]
+      const headerRow = ws.getRow(1)
+      headerRow.font = { bold: true }
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
 
-    // 表頭樣式
-    const headerRow = worksheet.getRow(1)
-    headerRow.font = { bold: true }
-    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
+      if (items.length === 0) {
+        ws.addRow({ year_month: '本月無收支紀錄', type: '', payer: '', name: '', category: '', amount: '', status: '' })
+        ws.mergeCells('A2:G2')
+        ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' }
+        ws.getCell('A2').font = { color: { argb: 'FF999999' }, italic: true }
+        return
+      }
 
-    // 3. 按對象分組並寫入
-    const grouped = {}
-    allItems.forEach(item => {
-      if (!grouped[item.payer]) grouped[item.payer] = []
-      grouped[item.payer].push(item)
-    })
-
-    let currentRow = 2
-    let grandTotal = 0
-
-    // 遍歷每個對象
-    for (const [payer, items] of Object.entries(grouped)) {
-      let subtotal = 0
-
+      const grouped = {}
       items.forEach(item => {
-        const row = worksheet.addRow(item)
-        row.getCell('amount').alignment = { horizontal: 'right' }
-        subtotal += item.amount
+        if (!grouped[item.payer]) grouped[item.payer] = []
+        grouped[item.payer].push(item)
+      })
+
+      let currentRow = 2
+      let grandTotal = 0
+
+      for (const [payer, groupItems] of Object.entries(grouped)) {
+        let subtotal = 0
+        groupItems.forEach(item => {
+          const row = ws.addRow(item)
+          row.getCell('amount').alignment = { horizontal: 'right' }
+          subtotal += item.amount
+          currentRow++
+        })
+        grandTotal += subtotal
+
+        const subtotalRow = ws.addRow({
+          year_month: '', type: '', payer: '', name: `${payer} 小計`, category: '', amount: subtotal, status: ''
+        })
+        ws.mergeCells(`A${currentRow}:D${currentRow}`)
+        subtotalRow.getCell(4).alignment = { horizontal: 'right' }
+        subtotalRow.getCell(6).alignment = { horizontal: 'right' }
+        subtotalRow.font = { bold: true }
+        subtotalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } }
         currentRow++
-      })
+      }
 
-      grandTotal += subtotal
-
-      // 寫入小計
-      const subtotalRow = worksheet.addRow({
-        year_month: '',
-        type: '',
-        payer: '',
-        name: `${payer} 小計`,
-        category: '',
-        amount: subtotal,
-        status: ''
+      const totalRow = ws.addRow({
+        year_month: '', type: '', payer: '', name: `${title}總計`, category: '', amount: grandTotal, status: ''
       })
-      
-      worksheet.mergeCells(`A${currentRow}:D${currentRow}`)
-      subtotalRow.getCell(4).alignment = { horizontal: 'right' }
-      subtotalRow.getCell(6).alignment = { horizontal: 'right' }
-      subtotalRow.font = { bold: true }
-      subtotalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } }
-      
-      currentRow++
+      ws.mergeCells(`A${currentRow}:D${currentRow}`)
+      totalRow.getCell(4).alignment = { horizontal: 'right' }
+      totalRow.getCell(6).alignment = { horizontal: 'right' }
+      totalRow.font = { bold: true, color: { argb: 'FF6366F1' } }
+      totalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } }
+
+      ws.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = { top: { style: 'thin', color: { argb: 'FFDDDDDD' } }, left: { style: 'thin', color: { argb: 'FFDDDDDD' } }, bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } }, right: { style: 'thin', color: { argb: 'FFDDDDDD' } } }
+        })
+      })
     }
 
-    // 4. 寫入總計
-    const totalRow = worksheet.addRow({
-      year_month: '',
-      type: '',
-      payer: '',
-      name: `${viewTitle.value}總計`,
-      category: '',
-      amount: grandTotal,
-      status: ''
-    })
-    worksheet.mergeCells(`A${currentRow}:D${currentRow}`)
-    totalRow.getCell(4).alignment = { horizontal: 'right' }
-    totalRow.getCell(6).alignment = { horizontal: 'right' }
-    totalRow.font = { bold: true, color: { argb: 'FF6366F1' } }
-    totalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } }
+    // 1. 生成「整年」分頁
+    const wsYear = workbook.addWorksheet('整年')
+    buildWorksheet(wsYear, allItems, '整年')
 
-    // 設置全局邊框
-    worksheet.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FFDDDDDD' } },
-          left: { style: 'thin', color: { argb: 'FFDDDDDD' } },
-          bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } },
-          right: { style: 'thin', color: { argb: 'FFDDDDDD' } }
-        }
-      })
-    })
+    // 2. 生成「1月」到「12月」分頁
+    for (let m = 1; m <= 12; m++) {
+      const monthStr = String(m).padStart(2, '0')
+      const targetYM = `${selectedYear.value}-${monthStr}`
+      const monthItems = allItems.filter(item => item.year_month === targetYM)
+      
+      const wsMonth = workbook.addWorksheet(`${m}月`)
+      buildWorksheet(wsMonth, monthItems, `${m}月`)
+    }
 
-    // 5. 導出檔案
+    // 導出檔案
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    saveAs(blob, `收支明細_${viewTitle.value}.xlsx`)
+    saveAs(blob, `收支明細_${selectedYear.value}.xlsx`)
 
-    ElMessage.success('✅ 報表匯出成功')
+    ElMessage.success('✅ 報表匯出成功（包含整年與 12 個月分頁）')
   } catch (err) {
     console.error(err)
     ElMessage.error('匯出失敗：' + err.message)
@@ -1161,15 +1159,7 @@ onMounted(() => fetchData())
 .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .month-picker { width: 100px; }
 
-.mb-24 { margin-bottom: 24px; }
-.stat-card { border-radius: 20px; background: #ffffff; border: none; }
-.stat-label { font-size: 14px; color: #64748b; margin-bottom: 8px; }
-.stat-value { font-size: 22px; font-weight: bold; }
-.text-green { color: #10b981; }
-.text-red { color: #ef4444; }
-.text-orange { color: #f59e0b; }
-.font-bold { font-weight: 700; }
-
+/* 移除統計卡片後，表格直接貼齊上方 */
 .table-card { border-radius: 20px; border: none; overflow: hidden; }
 .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 :deep(.el-table__footer-wrapper tbody td) {
@@ -1178,16 +1168,22 @@ onMounted(() => fetchData())
   color: #1e293b;
 }
 
+.text-green { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-orange { color: #f59e0b; }
+.text-muted { color: #94a3b8; }
+.font-bold { font-weight: 700; }
+.font-monospace { font-family: monospace; font-size: 14px; }
+
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; }
   .header-actions { width: 100%; justify-content: space-between; }
-  .stat-value { font-size: 18px; }
 }
 </style>
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/AnnualReportView.vue
-V: 1793972300
+V: 1793992000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -1201,525 +1197,225 @@ W: ai-wa-fs-002
 <template>
   <div class="cashflow-container">
     <div class="page-header">
-      <h2>收支流水</h2>
-      <div class="header-actions">
-        <el-button type="primary" @click="openAddDialog">+ 新增紀錄</el-button>
+      <div class="header-left">
+        <h2>月度總覽</h2>
+        <el-date-picker 
+          v-model="selectedMonth" 
+          type="month" 
+          placeholder="選擇月份" 
+          value-format="YYYY-MM" 
+          @change="fetchData" 
+          class="month-picker"
+        />
       </div>
     </div>
 
-    <!-- 統計卡片 (顯示所有歷史總和) -->
-    <el-row :gutter="20" class="mb-20">
-      <el-col :xs="12" :sm="12">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">總支出</div>
-          <div class="stat-value text-red">HK$ {{ totalExpense.toLocaleString() }}</div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="12">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-label">總收入</div>
+    <div v-loading="loading" class="dashboard-grid">
+      <!-- 1. 本月總收入 -->
+      <el-card shadow="never" class="stat-card income-card">
+        <div class="stat-icon"><el-icon><TrendCharts /></el-icon></div>
+        <div class="stat-info">
+          <div class="stat-label">{{ currentMonthLabel }}總收入</div>
           <div class="stat-value text-green">HK$ {{ totalIncome.toLocaleString() }}</div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 資料顯示區 -->
-    <el-card shadow="never" class="list-card">
-      <el-tabs v-model="activeTab">
-        <!-- 支出紀錄 -->
-        <el-tab-pane label="支出紀錄" name="expense">
-          <div class="tool-bar">
-            <el-button type="warning" plain icon="MagicStick" :loading="importing" @click="importFixedExpenses">
-              一鍵匯入固定支出
-            </el-button>
-          </div>
-
-          <div v-if="expenses.length === 0" class="empty-state">
-            <el-empty description="尚無任何支出紀錄" :image-size="80" />
-          </div>
-
-          <div v-else class="month-groups">
-            <el-collapse v-model="activeExpenseMonths">
-              <el-collapse-item 
-                v-for="group in groupedExpenses" 
-                :key="group.month" 
-                :name="group.month"
-              >
-                <template #title>
-                  <div class="group-title">
-                    <span class="month-text">{{ group.month }}</span>
-                    <span class="month-total text-red">總支出: HK$ {{ group.total.toLocaleString() }}</span>
-                  </div>
-                </template>
-                
-                <div class="table-wrapper">
-                  <el-table :data="group.items" style="width: 100%; min-width: 600px;" stripe>
-                    <el-table-column prop="name" label="項目名稱" min-width="150" />
-                    <el-table-column prop="payer_name" label="對象" width="100" />
-                    <el-table-column prop="category_name" label="類別" width="120">
-                      <template #default="scope">
-                        <el-tag size="small" type="info">{{ scope.row.category_name || '未分類' }}</el-tag>
-                      </template>
-                    </el-table-column>
-                    <el-table-column prop="amount" label="金額" width="120" align="right">
-                      <template #default="scope">
-                        <span class="text-red font-bold">HK$ {{ scope.row.amount.toLocaleString() }}</span>
-                      </template>
-                    </el-table-column>
-                    <el-table-column prop="status" label="狀態" width="100" align="center">
-                      <template #default="scope">
-                        <el-tag :type="scope.row.status === '已處理' ? 'success' : 'info'" size="small">{{ scope.row.status || '未處理' }}</el-tag>
-                      </template>
-                    </el-table-column>
-                    <el-table-column label="操作" width="140" align="center">
-                      <template #default="scope">
-                        <el-button type="primary" link size="small" @click="toggleExpenseStatus(scope.row)">
-                          {{ scope.row.status === '已處理' ? '取消' : '標記處理' }}
-                        </el-button>
-                        <el-button type="primary" link size="small" @click="openEditDialog(scope.row)">編輯</el-button>
-                        <el-button type="danger" text size="small" @click="deleteRecord('expenses', scope.row.id)">刪除</el-button>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </div>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-        </el-tab-pane>
-        
-        <!-- 收入紀錄 -->
-        <el-tab-pane label="收入紀錄" name="income">
-          <div v-if="incomes.length === 0" class="empty-state">
-            <el-empty description="尚無任何收入紀錄" :image-size="80" />
-          </div>
-
-          <div v-else class="month-groups">
-            <el-collapse v-model="activeIncomeMonths">
-              <el-collapse-item 
-                v-for="group in groupedIncomes" 
-                :key="group.month" 
-                :name="group.month"
-              >
-                <template #title>
-                  <div class="group-title">
-                    <span class="month-text">{{ group.month }}</span>
-                    <span class="month-total text-green">總收入: HK$ {{ group.total.toLocaleString() }}</span>
-                  </div>
-                </template>
-                
-                <div class="table-wrapper">
-                  <el-table :data="group.items" style="width: 100%; min-width: 400px;" stripe>
-                    <el-table-column prop="name" label="收入名稱" min-width="150" />
-                    <el-table-column prop="member_name" label="對象" width="100" />
-                    <el-table-column prop="amount" label="金額" width="120" align="right">
-                      <template #default="scope">
-                        <span class="text-green font-bold">HK$ {{ scope.row.amount.toLocaleString() }}</span>
-                      </template>
-                    </el-table-column>
-                    <el-table-column label="操作" width="120" align="center">
-                      <template #default="scope">
-                        <el-button type="primary" link size="small" @click="openEditDialog(scope.row)">編輯</el-button>
-                        <el-button type="danger" text size="small" @click="deleteRecord('incomes', scope.row.id)">刪除</el-button>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </div>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
-
-    <!-- 新增/編輯彈窗 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="90%" max-width="500px">
-      <el-form :model="form" label-position="top">
-        <el-form-item label="紀錄月份" required>
-          <el-date-picker v-model="form.year_month" type="month" placeholder="選擇月份" value-format="YYYY-MM" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="項目名稱" required>
-          <el-input v-model="form.name" :placeholder="activeTab === 'expense' ? '例如：買餸、交租' : '例如：薪金、家用轉入'" />
-        </el-form-item>
-        <el-form-item label="金額 (HKD)" required>
-          <el-input-number v-model="form.amount" :min="1" style="width: 100%" />
-        </el-form-item>
-        
-        <el-form-item label="對象" required>
-          <el-select v-model="form.member_name" style="width: 100%">
-            <el-option v-for="m in members" :key="m.id" :label="m.name" :value="m.name" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="類別" v-if="activeTab === 'expense'">
-          <el-select v-model="form.category_name" style="width: 100%" allow-create filterable default-first-option>
-            <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.name" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="狀態" v-if="activeTab === 'expense'">
-          <el-radio-group v-model="form.status">
-            <el-radio label="未處理">未處理</el-radio>
-            <el-radio label="已處理">已處理</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">確認儲存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 匯入固定支出彈窗 -->
-    <el-dialog v-model="importDialogVisible" title="匯入固定支出" width="90%" max-width="400px">
-      <el-form label-position="top">
-        <div class="preview-box" style="margin-bottom: 15px; background: #fffbeb; color: #d97706;">
-          將為指定月份匯入設定好的固定支出模板。
         </div>
-        <el-form-item label="選擇要匯入的月份" required>
-          <el-date-picker v-model="importMonth" type="month" placeholder="選擇月份" value-format="YYYY-MM" style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="importDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="importing" @click="executeImport">確認匯入</el-button>
-      </template>
-    </el-dialog>
+      </el-card>
+
+      <!-- 2. 普通支出 -->
+      <el-card shadow="never" class="stat-card expense-card">
+        <div class="stat-icon"><el-icon><Bottom /></el-icon></div>
+        <div class="stat-info">
+          <div class="stat-label">{{ currentMonthLabel }}普通支出</div>
+          <div class="stat-value text-red">HK$ {{ processedExpense.toLocaleString() }}</div>
+          <div class="stat-sub">
+            待處理：<span class="text-orange">HK$ {{ pendingExpense.toLocaleString() }}</span>
+          </div>
+        </div>
+      </el-card>
+
+      <!-- 3. 保險支出 -->
+      <el-card shadow="never" class="stat-card insurance-card">
+        <div class="stat-icon"><el-icon><Umbrella /></el-icon></div>
+        <div class="stat-info">
+          <div class="stat-label">{{ currentMonthLabel }}保險供款</div>
+          <div class="stat-value text-orange">HK$ {{ processedInsurance.toLocaleString() }}</div>
+          <div class="stat-sub">
+            待轉帳：<span class="text-muted">HK$ {{ pendingInsurance.toLocaleString() }}</span>
+          </div>
+        </div>
+      </el-card>
+
+      <!-- 4. 本月實際總支出 -->
+      <el-card shadow="never" class="stat-card total-card">
+        <div class="stat-icon"><el-icon><Wallet /></el-icon></div>
+        <div class="stat-info">
+          <div class="stat-label">{{ currentMonthLabel }}實際總支出</div>
+          <div class="stat-value text-primary">HK$ {{ totalProcessed.toLocaleString() }}</div>
+          <div class="stat-sub">
+            (普通支出 + 保險供款)
+          </div>
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from '@/config/supabase'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { MagicStick } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { TrendCharts, Bottom, Wallet, Umbrella } from '@element-plus/icons-vue'
 
-const activeTab = ref('expense')
-const expenses = ref([])
-const incomes = ref([])
-const members = ref([])
-const categories = ref([])
 const loading = ref(false)
-const submitting = ref(false)
-const importing = ref(false)
+const selectedMonth = ref(new Date().toISOString().slice(0, 7))
 
-// 彈窗狀態
-const dialogVisible = ref(false)
-const isEdit = ref(false)
-
-// 折疊面板展開狀態 (預設展開最近的兩個月)
-const activeExpenseMonths = ref([])
-const activeIncomeMonths = ref([])
-
-// 匯入彈窗狀態
-const importDialogVisible = ref(false)
-const importMonth = ref(new Date().toISOString().slice(0, 7))
-
-const dialogTitle = computed(() => {
-  return isEdit.value ? '編輯紀錄' : `新增${activeTab.value === 'expense' ? '支出' : '收入'}`
+// 動態月份標籤
+const currentMonthLabel = computed(() => {
+  if (!selectedMonth.value) return ''
+  const [year, month] = selectedMonth.value.split('-')
+  return `${year} 年 ${parseInt(month)} 月`
 })
 
-const totalExpense = computed(() => expenses.value.reduce((sum, e) => sum + Number(e.amount), 0))
-const totalIncome = computed(() => incomes.value.reduce((sum, i) => sum + Number(i.amount), 0))
+// 數據狀態
+const totalIncome = ref(0)
+const processedExpense = ref(0)
+const pendingExpense = ref(0)
+const processedInsurance = ref(0)
+const pendingInsurance = ref(0)
 
-// 分組邏輯
-const groupData = (data, amountKey) => {
-  const groups = {}
-  data.forEach(item => {
-    const m = item.year_month || '未知月份'
-    if (!groups[m]) {
-      groups[m] = { month: m, total: 0, items: [] }
-    }
-    groups[m].items.push(item)
-    groups[m].total += Number(item[amountKey])
-  })
-  // 轉為陣列並按月份倒序
-  return Object.values(groups).sort((a, b) => b.month.localeCompare(a.month))
-}
-
-const groupedExpenses = computed(() => groupData(expenses.value, 'amount'))
-const groupedIncomes = computed(() => groupData(incomes.value, 'amount'))
-
-const form = ref({ id: null, year_month: '', name: '', amount: 1, member_name: '', category_name: '', status: '未處理' })
-
-const fetchDependencies = async () => {
-  const [mRes, cRes] = await Promise.all([
-    supabase.from('members').select('*').order('created_at', { ascending: true }),
-    supabase.from('expense_categories').select('*').order('created_at', { ascending: true })
-  ])
-  if (mRes.data) members.value = mRes.data
-  if (cRes.data) categories.value = cRes.data
-}
+// 計算實際總支出 (已處理 + 已轉)
+const totalProcessed = computed(() => processedExpense.value + processedInsurance.value)
 
 const fetchData = async () => {
+  if (!selectedMonth.value) return
   loading.value = true
-  
-  const [expRes, incRes] = await Promise.all([
-    supabase.from('expenses').select('*').order('year_month', { ascending: false }).order('created_at', { ascending: false }),
-    supabase.from('incomes').select('*').order('year_month', { ascending: false }).order('created_at', { ascending: false })
-  ])
 
-  if (!expRes.error) expenses.value = expRes.data || []
-  if (!incRes.error) incomes.value = incRes.data || []
-  
-  // 預設展開前 2 個月
-  if (activeExpenseMonths.value.length === 0 && groupedExpenses.value.length > 0) {
-    activeExpenseMonths.value = groupedExpenses.value.slice(0, 2).map(g => g.month)
-  }
-  if (activeIncomeMonths.value.length === 0 && groupedIncomes.value.length > 0) {
-    activeIncomeMonths.value = groupedIncomes.value.slice(0, 2).map(g => g.month)
-  }
-  
-  loading.value = false
-}
-
-const importFixedExpenses = () => {
-  importMonth.value = new Date().toISOString().slice(0, 7)
-  importDialogVisible.value = true
-}
-
-const executeImport = async () => {
-  if (!importMonth.value) return ElMessage.warning('請選擇月份')
-  
   try {
-    importing.value = true
-    const familyId = '00000000-0000-0000-0000-000000000001'
-
-    const [fixedRes, currentRes] = await Promise.all([
-      supabase.from('fixed_expenses').select('*'),
-      supabase.from('expenses').select('name').eq('year_month', importMonth.value)
+    const [incRes, expRes, insPayRes, polRes] = await Promise.all([
+      supabase.from('incomes').select('amount').eq('year_month', selectedMonth.value),
+      supabase.from('expenses').select('amount, status').eq('year_month', selectedMonth.value),
+      supabase.from('insurance_payments').select('policy_id, status').eq('year_month', selectedMonth.value),
+      supabase.from('insurance_policies').select('id, monthly_average')
     ])
 
-    if (fixedRes.error) throw fixedRes.error
-    if (!fixedRes.data || fixedRes.data.length === 0) return ElMessage.warning('尚未設定任何固定支出模板')
+    if (incRes.error) throw incRes.error
+    if (expRes.error) throw expRes.error
+    if (insPayRes.error) throw insPayRes.error
+    if (polRes.error) throw polRes.error
 
-    const existingNames = currentRes.data.map(e => e.name)
-    const toInsert = []
+    // 1. 計算收入
+    totalIncome.value = (incRes.data || []).reduce((sum, item) => sum + Number(item.amount), 0)
 
-    fixedRes.data.forEach(tpl => {
-      if (!existingNames.includes(tpl.name)) {
-        toInsert.push({
-          family_id: familyId,
-          year_month: importMonth.value,
-          name: tpl.name,
-          amount: tpl.amount,
-          payer_name: tpl.payer_name,
-          category_name: tpl.category_name,
-          status: '未處理'
-        })
-      }
-    })
+    // 2. 計算普通支出
+    processedExpense.value = 0
+    pendingExpense.value = 0
+    if (expRes.data) {
+      expRes.data.forEach(item => {
+        const amount = Number(item.amount)
+        if (item.status === '已處理') {
+          processedExpense.value += amount
+        } else {
+          pendingExpense.value += amount
+        }
+      })
+    }
 
-    if (toInsert.length === 0) return ElMessage.info('該月份所有固定支出皆已匯入')
+    // 3. 計算保險支出
+    const policyMap = {}
+    if (polRes.data) {
+      polRes.data.forEach(p => { policyMap[p.id] = Number(p.monthly_average) })
+    }
 
-    const { error } = await supabase.from('expenses').insert(toInsert)
-    if (error) throw error
+    processedInsurance.value = 0
+    pendingInsurance.value = 0
+    if (insPayRes.data) {
+      insPayRes.data.forEach(item => {
+        const amount = policyMap[item.policy_id] || 0
+        if (item.status === '已轉') {
+          processedInsurance.value += amount
+        } else {
+          pendingInsurance.value += amount
+        }
+      })
+    }
 
-    ElMessage.success(`✅ 成功匯入 ${toInsert.length} 筆固定支出至 ${importMonth.value}`)
-    importDialogVisible.value = false
-    fetchData()
-
-  } catch (err) {
-    ElMessage.error('匯入失敗：' + err.message)
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('載入月度總覽失敗')
   } finally {
-    importing.value = false
-  }
-}
-
-const toggleExpenseStatus = async (item) => {
-  const newStatus = item.status === '已處理' ? '未處理' : '已處理'
-  const { error } = await supabase.from('expenses').update({ status: newStatus }).eq('id', item.id)
-  if (error) ElMessage.error('更新失敗：' + error.message)
-  else {
-    item.status = newStatus
-  }
-}
-
-const openAddDialog = () => {
-  isEdit.value = false
-  const defaultMember = members.value.length > 0 ? members.value[0].name : ''
-  const defaultCategory = categories.value.length > 0 ? categories.value[0].name : ''
-  const currentMonth = new Date().toISOString().slice(0, 7)
-  
-  form.value = { 
-    id: null, 
-    year_month: currentMonth, 
-    name: '', 
-    amount: 1, 
-    member_name: defaultMember, 
-    category_name: defaultCategory, 
-    status: '未處理' 
-  }
-  dialogVisible.value = true
-}
-
-const openEditDialog = (row) => {
-  isEdit.value = true
-  form.value = {
-    id: row.id,
-    year_month: row.year_month,
-    name: row.name,
-    amount: row.amount,
-    member_name: activeTab.value === 'expense' ? row.payer_name : row.member_name,
-    category_name: row.category_name || '',
-    status: row.status || '未處理'
-  }
-  dialogVisible.value = true
-}
-
-const submitForm = async () => {
-  if (!form.value.name || form.value.amount <= 0 || !form.value.year_month) return ElMessage.warning('請填寫完整資訊')
-  if (!form.value.member_name) return ElMessage.warning('請選擇對象')
-  
-  submitting.value = true
-  const familyId = '00000000-0000-0000-0000-000000000001'
-
-  // 檢查是否為新分類，若是則自動存檔
-  if (activeTab.value === 'expense' && form.value.category_name) {
-    const isNewCategory = !categories.value.some(c => c.name === form.value.category_name)
-    if (isNewCategory) {
-      await supabase.from('expense_categories').insert([{
-        family_id: familyId,
-        name: form.value.category_name
-      }])
-      fetchDependencies()
-    }
-  }
-  
-  if (activeTab.value === 'expense') {
-    const payload = {
-      year_month: form.value.year_month,
-      name: form.value.name,
-      amount: form.value.amount,
-      payer_name: form.value.member_name,
-      category_name: form.value.category_name,
-      status: form.value.status
-    }
-
-    let error
-    if (isEdit.value) {
-      const res = await supabase.from('expenses').update(payload).eq('id', form.value.id)
-      error = res.error
-    } else {
-      const res = await supabase.from('expenses').insert([{
-        ...payload,
-        family_id: familyId
-      }])
-      error = res.error
-    }
-
-    if (error) ElMessage.error('儲存失敗：' + error.message)
-    else {
-      ElMessage.success(isEdit.value ? '✅ 支出已更新' : '✅ 支出已新增')
-      dialogVisible.value = false
-      fetchData()
-    }
-  } else {
-    const payload = {
-      year_month: form.value.year_month,
-      name: form.value.name,
-      amount: form.value.amount,
-      member_name: form.value.member_name
-    }
-
-    let error
-    if (isEdit.value) {
-      const res = await supabase.from('incomes').update(payload).eq('id', form.value.id)
-      error = res.error
-    } else {
-      const res = await supabase.from('incomes').insert([{
-        ...payload,
-        family_id: familyId
-      }])
-      error = res.error
-    }
-
-    if (error) ElMessage.error('儲存失敗：' + error.message)
-    else {
-      ElMessage.success(isEdit.value ? '✅ 收入已更新' : '✅ 收入已新增')
-      dialogVisible.value = false
-      fetchData()
-    }
-  }
-  submitting.value = false
-}
-
-const deleteRecord = async (table, id) => {
-  try {
-    await ElMessageBox.confirm('確定要刪除這筆紀錄嗎？', '提示', { type: 'warning' })
-    const { error } = await supabase.from(table).delete().eq('id', id)
-    if (error) throw error
-    ElMessage.success('已刪除')
-    fetchData()
-  } catch (err) {
-    if (err !== 'cancel') ElMessage.error('刪除失敗')
+    loading.value = false
   }
 }
 
 onMounted(() => {
   fetchData()
-  fetchDependencies()
 })
 </script>
 
 <style scoped>
 .cashflow-container { width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-header h2 { margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.header-left h2 { margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; }
+.month-picker { width: 140px; }
 
-.mb-20 { margin-bottom: 24px; }
-.stat-card { border-radius: 20px; background: #ffffff; border: none; }
-.stat-label { font-size: 14px; color: #64748b; margin-bottom: 6px; }
-.stat-value { font-size: 24px; font-weight: bold; }
-.text-red { color: #ef4444; }
-.text-green { color: #10b981; }
-.font-bold { font-weight: 600; }
+/* 網格佈局 */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 768px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }
 
-.list-card { border-radius: 20px; border: none; overflow: hidden; }
-.tool-bar { margin-bottom: 20px; display: flex; justify-content: flex-end; }
-
-/* 折疊面板樣式 */
-.month-groups :deep(.el-collapse) {
-  border: none;
+/* 統計卡片 */
+.stat-card { 
+  border-radius: 20px; 
+  border: none; 
+  background: #ffffff; 
+  height: 100%;
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
 }
-.month-groups :deep(.el-collapse-item__header) {
-  background-color: #F8FAFC;
-  border-radius: 12px;
-  padding: 0 16px;
-  margin-bottom: 12px;
-  border-bottom: none;
-  font-size: 15px;
-}
-.month-groups :deep(.el-collapse-item__wrap) {
-  border-bottom: none;
-  background-color: transparent;
-}
-.month-groups :deep(.el-collapse-item__content) {
-  padding-bottom: 16px;
-}
-.group-title {
+.stat-card :deep(.el-card__body) {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding-right: 10px;
+  align-items: flex-start;
+  padding: 24px;
+  height: 100%;
 }
-.month-text { font-weight: 700; color: #334155; }
-.month-total { font-size: 13px; font-family: monospace; }
+.stat-icon { 
+  width: 48px; height: 48px; 
+  border-radius: 14px; 
+  display: flex; justify-content: center; align-items: center; 
+  font-size: 24px; margin-right: 16px; 
+  flex-shrink: 0; 
+}
 
-.table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.empty-state { padding: 40px 0; }
+/* 各卡片專屬樣式 */
+.income-card .stat-icon { background: #ecfdf5; color: #10b981; }
+.expense-card .stat-icon { background: #fef2f2; color: #ef4444; }
+.insurance-card .stat-icon { background: #fffbeb; color: #f59e0b; }
+.total-card .stat-icon { background: #EEF2FF; color: #6366F1; }
+
+.stat-info { display: flex; flex-direction: column; width: 100%; }
+.stat-label { font-size: 14px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
+.stat-value { font-size: 24px; font-weight: 700; font-family: monospace; line-height: 1.2; margin-bottom: 8px; }
+.stat-sub { font-size: 13px; color: #94a3b8; margin-top: auto; }
+
+.text-green { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-orange { color: #f59e0b; }
+.text-primary { color: #6366F1; }
+.text-muted { color: #94a3b8; }
 
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .header-actions { width: 100%; }
-  .header-actions .el-button { width: 100%; }
-  .tool-bar { justify-content: center; }
+  .header-left { width: 100%; justify-content: space-between; }
+  .stat-value { font-size: 22px; }
 }
 </style>
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/CashflowView.vue
-V: 1793971300
+V: 1793988000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -1733,7 +1429,7 @@ W: ai-wa-fs-002
 <template>
   <div class="dashboard-container" v-loading="loading">
     <div class="page-header">
-      <h2>總覽儀表板</h2>
+      <h2>年度總覽</h2>
       <el-button type="primary" icon="DataLine" class="report-btn" @click="$router.push('/annual-report')">
         查看年度報表
       </el-button>
@@ -1747,9 +1443,19 @@ W: ai-wa-fs-002
             <el-icon><Money /></el-icon>
           </div>
           <div class="card-content">
-            <div class="asset-label">家庭總餘額</div>
-            <div class="asset-value">HK$ {{ totalBalance.toLocaleString() }}</div>
-            <div class="asset-sub">共 1 個銀行帳號</div>
+            <div class="asset-header">
+              <div class="asset-label">家庭總餘額</div>
+            </div>
+            <div class="asset-value" :class="totalBalance < 0 ? 'text-red' : ''">
+              HK$ {{ totalBalance.toLocaleString() }}
+            </div>
+            <div class="asset-sub" v-if="latestBalanceRecord">
+              <el-tag size="small" type="success" effect="dark" class="mr-2">基準：{{ latestBalanceRecord.year_month }} 月初</el-tag>
+              {{ latestBalanceRecord.year_month }} 基準餘額 + 後續收支推算
+            </div>
+            <div class="asset-sub text-orange" v-else>
+              ⚠️ 尚未設定對帳基準。請至「待辦與紀錄中心」輸入月初實際結餘。
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -1839,11 +1545,25 @@ import { TrendCharts, Bottom, Wallet, DataLine, Money } from '@element-plus/icon
 const loading = ref(false)
 
 // 狀態
-const totalBalance = ref(0)
+const latestBalanceRecord = ref(null)
+const allTimeIncome = ref(0)
+const allTimeExpense = ref(0)
 const annualData = ref([])
 const activeMonthsCount = ref(0)
 
 const currentYear = new Date().getFullYear()
+
+// 家庭總餘額推算
+const totalBalance = computed(() => {
+  if (latestBalanceRecord.value) {
+    // 有對帳紀錄：以最新輸入的「月初餘額」為基準 + 該月及之後的收入 - 支出
+    const baseAmount = Number(latestBalanceRecord.value.actual_balance)
+    return baseAmount + allTimeIncome.value - allTimeExpense.value
+  } else {
+    // 從未對帳過：顯示歷史累計
+    return allTimeIncome.value - allTimeExpense.value
+  }
+})
 
 // 取得當前年度資料
 const currentYearData = computed(() => {
@@ -1858,17 +1578,21 @@ const fetchDashboardData = async () => {
   loading.value = true
   
   try {
-    // 1. 抓取最新總餘額
+    const familyId = '00000000-0000-0000-0000-000000000001'
+
+    // 1. 抓取最新一筆對帳紀錄 (最後一次輸入的月初餘額)
     const { data: balData } = await supabase
       .from('monthly_balances')
-      .select('actual_balance')
+      .select('year_month, actual_balance')
+      .eq('family_id', familyId)
       .order('year_month', { ascending: false })
       .limit(1)
       .maybeSingle()
     
-    if (balData) totalBalance.value = Number(balData.actual_balance)
+    latestBalanceRecord.value = balData
+    const baseYM = balData ? balData.year_month : '0000-00'
 
-    // 2. 抓取所有收支紀錄 (用於計算年度)
+    // 2. 抓取所有收支紀錄
     const [incRes, expRes, insRes, polRes] = await Promise.all([
       supabase.from('incomes').select('year_month, amount'),
       supabase.from('expenses').select('year_month, amount').eq('status', '已處理'),
@@ -1884,43 +1608,48 @@ const fetchDashboardData = async () => {
       polRes.data.forEach(p => { policyMap[p.id] = Number(p.monthly_average) })
     }
 
-    // 3. 初始化前後 2 年的資料結構
+    // 初始化前後 2 年的資料結構
     const tempYears = {}
     for (let i = -2; i <= 2; i++) {
       const y = currentYear + i
       tempYears[y] = { year: y, income: 0, expense: 0, net: 0 }
     }
 
-    // 4. 計算收入
+    // 重設「基準點之後」的收支累計
+    allTimeIncome.value = 0
+    allTimeExpense.value = 0
+
+    // 3. 計算收入
     if (incRes.data) {
       incRes.data.forEach(item => {
         if (!item.year_month) return
+        const amount = Number(item.amount)
+        
+        // 只有大於等於基準月份的才計入總餘額推算
+        if (item.year_month >= baseYM) {
+          allTimeIncome.value += amount
+        }
+        
         const y = parseInt(item.year_month.split('-')[0])
         if (tempYears[y]) {
-          tempYears[y].income += Number(item.amount)
+          tempYears[y].income += amount
         }
       })
     }
 
-    // 5. 計算一般支出 (已處理)
+    // 4. 計算一般支出 (已處理)
     const monthsWithData = new Set()
     if (expRes.data) {
       expRes.data.forEach(item => {
         if (!item.year_month) return
-        const y = parseInt(item.year_month.split('-')[0])
-        if (tempYears[y]) {
-          tempYears[y].expense += Number(item.amount)
-          if (y === currentYear) monthsWithData.add(item.year_month)
+        const amount = Number(item.amount)
+        
+        // 只有大於等於基準月份的才計入總餘額推算
+        if (item.year_month >= baseYM) {
+          allTimeExpense.value += amount
         }
-      })
-    }
-
-    // 6. 計算保險支出 (已轉)
-    if (insRes.data) {
-      insRes.data.forEach(item => {
-        if (!item.year_month) return
+        
         const y = parseInt(item.year_month.split('-')[0])
-        const amount = policyMap[item.policy_id] || 0
         if (tempYears[y]) {
           tempYears[y].expense += amount
           if (y === currentYear) monthsWithData.add(item.year_month)
@@ -1928,7 +1657,25 @@ const fetchDashboardData = async () => {
       })
     }
 
-    // 7. 計算淨額並轉為陣列
+    // 5. 計算保險支出 (已轉)
+    if (insRes.data) {
+      insRes.data.forEach(item => {
+        if (!item.year_month) return
+        const amount = policyMap[item.policy_id] || 0
+        
+        if (item.year_month >= baseYM) {
+          allTimeExpense.value += amount
+        }
+        
+        const y = parseInt(item.year_month.split('-')[0])
+        if (tempYears[y]) {
+          tempYears[y].expense += amount
+          if (y === currentYear) monthsWithData.add(item.year_month)
+        }
+      })
+    }
+
+    // 6. 計算年度淨額並轉為陣列
     const resultArray = []
     for (let i = -2; i <= 2; i++) {
       const y = currentYear + i
@@ -1970,7 +1717,7 @@ onMounted(() => {
 }
 .total-balance-card :deep(.el-card__body) {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 30px;
 }
 .card-icon {
@@ -1979,12 +1726,15 @@ onMounted(() => {
   background: rgba(255,255,255,0.1);
   display: flex; justify-content: center; align-items: center;
   font-size: 32px; margin-right: 24px;
-  color: #38bdf8;
+  color: #38bdf8; flex-shrink: 0;
 }
 .card-content { flex: 1; }
-.asset-label { font-size: 15px; color: #94a3b8; margin-bottom: 8px; }
+.asset-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.asset-label { font-size: 15px; color: #94a3b8; }
 .asset-value { font-size: 36px; font-weight: bold; font-family: monospace; margin-bottom: 6px; }
-.asset-sub { font-size: 13px; color: #64748b; }
+.asset-value.text-red { color: #f87171; }
+.asset-sub { font-size: 13px; color: #64748b; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.asset-sub.text-orange { color: #fb923c; }
 
 /* 統計卡片 */
 .stat-card { border-radius: 20px; border: none; position: relative; overflow: hidden; height: 100%; }
@@ -2012,6 +1762,7 @@ onMounted(() => {
 .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .ml-2 { margin-left: 8px; }
+.mr-2 { margin-right: 8px; }
 
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -2024,7 +1775,7 @@ onMounted(() => {
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/DashboardView.vue
-V: 1793971200
+V: 1793985000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -2046,7 +1797,7 @@ W: ai-wa-fs-002
     </div>
 
     <!-- 總計卡片 -->
-    <el-row :gutter="10" class="mb-20">
+    <el-row :gutter="20" class="mb-20">
       <el-col :xs="12" :sm="8">
         <el-card shadow="never" class="stat-card">
           <div class="stat-label">總投入成本</div>
@@ -2087,7 +1838,10 @@ W: ai-wa-fs-002
               <el-tag size="small" type="info">獨立基金</el-tag>
             </div>
           </div>
-          <el-button type="danger" text size="small" @click="deleteFund(fund.id)">刪除</el-button>
+          <div class="header-actions-btn">
+            <el-button type="primary" text size="small" @click="openFundDialog(fund)">編輯</el-button>
+            <el-button type="danger" text size="small" @click="deleteFund(fund.id)">刪除</el-button>
+          </div>
         </div>
         
         <div class="card-body">
@@ -2115,7 +1869,7 @@ W: ai-wa-fs-002
           </div>
         </div>
 
-        <!-- 🆕 操作按鈕區 -->
+        <!-- 操作按鈕區 -->
         <div class="card-actions">
           <el-button type="primary" link size="small" @click="openHistoryDialog(fund)">查看歷史快照</el-button>
           <el-button type="warning" size="small" plain @click="openWithdrawDialog(fund)">記錄提款/轉出</el-button>
@@ -2123,8 +1877,8 @@ W: ai-wa-fs-002
       </el-card>
     </div>
 
-    <!-- 新增基金彈窗 -->
-    <el-dialog v-model="fundDialogVisible" title="新增基金" width="90%" max-width="450px">
+    <!-- 新增/編輯基金彈窗 -->
+    <el-dialog v-model="fundDialogVisible" :title="isEditFund ? '編輯基金' : '新增基金'" width="90%" max-width="450px">
       <el-form :model="fundForm" label-position="top">
         <el-form-item label="基金名稱" required>
           <el-input v-model="fundForm.name" placeholder="例如：駿利亨德森遠見基金" />
@@ -2165,8 +1919,8 @@ W: ai-wa-fs-002
             <el-option v-for="f in funds" :key="f.id" :label="f.name" :value="f.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="月份" required>
-          <el-date-picker v-model="snapshotForm.year_month" type="month" value-format="YYYY-MM" style="width: 100%" />
+        <el-form-item label="日期" required>
+          <el-date-picker v-model="snapshotForm.year_month" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
         
         <el-row :gutter="10">
@@ -2182,13 +1936,9 @@ W: ai-wa-fs-002
           </el-col>
         </el-row>
         
-        <el-form-item label="匯率 (USD to HKD)" required>
-          <el-input-number v-model="snapshotForm.exchange_rate" :precision="4" :step="0.1" style="width: 100%" />
+        <el-form-item label="保單貨幣價值 (HKD)" required>
+          <el-input-number v-model="snapshotForm.total_value_hkd" :precision="2" :step="1" style="width: 100%" placeholder="請輸入 App 顯示的 HKD 現值" />
         </el-form-item>
-
-        <div class="preview-box" v-if="snapshotForm.units && snapshotForm.nav">
-          預估 HKD 現值：<strong>HK$ {{ computedSnapshotValue.toLocaleString() }}</strong>
-        </div>
       </el-form>
       <template #footer>
         <el-button @click="snapshotDialogVisible = false">取消</el-button>
@@ -2212,14 +1962,13 @@ W: ai-wa-fs-002
       </template>
     </el-dialog>
 
-    <!-- 🆕 歷史快照彈窗 -->
+    <!-- 歷史快照彈窗 -->
     <el-dialog v-model="historyDialogVisible" :title="`歷史快照 - ${currentFund?.name}`" width="90%" max-width="600px">
       <div class="table-wrapper">
         <el-table :data="currentFundSnaps" style="width: 100%; min-width: 500px;" stripe>
-          <el-table-column prop="year_month" label="月份" width="100" />
+          <el-table-column prop="year_month" label="日期" width="120" />
           <el-table-column prop="units" label="單位數" width="100" align="right" />
           <el-table-column prop="nav" label="價格 (USD)" width="100" align="right" />
-          <el-table-column prop="exchange_rate" label="匯率" width="80" align="right" />
           <el-table-column prop="total_value_hkd" label="總值 (HKD)" align="right">
             <template #default="scope">
               <span class="font-bold text-blue">HK$ {{ Number(scope.row.total_value_hkd).toLocaleString() }}</span>
@@ -2253,18 +2002,19 @@ const submitting = ref(false)
 const fundDialogVisible = ref(false)
 const snapshotDialogVisible = ref(false)
 const withdrawDialogVisible = ref(false)
-const historyDialogVisible = ref(false) // 🆕
+const historyDialogVisible = ref(false)
 
 // 表單狀態
+const isEditFund = ref(false)
 const isLinkedToPolicy = ref(false)
-const fundForm = ref({ name: '', policy_id: '', allocation_pct: 0, manual_cost: 0 })
-const snapshotForm = ref({ fund_id: '', year_month: new Date().toISOString().slice(0, 7), units: 0, nav: 0, exchange_rate: 7.8 })
+const fundForm = ref({ id: null, name: '', policy_id: '', allocation_pct: 0, manual_cost: 0 })
+const snapshotForm = ref({ fund_id: '', year_month: new Date().toISOString().slice(0, 10), units: 0, nav: 0, total_value_hkd: 0 })
 
 // 提款狀態
 const currentFund = ref(null)
 const withdrawAmount = ref(0)
 
-// 🆕 歷史快照狀態
+// 歷史快照狀態
 const currentFundSnaps = ref([])
 
 const fundPolicies = computed(() => policies.value.filter(p => p.type === 'fund_insurance'))
@@ -2311,11 +2061,6 @@ const getLatestValue = (fund) => {
   return latest ? Number(latest.total_value_hkd) : 0
 }
 
-const computedSnapshotValue = computed(() => {
-  const v = (snapshotForm.value.units || 0) * (snapshotForm.value.nav || 0) * (snapshotForm.value.exchange_rate || 0)
-  return Math.round(v)
-})
-
 const fetchData = async () => {
   loading.value = true
   const [fundRes, snapRes, polRes] = await Promise.all([
@@ -2329,25 +2074,21 @@ const fetchData = async () => {
   loading.value = false
 }
 
-// 🆕 打開歷史快照彈窗
 const openHistoryDialog = (fund) => {
   currentFund.value = fund
-  // 篩選該基金的所有快照，並按時間降序排列
   currentFundSnaps.value = snapshots.value
     .filter(s => s.fund_id === fund.id)
     .sort((a, b) => b.year_month.localeCompare(a.year_month))
   historyDialogVisible.value = true
 }
 
-// 🆕 刪除快照
 const deleteSnapshot = async (id) => {
   try {
     await ElMessageBox.confirm('確定要刪除這筆快照嗎？這將會影響該月的盈虧計算。', '警告', { type: 'warning' })
     const { error } = await supabase.from('fund_snapshots').delete().eq('id', id)
     if (error) throw error
     ElMessage.success('已刪除')
-    fetchData() // 重新抓取
-    // 重新整理彈窗內的列表
+    fetchData()
     currentFundSnaps.value = currentFundSnaps.value.filter(s => s.id !== id)
   } catch (err) {
     if (err !== 'cancel') ElMessage.error('刪除失敗')
@@ -2379,9 +2120,22 @@ const submitWithdraw = async () => {
   }
 }
 
-const openFundDialog = () => {
-  isLinkedToPolicy.value = false
-  fundForm.value = { name: '', policy_id: '', allocation_pct: 0, manual_cost: 0 }
+const openFundDialog = (fund = null) => {
+  if (fund) {
+    isEditFund.value = true
+    isLinkedToPolicy.value = !!fund.policy_id
+    fundForm.value = {
+      id: fund.id,
+      name: fund.name,
+      policy_id: fund.policy_id || '',
+      allocation_pct: Number(fund.allocation_pct) || 0,
+      manual_cost: Number(fund.manual_cost) || 0
+    }
+  } else {
+    isEditFund.value = false
+    isLinkedToPolicy.value = false
+    fundForm.value = { id: null, name: '', policy_id: '', allocation_pct: 0, manual_cost: 0 }
+  }
   fundDialogVisible.value = true
 }
 
@@ -2389,7 +2143,6 @@ const submitFund = async () => {
   if (!fundForm.value.name) return ElMessage.warning('請輸入名稱')
   
   let payload = {
-    family_id: '00000000-0000-0000-0000-000000000001',
     name: fundForm.value.name,
     policy_id: null,
     allocation_pct: 0,
@@ -2406,12 +2159,25 @@ const submitFund = async () => {
   }
 
   submitting.value = true
-  const { error } = await supabase.from('funds').insert([payload])
+  
+  let error
+  if (isEditFund.value) {
+    const res = await supabase.from('funds').update(payload).eq('id', fundForm.value.id)
+    error = res.error
+  } else {
+    const res = await supabase.from('funds').insert([{
+      ...payload,
+      family_id: '00000000-0000-0000-0000-000000000001'
+    }])
+    error = res.error
+  }
+
   submitting.value = false
   
-  if (error) ElMessage.error('失敗：' + error.message)
-  else {
-    ElMessage.success('✅ 基金已新增')
+  if (error) {
+    ElMessage.error('失敗：' + error.message)
+  } else {
+    ElMessage.success(isEditFund.value ? '✅ 基金已更新' : '✅ 基金已新增')
     fundDialogVisible.value = false
     fetchData()
   }
@@ -2421,22 +2187,24 @@ const openSnapshotDialog = () => {
   if (funds.value.length === 0) return ElMessage.warning('請先新增基金主檔')
   snapshotForm.value = {
     fund_id: funds.value[0].id,
-    year_month: new Date().toISOString().slice(0, 7),
-    units: 0, nav: 0, exchange_rate: 7.8
+    year_month: new Date().toISOString().slice(0, 10),
+    units: 0, nav: 0, total_value_hkd: 0
   }
   snapshotDialogVisible.value = true
 }
 
 const submitSnapshot = async () => {
   if (!snapshotForm.value.fund_id || !snapshotForm.value.year_month) return ElMessage.warning('請填寫完整')
+  if (snapshotForm.value.total_value_hkd <= 0) return ElMessage.warning('請輸入保單貨幣價值 (HKD)')
+  
   submitting.value = true
   const { error } = await supabase.from('fund_snapshots').insert([{
     fund_id: snapshotForm.value.fund_id,
     year_month: snapshotForm.value.year_month,
     units: snapshotForm.value.units,
     nav: snapshotForm.value.nav,
-    exchange_rate: snapshotForm.value.exchange_rate,
-    total_value_hkd: computedSnapshotValue.value
+    exchange_rate: 1, // 保留欄位但不參與計算，預設給 1
+    total_value_hkd: snapshotForm.value.total_value_hkd
   }])
   submitting.value = false
   if (error) ElMessage.error('失敗：' + error.message)
@@ -2482,6 +2250,7 @@ onMounted(() => fetchData())
 .fund-card { border-radius: 12px; border: none; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05); }
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; }
 .card-header h3 { margin: 0 0 5px 0; font-size: 16px; color: #0f172a; }
+.header-actions-btn { display: flex; align-items: center; }
 .linked-policy { font-size: 12px; }
 
 .card-body { display: flex; flex-direction: column; gap: 8px; }
@@ -2496,7 +2265,6 @@ onMounted(() => fetchData())
 .latest-info { font-size: 12px; color: #94a3b8; margin-top: 5px; text-align: right; }
 .preview-box { background: #eff6ff; color: #1d4ed8; padding: 10px 15px; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 
-/* 🆕 按鈕區排版 */
 .card-actions { display: flex; justify-content: space-between; margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
 
 .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -2507,10 +2275,11 @@ onMounted(() => fetchData())
   .fund-card { flex: 0 0 85%; min-width: 280px; }
 }
 </style>
+
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/FundView.vue
-V: 1793811100
-W: ai-wa-fs-001
+V: 1793991000
+W: ai-wa-fs-002
 ═══ -->```
 
 <!-- === FILE END: ./src/views/FundView.vue === -->
@@ -2976,10 +2745,12 @@ W: ai-wa-fs-002
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { supabase } from '@/config/supabase'
 import { ElMessage } from 'element-plus'
 import { Wallet, WarningFilled } from '@element-plus/icons-vue'
 
+const router = useRouter()
 const account = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -2996,22 +2767,37 @@ const handleLogin = async () => {
   
   try {
     const cleanAccount = account.value.trim()
-    const virtualEmail = cleanAccount.includes('@') ? cleanAccount : `${cleanAccount}@fs-app.com`
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: virtualEmail,
-      password: password.value,
-    })
+    
+    // 查詢 app_users 表
+    const { data, error } = await supabase
+      .from('app_users')
+      .select('*')
+      .eq('username', cleanAccount)
+      .eq('password', password.value)
+      .maybeSingle()
 
     if (error) throw error
     
+    if (!data) {
+      errorMsg.value = '帳號或密碼錯誤，請重新輸入'
+      return
+    }
+
+    // 登入成功，儲存至 localStorage
+    const userInfo = {
+      id: data.id,
+      username: data.username,
+      role: data.role
+    }
+    localStorage.setItem('app_user', JSON.stringify(userInfo))
+    
     ElMessage.success('登入成功！')
-    window.location.reload()
+    // 跳轉至首頁，並使用 replace 避免使用者按上一頁回到登入頁
+    router.replace('/')
     
   } catch (error) {
-    errorMsg.value = error.message === 'Invalid login credentials' 
-      ? '帳號或密碼錯誤，請重新輸入' 
-      : '登入失敗：' + error.message
+    console.error(error)
+    errorMsg.value = '登入失敗，請檢查網路連線'
   } finally {
     loading.value = false
   }
@@ -3146,13 +2932,273 @@ const handleLogin = async () => {
   z-index: 1;
 }
 </style>
+
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/LoginView.vue
-V: 1793811500
-W: ai-wa-fs-001
+V: 1793993000
+W: ai-wa-fs-002
 ═══ -->```
 
 <!-- === FILE END: ./src/views/LoginView.vue === -->
+
+<!-- === FILE START: ./src/views/MemberReportView.vue === -->
+
+## 📄 ./src/views/MemberReportView.vue
+
+```vue
+<template>
+  <div class="member-report-container">
+    <div class="page-header">
+      <div class="header-left">
+        <h2>成員收支明細</h2>
+        <el-date-picker 
+          v-model="selectedMonth" 
+          type="month" 
+          placeholder="選擇月份" 
+          value-format="YYYY-MM" 
+          @change="fetchData" 
+          class="month-picker"
+        />
+      </div>
+    </div>
+
+    <div v-if="loading" style="text-align: center; padding: 40px;">
+      <el-icon class="is-loading" :size="30"><Loading /></el-icon>
+    </div>
+
+    <el-empty v-else-if="members.length === 0" description="尚無家庭成員，請先至系統設定新增。" />
+
+    <div v-else class="member-grid">
+      <el-card v-for="member in memberStats" :key="member.name" shadow="hover" class="member-card">
+        <div class="card-header">
+          <h3 class="member-name">{{ member.name }}</h3>
+        </div>
+        
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">家用轉入</span>
+            <span class="value text-green">HK$ {{ member.householdIncome.toLocaleString() }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">個人收入</span>
+            <span class="value text-green">HK$ {{ member.personalIncome.toLocaleString() }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">一般支出</span>
+            <span class="value text-red">HK$ {{ member.expense.toLocaleString() }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">保險平攤</span>
+            <span class="value text-orange">HK$ {{ member.insurance.toLocaleString() }}</span>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <div class="info-row net-row">
+            <span class="label font-bold">淨結餘</span>
+            <span class="value font-bold" :class="member.net >= 0 ? 'text-green' : 'text-red'">
+              {{ member.net >= 0 ? '+' : '' }} HK$ {{ member.net.toLocaleString() }}
+            </span>
+          </div>
+        </div>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { supabase } from '@/config/supabase'
+import { ElMessage } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
+
+const loading = ref(false)
+const selectedMonth = ref(new Date().toISOString().slice(0, 7))
+
+// 原始資料
+const members = ref([])
+const rawIncomes = ref([])
+const rawExpenses = ref([])
+const policies = ref([])
+
+// 計算每位成員的統計
+const memberStats = computed(() => {
+  if (members.value.length === 0) return []
+
+  return members.value.map(member => {
+    const mName = member.name
+
+    // 1. 收入 (區分家用與個人)
+    let householdIncome = 0
+    let personalIncome = 0
+    
+    rawIncomes.value.forEach(inc => {
+      if (inc.member_name === mName) {
+        const amount = Number(inc.amount)
+        if (inc.name && inc.name.includes('家用')) {
+          householdIncome += amount
+        } else {
+          personalIncome += amount
+        }
+      }
+    })
+
+    // 2. 一般支出 (已處理)
+    let expense = 0
+    rawExpenses.value.forEach(exp => {
+      if (exp.payer_name === mName) {
+        expense += Number(exp.amount)
+      }
+    })
+
+    // 3. 保險平攤 (名下保單的月均總和)
+    let insurance = 0
+    policies.value.forEach(p => {
+      if (p.holder_name === mName) {
+        insurance += Number(p.monthly_average)
+      }
+    })
+
+    // 4. 淨結餘
+    const net = (householdIncome + personalIncome) - (expense + insurance)
+
+    return {
+      name: mName,
+      householdIncome,
+      personalIncome,
+      expense,
+      insurance,
+      net
+    }
+  })
+})
+
+const fetchData = async () => {
+  if (!selectedMonth.value) return
+  loading.value = true
+
+  try {
+    // 抓取成員
+    const mRes = await supabase.from('members').select('*').order('created_at', { ascending: true })
+    if (mRes.data) members.value = mRes.data
+
+    // 抓取該月收入
+    const incRes = await supabase.from('incomes').select('*').eq('year_month', selectedMonth.value)
+    if (incRes.data) rawIncomes.value = incRes.data
+
+    // 抓取該月支出 (僅已處理)
+    const expRes = await supabase.from('expenses').select('*').eq('year_month', selectedMonth.value).eq('status', '已處理')
+    if (expRes.data) rawExpenses.value = expRes.data
+
+    // 抓取所有保單
+    const polRes = await supabase.from('insurance_policies').select('*')
+    if (polRes.data) policies.value = polRes.data
+
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('載入成員收支資料失敗')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchData()
+})
+</script>
+
+<style scoped>
+.member-report-container { width: 100%; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.header-left h2 { margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; }
+.month-picker { width: 140px; }
+
+/* 網格佈局 */
+.member-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .member-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1024px) {
+  .member-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* 卡片樣式 */
+.member-card { 
+  border-radius: 20px; 
+  border: none; 
+  background: #ffffff; 
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
+}
+.member-card :deep(.el-card__body) {
+  padding: 24px;
+}
+.card-header {
+  margin-bottom: 16px;
+}
+.member-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #6366F1; /* 主色調，與截圖一致 */
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+}
+.label {
+  color: #64748b;
+}
+.value {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.divider {
+  height: 1px;
+  background-color: #f1f5f9;
+  margin: 4px 0;
+}
+
+.net-row {
+  margin-top: 4px;
+}
+.net-row .label {
+  color: #1e293b;
+}
+
+.text-green { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-orange { color: #f59e0b; }
+.font-bold { font-weight: 700; }
+
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-left { width: 100%; justify-content: space-between; }
+}
+</style>
+
+<!-- ═══ EOF ═══
+F: AI-WA-FS/src/views/MemberReportView.vue
+V: 1793974000
+W: ai-wa-fs-002
+═══ -->```
+
+<!-- === FILE END: ./src/views/MemberReportView.vue === -->
 
 <!-- === FILE START: ./src/views/SettingsView.vue === -->
 
@@ -3210,7 +3256,7 @@ W: ai-wa-fs-001
       <el-tab-pane label="固定支出" name="fixed">
         <div class="tab-content">
           <div class="action-bar">
-            <span class="hint">設定後，每月初可在「收支流水」一鍵匯入這些項目。</span>
+            <span class="hint">設定後，每月初可在「待辦與紀錄中心」一鍵匯入這些項目。</span>
             <el-button type="primary" @click="openDialog('fixed')">+ 新增模板</el-button>
           </div>
           <el-table :data="fixedExpenses" style="width: 100%" stripe v-loading="loading">
@@ -3226,6 +3272,32 @@ W: ai-wa-fs-001
               <template #default="scope">
                 <el-button type="primary" link size="small" @click="openDialog('fixed', scope.row)">編輯</el-button>
                 <el-button type="danger" link size="small" @click="deleteItem('fixed_expenses', scope.row.id)">刪除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-tab-pane>
+
+      <!-- 🆕 帳號與權限管理 -->
+      <el-tab-pane label="帳號與權限" name="users">
+        <div class="tab-content">
+          <div class="action-bar">
+            <span class="hint">在此新增登入系統的帳號，並指派角色權限。</span>
+            <el-button type="primary" @click="openUserDialog()">+ 新增帳號</el-button>
+          </div>
+          <el-table :data="appUsers" style="width: 100%" stripe v-loading="userLoading">
+            <el-table-column prop="username" label="帳號" min-width="120" />
+            <el-table-column prop="role" label="角色權限" width="150">
+              <template #default="scope">
+                <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'info'" size="small" effect="light">
+                  {{ scope.row.role === 'admin' ? '管理員' : '一般使用者' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" align="center">
+              <template #default="scope">
+                <el-button type="primary" link size="small" @click="openUserDialog(scope.row)">編輯</el-button>
+                <el-button type="danger" link size="small" @click="deleteUser(scope.row)">刪除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -3299,6 +3371,28 @@ W: ai-wa-fs-001
         <el-button type="primary" :loading="submitting" @click="submitForm">儲存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 🆕 帳號編輯彈窗 -->
+    <el-dialog v-model="userDialogVisible" :title="isEditUser ? '編輯帳號' : '新增帳號'" width="90%" max-width="400px">
+      <el-form :model="userForm" label-position="top">
+        <el-form-item label="帳號名稱" required>
+          <el-input v-model="userForm.username" placeholder="例如：admin" :disabled="isEditUser" />
+        </el-form-item>
+        <el-form-item label="密碼" required>
+          <el-input v-model="userForm.password" type="password" show-password placeholder="請輸入密碼" />
+        </el-form-item>
+        <el-form-item label="角色權限" required>
+          <el-select v-model="userForm.role" style="width: 100%">
+            <el-option label="管理員 (全權限)" value="admin" />
+            <el-option label="一般使用者 (僅檢視)" value="viewer" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="userDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="userSubmitting" @click="submitUser">確認儲存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -3316,6 +3410,14 @@ const submitting = ref(false)
 const clearing = ref(false)
 const dialogVisible = ref(false)
 
+// 帳號管理狀態
+const appUsers = ref([])
+const userLoading = ref(false)
+const userDialogVisible = ref(false)
+const userSubmitting = ref(false)
+const isEditUser = ref(false)
+const userForm = ref({ id: null, username: '', password: '', role: 'viewer' })
+
 const formType = ref('member')
 const form = ref({ id: null, name: '', role: '', amount: 0, payer_name: '', category_name: '' })
 const isEdit = ref(false)
@@ -3323,6 +3425,12 @@ const isEdit = ref(false)
 const dialogTitle = computed(() => {
   const typeName = formType.value === 'member' ? '成員' : (formType.value === 'category' ? '分類' : '固定支出模板')
   return isEdit.value ? `編輯${typeName}` : `新增${typeName}`
+})
+
+// 取得當前登入帳號
+const currentUsername = computed(() => {
+  const uStr = localStorage.getItem('app_user')
+  return uStr ? JSON.parse(uStr).username : ''
 })
 
 const fetchData = async () => {
@@ -3338,6 +3446,15 @@ const fetchData = async () => {
   if (!fRes.error) fixedExpenses.value = fRes.data || []
   
   loading.value = false
+}
+
+const fetchUsers = async () => {
+  userLoading.value = true
+  const { data, error } = await supabase.from('app_users').select('*').order('created_at', { ascending: true })
+  if (!error && data) {
+    appUsers.value = data
+  }
+  userLoading.value = false
 }
 
 const openDialog = (type, row = null) => {
@@ -3418,7 +3535,77 @@ const deleteItem = async (table, id) => {
   }
 }
 
-// 🆕 清空記帳紀錄
+// 🆕 帳號管理相關
+const openUserDialog = (user = null) => {
+  if (user) {
+    isEditUser.value = true
+    userForm.value = { id: user.id, username: user.username, password: user.password, role: user.role }
+  } else {
+    isEditUser.value = false
+    userForm.value = { id: null, username: '', password: '', role: 'viewer' }
+  }
+  userDialogVisible.value = true
+}
+
+const submitUser = async () => {
+  if (!userForm.value.username || !userForm.value.password) return ElMessage.warning('請填寫完整資訊')
+  
+  userSubmitting.value = true
+  
+  if (isEditUser.value) {
+    // 更新時不修改 username
+    const { error } = await supabase.from('app_users').update({
+      password: userForm.value.password,
+      role: userForm.value.role
+    }).eq('id', userForm.value.id)
+    
+    if (error) ElMessage.error('更新失敗：' + error.message)
+    else {
+      ElMessage.success('✅ 帳號已更新')
+      userDialogVisible.value = false
+      fetchUsers()
+    }
+  } else {
+    // 檢查是否重複
+    const existing = appUsers.value.find(u => u.username === userForm.value.username)
+    if (existing) {
+      userSubmitting.value = false
+      return ElMessage.warning('該帳號名稱已存在')
+    }
+
+    const { error } = await supabase.from('app_users').insert([{
+      username: userForm.value.username,
+      password: userForm.value.password,
+      role: userForm.value.role
+    }])
+    
+    if (error) ElMessage.error('新增失敗：' + error.message)
+    else {
+      ElMessage.success('✅ 帳號已新增')
+      userDialogVisible.value = false
+      fetchUsers()
+    }
+  }
+  userSubmitting.value = false
+}
+
+const deleteUser = async (user) => {
+  if (user.username === currentUsername.value) {
+    return ElMessage.error('您無法刪除目前正在登入的帳號！')
+  }
+  
+  try {
+    await ElMessageBox.confirm(`確定要刪除帳號「${user.username}」嗎？`, '警告', { type: 'warning' })
+    const { error } = await supabase.from('app_users').delete().eq('id', user.id)
+    if (error) throw error
+    ElMessage.success('已刪除帳號')
+    fetchUsers()
+  } catch (err) {
+    if (err !== 'cancel') ElMessage.error('刪除失敗')
+  }
+}
+
+// 危險區域
 const clearAllRecords = async () => {
   try {
     await ElMessageBox.confirm('這將清空所有收支、保險狀態與基金快照，但會保留你的成員與主檔設定。確定要繼續嗎？', '高風險操作', { type: 'error', confirmButtonText: '確定清空' })
@@ -3441,7 +3628,6 @@ const clearAllRecords = async () => {
   }
 }
 
-// 🆕 徹底重置系統
 const resetSystem = async () => {
   try {
     await ElMessageBox.confirm('【警告】這將刪除系統內「所有」的資料，包含成員、保單、基金與所有收支紀錄。系統將回到全新狀態。你確定嗎？', '徹底重置', { type: 'error', confirmButtonText: '我確定要重置' })
@@ -3472,6 +3658,7 @@ const resetSystem = async () => {
 
 onMounted(() => {
   fetchData()
+  fetchUsers()
 })
 </script>
 
@@ -3480,7 +3667,7 @@ onMounted(() => {
 .page-header { margin-bottom: 20px; }
 .page-header h2 { margin: 0; color: #1e293b; }
 
-.settings-tabs { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+.settings-tabs { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
 .tab-content { padding-top: 10px; }
 .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .hint { font-size: 13px; color: #64748b; }
@@ -3492,11 +3679,11 @@ onMounted(() => {
 .danger-title { color: #ef4444; margin-bottom: 5px; }
 .danger-desc { color: #64748b; font-size: 14px; margin-bottom: 20px; }
 
-.danger-card { border: 1px solid #fca5a5; background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.danger-card { border: 1px solid #fca5a5; background: #fef2f2; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .danger-info h4 { margin: 0 0 5px 0; color: #b91c1c; font-size: 16px; }
 .danger-info p { margin: 0; color: #991b1b; font-size: 13px; }
 
-.info-card { border: 1px solid #e2e8f0; background: #f8fafc; padding: 20px; border-radius: 8px; }
+.info-card { border: 1px solid #e2e8f0; background: #f8fafc; padding: 20px; border-radius: 12px; }
 .info-card h4 { margin: 0 0 10px 0; color: #1e293b; font-size: 16px; }
 .data-stats { margin: 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.8; }
 
@@ -3505,10 +3692,11 @@ onMounted(() => {
   .danger-card { flex-direction: column; align-items: flex-start; }
 }
 </style>
+
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/SettingsView.vue
-V: 1793811400
-W: ai-wa-fs-001
+V: 1793996000
+W: ai-wa-fs-002
 ═══ -->```
 
 <!-- === FILE END: ./src/views/SettingsView.vue === -->
@@ -3521,115 +3709,260 @@ W: ai-wa-fs-001
 <template>
   <div class="settlement-container">
     <div class="page-header">
-      <h2>待辦中心</h2>
+      <h2>待辦與紀錄中心</h2>
       <div class="header-actions">
-        <el-button type="primary" @click="openAddExpenseDialog">+ 新增支出</el-button>
+        <el-button type="primary" @click="openAddDialog('expense')">+ 新增支出</el-button>
+        <el-button type="success" @click="openAddDialog('income')">+ 新增收入</el-button>
+        <el-button type="warning" plain @click="openReconcileDialog()">+ 輸入月初結餘</el-button>
       </div>
     </div>
 
-    <div v-if="loading" style="text-align: center; padding: 40px;">
-      <el-icon class="is-loading" :size="30"><Loading /></el-icon>
-    </div>
-
-    <el-empty v-else-if="pendingGroups.length === 0 && doneItems.length === 0" description="目前沒有待辦項目，太棒了！" />
-
-    <div v-else class="content-wrapper">
-      <!-- 未辦事項區塊 -->
-      <div v-if="pendingGroups.length > 0" class="pending-section">
-        <div class="section-header">
-          <h3>⏳ 未辦事項</h3>
-          <div class="bulk-actions">
-            <el-checkbox v-model="checkAll" @change="handleCheckAll" class="mr-2">全選</el-checkbox>
-            <el-button type="success" :disabled="selectedItems.length === 0" @click="batchProcess" :loading="processing">
-              批量標記已辦 ({{ selectedItems.length }})
-            </el-button>
-          </div>
-        </div>
-
-        <div class="groups-list">
-          <el-card v-for="group in pendingGroups" :key="group.month" shadow="never" class="month-card">
-            <template #header>
-              <div class="month-header">
-                <span class="month-title">{{ group.month }}</span>
-                <span class="month-total text-red">待處理總額: HK$ {{ group.total.toLocaleString() }}</span>
-              </div>
-            </template>
-            
-            <div class="items-list">
-              <div v-for="item in group.items" :key="item.id" class="todo-item">
-                <div class="item-checkbox">
-                  <el-checkbox-group v-model="selectedItems">
-                    <el-checkbox :label="item.id">
-                      <span style="display:none">選中</span>
-                    </el-checkbox>
-                  </el-checkbox-group>
-                </div>
-                <div class="item-info">
-                  <div class="item-main">
-                    <el-tag :type="item.type === 'insurance' ? 'warning' : 'info'" size="small" class="mr-2">
-                      {{ item.type === 'insurance' ? '保險' : '支出' }}
-                    </el-tag>
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-category" v-if="item.category">({{ item.category }})</span>
-                  </div>
-                  <div class="item-sub">
-                    對象：{{ item.payer }} | 金額：<strong>HK$ {{ item.amount.toLocaleString() }}</strong>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <!-- 單獨處理按鈕 (可選) -->
-                  <el-button type="success" plain size="small" @click="processSingle(item)">完成</el-button>
-                </div>
-              </div>
+    <el-card shadow="never" class="main-card">
+      <el-tabs v-model="activeTab" class="custom-tabs">
+        
+        <!-- 1. 收入紀錄 -->
+        <el-tab-pane label="收入紀錄" name="income">
+          <div class="tab-content">
+            <div v-if="rawIncomes.length === 0" class="empty-state">
+              <el-empty description="尚無任何收入紀錄" :image-size="80" />
             </div>
-          </el-card>
-        </div>
-      </div>
-
-      <!-- 已辦事項區塊 -->
-      <div v-if="doneItems.length > 0" class="done-section">
-        <el-collapse v-model="activeDoneCollapse">
-          <el-collapse-item name="done">
-            <template #title>
-              <h3 class="done-title">✅ 已辦事項 ({{ doneItems.length }})</h3>
-            </template>
-            <div class="table-wrapper">
-              <el-table :data="doneItems" style="width: 100%; min-width: 500px;" stripe size="small">
-                <el-table-column prop="year_month" label="月份" width="100" />
-                <el-table-column prop="type" label="類型" width="80">
-                  <template #default="scope">
-                    <el-tag :type="scope.row.type === 'insurance' ? 'warning' : 'info'" size="small">
-                      {{ scope.row.type === 'insurance' ? '保險' : '支出' }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="名稱" min-width="150" />
-                <el-table-column prop="payer" label="對象" width="100" />
+            <div v-else class="table-wrapper">
+              <el-table :data="rawIncomes" style="width: 100%; min-width: 500px;" stripe>
+                <el-table-column prop="year_month" label="月份" width="100" sortable />
+                <el-table-column prop="member_name" label="對象" width="120" />
+                <el-table-column prop="name" label="收入名稱" min-width="150" />
                 <el-table-column prop="amount" label="金額" width="120" align="right">
                   <template #default="scope">
-                    <span class="text-muted">HK$ {{ scope.row.amount.toLocaleString() }}</span>
+                    <span class="text-green font-bold">HK$ {{ Number(scope.row.amount).toLocaleString() }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="80" align="center">
+                <el-table-column label="操作" width="120" align="center">
                   <template #default="scope">
-                    <el-button type="danger" link size="small" @click="cancelProcess(scope.row)">退回</el-button>
+                    <el-button type="primary" link size="small" @click="editRecord('income', scope.row)">編輯</el-button>
+                    <el-button type="danger" link size="small" @click="deleteRecord('incomes', scope.row.id)">刪除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
-          </el-collapse-item>
-        </el-collapse>
-      </div>
-    </div>
+          </div>
+        </el-tab-pane>
 
-    <!-- 新增支出彈窗 -->
-    <el-dialog v-model="dialogVisible" title="新增支出" width="90%" max-width="500px">
+        <!-- 2. 支出事項 -->
+        <el-tab-pane label="支出事項" name="expense">
+          <div class="tab-content">
+            <div class="tool-bar">
+              <el-button type="warning" plain icon="MagicStick" :loading="importing" @click="importDialogVisible = true">
+                一鍵匯入固定支出
+              </el-button>
+            </div>
+            <div v-if="rawExpenses.length === 0" class="empty-state">
+              <el-empty description="尚無任何支出紀錄" :image-size="80" />
+            </div>
+            <div v-else class="table-wrapper">
+              <el-table :data="rawExpenses" style="width: 100%; min-width: 600px;" stripe>
+                <el-table-column prop="year_month" label="月份" width="100" sortable />
+                <el-table-column prop="payer_name" label="對象" width="100" />
+                <el-table-column prop="name" label="項目名稱" min-width="150" />
+                <el-table-column prop="category_name" label="類別" width="120">
+                  <template #default="scope">
+                    <el-tag size="small" type="info">{{ scope.row.category_name || '未分類' }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="amount" label="金額" width="120" align="right">
+                  <template #default="scope">
+                    <span class="text-red font-bold">HK$ {{ Number(scope.row.amount).toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="status" label="狀態" width="100" align="center">
+                  <template #default="scope">
+                    <el-tag :type="scope.row.status === '已處理' ? 'success' : 'info'" size="small">{{ scope.row.status || '未處理' }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="140" align="center">
+                  <template #default="scope">
+                    <el-button type="primary" link size="small" @click="editRecord('expense', scope.row)">編輯</el-button>
+                    <el-button type="danger" link size="small" @click="deleteRecord('expenses', scope.row.id)">刪除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 3. 待辦事項 -->
+        <el-tab-pane label="待辦事項" name="todo">
+          <div class="tab-content">
+            <div v-if="pendingGroups.length === 0" class="empty-state">
+              <el-empty description="目前沒有待辦項目，太棒了！" :image-size="80" />
+            </div>
+            <div v-else>
+              <div class="tool-bar" style="justify-content: space-between; align-items: center;">
+                <el-checkbox v-model="checkAll" @change="handleCheckAll">全選</el-checkbox>
+                <el-button type="success" :disabled="selectedItems.length === 0" @click="batchProcess" :loading="processing">
+                  批量標記已辦 ({{ selectedItems.length }})
+                </el-button>
+              </div>
+
+              <el-collapse v-model="activePendingCollapse">
+                <el-collapse-item v-for="group in pendingGroups" :key="group.month" :name="group.month">
+                  <template #title>
+                    <div class="group-title">
+                      <span class="month-text">{{ group.month }}</span>
+                      <span class="month-total text-red">待處理總額: HK$ {{ group.total.toLocaleString() }}</span>
+                    </div>
+                  </template>
+                  
+                  <div class="table-wrapper">
+                    <el-table :data="group.items" style="width: 100%; min-width: 500px;" stripe size="small">
+                      <el-table-column width="50" align="center">
+                        <template #default="scope">
+                          <el-checkbox-group v-model="selectedItems">
+                            <el-checkbox :label="scope.row.id"><span style="display:none">選</span></el-checkbox>
+                          </el-checkbox-group>
+                        </template>
+                      </el-table-column>
+                      <el-table-column prop="type" label="類型" width="80">
+                        <template #default="scope">
+                          <el-tag :type="scope.row.type === 'insurance' ? 'warning' : 'info'" size="small">
+                            {{ scope.row.type === 'insurance' ? '保險' : '支出' }}
+                          </el-tag>
+                        </template>
+                      </el-table-column>
+                      <el-table-column prop="payer" label="對象" width="100" />
+                      <el-table-column prop="name" label="項目名稱" min-width="150" />
+                      <el-table-column prop="amount" label="金額" width="120" align="right">
+                        <template #default="scope">
+                          <span class="text-red font-bold">HK$ {{ scope.row.amount.toLocaleString() }}</span>
+                        </template>
+                      </el-table-column>
+                      <el-table-column label="操作" width="80" align="center">
+                        <template #default="scope">
+                          <el-button type="success" plain size="small" @click="processSingle(scope.row)">完成</el-button>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </div>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 4. 已辦事項 -->
+        <el-tab-pane label="已辦事項" name="done">
+          <div class="tab-content">
+            <div v-if="processedGroups.length === 0" class="empty-state">
+              <el-empty description="尚無已辦事項" :image-size="80" />
+            </div>
+            <div v-else>
+              <el-collapse v-model="activeDoneCollapse">
+                <el-collapse-item v-for="group in processedGroups" :key="group.month" :name="group.month">
+                  <template #title>
+                    <div class="group-title">
+                      <span class="month-text">{{ group.month }}</span>
+                      <span class="month-total text-muted">總額: HK$ {{ group.total.toLocaleString() }}</span>
+                    </div>
+                  </template>
+                  
+                  <div class="table-wrapper">
+                    <el-table :data="group.items" style="width: 100%; min-width: 500px;" stripe size="small">
+                      <el-table-column prop="type" label="類型" width="80">
+                        <template #default="scope">
+                          <el-tag :type="scope.row.type === 'insurance' ? 'warning' : 'info'" size="small">
+                            {{ scope.row.type === 'insurance' ? '保險' : '支出' }}
+                          </el-tag>
+                        </template>
+                      </el-table-column>
+                      <el-table-column prop="payer" label="對象" width="100" />
+                      <el-table-column prop="name" label="項目名稱" min-width="150" />
+                      <el-table-column prop="amount" label="金額" width="120" align="right">
+                        <template #default="scope">
+                          <span class="text-muted" style="text-decoration: line-through;">HK$ {{ scope.row.amount.toLocaleString() }}</span>
+                        </template>
+                      </el-table-column>
+                      <el-table-column label="操作" width="80" align="center">
+                        <template #default="scope">
+                          <el-button type="danger" link size="small" @click="cancelProcess(scope.row)">退回</el-button>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </div>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 5. 每月對帳 -->
+        <el-tab-pane label="每月對帳" name="reconcile">
+          <div class="tab-content">
+            <div class="reconcile-hint" style="margin-bottom: 20px;">
+              請輸入每個月的「月初真實銀行結餘」。系統會自動推算該月月末結餘，並與下個月的月初結餘進行對比。<br>
+              💡 提示：您可以直接點擊表格中的「月初實際結餘」欄位進行修改。
+            </div>
+            
+            <div class="table-wrapper">
+              <el-table :data="reconcileData" style="width: 100%; min-width: 800px;" stripe>
+                <el-table-column prop="month" label="月份" width="100" />
+                <el-table-column prop="income" label="本月收入" width="110" align="right">
+                  <template #default="scope">
+                    <span class="text-green">HK$ {{ scope.row.income.toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="expense" label="本月支出" width="110" align="right">
+                  <template #default="scope">
+                    <span class="text-red">HK$ {{ scope.row.expense.toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="月初實際結餘 (基準)" width="160" align="right">
+                  <template #default="scope">
+                    <div 
+                      class="editable-cell" 
+                      @click="openReconcileDialog(scope.row.month)"
+                      title="點擊修改"
+                    >
+                      <span v-if="scope.row.actualStart !== null" class="font-bold font-monospace text-blue">
+                        HK$ {{ scope.row.actualStart.toLocaleString() }}
+                      </span>
+                      <span v-else class="text-muted">
+                        + 點擊輸入
+                      </span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="系統推算月末結餘" width="150" align="right">
+                  <template #default="scope">
+                    <span class="font-bold font-monospace">HK$ {{ scope.row.calculatedEnd.toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="對比下月差異" width="150" align="right">
+                  <template #default="scope">
+                    <div v-if="scope.row.diff !== null">
+                      <el-tag v-if="Math.abs(scope.row.diff) < 1" type="success" effect="light">
+                        🟢 相符
+                      </el-tag>
+                      <el-tag v-else type="danger" effect="light">
+                        🔴 差異 {{ scope.row.diff > 0 ? '+' : '' }}{{ scope.row.diff.toLocaleString() }}
+                      </el-tag>
+                    </div>
+                    <span v-else class="text-muted">-</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
+
+    <!-- 新增/編輯收支彈窗 -->
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="90%" max-width="500px">
       <el-form :model="form" label-position="top">
         <el-form-item label="紀錄月份" required>
           <el-date-picker v-model="form.year_month" type="month" placeholder="選擇月份" value-format="YYYY-MM" style="width: 100%" />
         </el-form-item>
         <el-form-item label="項目名稱" required>
-          <el-input v-model="form.name" placeholder="例如：買餸、交租" />
+          <el-input v-model="form.name" :placeholder="dialogType === 'expense' ? '例如：買餸、交租' : '例如：薪金、家用轉入'" />
         </el-form-item>
         <el-form-item label="金額 (HKD)" required>
           <el-input-number v-model="form.amount" :min="1" style="width: 100%" />
@@ -3641,15 +3974,54 @@ W: ai-wa-fs-001
           </el-select>
         </el-form-item>
         
-        <el-form-item label="類別" required>
+        <el-form-item label="類別" v-if="dialogType === 'expense'">
           <el-select v-model="form.category_name" style="width: 100%" allow-create filterable default-first-option>
             <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.name" />
           </el-select>
+        </el-form-item>
+        
+        <el-form-item label="狀態" v-if="dialogType === 'expense'">
+          <el-radio-group v-model="form.status">
+            <el-radio label="未處理">未處理</el-radio>
+            <el-radio label="已處理">已處理</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitForm">確認儲存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 輸入對帳餘額彈窗 -->
+    <el-dialog v-model="reconcileDialogVisible" title="輸入月初實際結餘" width="90%" max-width="400px">
+      <el-form :model="reconcileForm" label-position="top">
+        <el-form-item label="選擇月份" required>
+          <el-date-picker v-model="reconcileForm.year_month" type="month" placeholder="選擇月份" value-format="YYYY-MM" style="width: 100%" @change="onReconcileMonthChange" />
+        </el-form-item>
+        <el-form-item label="月初真實結餘 (HKD)" required>
+          <el-input-number v-model="reconcileForm.actual_balance" :min="0" style="width: 100%" placeholder="請輸入金額" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="reconcileDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submittingReconcile" @click="submitReconcile">確認儲存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 匯入固定支出彈窗 -->
+    <el-dialog v-model="importDialogVisible" title="匯入固定支出" width="90%" max-width="400px">
+      <el-form label-position="top">
+        <div class="preview-box" style="margin-bottom: 15px; background: #fffbeb; color: #d97706;">
+          將為指定月份匯入設定好的固定支出模板。
+        </div>
+        <el-form-item label="選擇要匯入的月份" required>
+          <el-date-picker v-model="importMonth" type="month" placeholder="選擇月份" value-format="YYYY-MM" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="importing" @click="executeImport">確認匯入</el-button>
       </template>
     </el-dialog>
   </div>
@@ -3659,15 +4031,19 @@ W: ai-wa-fs-001
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from '@/config/supabase'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
+import { MagicStick } from '@element-plus/icons-vue'
 
+const activeTab = ref('todo')
 const loading = ref(false)
 const processing = ref(false)
 const submitting = ref(false)
+const importing = ref(false)
 
-// 資料狀態
+// 原始資料
+const rawIncomes = ref([])
 const rawExpenses = ref([])
 const rawInsurancePayments = ref([])
+const rawBalances = ref([])
 const policies = ref([])
 const members = ref([])
 const categories = ref([])
@@ -3675,73 +4051,81 @@ const categories = ref([])
 // 勾選與折疊狀態
 const selectedItems = ref([])
 const checkAll = ref(false)
+const activePendingCollapse = ref([])
 const activeDoneCollapse = ref([])
 
-// 彈窗狀態
+// 新增/編輯收支彈窗狀態
 const dialogVisible = ref(false)
-const form = ref({ year_month: '', name: '', amount: 1, member_name: '', category_name: '' })
+const dialogType = ref('expense')
+const isEdit = ref(false)
+const form = ref({ id: null, year_month: '', name: '', amount: 1, member_name: '', category_name: '', status: '未處理' })
+
+// 對帳彈窗狀態
+const reconcileDialogVisible = ref(false)
+const submittingReconcile = ref(false)
+const reconcileForm = ref({ year_month: '', actual_balance: 0 })
+
+// 匯入彈窗狀態
+const importDialogVisible = ref(false)
+const importMonth = ref(new Date().toISOString().slice(0, 7))
+
+const dialogTitle = computed(() => {
+  const typeName = dialogType.value === 'expense' ? '支出' : '收入'
+  return isEdit.value ? `編輯${typeName}` : `新增${typeName}`
+})
+
+// 計算期數
+const getPeriodNumber = (startDateStr, targetYearMonth) => {
+  if (!startDateStr || !targetYearMonth) return ''
+  const start = new Date(startDateStr)
+  const startY = start.getFullYear()
+  const startM = start.getMonth() + 1
+  
+  const [targetY, targetM] = targetYearMonth.split('-').map(Number)
+  
+  const diffMonths = (targetY - startY) * 12 + (targetM - startM) + 1
+  return diffMonths > 0 ? diffMonths : 1
+}
 
 // 轉換為統一的待辦格式
 const allPendingItems = computed(() => {
   const items = []
-
-  // 處理一般支出 (跨月，status = '未處理')
   rawExpenses.value.forEach(e => {
     if (e.status !== '已處理') {
       items.push({
-        id: `exp_${e.id}`,
-        realId: e.id,
-        type: 'expense',
-        year_month: e.year_month,
-        name: e.name,
-        payer: e.payer_name || '未指定',
-        category: e.category_name,
-        amount: Number(e.amount),
-        created_at: e.created_at
+        id: `exp_${e.id}`, realId: e.id, type: 'expense',
+        year_month: e.year_month, name: e.name, payer: e.payer_name || '未指定',
+        category: e.category_name, amount: Number(e.amount), created_at: e.created_at
       })
     }
   })
 
-  // 處理保險 (跨月，status = '未轉')
   const policyMap = {}
   policies.value.forEach(p => { policyMap[p.id] = p })
-  
   rawInsurancePayments.value.forEach(ip => {
     if (ip.status !== '已轉') {
       const p = policyMap[ip.policy_id]
       if (p) {
+        const period = getPeriodNumber(p.start_date, ip.year_month)
         items.push({
-          id: `ins_${ip.id}`,
-          realId: ip.id,
-          type: 'insurance',
-          year_month: ip.year_month,
-          name: `保險供款：${p.name}`,
-          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
-          category: '保險',
-          amount: Number(p.monthly_average),
-          created_at: ip.created_at
+          id: `ins_${ip.id}`, realId: ip.id, type: 'insurance',
+          year_month: ip.year_month, name: `保險供款：${p.name} (第 ${period} 期)`, payer: p.holder_name || '家庭共用',
+          category: '保險', amount: Number(p.monthly_average), created_at: ip.created_at
         })
       }
     }
   })
-
-  // 按年月由舊到新排序
   return items.sort((a, b) => a.year_month.localeCompare(b.year_month))
 })
 
-// 已辦事項 (只顯示最近一個月的，避免太長)
-const doneItems = computed(() => {
+// 轉換為統一的已辦格式
+const allProcessedItems = computed(() => {
   const items = []
-  
   rawExpenses.value.forEach(e => {
     if (e.status === '已處理') {
       items.push({
-        id: `exp_${e.id}`,
-        realId: e.id,
-        type: 'expense',
-        year_month: e.year_month,
-        name: e.name,
-        payer: e.payer_name || '未指定',
+        id: `exp_${e.id}`, realId: e.id, type: 'expense',
+        year_month: e.year_month, name: e.name, payer: e.payer_name || '未指定',
         amount: Number(e.amount)
       })
     }
@@ -3753,57 +4137,151 @@ const doneItems = computed(() => {
     if (ip.status === '已轉') {
       const p = policyMap[ip.policy_id]
       if (p) {
+        const period = getPeriodNumber(p.start_date, ip.year_month)
         items.push({
-          id: `ins_${ip.id}`,
-          realId: ip.id,
-          type: 'insurance',
-          year_month: ip.year_month,
-          name: `保險供款：${p.name}`,
-          payer: p.holder_name || '家庭共用', // 🆕 改為讀取持有人
+          id: `ins_${ip.id}`, realId: ip.id, type: 'insurance',
+          year_month: ip.year_month, name: `保險供款：${p.name} (第 ${period} 期)`, payer: p.holder_name || '家庭共用',
           amount: Number(p.monthly_average)
         })
       }
     }
   })
-  // 由新到舊
   return items.sort((a, b) => b.year_month.localeCompare(a.year_month))
 })
 
-// 未辦事項分組
-const pendingGroups = computed(() => {
+const groupByMonth = (items) => {
   const groups = {}
-  allPendingItems.value.forEach(item => {
+  items.forEach(item => {
     const m = item.year_month || '未知月份'
-    if (!groups[m]) {
-      groups[m] = { month: m, total: 0, items: [] }
-    }
+    if (!groups[m]) groups[m] = { month: m, total: 0, items: [] }
     groups[m].items.push(item)
     groups[m].total += item.amount
   })
   return Object.values(groups)
+}
+
+const pendingGroups = computed(() => groupByMonth(allPendingItems.value).sort((a, b) => a.month.localeCompare(b.month)))
+const processedGroups = computed(() => groupByMonth(allProcessedItems.value))
+
+// 計算對帳資料 (月初餘額推算月末)
+const reconcileData = computed(() => {
+  const monthSet = new Set()
+  rawIncomes.value.forEach(i => monthSet.add(i.year_month))
+  rawExpenses.value.forEach(e => monthSet.add(e.year_month))
+  rawInsurancePayments.value.forEach(ip => monthSet.add(ip.year_month))
+  rawBalances.value.forEach(b => monthSet.add(b.year_month))
+  
+  const sortedMonths = Array.from(monthSet).filter(Boolean).sort()
+  
+  const result = []
+  let lastCalculatedEnd = 0
+  
+  for (let i = 0; i < sortedMonths.length; i++) {
+    const month = sortedMonths[i]
+    
+    const mInc = rawIncomes.value.filter(x => x.year_month === month).reduce((sum, x) => sum + Number(x.amount), 0)
+    const mExp = rawExpenses.value.filter(x => x.year_month === month && x.status === '已處理').reduce((sum, x) => sum + Number(x.amount), 0)
+    const policyMap = {}
+    policies.value.forEach(p => { policyMap[p.id] = Number(p.monthly_average) })
+    const mIns = rawInsurancePayments.value.filter(x => x.year_month === month && x.status === '已轉').reduce((sum, x) => sum + (policyMap[x.policy_id] || 0), 0)
+    const totalExpense = mExp + mIns
+    
+    const balanceRecord = rawBalances.value.find(b => b.year_month === month)
+    const actualStart = balanceRecord ? Number(balanceRecord.actual_balance) : null
+    
+    const baseStart = actualStart !== null ? actualStart : lastCalculatedEnd
+    const calculatedEnd = baseStart + mInc - totalExpense
+    
+    const nextMonth = sortedMonths[i + 1]
+    let nextActualStart = null
+    if (nextMonth) {
+      const nextRecord = rawBalances.value.find(b => b.year_month === nextMonth)
+      if (nextRecord) nextActualStart = Number(nextRecord.actual_balance)
+    }
+    
+    let diff = null
+    if (nextActualStart !== null) {
+      diff = nextActualStart - calculatedEnd
+    }
+    
+    result.push({
+      month,
+      income: mInc,
+      expense: totalExpense,
+      actualStart,
+      calculatedEnd,
+      diff
+    })
+    
+    lastCalculatedEnd = calculatedEnd
+  }
+  
+  return result.reverse()
 })
 
-// 載入資料
+const openReconcileDialog = (month = '') => {
+  const defaultMonth = month || new Date().toISOString().slice(0, 7)
+  const existing = rawBalances.value.find(b => b.year_month === defaultMonth)
+  
+  reconcileForm.value = {
+    year_month: defaultMonth,
+    actual_balance: existing ? Number(existing.actual_balance) : 0
+  }
+  reconcileDialogVisible.value = true
+}
+
+const onReconcileMonthChange = (val) => {
+  if (!val) return
+  const existing = rawBalances.value.find(b => b.year_month === val)
+  reconcileForm.value.actual_balance = existing ? Number(existing.actual_balance) : 0
+}
+
+const submitReconcile = async () => {
+  if (!reconcileForm.value.year_month) return ElMessage.warning('請選擇月份')
+  if (reconcileForm.value.actual_balance === null) return ElMessage.warning('請輸入金額')
+  
+  submittingReconcile.value = true
+  try {
+    const familyId = '00000000-0000-0000-0000-000000000001'
+    const { error } = await supabase.from('monthly_balances').upsert({
+      family_id: familyId,
+      year_month: reconcileForm.value.year_month,
+      actual_balance: reconcileForm.value.actual_balance
+    }, { onConflict: 'family_id, year_month' })
+    
+    if (error) throw error
+    ElMessage.success(`✅ ${reconcileForm.value.year_month} 月初結餘已更新`)
+    reconcileDialogVisible.value = false
+    fetchData()
+  } catch (err) {
+    ElMessage.error('儲存失敗：' + err.message)
+  } finally {
+    submittingReconcile.value = false
+  }
+}
+
 const fetchData = async () => {
   loading.value = true
-  
   try {
-    const [expRes, ipRes, polRes, mRes, cRes] = await Promise.all([
-      supabase.from('expenses').select('*'),
+    const [incRes, expRes, ipRes, polRes, mRes, cRes, balRes] = await Promise.all([
+      supabase.from('incomes').select('*').order('year_month', { ascending: false }),
+      supabase.from('expenses').select('*').order('year_month', { ascending: false }),
       supabase.from('insurance_payments').select('*'),
       supabase.from('insurance_policies').select('*'),
       supabase.from('members').select('*').order('created_at', { ascending: true }),
-      supabase.from('expense_categories').select('*').order('created_at', { ascending: true })
+      supabase.from('expense_categories').select('*').order('created_at', { ascending: true }),
+      supabase.from('monthly_balances').select('*')
     ])
 
+    if (incRes.data) rawIncomes.value = incRes.data
     if (expRes.data) rawExpenses.value = expRes.data
     if (ipRes.data) rawInsurancePayments.value = ipRes.data
     if (polRes.data) policies.value = polRes.data
     if (mRes.data) members.value = mRes.data
     if (cRes.data) categories.value = cRes.data
-
+    if (balRes.data) rawBalances.value = balRes.data
   } catch (error) {
-    ElMessage.error('載入待辦資料失敗')
+    ElMessage.error('載入資料失敗')
   } finally {
     loading.value = false
   }
@@ -3821,36 +4299,26 @@ const handleCheckAll = (val) => {
 // 批量處理
 const batchProcess = async () => {
   if (selectedItems.value.length === 0) return
-  
   try {
     await ElMessageBox.confirm(`確定要將選中的 ${selectedItems.value.length} 個項目標記為已辦嗎？`, '批量處理', { type: 'success' })
     processing.value = true
-
-    const expenseIds = []
-    const insuranceIds = []
-
+    const expenseIds = [], insuranceIds = []
     selectedItems.value.forEach(id => {
       if (id.startsWith('exp_')) expenseIds.push(id.replace('exp_', ''))
       if (id.startsWith('ins_')) insuranceIds.push(id.replace('ins_', ''))
     })
 
     const promises = []
-    if (expenseIds.length > 0) {
-      promises.push(supabase.from('expenses').update({ status: '已處理' }).in('id', expenseIds))
-    }
-    if (insuranceIds.length > 0) {
-      promises.push(supabase.from('insurance_payments').update({ status: '已轉' }).in('id', insuranceIds))
-    }
+    if (expenseIds.length > 0) promises.push(supabase.from('expenses').update({ status: '已處理' }).in('id', expenseIds))
+    if (insuranceIds.length > 0) promises.push(supabase.from('insurance_payments').update({ status: '已轉' }).in('id', insuranceIds))
 
     await Promise.all(promises)
-
     ElMessage.success('✅ 已批量處理')
     selectedItems.value = []
     checkAll.value = false
     fetchData()
-
   } catch (err) {
-    if (err !== 'cancel') ElMessage.error('處理失敗：' + err.message)
+    if (err !== 'cancel') ElMessage.error('處理失敗')
   } finally {
     processing.value = false
   }
@@ -3889,18 +4357,48 @@ const cancelProcess = async (item) => {
   }
 }
 
-// 新增支出
-const openAddExpenseDialog = () => {
+// 新增/編輯
+const openAddDialog = (type) => {
+  dialogType.value = type
+  isEdit.value = false
   const defaultMember = members.value.length > 0 ? members.value[0].name : ''
   const defaultCategory = categories.value.length > 0 ? categories.value[0].name : ''
   form.value = { 
+    id: null, 
     year_month: new Date().toISOString().slice(0, 7), 
     name: '', 
     amount: 1, 
     member_name: defaultMember, 
-    category_name: defaultCategory 
+    category_name: defaultCategory, 
+    status: '未處理' 
   }
   dialogVisible.value = true
+}
+
+const editRecord = (type, row) => {
+  dialogType.value = type
+  isEdit.value = true
+  form.value = {
+    id: row.id,
+    year_month: row.year_month,
+    name: row.name,
+    amount: row.amount,
+    member_name: type === 'expense' ? row.payer_name : row.member_name,
+    category_name: row.category_name || '',
+    status: row.status || '未處理'
+  }
+  dialogVisible.value = true
+}
+
+const deleteRecord = async (table, id) => {
+  try {
+    await ElMessageBox.confirm('確定要刪除這筆紀錄嗎？', '警告', { type: 'warning' })
+    await supabase.from(table).delete().eq('id', id)
+    ElMessage.success('已刪除')
+    fetchData()
+  } catch (err) {
+    if (err !== 'cancel') ElMessage.error('刪除失敗')
+  }
 }
 
 const submitForm = async () => {
@@ -3910,34 +4408,65 @@ const submitForm = async () => {
   submitting.value = true
   const familyId = '00000000-0000-0000-0000-000000000001'
 
-  // 自動存檔新分類
-  if (form.value.category_name) {
+  if (dialogType.value === 'expense' && form.value.category_name) {
     const isNewCategory = !categories.value.some(c => c.name === form.value.category_name)
     if (isNewCategory) {
       await supabase.from('expense_categories').insert([{ family_id: familyId, name: form.value.category_name }])
-      fetchData()
     }
   }
   
-  const payload = {
-    family_id: familyId,
-    year_month: form.value.year_month,
-    name: form.value.name,
-    amount: form.value.amount,
-    payer_name: form.value.member_name,
-    category_name: form.value.category_name,
-    status: '未處理'
+  if (dialogType.value === 'expense') {
+    const payload = {
+      year_month: form.value.year_month, name: form.value.name, amount: form.value.amount,
+      payer_name: form.value.member_name, category_name: form.value.category_name, status: form.value.status
+    }
+    if (isEdit.value) await supabase.from('expenses').update(payload).eq('id', form.value.id)
+    else await supabase.from('expenses').insert([{ ...payload, family_id: familyId }])
+    ElMessage.success(isEdit.value ? '✅ 支出已更新' : '✅ 支出已新增')
+  } else {
+    const payload = {
+      year_month: form.value.year_month, name: form.value.name, amount: form.value.amount, member_name: form.value.member_name
+    }
+    if (isEdit.value) await supabase.from('incomes').update(payload).eq('id', form.value.id)
+    else await supabase.from('incomes').insert([{ ...payload, family_id: familyId }])
+    ElMessage.success(isEdit.value ? '✅ 收入已更新' : '✅ 收入已新增')
   }
-
-  const { error } = await supabase.from('expenses').insert([payload])
   
   submitting.value = false
-  if (error) {
-    ElMessage.error('儲存失敗：' + error.message)
-  } else {
-    ElMessage.success('✅ 支出已新增')
-    dialogVisible.value = false
+  dialogVisible.value = false
+  fetchData()
+}
+
+// 匯入固定支出
+const executeImport = async () => {
+  if (!importMonth.value) return ElMessage.warning('請選擇月份')
+  try {
+    importing.value = true
+    const familyId = '00000000-0000-0000-0000-000000000001'
+    const [fixedRes, currentRes] = await Promise.all([
+      supabase.from('fixed_expenses').select('*'),
+      supabase.from('expenses').select('name').eq('year_month', importMonth.value)
+    ])
+    if (fixedRes.error) throw fixedRes.error
+    if (!fixedRes.data || fixedRes.data.length === 0) return ElMessage.warning('尚未設定任何固定支出模板')
+
+    const existingNames = currentRes.data.map(e => e.name)
+    const toInsert = []
+    fixedRes.data.forEach(tpl => {
+      if (!existingNames.includes(tpl.name)) {
+        toInsert.push({ family_id: familyId, year_month: importMonth.value, name: tpl.name, amount: tpl.amount, payer_name: tpl.payer_name, category_name: tpl.category_name, status: '未處理' })
+      }
+    })
+    if (toInsert.length === 0) return ElMessage.info('該月份所有固定支出皆已匯入')
+
+    await supabase.from('expenses').insert(toInsert)
+    ElMessage.success(`✅ 成功匯入 ${toInsert.length} 筆固定支出至 ${importMonth.value}`)
+    importDialogVisible.value = false
     fetchData()
+  } catch (err) {
+    ElMessage.error('匯入失敗：' + err.message)
+  } finally {
+    importing.value = false
   }
 }
 
@@ -3946,60 +4475,57 @@ onMounted(() => fetchData())
 
 <style scoped>
 .settlement-container { width: 100%; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .page-header h2 { margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; }
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-.content-wrapper { display: flex; flex-direction: column; gap: 24px; }
+.main-card { border-radius: 20px; border: none; overflow: hidden; }
+.tab-content { padding-top: 10px; }
+.tool-bar { margin-bottom: 16px; display: flex; justify-content: flex-end; }
 
-/* 未辦事項區塊 */
-.pending-section { width: 100%; }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.section-header h3 { margin: 0; font-size: 18px; color: #334155; }
-.bulk-actions { display: flex; align-items: center; }
+/* 表格與折疊樣式 */
+.table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.empty-state { padding: 40px 0; }
 
-.groups-list { display: flex; flex-direction: column; gap: 16px; }
+:deep(.el-collapse) { border: none; }
+:deep(.el-collapse-item__header) {
+  background-color: #F8FAFC;
+  border-radius: 12px;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  border-bottom: none;
+  font-size: 15px;
+}
+:deep(.el-collapse-item__wrap) { border-bottom: none; background-color: transparent; }
+:deep(.el-collapse-item__content) { padding-bottom: 16px; }
 
-.month-card { border-radius: 16px; border: 1px solid rgba(0,0,0,0.03); }
-.month-card :deep(.el-card__header) { background-color: #F8FAFC; padding: 12px 20px; border-bottom: 1px solid #f1f5f9; }
-.month-header { display: flex; justify-content: space-between; align-items: center; }
-.month-title { font-weight: 700; color: #1e293b; font-size: 16px; }
+.group-title { display: flex; justify-content: space-between; align-items: center; width: 100%; padding-right: 10px; }
+.month-text { font-weight: 700; color: #334155; }
 .month-total { font-size: 14px; font-family: monospace; font-weight: 600; }
 
-.items-list { display: flex; flex-direction: column; gap: 8px; }
-.todo-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #ffffff; border: 1px solid #f1f5f9; transition: background 0.2s; }
-.todo-item:hover { background: #F8FAFC; }
-
-.item-checkbox { flex-shrink: 0; }
-.item-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.item-main { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b; font-size: 15px; }
-.item-name { font-weight: 700; }
-.item-category { font-size: 13px; color: #64748b; font-weight: normal; }
-.item-sub { font-size: 13px; color: #64748b; }
-.item-actions { flex-shrink: 0; }
-
-.mr-2 { margin-right: 12px; }
+.text-green { color: #10b981; }
 .text-red { color: #ef4444; }
+.text-blue { color: #3b82f6; }
+.text-muted { color: #94a3b8; }
+.font-bold { font-weight: 600; }
 
-/* 已辦事項區塊 */
-.done-section { margin-top: 20px; background: #ffffff; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03); padding: 0 20px; }
-.done-title { font-size: 16px; color: #334155; margin: 0; padding: 4px 0; }
-.table-wrapper { width: 100%; overflow-x: auto; }
-.text-muted { color: #94a3b8; text-decoration: line-through; }
+/* 對帳頁面專用 */
+.reconcile-hint { background: #EEF2FF; color: #6366F1; padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.6; }
+.font-monospace { font-family: monospace; }
+.editable-cell { cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; display: inline-block; }
+.editable-cell:hover { background: #F1F5F9; }
 
 @media (max-width: 768px) {
-  .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .header-actions { width: 100%; }
-  .header-actions .el-button { width: 100%; }
-  .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .bulk-actions { width: 100%; justify-content: space-between; }
-  .todo-item { flex-wrap: wrap; }
-  .item-actions { width: 100%; text-align: right; margin-top: 8px; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-actions { width: 100%; justify-content: space-between; }
+  .header-actions .el-button { flex: 1; margin-left: 0 !important; }
+  .header-actions .el-button + .el-button { margin-left: 8px !important; }
 }
 </style>
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/SettlementView.vue
-V: 1793972200
+V: 1793987000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -4031,14 +4557,10 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
+            src: '/1000125065.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
@@ -4057,8 +4579,8 @@ export default defineConfig({
 
 /* ═══ EOF ═══
 F: AI-WA-FS/vite.config.js
-V: 1793810200
-W: ai-wa-fs-001
+V: 1793973200
+W: ai-wa-fs-002
 ═══ */```
 
 <!-- === FILE END: ./vite.config.js === -->
