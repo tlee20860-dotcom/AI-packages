@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-08 10:06:10 (HKT)
+> 生成時間：2026-11-08 10:21:00 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -259,7 +259,7 @@ W: ai-wa-fs-002
         <el-button class="menu-toggle" text @click="toggleMenu">
           <el-icon :size="20"><Menu /></el-icon>
         </el-button>
-        <div class="header-title">歡迎回來，{{ currentUsername }}</div>
+        <div class="header-title">歡迎回來</div>
         <el-button type="danger" plain size="small" class="logout-btn" @click="handleLogout">登出</el-button>
       </el-header>
       
@@ -271,26 +271,13 @@ W: ai-wa-fs-002
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { supabase } from '@/config/supabase'
 import { HomeFilled, Money, Umbrella, Menu, TrendCharts, Document, Setting, Tickets, User } from '@element-plus/icons-vue'
 
-const router = useRouter()
 const isCollapse = ref(false)
 const isMobile = ref(false)
 const isMobileOpen = ref(false)
-
-// 取得當前登入帳號名稱
-const currentUsername = computed(() => {
-  const userStr = localStorage.getItem('app_user')
-  if (!userStr) return '使用者'
-  try {
-    const user = JSON.parse(userStr)
-    return user.username || '使用者'
-  } catch (e) {
-    return '使用者'
-  }
-})
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768
@@ -313,9 +300,9 @@ const onMenuSelect = () => {
   }
 }
 
-const handleLogout = () => {
-  localStorage.removeItem('app_user')
-  router.replace('/login')
+const handleLogout = async () => {
+  await supabase.auth.signOut()
+  window.location.href = '/login'
 }
 
 onMounted(() => {
@@ -446,7 +433,7 @@ body { margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; backgroun
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/App.vue
-V: 1793995000
+V: 1794001000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -589,19 +576,26 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  // 使用 Supabase Auth 取得 Session
   const { data: { session } } = await supabase.auth.getSession()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   
-  if (requiresAuth && !session) next('/login')
-  else if (to.path === '/login' && session) next('/')
-  else next()
+  if (requiresAuth && !session) {
+    // 需要權限但未登入，跳轉至登入頁
+    next('/login')
+  } else if (to.path === '/login' && session) {
+    // 已登入且嘗試去登入頁，跳轉回首頁
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router
 
 /* ═══ EOF ═══
 F: AI-WA-FS/src/router/index.js
-V: 1793974100
+V: 1794000000
 W: ai-wa-fs-002
 ═══ */```
 
@@ -2745,12 +2739,10 @@ W: ai-wa-fs-002
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { supabase } from '@/config/supabase'
 import { ElMessage } from 'element-plus'
 import { Wallet, WarningFilled } from '@element-plus/icons-vue'
 
-const router = useRouter()
 const account = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -2767,37 +2759,25 @@ const handleLogin = async () => {
   
   try {
     const cleanAccount = account.value.trim()
-    
-    // 查詢 app_users 表
-    const { data, error } = await supabase
-      .from('app_users')
-      .select('*')
-      .eq('username', cleanAccount)
-      .eq('password', password.value)
-      .maybeSingle()
+    // 若無 @，自動補齊虛擬 Email 後綴
+    const virtualEmail = cleanAccount.includes('@') ? cleanAccount : `${cleanAccount}@fs-app.com`
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: virtualEmail,
+      password: password.value,
+    })
 
     if (error) throw error
     
-    if (!data) {
-      errorMsg.value = '帳號或密碼錯誤，請重新輸入'
-      return
-    }
-
-    // 登入成功，儲存至 localStorage
-    const userInfo = {
-      id: data.id,
-      username: data.username,
-      role: data.role
-    }
-    localStorage.setItem('app_user', JSON.stringify(userInfo))
-    
     ElMessage.success('登入成功！')
-    // 跳轉至首頁，並使用 replace 避免使用者按上一頁回到登入頁
-    router.replace('/')
+    // 使用 reload 強制刷新頁面，確保路由守衛重新讀取 session
+    window.location.reload()
     
   } catch (error) {
     console.error(error)
-    errorMsg.value = '登入失敗，請檢查網路連線'
+    errorMsg.value = error.message === 'Invalid login credentials' 
+      ? '帳號或密碼錯誤，請重新輸入' 
+      : '登入失敗：' + error.message
   } finally {
     loading.value = false
   }
@@ -2935,7 +2915,7 @@ const handleLogin = async () => {
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/LoginView.vue
-V: 1793993000
+V: 1793999000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -3278,33 +3258,7 @@ W: ai-wa-fs-002
         </div>
       </el-tab-pane>
 
-      <!-- 🆕 帳號與權限管理 -->
-      <el-tab-pane label="帳號與權限" name="users">
-        <div class="tab-content">
-          <div class="action-bar">
-            <span class="hint">在此新增登入系統的帳號，並指派角色權限。</span>
-            <el-button type="primary" @click="openUserDialog()">+ 新增帳號</el-button>
-          </div>
-          <el-table :data="appUsers" style="width: 100%" stripe v-loading="userLoading">
-            <el-table-column prop="username" label="帳號" min-width="120" />
-            <el-table-column prop="role" label="角色權限" width="150">
-              <template #default="scope">
-                <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'info'" size="small" effect="light">
-                  {{ scope.row.role === 'admin' ? '管理員' : '一般使用者' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150" align="center">
-              <template #default="scope">
-                <el-button type="primary" link size="small" @click="openUserDialog(scope.row)">編輯</el-button>
-                <el-button type="danger" link size="small" @click="deleteUser(scope.row)">刪除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-tab-pane>
-
-      <!-- 🆕 資料管理（危險區域） -->
+      <!-- 資料管理（危險區域） -->
       <el-tab-pane label="資料管理" name="data">
         <div class="tab-content danger-zone">
           <h3 class="danger-title">⚠️ 危險區域 (Danger Zone)</h3>
@@ -3371,28 +3325,6 @@ W: ai-wa-fs-002
         <el-button type="primary" :loading="submitting" @click="submitForm">儲存</el-button>
       </template>
     </el-dialog>
-
-    <!-- 🆕 帳號編輯彈窗 -->
-    <el-dialog v-model="userDialogVisible" :title="isEditUser ? '編輯帳號' : '新增帳號'" width="90%" max-width="400px">
-      <el-form :model="userForm" label-position="top">
-        <el-form-item label="帳號名稱" required>
-          <el-input v-model="userForm.username" placeholder="例如：admin" :disabled="isEditUser" />
-        </el-form-item>
-        <el-form-item label="密碼" required>
-          <el-input v-model="userForm.password" type="password" show-password placeholder="請輸入密碼" />
-        </el-form-item>
-        <el-form-item label="角色權限" required>
-          <el-select v-model="userForm.role" style="width: 100%">
-            <el-option label="管理員 (全權限)" value="admin" />
-            <el-option label="一般使用者 (僅檢視)" value="viewer" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="userDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="userSubmitting" @click="submitUser">確認儲存</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -3410,14 +3342,6 @@ const submitting = ref(false)
 const clearing = ref(false)
 const dialogVisible = ref(false)
 
-// 帳號管理狀態
-const appUsers = ref([])
-const userLoading = ref(false)
-const userDialogVisible = ref(false)
-const userSubmitting = ref(false)
-const isEditUser = ref(false)
-const userForm = ref({ id: null, username: '', password: '', role: 'viewer' })
-
 const formType = ref('member')
 const form = ref({ id: null, name: '', role: '', amount: 0, payer_name: '', category_name: '' })
 const isEdit = ref(false)
@@ -3425,12 +3349,6 @@ const isEdit = ref(false)
 const dialogTitle = computed(() => {
   const typeName = formType.value === 'member' ? '成員' : (formType.value === 'category' ? '分類' : '固定支出模板')
   return isEdit.value ? `編輯${typeName}` : `新增${typeName}`
-})
-
-// 取得當前登入帳號
-const currentUsername = computed(() => {
-  const uStr = localStorage.getItem('app_user')
-  return uStr ? JSON.parse(uStr).username : ''
 })
 
 const fetchData = async () => {
@@ -3446,15 +3364,6 @@ const fetchData = async () => {
   if (!fRes.error) fixedExpenses.value = fRes.data || []
   
   loading.value = false
-}
-
-const fetchUsers = async () => {
-  userLoading.value = true
-  const { data, error } = await supabase.from('app_users').select('*').order('created_at', { ascending: true })
-  if (!error && data) {
-    appUsers.value = data
-  }
-  userLoading.value = false
 }
 
 const openDialog = (type, row = null) => {
@@ -3535,76 +3444,6 @@ const deleteItem = async (table, id) => {
   }
 }
 
-// 🆕 帳號管理相關
-const openUserDialog = (user = null) => {
-  if (user) {
-    isEditUser.value = true
-    userForm.value = { id: user.id, username: user.username, password: user.password, role: user.role }
-  } else {
-    isEditUser.value = false
-    userForm.value = { id: null, username: '', password: '', role: 'viewer' }
-  }
-  userDialogVisible.value = true
-}
-
-const submitUser = async () => {
-  if (!userForm.value.username || !userForm.value.password) return ElMessage.warning('請填寫完整資訊')
-  
-  userSubmitting.value = true
-  
-  if (isEditUser.value) {
-    // 更新時不修改 username
-    const { error } = await supabase.from('app_users').update({
-      password: userForm.value.password,
-      role: userForm.value.role
-    }).eq('id', userForm.value.id)
-    
-    if (error) ElMessage.error('更新失敗：' + error.message)
-    else {
-      ElMessage.success('✅ 帳號已更新')
-      userDialogVisible.value = false
-      fetchUsers()
-    }
-  } else {
-    // 檢查是否重複
-    const existing = appUsers.value.find(u => u.username === userForm.value.username)
-    if (existing) {
-      userSubmitting.value = false
-      return ElMessage.warning('該帳號名稱已存在')
-    }
-
-    const { error } = await supabase.from('app_users').insert([{
-      username: userForm.value.username,
-      password: userForm.value.password,
-      role: userForm.value.role
-    }])
-    
-    if (error) ElMessage.error('新增失敗：' + error.message)
-    else {
-      ElMessage.success('✅ 帳號已新增')
-      userDialogVisible.value = false
-      fetchUsers()
-    }
-  }
-  userSubmitting.value = false
-}
-
-const deleteUser = async (user) => {
-  if (user.username === currentUsername.value) {
-    return ElMessage.error('您無法刪除目前正在登入的帳號！')
-  }
-  
-  try {
-    await ElMessageBox.confirm(`確定要刪除帳號「${user.username}」嗎？`, '警告', { type: 'warning' })
-    const { error } = await supabase.from('app_users').delete().eq('id', user.id)
-    if (error) throw error
-    ElMessage.success('已刪除帳號')
-    fetchUsers()
-  } catch (err) {
-    if (err !== 'cancel') ElMessage.error('刪除失敗')
-  }
-}
-
 // 危險區域
 const clearAllRecords = async () => {
   try {
@@ -3658,7 +3497,6 @@ const resetSystem = async () => {
 
 onMounted(() => {
   fetchData()
-  fetchUsers()
 })
 </script>
 
@@ -3674,7 +3512,7 @@ onMounted(() => {
 .text-red { color: #ef4444; }
 .font-bold { font-weight: 600; }
 
-/* 🆕 危險區域樣式 */
+/* 危險區域樣式 */
 .danger-zone { max-width: 800px; }
 .danger-title { color: #ef4444; margin-bottom: 5px; }
 .danger-desc { color: #64748b; font-size: 14px; margin-bottom: 20px; }
@@ -3695,7 +3533,7 @@ onMounted(() => {
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/SettingsView.vue
-V: 1793996000
+V: 1794002000
 W: ai-wa-fs-002
 ═══ -->```
 
