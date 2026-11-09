@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-09 11:48:51 (HKT)
+> 生成時間：2026-11-09 13:23:04 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -15,12 +15,16 @@
 | AI-General | docs/p90/WF-CONCLUSION.md | 1792902010 | webapp-20261025-001#49 |
 | AI-General | docs/p90/WF-HANDOFF.md | 1792901990 | webapp-20261025-001#47 |
 | AI-General | docs/p90/WF-PROGRESS.md | 1792902000 | webapp-20261025-001#48 |
-| AI-General | docs/p92/P-Architecture.md | 1793074000 | UPGRADE-007 |
-| AI-General | docs/p92/P-Data.md | 1792915500 | UPGRADE-002 |
-| AI-General | docs/p92/P-Dev-SOP.md | 1792915600 | UPGRADE-002 |
-| AI-General | docs/p92/WF-CONCLUSION.md | 1793073000 | UPGRADE-007 |
-| AI-General | docs/p92/WF-HANDOFF.md | 1793072000 | UPGRADE-007 |
-| AI-General | docs/p92/WF-PROGRESS.md | 1792989600 | UPGRADE-007 |
+| AI-General | docs/p92/WF-ARCH.md | 1794184100 | UPGRADE-008 |
+| AI-General | docs/p92/WF-ARCHIVE.md | 1794184000 | UPGRADE-008 |
+| AI-General | docs/p92/WF-CONCLUSION.md | 1794184500 | UPGRADE-008 |
+| AI-General | docs/p92/WF-DATA.md | 1794184200 | UPGRADE-008 |
+| AI-General | docs/p92/WF-DEBT.md | 1794184400 | UPGRADE-008 |
+| AI-General | docs/p92/WF-EVOLUTION.md | 1794183700 | UPGRADE-008 |
+| AI-General | docs/p92/WF-HANDOFF.md | 1794183400 | UPGRADE-008 |
+| AI-General | docs/p92/WF-PROGRESS.md | 1794184600 | UPGRADE-008 |
+| AI-General | docs/p92/WF-REJECTED.md | 1794183800 | UPGRADE-008 |
+| AI-General | docs/p92/WF-SOP.md | 1794184300 | UPGRADE-008 |
 | AI-General | docs/p93/WF-ARCH.md | 1793968000 | ai-wa-fs-002 |
 | AI-General | docs/p93/WF-CONCLUSION.md | 1793812000 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-DATA.md | 1793968100 | ai-wa-fs-002 |
@@ -361,15 +365,15 @@
 | 20-SP-Sys.md | 40 |
 | 21-INFRA.md | 60 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 52 |
+| 24-HISTORY.md | 56 |
 | 90-Code.md | 388 |
 | 90-P.md | 32 |
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
 | 92-Code.md | 400 |
-| 92-P.md | 28 |
-| 92-SP.md | 28 |
+| 92-P.md | 60 |
+| 92-SP.md | 60 |
 | 93-Code.md | 160 |
 | 93-P.md | 32 |
 | 93-SP.md | 32 |
