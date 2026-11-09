@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-08 10:21:00 (HKT)
+> 生成時間：2026-11-09 11:48:51 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -2311,57 +2311,118 @@ W: ai-wa-fs-002
     
     <el-empty v-else-if="policies.length === 0" description="目前尚無保單資料，請點擊右上角新增。" />
 
-    <div v-else class="policy-grid">
-      <el-card v-for="p in policies" :key="p.id" class="policy-card" shadow="hover">
-        <div class="card-header">
-          <div class="title-area">
-            <h3>{{ p.name }}</h3>
-            <span class="company">{{ p.company || '未填寫公司' }}</span>
-          </div>
-          <div class="header-right">
-            <el-tag :type="p.type === 'fund_insurance' ? 'warning' : 'primary'" size="small" style="margin-right: 8px;">
-              {{ p.type === 'fund_insurance' ? '基金保險' : '普通保險' }}
-            </el-tag>
-            <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, p)">
-              <el-button text size="small"><el-icon><MoreFilled /></el-icon></el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="edit">編輯保單</el-dropdown-item>
-                  <el-dropdown-item command="delete" style="color: #ef4444;">刪除保單</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </div>
-
-        <div class="card-body">
-          <div class="info-row">
-            <span class="label">持有人</span>
-            <span class="value">{{ p.holder_name || '家庭共用' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">本期月均</span>
-            <span class="value text-blue">HK$ {{ p.monthly_average.toLocaleString() }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">繳費方式</span>
-            <span class="value">{{ p.payment_freq }} (HK$ {{ p.premium_amount.toLocaleString() }})</span>
-          </div>
-          
-          <div class="progress-area">
-            <div class="info-row" style="margin-bottom: 6px;">
-              <span class="label">供款進度</span>
-              <span class="value">{{ getProgress(p).text }}</span>
+    <div v-else>
+      <!-- 供款中保單 -->
+      <h3 class="section-title" v-if="activePolicies.length > 0">供款中保單</h3>
+      <div class="policy-grid">
+        <el-card v-for="p in activePolicies" :key="p.id" class="policy-card" shadow="hover">
+          <div class="card-header">
+            <div class="title-area">
+              <h3>{{ p.name }}</h3>
+              <span class="company">{{ p.company || '未填寫公司' }}</span>
             </div>
-            <el-progress 
-              :percentage="getProgress(p).pct" 
-              :show-text="false" 
-              :stroke-width="8"
-              :color="getProgress(p).pct >= 100 ? '#10b981' : '#6366F1'"
-            />
+            <div class="header-right">
+              <el-tag :type="p.type === 'fund_insurance' ? 'warning' : 'primary'" size="small" style="margin-right: 8px;">
+                {{ p.type === 'fund_insurance' ? '基金保險' : '普通保險' }}
+              </el-tag>
+              <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, p)">
+                <el-button text size="small"><el-icon><MoreFilled /></el-icon></el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="edit">編輯保單</el-dropdown-item>
+                    <el-dropdown-item command="delete" style="color: #ef4444;">刪除保單</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </div>
+
+          <div class="card-body">
+            <div class="info-row">
+              <span class="label">持有人</span>
+              <span class="value">{{ p.holder_name || '家庭共用' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">本期月均</span>
+              <span class="value text-blue">HK$ {{ p.monthly_average.toLocaleString() }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">繳費方式</span>
+              <span class="value">{{ p.payment_freq }} (HK$ {{ p.premium_amount.toLocaleString() }})</span>
+            </div>
+            
+            <div class="progress-area">
+              <div class="info-row" style="margin-bottom: 6px;">
+                <span class="label">供款進度</span>
+                <span class="value">{{ getProgress(p).text }}</span>
+              </div>
+              <el-progress 
+                :percentage="getProgress(p).pct" 
+                :show-text="false" 
+                :stroke-width="8"
+                color="#6366F1"
+              />
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 已供滿保單 -->
+      <div v-if="completedPolicies.length > 0" class="completed-section">
+        <h3 class="section-title mt-24">✅ 已供滿保單</h3>
+        <div class="policy-grid">
+          <el-card v-for="p in completedPolicies" :key="p.id" class="policy-card completed-card" shadow="never">
+            <div class="card-header">
+              <div class="title-area">
+                <h3>{{ p.name }} <el-tag type="success" size="small" effect="dark" class="ml-2">已供滿</el-tag></h3>
+                <span class="company">{{ p.company || '未填寫公司' }}</span>
+              </div>
+              <div class="header-right">
+                <el-tag :type="p.type === 'fund_insurance' ? 'warning' : 'primary'" size="small" style="margin-right: 8px;">
+                  {{ p.type === 'fund_insurance' ? '基金保險' : '普通保險' }}
+                </el-tag>
+                <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, p)">
+                  <el-button text size="small"><el-icon><MoreFilled /></el-icon></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="edit">編輯保單</el-dropdown-item>
+                      <el-dropdown-item command="delete" style="color: #ef4444;">刪除保單</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </div>
+
+            <div class="card-body text-muted">
+              <div class="info-row">
+                <span class="label">持有人</span>
+                <span class="value">{{ p.holder_name || '家庭共用' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">原月均</span>
+                <span class="value">HK$ {{ p.monthly_average.toLocaleString() }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">總期數</span>
+                <span class="value">{{ p.total_years * 12 }} 期</span>
+              </div>
+              
+              <div class="progress-area">
+                <div class="info-row" style="margin-bottom: 6px;">
+                  <span class="label">供款進度</span>
+                  <span class="value">{{ getProgress(p).text }}</span>
+                </div>
+                <el-progress 
+                  :percentage="100" 
+                  :show-text="false" 
+                  :stroke-width="8"
+                  color="#10B981"
+                />
+              </div>
+            </div>
+          </el-card>
         </div>
-      </el-card>
+      </div>
     </div>
 
     <!-- 新增/編輯保單彈窗 -->
@@ -2444,7 +2505,7 @@ import { Loading, InfoFilled, MoreFilled, Money } from '@element-plus/icons-vue'
 
 const policies = ref([])
 const payments = ref([]) 
-const members = ref([]) // 🆕 儲存成員列表
+const members = ref([])
 const loading = ref(true)
 const dialogVisible = ref(false)
 const submitting = ref(false)
@@ -2455,9 +2516,9 @@ const currentYearMonth = computed(() => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 })
 
-// 本月總供款額
+// 本月總供款額 (排除已供滿保單)
 const monthlyTotal = computed(() => {
-  return policies.value.reduce((sum, p) => sum + Number(p.monthly_average), 0)
+  return activePolicies.value.reduce((sum, p) => sum + Number(p.monthly_average), 0)
 })
 
 // 計算進度：已轉筆數 / 總期數
@@ -2471,6 +2532,21 @@ const getProgress = (p) => {
     pct: pct
   }
 }
+
+// 🆕 分類保單：供款中 / 已供滿
+const activePolicies = computed(() => {
+  return policies.value.filter(p => {
+    const progress = getProgress(p)
+    return progress.pct < 100
+  })
+})
+
+const completedPolicies = computed(() => {
+  return policies.value.filter(p => {
+    const progress = getProgress(p)
+    return progress.pct >= 100
+  })
+})
 
 const form = ref({ id: null, name: '', company: '', holder_name: '', start_date: '', total_years: 10, payment_freq: '月繳', premium_amount: 0, type: 'normal' })
 const computedMonthlyAverage = computed(() => form.value.payment_freq === '年繳' ? Math.round((form.value.premium_amount || 0) / 12) : (form.value.premium_amount || 0))
@@ -2525,7 +2601,7 @@ const deletePolicy = async (id, name) => {
   }
 }
 
-// 自動比對並補齊歷史繳費紀錄
+// 自動比對並補齊歷史繳費紀錄 (加入總期數上限)
 const syncInsurancePayments = async (policy) => {
   if (!policy || !policy.start_date) return
   
@@ -2537,8 +2613,11 @@ const syncInsurancePayments = async (policy) => {
     const requiredMonths = []
     let current = new Date(start.getFullYear(), start.getMonth(), 1)
     const end = new Date(now.getFullYear(), now.getMonth(), 1)
+    const maxPeriods = policy.total_years * 12
     
     while (current <= end) {
+      if (requiredMonths.length >= maxPeriods) break // 🆕 達到總期數即停止生成
+      
       const yyyy = current.getFullYear()
       const mm = String(current.getMonth() + 1).padStart(2, '0')
       requiredMonths.push(`${yyyy}-${mm}`)
@@ -2584,7 +2663,7 @@ const submitForm = async () => {
   const payload = {
     name: form.value.name, 
     company: form.value.company, 
-    holder_name: form.value.holder_name, // 🆕 寫入持有人
+    holder_name: form.value.holder_name,
     start_date: form.value.start_date,
     total_years: form.value.total_years, 
     payment_freq: form.value.payment_freq,
@@ -2599,8 +2678,7 @@ const submitForm = async () => {
     if (error) {
       ElMessage.error('更新失敗：' + error.message)
     } else {
-      // 編輯後同步補齊
-      await syncInsurancePayments({ id: form.value.id, start_date: form.value.start_date })
+      await syncInsurancePayments({ id: form.value.id, start_date: form.value.start_date, total_years: form.value.total_years })
       ElMessage.success('✅ 保單已更新')
       dialogVisible.value = false
       fetchData()
@@ -2616,7 +2694,6 @@ const submitForm = async () => {
     if (error) {
       ElMessage.error('新增失敗：' + error.message)
     } else {
-      // 新增後生成歷史
       await syncInsurancePayments(newPolicy)
       ElMessage.success('✅ 保單已新增，並已生成歷史待辦')
       dialogVisible.value = false
@@ -2635,6 +2712,8 @@ onMounted(() => fetchData())
 .page-header h2 { margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; }
 
 .mb-24 { margin-bottom: 24px; }
+.mt-24 { margin-top: 32px; margin-bottom: 16px; }
+.section-title { color: #1e293b; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
 
 /* 統計卡片 */
 .stat-card { border-radius: 20px; border: none; background: #ffffff; }
@@ -2647,21 +2726,27 @@ onMounted(() => fetchData())
 /* 保單列表網格 */
 .policy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
 .policy-card { border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
+.policy-card.completed-card { background-color: #F8FAFC; box-shadow: none; opacity: 0.8; }
+
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
 .header-right { display: flex; align-items: center; }
 .title-area h3 { margin: 0 0 6px 0; color: #1e293b; font-size: 18px; font-weight: 700; }
 .company { font-size: 13px; color: #64748b; }
 .card-body { display: flex; flex-direction: column; gap: 10px; }
+.card-body.text-muted .label, .card-body.text-muted .value { color: #94a3b8; }
 .info-row { display: flex; justify-content: space-between; font-size: 14px; }
 .label { color: #64748b; }
 .value { font-weight: 600; color: #334155; }
-.progress-area { margin-top: 12px; background: #F8FAFC; padding: 12px 16px; border-radius: 12px; }
+.progress-area { margin-top: 12px; background: #ffffff; padding: 12px 16px; border-radius: 12px; border: 1px solid #f1f5f9; }
+.completed-card .progress-area { background: #F1F5F9; border: none; }
 .preview-box { background: #EEF2FF; color: #6366F1; padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 12px; }
+
+.ml-2 { margin-left: 8px; }
 </style>
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/InsuranceView.vue
-V: 1793972100
+V: 1794003000
 W: ai-wa-fs-002
 ═══ -->```
 
@@ -3565,8 +3650,13 @@ W: ai-wa-fs-002
               <el-empty description="尚無任何收入紀錄" :image-size="80" />
             </div>
             <div v-else class="table-wrapper">
-              <el-table :data="rawIncomes" style="width: 100%; min-width: 500px;" stripe>
+              <el-table :data="rawIncomes" style="width: 100%; min-width: 600px;" stripe>
                 <el-table-column prop="year_month" label="月份" width="100" sortable />
+                <el-table-column prop="created_at" label="輸入日期" width="120">
+                  <template #default="scope">
+                    <span class="text-muted text-sm">{{ formatDate(scope.row.created_at) }}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="member_name" label="對象" width="120" />
                 <el-table-column prop="name" label="收入名稱" min-width="150" />
                 <el-table-column prop="amount" label="金額" width="120" align="right">
@@ -3597,8 +3687,13 @@ W: ai-wa-fs-002
               <el-empty description="尚無任何支出紀錄" :image-size="80" />
             </div>
             <div v-else class="table-wrapper">
-              <el-table :data="rawExpenses" style="width: 100%; min-width: 600px;" stripe>
+              <el-table :data="rawExpenses" style="width: 100%; min-width: 700px;" stripe>
                 <el-table-column prop="year_month" label="月份" width="100" sortable />
+                <el-table-column prop="created_at" label="輸入日期" width="120">
+                  <template #default="scope">
+                    <span class="text-muted text-sm">{{ formatDate(scope.row.created_at) }}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="payer_name" label="對象" width="100" />
                 <el-table-column prop="name" label="項目名稱" min-width="150" />
                 <el-table-column prop="category_name" label="類別" width="120">
@@ -3912,6 +4007,12 @@ const dialogTitle = computed(() => {
   return isEdit.value ? `編輯${typeName}` : `新增${typeName}`
 })
 
+// 🆕 格式化輸入日期
+const formatDate = (datetime) => {
+  if (!datetime) return '-'
+  return datetime.split('T')[0]
+}
+
 // 計算期數
 const getPeriodNumber = (startDateStr, targetYearMonth) => {
   if (!startDateStr || !targetYearMonth) return ''
@@ -3925,9 +4026,22 @@ const getPeriodNumber = (startDateStr, targetYearMonth) => {
   return diffMonths > 0 ? diffMonths : 1
 }
 
+// 計算各保單已轉筆數，用於過濾已供滿
+const policyPaidCounts = computed(() => {
+  const counts = {}
+  rawInsurancePayments.value.forEach(ip => {
+    if (ip.status === '已轉') {
+      counts[ip.policy_id] = (counts[ip.policy_id] || 0) + 1
+    }
+  })
+  return counts
+})
+
 // 轉換為統一的待辦格式
 const allPendingItems = computed(() => {
   const items = []
+  
+  // 1. 處理一般支出
   rawExpenses.value.forEach(e => {
     if (e.status !== '已處理') {
       items.push({
@@ -3938,12 +4052,21 @@ const allPendingItems = computed(() => {
     }
   })
 
+  // 2. 處理保險
   const policyMap = {}
   policies.value.forEach(p => { policyMap[p.id] = p })
+  
   rawInsurancePayments.value.forEach(ip => {
     if (ip.status !== '已轉') {
       const p = policyMap[ip.policy_id]
       if (p) {
+        // 檢查是否已供滿
+        const totalPeriods = p.total_years * 12
+        const paidCount = policyPaidCounts.value[p.id] || 0
+        
+        // 如果已轉筆數 >= 總期數，代表已供滿，強制忽略此筆未轉紀錄
+        if (paidCount >= totalPeriods) return
+
         const period = getPeriodNumber(p.start_date, ip.year_month)
         items.push({
           id: `ins_${ip.id}`, realId: ip.id, type: 'insurance',
@@ -3953,6 +4076,7 @@ const allPendingItems = computed(() => {
       }
     }
   })
+  
   return items.sort((a, b) => a.year_month.localeCompare(b.year_month))
 })
 
@@ -4346,6 +4470,7 @@ onMounted(() => fetchData())
 .text-blue { color: #3b82f6; }
 .text-muted { color: #94a3b8; }
 .font-bold { font-weight: 600; }
+.text-sm { font-size: 13px; }
 
 /* 對帳頁面專用 */
 .reconcile-hint { background: #EEF2FF; color: #6366F1; padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.6; }
@@ -4363,7 +4488,7 @@ onMounted(() => fetchData())
 
 <!-- ═══ EOF ═══
 F: AI-WA-FS/src/views/SettlementView.vue
-V: 1793987000
+V: 1794005000
 W: ai-wa-fs-002
 ═══ -->```
 
