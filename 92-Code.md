@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-10 19:51:19 (HKT)
+> 生成時間：2026-11-10 20:27:44 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1124,6 +1124,8 @@ W: UPGRADE-008
 ## 📄 ./src/domain/parser.js
 
 ```js
+import * as XLSX from 'xlsx';
+
 /**
  * 將銷售員字串依據對照表進行標準化
  * @param {string} repString 原始字串 (例如: "王小明 / 123")
@@ -1169,15 +1171,13 @@ export function normalizeSalesRep(repString, salesMapping) {
  * @returns {string} 格式化後的日期字串
  */
 function formatExcelDate(val) {
-  if (!val) return "";
+  if (val === undefined || val === null || val === '') return "";
   
   // 如果已經是正常的日期字串 (包含 - 或 /)
   if (typeof val === 'string' && (val.includes('-') || val.includes('/'))) {
-    // 簡單處理 YYYY/MM/DD -> YYYY-MM-DD
     if (val.includes('/')) {
       const parts = val.split('/');
       if (parts.length === 3) {
-        // 假設年份是4位數
         if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
         if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
       }
@@ -1185,12 +1185,11 @@ function formatExcelDate(val) {
     return val.trim();
   }
 
-  // 處理 Excel 序列號 (通常介於 20000 到 60000 之間)
+  // 處理 Excel 序列號 (通常介於 20000 到 80000 之間)
   const num = Number(val);
   if (!isNaN(num) && num > 20000 && num < 80000) {
     // Excel 起始日為 1899-12-30
     const date = new Date((num - 25569) * 86400 * 1000);
-    // 檢查是否為有效日期
     if (!isNaN(date.getTime())) {
       return date.toISOString().split('T')[0];
     }
@@ -1207,9 +1206,10 @@ function formatExcelDate(val) {
  * @param {Array} salesMapping 銷售員對照表
  * @param {string} defaultStatus 預設狀態 (如 "排產中")
  * @param {Array} schema 系統欄位定義
+ * @param {string} targetMonth 指定過濾的月份 (格式 YYYY-MM，若為空則不篩選)
  * @returns {Array<Object>} 標準化後的工單物件陣列
  */
-export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中", schema = []) {
+export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中", schema = [], targetMonth = "") {
   const nowStr = new Date().toISOString();
   const parsedOrders = [];
 
@@ -1229,7 +1229,6 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   }
 
   if (headerIdx === -1) {
-    // 如果找不到表頭，直接回傳空陣列，由上層決定是否報錯 (避免多分頁掃描時中斷)
     return [];
   }
 
@@ -1249,7 +1248,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     }
   });
 
-  // 核心欄位別名映射表 (用於識別匯出的 Excel 或公司系統報表)
+  // 核心欄位別名映射表
   const coreAliases = {
     id: ['工單號碼', '單號', '發票', 'id', '登錄'],
     status: ['狀態', '生產進度', 'status'],
@@ -1263,7 +1262,6 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     category: ['類別', 'category', '工單類別']
   };
 
-  // 找出核心欄位在 Excel 中的索引
   const coreIndices = {};
   Object.keys(coreAliases).forEach(key => {
     const aliases = coreAliases[key];
@@ -1273,7 +1271,6 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     }
   });
 
-  // 檢查必要的系統核心欄位是否存在
   let idIdx = coreIndices['id'];
   if (idIdx === undefined) {
     idIdx = columnMap['id'];
@@ -1286,19 +1283,29 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
 
   // 3. 逐列解析
   for (const row of dataRows) {
-    // 跳過完全空白的列（防呆）
     if (!row || row.length === 0) continue;
 
     const rawIdVal = row[coreIndices['id']];
     const orderId = rawIdVal !== undefined && rawIdVal !== null ? String(rawIdVal).trim() : "";
     
-    // 核心邏輯：遇到 A 欄（工單號碼）為空，直接中斷迴圈（完美剔除尾部的總計與備註）
     if (!orderId) {
       break;
     }
 
     // --- 解析核心欄位 ---
     
+    // 上傳/開單日期 (uploadDate) - 先解析出來，因為要用來比對月份
+    let uploadDate = nowStr.split('T')[0];
+    if (coreIndices['uploadDate'] !== undefined && row[coreIndices['uploadDate']] !== undefined) {
+      const formatted = formatExcelDate(row[coreIndices['uploadDate']]);
+      if (formatted) uploadDate = formatted;
+    }
+
+    // 月份過濾防呆：若有指定月份，且開單日期不符合，則跳過該筆
+    if (targetMonth && !uploadDate.startsWith(targetMonth)) {
+      continue;
+    }
+
     // 狀態 (status)
     let status = defaultStatus;
     if (coreIndices['status'] !== undefined && row[coreIndices['status']] !== undefined) {
@@ -1306,7 +1313,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       if (val) status = val;
     }
 
-    // 製程路線 (route) - 從 "A → B → C" 或 "A, B, C" 轉回陣列
+    // 製程路線 (route)
     let route = [];
     if (coreIndices['route'] !== undefined && row[coreIndices['route']] !== undefined) {
       const val = String(row[coreIndices['route']]).trim();
@@ -1334,13 +1341,6 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       dueDate = formatExcelDate(row[coreIndices['dueDate']]);
     }
 
-    // 上傳/開單日期 (uploadDate)
-    let uploadDate = nowStr.split('T')[0];
-    if (coreIndices['uploadDate'] !== undefined && row[coreIndices['uploadDate']] !== undefined) {
-      const formatted = formatExcelDate(row[coreIndices['uploadDate']]);
-      if (formatted) uploadDate = formatted;
-    }
-
     // 來源 (source)
     let source = "excel";
     if (coreIndices['source'] !== undefined && row[coreIndices['source']] !== undefined) {
@@ -1366,7 +1366,6 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     // --- 收集動態欄位資料 ---
     const data = {};
     
-    // 類別 (優先從 Excel 的類別欄位抓取，若無則從單號前兩碼擷取)
     if (coreIndices['category'] !== undefined && row[coreIndices['category']] !== undefined) {
       const val = String(row[coreIndices['category']]).trim();
       if (val) {
@@ -1380,10 +1379,15 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     }
 
     schema.forEach(field => {
-      // 排除系統核心欄位與 id (狀態、路線、區域已在上面處理)
       const isCoreHandled = ['id', 'status', 'route', 'area'].includes(field.key);
       if (!field.isSystem && !isCoreHandled && columnMap[field.key] !== undefined) {
-        const val = row[columnMap[field.key]];
+        let val = row[columnMap[field.key]];
+        
+        // 💡 防呆：若該自訂欄位被定義為 date 類型，強制轉換為標準日期格式
+        if (field.type === 'date' && val !== undefined && val !== null && val !== '') {
+          val = formatExcelDate(val);
+        }
+        
         data[field.key] = val !== undefined && val !== null ? val : "";
       }
     });
@@ -1407,35 +1411,34 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
 }
 
 /**
- * 解析整份 Excel 活頁簿（支援指定分頁與多分頁合併）
+ * 解析整份 Excel 活頁簿（支援指定分頁、多分頁合併與月份過濾）
  * @param {Object} workbook XLSX 的 workbook 物件
- * @param {Array<string>} targetSheetNames 指定要讀取的分頁名稱，若為空則自動掃描所有分頁
+ * @param {Array<string>} targetSheetNames 指定要讀取的分頁名稱
  * @param {Array} salesMapping 銷售員對照表
  * @param {string} defaultStatus 預設狀態
  * @param {Array} schema 系統欄位定義
+ * @param {string} targetMonth 指定過濾的月份 (格式 YYYY-MM)
  * @returns {Array<Object>} 合併後的工單物件陣列
  */
-export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, defaultStatus, schema) {
+export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, defaultStatus, schema, targetMonth = "") {
   const allParsedOrders = [];
   const sheetsToParse = targetSheetNames.length > 0 ? targetSheetNames : workbook.SheetNames;
 
   for (const sheetName of sheetsToParse) {
-    // 確保該分頁存在
     if (!workbook.Sheets[sheetName]) continue;
 
     const sheet = workbook.Sheets[sheetName];
-    // 將分頁轉為二維陣列 (header: 1)
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
     if (jsonData.length === 0) continue;
 
-    // 呼叫既有的解析器，若回傳空陣列代表這個分頁找不到表頭，直接跳過
     const parsed = parseExcelData(
       jsonData[0], 
       jsonData.slice(1), 
       salesMapping, 
       defaultStatus, 
-      schema
+      schema,
+      targetMonth
     );
 
     if (parsed.length > 0) {
@@ -1443,11 +1446,10 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
     }
   }
 
-  // 去除重複單號 (若有跨分頁重複，以最後讀取到的為準)
+  // 去除重複單號
   const uniqueOrders = [];
   const seenIds = new Set();
   
-  // 從後往前遍歷，保留最後出現的
   for (let i = allParsedOrders.length - 1; i >= 0; i--) {
     const order = allParsedOrders[i];
     if (!seenIds.has(order.id)) {
@@ -1461,7 +1463,7 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/domain/parser.js
-V: 1794185000
+V: 1794187800
 W: UPGRADE-009
 ═══ */```
 
@@ -2163,9 +2165,10 @@ import { updateWorkbookState, downloadWorkbook } from '../domain/excel-writer.js
 import { AppState } from '../config/state.js';
 import { showToast } from '../ui/toast.js';
 
-let currentFile = null; // 儲存上次上傳的原始檔案
+let currentFile = null;
 let targetFileName = '';
 let selectedSheets = [];
+let targetMonth = '';
 let isSyncing = false;
 
 let currentState = { isBound: false, fileName: '', sheets: [] };
@@ -2180,22 +2183,33 @@ function notifyStateChange() {
   stateListeners.forEach(cb => cb(currentState));
 }
 
-// 嘗試從 localStorage 恢復上次的設定
 export function initSyncEngine() {
   try {
     const configStr = localStorage.getItem('excel_sync_config');
     if (configStr) {
       const config = JSON.parse(configStr);
-      targetFileName = config.fileName;
-      selectedSheets = config.sheets;
+      targetFileName = config.fileName || '';
+      selectedSheets = config.sheets || [];
+      targetMonth = config.month || '';
       
-      // 更新 UI 狀態為已綁定 (但實際上檔案內容尚未載入，需重新上傳)
       currentState = { isBound: true, fileName: targetFileName, sheets: selectedSheets };
       notifyStateChange();
     }
   } catch (err) {
     console.warn('[Sync Engine] 恢復設定失敗', err);
   }
+}
+
+// 新增：解除綁定功能
+export function clearBinding() {
+  currentFile = null;
+  targetFileName = '';
+  selectedSheets = [];
+  targetMonth = '';
+  localStorage.removeItem('excel_sync_config');
+  currentState = { isBound: false, fileName: '', sheets: [] };
+  notifyStateChange();
+  showToast('已解除綁定，請重新上傳', 'success');
 }
 
 export function handleExcelUpload(file) {
@@ -2213,18 +2227,11 @@ export function handleExcelUpload(file) {
       const buffer = evt.target.result;
       const workbook = XLSX.read(buffer, { type: 'array' });
       
-      // 如果先前已經有選過分頁且檔名相同，自動沿用並開始同步
-      if (targetFileName === file.name && selectedSheets.length > 0) {
-        currentFile = buffer;
-        showToast('檔案讀取成功，開始同步', 'info');
-        await syncFromBuffer(buffer);
-      } else {
-        // 否則跳出設定視窗
-        showSetupModal(file.name, workbook.SheetNames, buffer);
-      }
+      // 只要檔案有選擇，一律跳出設定視窗，讓使用者重新確認分頁與月份
+      showSetupModal(file.name, workbook.SheetNames, buffer);
     } catch (err) {
       console.error('[Sync Engine] 解析檔案失敗', err);
-      showToast('無法解析此 Excel 檔案', 'error');
+      showToast(`無法解析此 Excel 檔案: ${err.message}`, 'error');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2239,21 +2246,30 @@ function showSetupModal(fileName, sheetNames, buffer) {
   
   modal.innerHTML = `
     <div class="flex justify-between items-center p-5 border-b border-slate-100 flex-shrink-0">
-      <h3 class="text-lg font-bold text-slate-900">設定同步分頁</h3>
+      <h3 class="text-lg font-bold text-slate-900">設定同步分頁與月份</h3>
       <button id="close-setup-modal" class="text-slate-400 hover:text-slate-600">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
-    <div class="p-5 text-slate-600 overflow-y-auto flex-1">
-      <p class="text-sm font-bold text-slate-800 mb-4">檔案：${fileName}</p>
-      <p class="text-sm text-slate-600 mb-4">請勾選要與網頁同步的工單分頁：</p>
-      <div class="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
-        ${sheetNames.map(name => `
-          <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand transition-colors">
-            <input type="checkbox" class="sheet-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${name}" ${selectedSheets.includes(name) ? 'checked' : ''}>
-            <span class="font-medium text-slate-700">${name}</span>
-          </label>
-        `).join('')}
+    <div class="p-5 text-slate-600 overflow-y-auto flex-1 flex flex-col gap-6">
+      <p class="text-sm font-bold text-slate-800 mb-0">檔案：${fileName}</p>
+      
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-bold text-slate-800">1. 選擇要讀取的工單分頁</label>
+        <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+          ${sheetNames.map(name => `
+            <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand transition-colors">
+              <input type="checkbox" class="sheet-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${name}" ${selectedSheets.includes(name) ? 'checked' : ''}>
+              <span class="font-medium text-slate-700">${name}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-bold text-slate-800">2. 指定匯入月份（選填）</label>
+        <input type="month" id="month-select" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand" value="${targetMonth}">
+        <p class="text-xs text-slate-500">若留空，將匯入該分頁的所有月份資料。</p>
       </div>
     </div>
     <div class="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
@@ -2271,6 +2287,7 @@ function showSetupModal(fileName, sheetNames, buffer) {
 
   document.getElementById('confirm-setup-modal').addEventListener('click', async () => {
     const checked = Array.from(modal.querySelectorAll('.sheet-checkbox:checked')).map(cb => cb.value);
+    const selectedMonth = document.getElementById('month-select').value;
     
     if (checked.length === 0) {
       showToast('請至少選擇一個分頁', 'error');
@@ -2279,11 +2296,13 @@ function showSetupModal(fileName, sheetNames, buffer) {
 
     targetFileName = fileName;
     selectedSheets = checked;
+    targetMonth = selectedMonth;
     currentFile = buffer;
     
     localStorage.setItem('excel_sync_config', JSON.stringify({
       fileName: targetFileName,
-      sheets: selectedSheets
+      sheets: selectedSheets,
+      month: targetMonth
     }));
     
     closeModal();
@@ -2314,12 +2333,16 @@ export async function syncFromBuffer(buffer = currentFile) {
         schema = s.schema || []; 
         routeTemplates = s.route_templates || [];
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn('[Sync Engine] 無法取得 settings', err);
+    }
 
-    const parsed = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema);
+    const parsed = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema, targetMonth);
     let added = 0, updated = 0;
 
     for (const order of parsed) {
+      if (!order.id) continue;
+      
       const existing = await getDocument('work_orders', order.id);
       if (existing) {
         const hasChanged = JSON.stringify(existing.data) !== JSON.stringify(order.data) ||
@@ -2339,7 +2362,7 @@ export async function syncFromBuffer(buffer = currentFile) {
           updated++;
         }
       } else {
-        const orderCategory = String(order.data.category || '其他').toUpperCase().trim();
+        const orderCategory = String(order.data?.category || '其他').toUpperCase().trim();
         let matchedTemplate = routeTemplates.find(t => {
           if (t.categories && Array.isArray(t.categories) && t.categories.length > 0) {
             return t.categories.map(c => String(c).toUpperCase().trim()).includes(orderCategory);
@@ -2373,10 +2396,12 @@ export async function syncFromBuffer(buffer = currentFile) {
 
     if (added > 0 || updated > 0) {
       showToast(`同步完成：新增 ${added}，更新 ${updated}`, 'success');
+    } else {
+      showToast('同步完成，但沒有新增或更新資料（請檢查分頁或月份）', 'info');
     }
   } catch (err) {
     console.error('[Sync From Excel Error]', err);
-    showToast('讀取 Excel 失敗', 'error');
+    showToast(`讀取 Excel 失敗: ${err.message}`, 'error');
   } finally {
     isSyncing = false;
   }
@@ -2400,13 +2425,13 @@ export async function downloadLatestExcel() {
     showToast('已下載最新進度，請覆蓋原檔', 'success');
   } catch (err) {
     console.error('[Download Error]', err);
-    showToast('下載失敗', 'error');
+    showToast(`下載失敗: ${err.message}`, 'error');
   }
 }
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/sync-engine.js
-V: 1794187400
+V: 1794188100
 W: UPGRADE-009
 ═══ */```
 
@@ -8471,12 +8496,12 @@ import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { deleteDocument, updateDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
-import { exportToPDF } from '../lib/io.js';
+import { exportToExcel, exportToPDF } from '../lib/io.js';
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { renderOrderView } from '../ui/order-view.js';
-import { handleExcelUpload, downloadLatestExcel, onSyncStateChange } from '../engine/sync-engine.js';
-import { createIcons, FileText, Upload, Save } from 'lucide';
+import { handleExcelUpload, downloadLatestExcel, onSyncStateChange, clearBinding } from '../engine/sync-engine.js';
+import { createIcons, FileText, Upload, Save, X } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
@@ -8504,9 +8529,14 @@ export default {
       subtitle: '所有工單的狀態、時間與流程追蹤列表',
       headerActions: `
         <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-upload-excel" class="bg-white text-brand border border-brand/30 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand/5 flex items-center gap-2 shadow-sm transition-colors">
-            <i data-lucide="upload" class="w-4 h-4"></i> 上傳 Excel
-          </button>
+          <div id="upload-wrapper" class="flex items-center border border-brand/30 rounded-[10px] overflow-hidden shadow-sm">
+            <button id="btn-upload-excel" class="bg-white text-brand px-3 py-2 text-sm font-medium hover:bg-brand/5 flex items-center gap-2 transition-colors">
+              <i data-lucide="upload" class="w-4 h-4"></i> 上傳 Excel
+            </button>
+            <button id="btn-unbind-excel" class="bg-slate-50 text-slate-400 hover:text-rose-500 hover:bg-rose-50 px-2 py-2 border-l border-brand/20 hidden transition-colors" title="解除綁定">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
           <input type="file" id="excel-upload-input" accept=".xlsx, .xls" class="hidden">
           
           <button id="btn-download-excel" class="bg-brand text-white border border-brand px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand-hover flex items-center gap-2 shadow-sm transition-colors opacity-50 cursor-not-allowed" disabled>
@@ -8534,36 +8564,43 @@ export default {
       this.updateUI();
     });
 
-    // 觸發檔案上傳
     document.getElementById('btn-upload-excel')?.addEventListener('click', () => {
       document.getElementById('excel-upload-input').click();
     });
 
-    // 處理檔案選擇
+    document.getElementById('btn-unbind-excel')?.addEventListener('click', () => {
+      clearBinding();
+    });
+
     document.getElementById('excel-upload-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         handleExcelUpload(file);
       }
-      e.target.value = ''; // 清空，允許重複上傳同一個檔案
+      e.target.value = ''; 
     });
 
-    // 觸發下載寫回
     document.getElementById('btn-download-excel')?.addEventListener('click', () => {
       downloadLatestExcel();
     });
 
     onSyncStateChange((state) => {
       const uploadBtn = document.getElementById('btn-upload-excel');
+      const unbindBtn = document.getElementById('btn-unbind-excel');
       const downloadBtn = document.getElementById('btn-download-excel');
+      const uploadWrapper = document.getElementById('upload-wrapper');
       
-      if (uploadBtn) {
+      if (uploadBtn && unbindBtn && uploadWrapper) {
         if (state.isBound) {
           uploadBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> 已載入：${state.fileName}`;
           uploadBtn.classList.add('bg-brand/5');
+          unbindBtn.classList.remove('hidden');
+          uploadWrapper.classList.add('bg-brand/5');
         } else {
           uploadBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> 上傳 Excel`;
           uploadBtn.classList.remove('bg-brand/5');
+          unbindBtn.classList.add('hidden');
+          uploadWrapper.classList.remove('bg-brand/5');
         }
       }
 
@@ -8578,7 +8615,7 @@ export default {
       }
 
       try {
-        createIcons({ icons: { Upload, Save }, attrs: { class: 'w-4 h-4' } });
+        createIcons({ icons: { Upload, Save, X }, attrs: { class: 'w-4 h-4' } });
       } catch (e) {
         console.warn('Icon render error:', e);
       }
@@ -8600,7 +8637,7 @@ export default {
     });
 
     try {
-      createIcons({ icons: { FileText, Upload, Save }, attrs: { class: 'w-4 h-4' } });
+      createIcons({ icons: { FileText, Upload, Save, X }, attrs: { class: 'w-4 h-4' } });
     } catch (e) {
       console.warn('Icon render error:', e);
     }
@@ -8682,7 +8719,7 @@ export default {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/table.js
-V: 1794187500
+V: 1794188200
 W: UPGRADE-009
 ═══ */```
 
@@ -10073,10 +10110,21 @@ function normalizeRoute(route) {
  */
 export function formatExcelDate(val) {
   if (!val) return "";
+  
   if (typeof val === 'string') {
     if (val.includes('T')) return val.split('T')[0];
-    if (val.includes('-') || val.includes('/')) return val.trim();
+    if (val.includes('-') || val.includes('/')) {
+      if (val.includes('/')) {
+        const parts = val.split('/');
+        if (parts.length === 3) {
+          if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+          if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+      }
+      return val.trim();
+    }
   }
+  
   const num = Number(val);
   if (!isNaN(num) && num > 20000 && num < 80000) {
     const date = new Date((num - 25569) * 86400 * 1000);
@@ -10126,7 +10174,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     ];
   }
 
-  // 名詞替換：若欄位 key 為 route_select 或 route，一律顯示為「製程路線圖」
+  // 名詞替換
   displayFields = displayFields.map(f => {
     if (f.key === 'route_select' || f.key === 'route') {
       return Object.assign({}, f, { label: '製程路線圖' });
@@ -10213,9 +10261,12 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
 
   // 4. 處理排序與全域篩選
   if (state.sortKey) {
+    // 尋找排序欄位的定義，以判斷是否為日期
+    const sortFieldDef = displayFields.find(f => f.key === state.sortKey) || { key: state.sortKey };
+    
     cleanOrders.sort((a, b) => {
-      let valA = getOrderValue(a, state.sortKey);
-      let valB = getOrderValue(b, state.sortKey);
+      let valA = getOrderValue(a, sortFieldDef);
+      let valB = getOrderValue(b, sortFieldDef);
       return (valA < valB ? -1 : 1) * (state.sortOrder === 'asc' ? 1 : -1);
     });
   }
@@ -10224,14 +10275,13 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
   if (globalFilter) {
     cleanOrders = cleanOrders.filter(o => {
       return displayFields.some(f => {
-        const val = String(getOrderValue(o, f.key) || '').toLowerCase();
+        const val = String(getOrderValue(o, f) || '').toLowerCase();
         return val.includes(globalFilter);
       });
     });
   }
 
   const allStatuses = AppState.getStatuses() || [];
-  // 判斷是否為工單進度表（看板），允許推進度
   const isKanban = groupBy === 'status' || pageKey === 'kanban';
 
   // 5. 生成 HTML
@@ -10274,11 +10324,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
     return `
       <div class="glass-card p-4 flex flex-col gap-2">
         ${displayFields.map(f => {
-          const val = getOrderValue(order, f.key);
+          const val = getOrderValue(order, f);
           const diffHtml = renderDiffIcon(order, f.key);
           
           if (f.key === 'id') {
-            // 💡 若為唯讀，單號不生成按鈕
             if (isReadOnly) {
               return `<div class="text-sm"><span class="text-slate-400">${f.label}:</span> <span class="font-bold text-slate-700 text-base">${val || '-'}</span></div>`;
             }
@@ -10286,12 +10335,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
           }
           
           if (f.key === 'status') {
-            // 若完全唯讀或不是看板，顯示純文字
             if ((isReadOnly && !allowStatusChange) || !isKanban) {
               return `<div class="text-sm flex items-center"><span class="text-slate-400">${f.label}:</span> <span class="font-bold text-slate-700 ml-1">${order.status}</span>${diffHtml}</div>`;
             }
 
-            // 看板的上下步按鈕
             let route = order.route ? normalizeRoute(order.route) : allStatuses;
             if (route.length === 0) route = allStatuses;
 
@@ -10323,7 +10370,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             `;
           }
 
-          // 顯示製程路線圖（取代原本的下拉選單）
           if (f.key === 'route_select') {
             const orderCat = getOrderCategory(order);
             const availableTemplates = (route_templates || []).filter(t => {
@@ -10347,13 +10393,11 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             `;
           }
 
-          // 若為一般顯示 route
           if (f.key === 'route') {
-            let displayVal = normalizeRoute(val).join(' → ');
+            let displayVal = normalizeRoute(order.route).join(' → ');
             return `<div class="text-sm flex flex-col gap-1"><span class="text-slate-400">${f.label}:</span> <span class="font-medium text-slate-700">${displayVal || '-'}</span>${diffHtml}</div>`;
           }
 
-          // 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
           return `<div class="text-sm flex items-center"><span class="text-slate-400">${f.label}:</span> <span class="font-medium text-slate-700 ml-1">${val || '-'}</span>${diffHtml}</div>`;
         }).join('')}
         ${isAdmin ? `
@@ -10384,11 +10428,10 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
             ${orderList.map(order => `
               <tr class="hover:bg-slate-50/50 transition-colors">
                 ${displayFields.map(f => {
-                  const val = getOrderValue(order, f.key);
+                  const val = getOrderValue(order, f);
                   const diffHtml = renderDiffIcon(order, f.key);
 
                   if (f.key === 'id') {
-                    // 💡 若為唯讀，單號不生成按鈕
                     if (isReadOnly) {
                       return `<td class="px-4 py-3 whitespace-nowrap font-bold text-slate-700">${val || '-'}</td>`;
                     }
@@ -10400,7 +10443,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                       return `<td class="px-4 py-3 whitespace-nowrap font-bold text-slate-700">${order.status}${diffHtml}</td>`;
                     }
 
-                    // 看板的上下步按鈕
                     let route = order.route ? normalizeRoute(order.route) : allStatuses;
                     if (route.length === 0) route = allStatuses;
 
@@ -10432,7 +10474,6 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                     `;
                   }
 
-                  // 顯示製程路線圖（取代原本的下拉選單）
                   if (f.key === 'route_select') {
                     const orderCat = getOrderCategory(order);
                     const availableTemplates = (route_templates || []).filter(t => {
@@ -10451,13 +10492,11 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
                     return `<td class="px-4 py-3 whitespace-nowrap text-slate-600">${currentMatchName}</td>`;
                   }
                   
-                  // 若為一般顯示 route
                   if (f.key === 'route') {
-                    let displayVal = normalizeRoute(val).join(' → ');
+                    let displayVal = normalizeRoute(order.route).join(' → ');
                     return `<td class="px-4 py-3 whitespace-nowrap text-slate-600">${displayVal || '-'}${diffHtml}</td>`;
                   }
 
-                  // 移除行內編輯：其餘所有可編輯欄位一律顯示純文字
                   return `<td class="px-4 py-3 whitespace-nowrap">${val || '-'}${diffHtml}</td>`;
                 }).join('')}
                 ${isAdmin ? `
@@ -10521,26 +10560,46 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
 }
 
 /**
- * 取得欄位值 (處理巢狀 data 與特殊日期格式)
+ * 取得欄位值 (處理巢狀 data 與日期格式防呆)
+ * @param {Object} order 工單物件
+ * @param {Object|string} field 欄位定義物件或欄位 key 字串
+ * @returns {any} 欄位值
  */
-function getOrderValue(order, key) {
-  if (key === 'uploadDate' || key === 'dueDate' || key === 'statusUpdateDate') {
-    return formatExcelDate(order[key]);
+function getOrderValue(order, field) {
+  let key, type;
+  
+  if (typeof field === 'string') {
+    key = field;
+  } else if (field && typeof field === 'object') {
+    key = field.key;
+    type = field.type;
+  } else {
+    return '';
   }
+
+  let val;
+
   if (key === 'status') {
-    return order.status || '未知'; 
+    val = order.status || '未知';
+  } else if (order.data && order.data[key] !== undefined) {
+    val = order.data[key];
+  } else {
+    val = order[key] !== undefined ? order[key] : '';
   }
-  if (order.data && order.data[key] !== undefined) {
-    return order.data[key];
+
+  // 日期格式化防呆：若為 date 類型，或已知的核心日期欄位，強制格式化
+  if (type === 'date' || key === 'uploadDate' || key === 'dueDate' || key === 'statusUpdateDate') {
+    return formatExcelDate(val);
   }
-  return order[key] !== undefined ? order[key] : '';
+
+  return val;
 }
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1793092000
-W: UPGRADE-007
-*/```
+V: 1794188000
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/ui/order-view.js === -->
 
