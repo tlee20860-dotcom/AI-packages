@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-09 13:23:04 (HKT)
+> 生成時間：2026-11-10 19:51:20 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -141,12 +141,14 @@
 | AI-WA-UPWO | src/db/read.js |
 | AI-WA-UPWO | src/db/write.js |
 | AI-WA-UPWO | src/domain/data-diff.js |
+| AI-WA-UPWO | src/domain/excel-writer.js |
 | AI-WA-UPWO | src/domain/formula-engine.js |
 | AI-WA-UPWO | src/domain/global-search.js |
 | AI-WA-UPWO | src/domain/parser.js |
 | AI-WA-UPWO | src/domain/stats.js |
 | AI-WA-UPWO | src/engine/main.js |
 | AI-WA-UPWO | src/engine/router.js |
+| AI-WA-UPWO | src/engine/sync-engine.js |
 | AI-WA-UPWO | src/lib/io.js |
 | AI-WA-UPWO | src/pages/admin-data.js |
 | AI-WA-UPWO | src/pages/area.js |
@@ -371,7 +373,7 @@
 | 90-SP.md | 32 |
 | 90-old-Code.md | 952 |
 | 91-Code.md | 4 |
-| 92-Code.md | 400 |
+| 92-Code.md | 412 |
 | 92-P.md | 60 |
 | 92-SP.md | 60 |
 | 93-Code.md | 160 |

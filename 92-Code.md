@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-09 13:23:03 (HKT)
+> 生成時間：2026-11-10 19:51:19 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -759,6 +759,136 @@ W: UPGRADE-007
 
 <!-- === FILE END: ./src/domain/data-diff.js === -->
 
+<!-- === FILE START: ./src/domain/excel-writer.js === -->
+
+## 📄 ./src/domain/excel-writer.js
+
+```js
+import * as XLSX from 'xlsx';
+
+/**
+ * 將網頁的工單狀態寫回 Excel 活頁簿
+ * @param {Object} workbook XLSX 的 workbook 物件
+ * @param {Array<string>} targetSheetNames 目標分頁名稱陣列
+ * @param {Array<Object>} orders 要更新的工單資料陣列
+ * @returns {Object} 更新後的 workbook 物件
+ */
+export function updateWorkbookState(workbook, targetSheetNames, orders) {
+  const sheetsToUpdate = targetSheetNames.length > 0 ? targetSheetNames : workbook.SheetNames;
+  
+  // 建立單號對應的資料字典，方便快速查詢
+  const orderMap = {};
+  orders.forEach(o => {
+    if (o.id) orderMap[String(o.id).trim()] = o;
+  });
+
+  const idKeywords = ['單號', '發票', '工單號碼', '登錄'];
+  const cleanStr = (s) => String(s || '').replace(/[\s\u3000]+/g, '').trim();
+
+  for (const sheetName of sheetsToUpdate) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+
+    // 將分頁轉為二維陣列以尋找表頭與資料列
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    if (jsonData.length === 0) continue;
+
+    // 1. 尋找表頭行
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(jsonData.length, 20); i++) {
+      const row = jsonData[i];
+      if (!row) continue;
+      const cleanRow = row.map(cleanStr);
+      if (cleanRow.some(cell => idKeywords.includes(cell))) {
+        headerIdx = i;
+        break;
+      }
+    }
+
+    if (headerIdx === -1) continue; // 找不到表頭，跳過此分頁
+
+    const headers = jsonData[headerIdx];
+    const cleanHeaders = headers.map(cleanStr);
+
+    // 2. 定位核心欄位索引
+    let idColIdx = cleanHeaders.findIndex(h => idKeywords.includes(h));
+    if (idColIdx === -1) continue;
+
+    let statusColIdx = cleanHeaders.findIndex(h => ['狀態', '生產進度', 'status'].includes(h));
+    let routeColIdx = cleanHeaders.findIndex(h => ['製程路線', '製程路線圖管理', 'route'].includes(h));
+    let areaColIdx = cleanHeaders.findIndex(h => ['區域', 'area'].includes(h));
+
+    // 3. 若無狀態欄位，則在最後一欄新增
+    let newColCount = headers.length;
+    if (statusColIdx === -1) {
+      statusColIdx = newColCount++;
+      XLSX.utils.sheet_add_aoa(sheet, [['狀態']], { origin: { r: headerIdx, c: statusColIdx } });
+    }
+    if (routeColIdx === -1) {
+      routeColIdx = newColCount++;
+      XLSX.utils.sheet_add_aoa(sheet, [['製程路線']], { origin: { r: headerIdx, c: routeColIdx } });
+    }
+    if (areaColIdx === -1) {
+      areaColIdx = newColCount++;
+      XLSX.utils.sheet_add_aoa(sheet, [['區域']], { origin: { r: headerIdx, c: areaColIdx } });
+    }
+
+    // 4. 逐列更新資料
+    for (let r = headerIdx + 1; r < jsonData.length; r++) {
+      const row = jsonData[r];
+      if (!row) continue;
+
+      const rawId = row[idColIdx];
+      const orderId = rawId !== undefined && rawId !== null ? String(rawId).trim() : "";
+      
+      if (!orderId) break; // 遇到空白單號，停止該分頁
+
+      const orderData = orderMap[orderId];
+      if (orderData) {
+        // 寫入狀態
+        if (orderData.status !== undefined) {
+          XLSX.utils.sheet_add_aoa(sheet, [[orderData.status]], { origin: { r: r, c: statusColIdx } });
+        }
+        // 寫入製程路線 (轉為字串)
+        if (orderData.route !== undefined) {
+          const routeStr = Array.isArray(orderData.route) ? orderData.route.join(' → ') : String(orderData.route || '');
+          XLSX.utils.sheet_add_aoa(sheet, [[routeStr]], { origin: { r: r, c: routeColIdx } });
+        }
+        // 寫入區域
+        if (orderData.area !== undefined) {
+          XLSX.utils.sheet_add_aoa(sheet, [[orderData.area]], { origin: { r: r, c: areaColIdx } });
+        }
+      }
+    }
+  }
+
+  return workbook;
+}
+
+/**
+ * 將更新後的 workbook 觸發下載
+ * @param {Object} workbook 更新後的 workbook 物件
+ * @param {string} fileName 下載的檔案名稱 (例如：2026 開單紀錄_已同步.xlsx)
+ */
+export function downloadWorkbook(workbook, fileName) {
+  try {
+    // 使用 XLSX 的 writeFile 直接觸發瀏覽器下載
+    XLSX.writeFile(workbook, fileName, { bookType: 'xlsx' });
+    return true;
+  } catch (error) {
+    console.error('[Excel Download Error]', error);
+    throw error;
+  }
+}
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/domain/excel-writer.js
+V: 1794186800
+W: UPGRADE-009
+═══ */```
+
+<!-- === FILE END: ./src/domain/excel-writer.js === -->
+
 <!-- === FILE START: ./src/domain/formula-engine.js === -->
 
 ## 📄 ./src/domain/formula-engine.js
@@ -1099,7 +1229,8 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   }
 
   if (headerIdx === -1) {
-    throw new Error('找不到表頭，請確認 Excel 中包含「單號」、「登錄」或「發票」等欄位。');
+    // 如果找不到表頭，直接回傳空陣列，由上層決定是否報錯 (避免多分頁掃描時中斷)
+    return [];
   }
 
   const actualHeaders = allData[headerIdx];
@@ -1122,12 +1253,14 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   const coreAliases = {
     id: ['工單號碼', '單號', '發票', 'id', '登錄'],
     status: ['狀態', '生產進度', 'status'],
-    route: ['製程路線', 'route'],
+    route: ['製程路線', '製程路線圖管理', 'route'],
+    area: ['區域', 'area'],
     dueDate: ['交貨日期', '交貨日', '預計日期', 'dueDate'],
     uploadDate: ['上傳日期', '開單日期', '日期', 'uploadDate'],
     salesReps: ['銷售員', 'salesRep', 'salesReps', '我方備考'],
     source: ['來源', 'source'],
-    supplierName: ['外發商', '工單類別/外發商', '供應商', '外發廠商'] // 💡 新增外發商識別
+    supplierName: ['外發商', '工單類別/外發商', '供應商', '外發廠商'],
+    category: ['類別', 'category', '工單類別']
   };
 
   // 找出核心欄位在 Excel 中的索引
@@ -1148,7 +1281,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   }
 
   if (idIdx === undefined) {
-    throw new Error('找不到「工單號碼」、「單號」或「登錄」欄位，請確認 Excel 表頭。');
+    return [];
   }
 
   // 3. 逐列解析
@@ -1173,13 +1306,26 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       if (val) status = val;
     }
 
-    // 製程路線 (route) - 從 "A → B → C" 轉回陣列
+    // 製程路線 (route) - 從 "A → B → C" 或 "A, B, C" 轉回陣列
     let route = [];
     if (coreIndices['route'] !== undefined && row[coreIndices['route']] !== undefined) {
       const val = String(row[coreIndices['route']]).trim();
       if (val) {
-        route = val.split('→').map(s => s.trim()).filter(Boolean);
+        if (val.includes(',')) {
+          route = val.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (val.includes('→')) {
+          route = val.split('→').map(s => s.trim()).filter(Boolean);
+        } else {
+          route = [val];
+        }
       }
+    }
+
+    // 區域 (area)
+    let area = "";
+    if (coreIndices['area'] !== undefined && row[coreIndices['area']] !== undefined) {
+      const val = String(row[coreIndices['area']]).trim();
+      if (val) area = val;
     }
 
     // 交貨日期 (dueDate)
@@ -1220,13 +1366,23 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     // --- 收集動態欄位資料 ---
     const data = {};
     
-    // 自動擷取工單號前兩碼英文作為類別 (若資料中沒有設定 category)
-    const categoryMatch = orderId.match(/^[a-zA-Z]+/);
-    data['category'] = categoryMatch ? categoryMatch[0].toUpperCase() : '其他';
+    // 類別 (優先從 Excel 的類別欄位抓取，若無則從單號前兩碼擷取)
+    if (coreIndices['category'] !== undefined && row[coreIndices['category']] !== undefined) {
+      const val = String(row[coreIndices['category']]).trim();
+      if (val) {
+        data['category'] = val.toUpperCase();
+      }
+    }
+    
+    if (!data['category']) {
+      const categoryMatch = orderId.match(/^[a-zA-Z]+/);
+      data['category'] = categoryMatch ? categoryMatch[0].toUpperCase() : '其他';
+    }
 
     schema.forEach(field => {
-      // 排除系統核心欄位與 id
-      if (!field.isSystem && field.key !== 'id' && columnMap[field.key] !== undefined) {
+      // 排除系統核心欄位與 id (狀態、路線、區域已在上面處理)
+      const isCoreHandled = ['id', 'status', 'route', 'area'].includes(field.key);
+      if (!field.isSystem && !isCoreHandled && columnMap[field.key] !== undefined) {
         const val = row[columnMap[field.key]];
         data[field.key] = val !== undefined && val !== null ? val : "";
       }
@@ -1236,10 +1392,11 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       id: orderId,
       status: status,
       route: route,
+      area: area,
       salesReps: normalizedReps,
-      supplierName: supplierName, // 💡 寫入外發商
+      supplierName: supplierName,
       uploadDate: uploadDate,
-      statusUpdateDate: nowStr.split('T')[0], // 狀態更新日預設為今天
+      statusUpdateDate: nowStr.split('T')[0],
       dueDate: dueDate,
       source: source,
       data: data
@@ -1249,11 +1406,64 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   return parsedOrders;
 }
 
-/*
+/**
+ * 解析整份 Excel 活頁簿（支援指定分頁與多分頁合併）
+ * @param {Object} workbook XLSX 的 workbook 物件
+ * @param {Array<string>} targetSheetNames 指定要讀取的分頁名稱，若為空則自動掃描所有分頁
+ * @param {Array} salesMapping 銷售員對照表
+ * @param {string} defaultStatus 預設狀態
+ * @param {Array} schema 系統欄位定義
+ * @returns {Array<Object>} 合併後的工單物件陣列
+ */
+export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, defaultStatus, schema) {
+  const allParsedOrders = [];
+  const sheetsToParse = targetSheetNames.length > 0 ? targetSheetNames : workbook.SheetNames;
+
+  for (const sheetName of sheetsToParse) {
+    // 確保該分頁存在
+    if (!workbook.Sheets[sheetName]) continue;
+
+    const sheet = workbook.Sheets[sheetName];
+    // 將分頁轉為二維陣列 (header: 1)
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    if (jsonData.length === 0) continue;
+
+    // 呼叫既有的解析器，若回傳空陣列代表這個分頁找不到表頭，直接跳過
+    const parsed = parseExcelData(
+      jsonData[0], 
+      jsonData.slice(1), 
+      salesMapping, 
+      defaultStatus, 
+      schema
+    );
+
+    if (parsed.length > 0) {
+      allParsedOrders.push(...parsed);
+    }
+  }
+
+  // 去除重複單號 (若有跨分頁重複，以最後讀取到的為準)
+  const uniqueOrders = [];
+  const seenIds = new Set();
+  
+  // 從後往前遍歷，保留最後出現的
+  for (let i = allParsedOrders.length - 1; i >= 0; i--) {
+    const order = allParsedOrders[i];
+    if (!seenIds.has(order.id)) {
+      seenIds.add(order.id);
+      uniqueOrders.unshift(order);
+    }
+  }
+
+  return uniqueOrders;
+}
+
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/domain/parser.js
-V: 1793066000
-W: UPGRADE-007
-*/```
+V: 1794185000
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/domain/parser.js === -->
 
@@ -1418,6 +1628,7 @@ import { initRouter } from './router.js';
 import { getCollection, listenDocument } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
 import { AppState } from '../config/state.js';
+import { initSyncEngine } from './sync-engine.js';
 import '../ui/order-view-editor.js';
 
 const defaultNavConfig = [
@@ -1453,6 +1664,10 @@ document.addEventListener('DOMContentLoaded', () => {
     listenSettingsUpdates();
     fixLegacyDatesInBackground();
     registerServiceWorker();
+    
+    // 初始化全域 Excel 同步引擎 (恢復綁定狀態、啟動唯讀輪詢)
+    initSyncEngine();
+    
   } catch (error) {
     console.error('[System Error] 系統啟動失敗:', error);
     root.innerHTML = `
@@ -1513,7 +1728,7 @@ function listenSettingsUpdates() {
       needSave = true;
     }
 
-    // 2. 💡 低程式碼資料庫無損遷移
+    // 2. 低程式碼資料庫無損遷移
     let currentDbs = Array.isArray(data.custom_databases) ? [...data.custom_databases] : [];
     let dbsChanged = false;
 
@@ -1646,11 +1861,11 @@ function registerServiceWorker() {
   }
 }
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/main.js
-V: 1793089000
-W: UPGRADE-007
-*/```
+V: 1794187100
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/engine/main.js === -->
 
@@ -1934,6 +2149,268 @@ W: UPGRADE-007
 */```
 
 <!-- === FILE END: ./src/engine/router.js === -->
+
+<!-- === FILE START: ./src/engine/sync-engine.js === -->
+
+## 📄 ./src/engine/sync-engine.js
+
+```js
+import * as XLSX from 'xlsx';
+import { getDocument, getCollection } from '../db/read.js';
+import { updateDocument, setDocument } from '../db/write.js';
+import { parseWorkbook } from '../domain/parser.js';
+import { updateWorkbookState, downloadWorkbook } from '../domain/excel-writer.js';
+import { AppState } from '../config/state.js';
+import { showToast } from '../ui/toast.js';
+
+let currentFile = null; // 儲存上次上傳的原始檔案
+let targetFileName = '';
+let selectedSheets = [];
+let isSyncing = false;
+
+let currentState = { isBound: false, fileName: '', sheets: [] };
+let stateListeners = [];
+
+export function onSyncStateChange(callback) {
+  stateListeners.push(callback);
+  callback(currentState);
+}
+
+function notifyStateChange() {
+  stateListeners.forEach(cb => cb(currentState));
+}
+
+// 嘗試從 localStorage 恢復上次的設定
+export function initSyncEngine() {
+  try {
+    const configStr = localStorage.getItem('excel_sync_config');
+    if (configStr) {
+      const config = JSON.parse(configStr);
+      targetFileName = config.fileName;
+      selectedSheets = config.sheets;
+      
+      // 更新 UI 狀態為已綁定 (但實際上檔案內容尚未載入，需重新上傳)
+      currentState = { isBound: true, fileName: targetFileName, sheets: selectedSheets };
+      notifyStateChange();
+    }
+  } catch (err) {
+    console.warn('[Sync Engine] 恢復設定失敗', err);
+  }
+}
+
+export function handleExcelUpload(file) {
+  console.log('[Sync Engine] 收到上傳檔案', file.name);
+  if (!file) return;
+
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    showToast('請選擇 Excel 檔案 (.xlsx 或 .xls)', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try {
+      const buffer = evt.target.result;
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      
+      // 如果先前已經有選過分頁且檔名相同，自動沿用並開始同步
+      if (targetFileName === file.name && selectedSheets.length > 0) {
+        currentFile = buffer;
+        showToast('檔案讀取成功，開始同步', 'info');
+        await syncFromBuffer(buffer);
+      } else {
+        // 否則跳出設定視窗
+        showSetupModal(file.name, workbook.SheetNames, buffer);
+      }
+    } catch (err) {
+      console.error('[Sync Engine] 解析檔案失敗', err);
+      showToast('無法解析此 Excel 檔案', 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showSetupModal(fileName, sheetNames, buffer) {
+  const overlay = document.createElement('div');
+  overlay.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+  
+  const modal = document.createElement('div');
+  modal.className = 'bg-white border border-slate-100 shadow-soft rounded-[20px] w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden';
+  
+  modal.innerHTML = `
+    <div class="flex justify-between items-center p-5 border-b border-slate-100 flex-shrink-0">
+      <h3 class="text-lg font-bold text-slate-900">設定同步分頁</h3>
+      <button id="close-setup-modal" class="text-slate-400 hover:text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-5 text-slate-600 overflow-y-auto flex-1">
+      <p class="text-sm font-bold text-slate-800 mb-4">檔案：${fileName}</p>
+      <p class="text-sm text-slate-600 mb-4">請勾選要與網頁同步的工單分頁：</p>
+      <div class="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
+        ${sheetNames.map(name => `
+          <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand transition-colors">
+            <input type="checkbox" class="sheet-checkbox w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" value="${name}" ${selectedSheets.includes(name) ? 'checked' : ''}>
+            <span class="font-medium text-slate-700">${name}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+      <button id="cancel-setup-modal" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+      <button id="confirm-setup-modal" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-brand hover:bg-brand-hover">確認並同步</button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  const closeModal = () => overlay.remove();
+  document.getElementById('close-setup-modal').addEventListener('click', closeModal);
+  document.getElementById('cancel-setup-modal').addEventListener('click', closeModal);
+
+  document.getElementById('confirm-setup-modal').addEventListener('click', async () => {
+    const checked = Array.from(modal.querySelectorAll('.sheet-checkbox:checked')).map(cb => cb.value);
+    
+    if (checked.length === 0) {
+      showToast('請至少選擇一個分頁', 'error');
+      return;
+    }
+
+    targetFileName = fileName;
+    selectedSheets = checked;
+    currentFile = buffer;
+    
+    localStorage.setItem('excel_sync_config', JSON.stringify({
+      fileName: targetFileName,
+      sheets: selectedSheets
+    }));
+    
+    closeModal();
+    
+    currentState = { isBound: true, fileName: targetFileName, sheets: selectedSheets };
+    notifyStateChange();
+    
+    showToast('設定成功，開始同步資料', 'success');
+    await syncFromBuffer(buffer);
+  });
+}
+
+export async function syncFromBuffer(buffer = currentFile) {
+  if (!buffer || isSyncing) return;
+  isSyncing = true;
+
+  try {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    let salesMapping = [], statuses = AppState.getStatuses() || ['排產中'];
+    let schema = [];
+    let routeTemplates = [];
+    
+    try {
+      const s = await getDocument('settings', 'main');
+      if (s) { 
+        salesMapping = s.sales_mapping || []; 
+        statuses = s.statuses || statuses; 
+        schema = s.schema || []; 
+        routeTemplates = s.route_templates || [];
+      }
+    } catch (err) {}
+
+    const parsed = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema);
+    let added = 0, updated = 0;
+
+    for (const order of parsed) {
+      const existing = await getDocument('work_orders', order.id);
+      if (existing) {
+        const hasChanged = JSON.stringify(existing.data) !== JSON.stringify(order.data) ||
+                           existing.status !== order.status ||
+                           JSON.stringify(existing.route) !== JSON.stringify(order.route) ||
+                           existing.area !== order.area;
+                           
+        if (hasChanged) {
+          await updateDocument('work_orders', order.id, { 
+            status: order.status,
+            route: order.route,
+            area: order.area,
+            salesReps: order.salesReps, 
+            uploadDate: order.uploadDate,
+            data: order.data 
+          });
+          updated++;
+        }
+      } else {
+        const orderCategory = String(order.data.category || '其他').toUpperCase().trim();
+        let matchedTemplate = routeTemplates.find(t => {
+          if (t.categories && Array.isArray(t.categories) && t.categories.length > 0) {
+            return t.categories.map(c => String(c).toUpperCase().trim()).includes(orderCategory);
+          }
+          if (typeof t.category === 'string' && t.category.trim() !== '') {
+            return t.category.toUpperCase().trim() === orderCategory;
+          }
+          return false;
+        });
+        
+        if (!matchedTemplate) {
+          matchedTemplate = routeTemplates.find(t => (!t.categories || t.categories.length === 0) && (!t.category || t.category.trim() === ''));
+        }
+
+        if (!order.route || order.route.length === 0) {
+          if (matchedTemplate && matchedTemplate.steps && matchedTemplate.steps.length > 0) {
+            order.route = matchedTemplate.steps.slice();
+            order.status = matchedTemplate.steps[0];
+          } else {
+            order.route = statuses.slice();
+            order.status = statuses[0];
+          }
+        }
+
+        if (!order.source) order.source = 'excel';
+
+        await setDocument('work_orders', order.id, order);
+        added++;
+      }
+    }
+
+    if (added > 0 || updated > 0) {
+      showToast(`同步完成：新增 ${added}，更新 ${updated}`, 'success');
+    }
+  } catch (err) {
+    console.error('[Sync From Excel Error]', err);
+    showToast('讀取 Excel 失敗', 'error');
+  } finally {
+    isSyncing = false;
+  }
+}
+
+export async function downloadLatestExcel() {
+  if (!currentFile) {
+    showToast('請先上傳 Excel 檔案', 'error');
+    return;
+  }
+
+  try {
+    const workbook = XLSX.read(currentFile, { type: 'array' });
+    const allOrders = await getCollection('work_orders');
+
+    const updatedWorkbook = updateWorkbookState(workbook, selectedSheets, allOrders);
+
+    const downloadName = targetFileName.replace(/\.(xlsx|xls)$/i, '_已同步.xlsx');
+    downloadWorkbook(updatedWorkbook, downloadName);
+    
+    showToast('已下載最新進度，請覆蓋原檔', 'success');
+  } catch (err) {
+    console.error('[Download Error]', err);
+    showToast('下載失敗', 'error');
+  }
+}
+
+/* ═══ EOF ═══
+F: AI-WA-UPWO/src/engine/sync-engine.js
+V: 1794187400
+W: UPGRADE-009
+═══ */```
+
+<!-- === FILE END: ./src/engine/sync-engine.js === -->
 
 <!-- === FILE START: ./src/lib/io.js === -->
 
@@ -7312,7 +7789,7 @@ W: UPGRADE-007
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
-import { updateDocument } from '../db/write.js';
+import { updateDocument, deleteDocument } from '../db/write.js';
 import { createIcons, Plus, Trash2, Edit2, AlertCircle } from 'lucide';
 
 /**
@@ -7613,20 +8090,36 @@ export function renderSystemData(container, currentSettings, saveSettings) {
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-lg font-bold text-slate-800">資料管理</h2>
-        <p class="text-sm text-slate-500 mt-1">清除由 Excel 匯入的資料，保留您手動輸入的狀態與交期。</p>
+        <p class="text-sm text-slate-500 mt-1">清除由 Excel 匯入的資料，或徹底刪除所有工單資料。</p>
       </div>
     </div>
 
-    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-6">
-      <h3 class="text-rose-700 font-bold mb-2 flex items-center gap-2">
-        <i data-lucide="alert-circle" class="w-5 h-5"></i> 危險操作區
-      </h3>
-      <p class="text-sm text-rose-600 mb-4">
-        點擊下方按鈕將會清空所有工單中「由 Excel 匯入」的資料。清空後，您可以重新匯入新的 Excel，系統會自動合併狀態。
-      </p>
-      <button id="btn-clear-excel-data" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
-        <i data-lucide="trash-2" class="w-4 h-4"></i> 清空 Excel 匯入資料
-      </button>
+    <div class="flex flex-col gap-6">
+      <!-- 清空 Excel 資料 -->
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+        <h3 class="text-rose-700 font-bold mb-2 flex items-center gap-2">
+          <i data-lucide="alert-circle" class="w-5 h-5"></i> 清空 Excel 匯入資料
+        </h3>
+        <p class="text-sm text-rose-600 mb-4">
+          點擊下方按鈕將會清空所有工單中「由 Excel 匯入」的資料。清空後，您可以重新匯入新的 Excel，系統會自動合併狀態。
+        </p>
+        <button id="btn-clear-excel-data" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> 清空 Excel 資料
+        </button>
+      </div>
+
+      <!-- 徹底刪除所有工單 -->
+      <div class="bg-rose-100 border border-rose-300 rounded-2xl p-6">
+        <h3 class="text-rose-800 font-bold mb-2 flex items-center gap-2">
+          <i data-lucide="alert-circle" class="w-5 h-5"></i> 徹底刪除所有工單
+        </h3>
+        <p class="text-sm text-rose-700 mb-4">
+          <strong>⚠️ 危險操作：</strong>這將會永久刪除資料庫中的「所有」工單，包含所有狀態與自訂欄位，且無法復原。請確認您已經備份資料。
+        </p>
+        <button id="btn-delete-all-orders" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> 徹底刪除所有工單
+        </button>
+      </div>
     </div>
   `;
 
@@ -7641,7 +8134,7 @@ export function renderSystemData(container, currentSettings, saveSettings) {
     });
     if (!confirmed) return;
 
-    showToast('正在清空資料...', 'info');
+    showToast('正在清空資料', 'info');
     try {
       const orders = await getCollection('work_orders');
       let count = 0;
@@ -7658,13 +8151,37 @@ export function renderSystemData(container, currentSettings, saveSettings) {
       showToast('清空失敗，請稍後再試', 'error');
     }
   });
+
+  document.getElementById('btn-delete-all-orders')?.addEventListener('click', async () => {
+    const confirmed = await openConfirm({
+      title: '徹底刪除所有工單',
+      message: '這將會永久刪除資料庫中的「所有」工單資料，且無法復原。您確定要繼續嗎？',
+      isDanger: true,
+      confirmText: '我確定，徹底刪除'
+    });
+    if (!confirmed) return;
+
+    showToast('正在刪除所有工單', 'info');
+    try {
+      const orders = await getCollection('work_orders');
+      let count = 0;
+      for (const order of orders) {
+        await deleteDocument('work_orders', order.id);
+        count++;
+      }
+      showToast(`成功刪除 ${count} 筆工單資料`, 'success');
+    } catch (error) {
+      console.error('Delete all data error:', error);
+      showToast('刪除失敗，請查看 Console', 'error');
+    }
+  });
 }
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings-system.js
-V: 1793055000
-W: UPGRADE-007
-*/```
+V: 1794187200
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/pages/settings-system.js === -->
 
@@ -7950,19 +8467,16 @@ W: UPGRADE-007
 ## 📄 ./src/pages/table.js
 
 ```js
-import * as XLSX from 'xlsx';
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
-import { setDocument, deleteDocument, updateDocument } from '../db/write.js';
+import { deleteDocument, updateDocument } from '../db/write.js';
 import { renderPageLayout } from '../ui/layout.js';
-import { exportToExcel, exportToPDF } from '../lib/io.js';
+import { exportToPDF } from '../lib/io.js';
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { renderOrderView } from '../ui/order-view.js';
-import { openOrderModal } from '../ui/order-detail-modal.js';
-import { parseExcelData } from '../domain/parser.js';
-import { checkDiff } from '../domain/data-diff.js';
-import { createIcons, Download, FileText, Plus, Upload, RefreshCw } from 'lucide';
+import { handleExcelUpload, downloadLatestExcel, onSyncStateChange } from '../engine/sync-engine.js';
+import { createIcons, FileText, Upload, Save } from 'lucide';
 
 let unsubscribe = null;
 let currentOrders = [];
@@ -7971,12 +8485,6 @@ let viewConfig = {};
 let route_templates = [];
 let currentCategory = 'ALL';
 let currentSettings = null;
-let diffFields = [];
-
-// 自動同步相關變數
-let autoSyncInterval = null;
-let directoryHandle = null;
-let isSyncing = false;
 
 export default {
   async render() {
@@ -7988,32 +8496,23 @@ export default {
         schema = currentSettings.schema || [];
         viewConfig = currentSettings.view_configs || {};
         route_templates = currentSettings.route_templates || [];
-        diffFields = currentSettings.diff_fields || [];
       }
     } catch (err) {}
-
-    const isSupported = 'showDirectoryPicker' in window;
 
     renderPageLayout({
       title: '管理總表',
       subtitle: '所有工單的狀態、時間與流程追蹤列表',
       headerActions: `
         <div class="flex flex-wrap items-center gap-2">
-          ${isSupported ? `
-            <button id="btn-auto-sync" class="bg-white text-brand border border-brand/30 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand/5 flex items-center gap-2 shadow-sm transition-colors">
-              <i data-lucide="refresh-cw" class="w-4 h-4"></i> 自動同步
-            </button>
-          ` : ''}
-          <button id="btn-import-excel" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
-            <i data-lucide="upload" class="w-4 h-4"></i> 匯入
+          <button id="btn-upload-excel" class="bg-white text-brand border border-brand/30 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand/5 flex items-center gap-2 shadow-sm transition-colors">
+            <i data-lucide="upload" class="w-4 h-4"></i> 上傳 Excel
           </button>
-          <input type="file" id="excel-import-input" accept=".xlsx, .xls" class="hidden">
-          <button id="btn-new-order" class="bg-brand text-white border border-brand px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand-hover flex items-center gap-2 shadow-sm transition-colors">
-            <i data-lucide="plus" class="w-4 h-4"></i> 新增工單
+          <input type="file" id="excel-upload-input" accept=".xlsx, .xls" class="hidden">
+          
+          <button id="btn-download-excel" class="bg-brand text-white border border-brand px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-brand-hover flex items-center gap-2 shadow-sm transition-colors opacity-50 cursor-not-allowed" disabled>
+            <i data-lucide="save" class="w-4 h-4"></i> 下載最新進度
           </button>
-          <button id="btn-export-excel" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
-            <i data-lucide="download" class="w-4 h-4"></i> Excel
-          </button>
+          
           <button id="btn-export-pdf" class="bg-white text-slate-700 border border-slate-200 px-3 py-2 rounded-[10px] text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
             <i data-lucide="file-text" class="w-4 h-4"></i> PDF
           </button>
@@ -8028,41 +8527,65 @@ export default {
       listContainerId: 'table-container'
     });
 
-    // 綁定匯出
-    document.getElementById('btn-export-excel')?.addEventListener('click', () => this.handleExport('excel'));
     document.getElementById('btn-export-pdf')?.addEventListener('click', () => this.handleExport('pdf'));
     
-    // 綁定篩選
     document.getElementById('filter-category')?.addEventListener('change', (e) => {
       currentCategory = e.target.value;
       this.updateUI();
     });
 
-    // 綁定新增工單
-    document.getElementById('btn-new-order')?.addEventListener('click', () => {
-      openOrderModal({ 
-        orderId: null, 
-        currentSettings: currentSettings,
-        onSaved: () => this.updateUI() 
-      });
+    // 觸發檔案上傳
+    document.getElementById('btn-upload-excel')?.addEventListener('click', () => {
+      document.getElementById('excel-upload-input').click();
     });
 
-    // 綁定匯入
-    document.getElementById('btn-import-excel')?.addEventListener('click', () => document.getElementById('excel-import-input').click());
-    document.getElementById('excel-import-input')?.addEventListener('change', (e) => {
+    // 處理檔案選擇
+    document.getElementById('excel-upload-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) this.processExcelFile(file);
-      e.target.value = '';
+      if (file) {
+        handleExcelUpload(file);
+      }
+      e.target.value = ''; // 清空，允許重複上傳同一個檔案
     });
 
-    // 綁定自動同步
-    document.getElementById('btn-auto-sync')?.addEventListener('click', () => this.setupAutoSync());
-    window.addEventListener('focus', this.checkForUpdates.bind(this));
+    // 觸發下載寫回
+    document.getElementById('btn-download-excel')?.addEventListener('click', () => {
+      downloadLatestExcel();
+    });
 
-    // 監聽工單資料
+    onSyncStateChange((state) => {
+      const uploadBtn = document.getElementById('btn-upload-excel');
+      const downloadBtn = document.getElementById('btn-download-excel');
+      
+      if (uploadBtn) {
+        if (state.isBound) {
+          uploadBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> 已載入：${state.fileName}`;
+          uploadBtn.classList.add('bg-brand/5');
+        } else {
+          uploadBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> 上傳 Excel`;
+          uploadBtn.classList.remove('bg-brand/5');
+        }
+      }
+
+      if (downloadBtn) {
+        if (state.isBound) {
+          downloadBtn.disabled = false;
+          downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          downloadBtn.disabled = true;
+          downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+
+      try {
+        createIcons({ icons: { Upload, Save }, attrs: { class: 'w-4 h-4' } });
+      } catch (e) {
+        console.warn('Icon render error:', e);
+      }
+    });
+
     window.addEventListener('refresh-table', this.updateUI.bind(this));
     
-    // 監聽系統設定（當新增流程或修改視圖配置時刷新）
     window.addEventListener('settings-updated', async () => {
       try {
         const settingsDoc = await getDocument('settings', 'main');
@@ -8071,13 +8594,16 @@ export default {
           schema = settingsDoc.schema || [];
           viewConfig = settingsDoc.view_configs || {};
           route_templates = settingsDoc.route_templates || [];
-          diffFields = settingsDoc.diff_fields || [];
           this.updateUI();
         }
       } catch (err) {}
     });
 
-    createIcons({ icons: { Download, FileText, Plus, Upload, RefreshCw }, attrs: { class: 'w-4 h-4' } });
+    try {
+      createIcons({ icons: { FileText, Upload, Save }, attrs: { class: 'w-4 h-4' } });
+    } catch (e) {
+      console.warn('Icon render error:', e);
+    }
 
     this.initDataListener();
   },
@@ -8102,13 +8628,11 @@ export default {
       filtered = filtered.filter(o => (o.data?.category || o.id.match(/^[a-zA-Z]+/)?.[0] || '其他') === currentCategory);
     }
 
-    // 依使用者設定的順序對齊欄位
     let visibleFields = (viewConfig['table'] || []).map(key => {
       const field = schema.find(f => f.key === key);
       return field ? Object.assign({}, field, { isVisible: true }) : null;
     }).filter(Boolean);
 
-    // 強制插入「製程路線圖」欄位（若不存在）
     if (!visibleFields.some(f => f.key === 'route_select')) {
       visibleFields.unshift({ key: 'route_select', label: '製程路線圖', isVisible: true });
     }
@@ -8149,218 +8673,18 @@ export default {
     }
   },
 
-  async setupAutoSync() {
-    if (!('showDirectoryPicker' in window)) {
-      showToast('您的瀏覽器不支援自動同步功能，請改用手動匯入', 'error');
-      return;
-    }
-
-    try {
-      directoryHandle = await window.showDirectoryPicker({ mode: 'read' });
-      showToast('已綁定資料夾，開始自動監聽更新', 'success');
-      
-      const btn = document.getElementById('btn-auto-sync');
-      if (btn) {
-        btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i> 同步中...`;
-        btn.classList.add('bg-brand/10');
-        createIcons({ icons: { RefreshCw }, attrs: { class: 'w-4 h-4' } });
-      }
-
-      await this.checkForUpdates();
-
-      if (autoSyncInterval) clearInterval(autoSyncInterval);
-      autoSyncInterval = setInterval(() => this.checkForUpdates(), 2000);
-
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      console.error('[Auto Sync Error]', err);
-      showToast('綁定資料夾失敗，請確認瀏覽器權限', 'error');
-    }
-  },
-
-  async checkForUpdates() {
-    if (!directoryHandle || isSyncing) return;
-
-    try {
-      const permission = await directoryHandle.queryPermission({ mode: 'read' });
-      if (permission !== 'granted') {
-        this.stopAutoSync();
-        showToast('資料夾授權已失效，請重新點擊「自動同步」', 'error');
-        return;
-      }
-
-      isSyncing = true;
-
-      let syncTimestamps = {};
-      try {
-        const stored = localStorage.getItem('excel_sync_timestamps');
-        if (stored) syncTimestamps = JSON.parse(stored);
-      } catch (e) {}
-
-      let filesToSync = [];
-
-      for await (const entry of directoryHandle.values()) {
-        if (entry.kind === 'file' && (entry.name.endsWith('.xlsx') || entry.name.endsWith('.xls'))) {
-          const file = await entry.getFile();
-          const lastModified = file.lastModified;
-          const lastSynced = syncTimestamps[file.name] || 0;
-
-          if (lastModified > lastSynced) {
-            filesToSync.push(file);
-          }
-        }
-      }
-
-      if (filesToSync.length > 0) {
-        filesToSync.sort((a, b) => a.lastModified - b.lastModified);
-        console.log(`[Auto Sync] 發現 ${filesToSync.length} 個更新檔案準備匯入`);
-
-        for (const file of filesToSync) {
-          await this.processExcelFile(file, true);
-          syncTimestamps[file.name] = file.lastModified;
-        }
-        
-        localStorage.setItem('excel_sync_timestamps', JSON.stringify(syncTimestamps));
-      }
-
-    } catch (err) {
-      console.error('[Auto Sync Check Error]', err);
-    } finally {
-      isSyncing = false;
-    }
-  },
-
-  stopAutoSync() {
-    if (autoSyncInterval) {
-      clearInterval(autoSyncInterval);
-      autoSyncInterval = null;
-    }
-    directoryHandle = null;
-    
-    const btn = document.getElementById('btn-auto-sync');
-    if (btn) {
-      btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> 自動同步`;
-      btn.classList.remove('bg-brand/10');
-      createIcons({ icons: { RefreshCw }, attrs: { class: 'w-4 h-4' } });
-    }
-  },
-
-  async processExcelFile(file, isAuto = false) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
-        try {
-          const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-          const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-          
-          if (jsonData.length === 0) {
-            if (!isAuto) showToast('無資料', 'error');
-            resolve();
-            return;
-          }
-
-          if (!isAuto) showToast('解析中...', 'info');
-          
-          let salesMapping = [], statuses = AppState.getStatuses() || ['排產中'];
-          let routeTemplates = [];
-          
-          try {
-            const s = await getDocument('settings', 'main');
-            if (s) { 
-              salesMapping = s.sales_mapping || []; 
-              statuses = s.statuses || statuses; 
-              schema = s.schema || schema; 
-              routeTemplates = s.route_templates || [];
-              diffFields = s.diff_fields || [];
-            }
-          } catch (err) {}
-
-          const parsed = parseExcelData(jsonData[0], jsonData.slice(1), salesMapping, statuses[0], schema);
-          let added = 0, updated = 0, diffCount = 0;
-
-          for (const order of parsed) {
-            const existing = await getDocument('work_orders', order.id);
-            if (existing) {
-              if (existing.source === 'manual') {
-                const diffResult = checkDiff(existing, order, diffFields);
-                if (diffResult) {
-                  await updateDocument('work_orders', order.id, { diff: diffResult });
-                  diffCount++;
-                }
-              } else {
-                await updateDocument('work_orders', order.id, { 
-                  salesReps: order.salesReps, 
-                  uploadDate: order.uploadDate,
-                  data: order.data 
-                });
-                updated++;
-              }
-            } else {
-              const orderCategory = String(order.data.category || '其他').toUpperCase().trim();
-              let matchedTemplate = routeTemplates.find(t => {
-                if (t.categories && Array.isArray(t.categories) && t.categories.length > 0) {
-                  return t.categories.map(c => String(c).toUpperCase().trim()).includes(orderCategory);
-                }
-                if (typeof t.category === 'string' && t.category.trim() !== '') {
-                  return t.category.toUpperCase().trim() === orderCategory;
-                }
-                return false;
-              });
-              
-              if (!matchedTemplate) {
-                matchedTemplate = routeTemplates.find(t => (!t.categories || t.categories.length === 0) && (!t.category || t.category.trim() === ''));
-              }
-
-              if (!order.route || order.route.length === 0) {
-                if (matchedTemplate && matchedTemplate.steps && matchedTemplate.steps.length > 0) {
-                  order.route = matchedTemplate.steps.slice();
-                  order.status = matchedTemplate.steps[0];
-                } else {
-                  order.route = statuses.slice();
-                  order.status = statuses[0];
-                }
-              }
-
-              if (!order.source) order.source = 'excel';
-
-              await setDocument('work_orders', order.id, order);
-              added++;
-            }
-          }
-          
-          let msg = isAuto ? '自動同步完成！' : '匯入完成！';
-          if (added > 0 || updated > 0 || diffCount > 0) {
-            msg += ` 新增 ${added}，更新 ${updated}`;
-            if (diffCount > 0) msg += `，比對不符 ${diffCount}`;
-            showToast(msg, 'success');
-          }
-          
-          resolve();
-          
-        } catch (error) {
-          console.error('[Import Error]', error);
-          if (!isAuto) showToast(`失敗: ${error.message}`, 'error');
-          resolve();
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  },
-
   destroy() {
     if (unsubscribe) unsubscribe();
-    this.stopAutoSync();
-    window.removeEventListener('focus', this.checkForUpdates.bind(this));
     window.removeEventListener('refresh-table', this.updateUI.bind(this));
     window.removeEventListener('settings-updated', this.updateUI.bind(this));
   }
 };
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/table.js
-V: 1793052000
-W: UPGRADE-007
-*/```
+V: 1794187500
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/pages/table.js === -->
 
