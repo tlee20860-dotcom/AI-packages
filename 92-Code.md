@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-10 20:27:44 (HKT)
+> 生成時間：2026-11-12 19:12:15 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1248,7 +1248,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     }
   });
 
-  // 核心欄位別名映射表
+  // 核心欄位別名映射表 (用於識別匯出的 Excel 或公司系統報表)
   const coreAliases = {
     id: ['工單號碼', '單號', '發票', 'id', '登錄'],
     status: ['狀態', '生產進度', 'status'],
@@ -1256,12 +1256,13 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     area: ['區域', 'area'],
     dueDate: ['交貨日期', '交貨日', '預計日期', 'dueDate'],
     uploadDate: ['上傳日期', '開單日期', '日期', 'uploadDate'],
-    salesReps: ['銷售員', 'salesRep', 'salesReps', '我方備考'],
+    salesReps: ['銷售員', 'salesRep', 'salesReps', '我方備考', 'SALES編號', 'SALES'],
     source: ['來源', 'source'],
     supplierName: ['外發商', '工單類別/外發商', '供應商', '外發廠商'],
     category: ['類別', 'category', '工單類別']
   };
 
+  // 找出核心欄位在 Excel 中的索引
   const coreIndices = {};
   Object.keys(coreAliases).forEach(key => {
     const aliases = coreAliases[key];
@@ -1463,7 +1464,7 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/domain/parser.js
-V: 1794187800
+V: 1794188400
 W: UPGRADE-009
 ═══ */```
 
