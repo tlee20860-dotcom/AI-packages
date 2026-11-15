@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-12 19:12:15 (HKT)
+> 生成時間：2026-11-16 07:30:49 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -1200,18 +1200,34 @@ function formatExcelDate(val) {
 }
 
 /**
+ * 將金額字串清理為純數字（去除 $ 與逗號）
+ * @param {any} val 原始數值或字串
+ * @returns {number} 轉換後的數字
+ */
+function parseCurrency(val) {
+  if (val === undefined || val === null || val === '') return 0;
+  if (typeof val === 'number') return val;
+  
+  // 移除貨幣符號、千分位逗號與空白
+  const cleanStr = String(val).replace(/[\$,]/g, '').trim();
+  const num = Number(cleanStr);
+  return isNaN(num) ? 0 : num;
+}
+
+/**
  * 解析 Excel 匯入的資料列（自動偵測表頭 + 動態 Schema）
  * @param {Array<string>} headers Excel 第一列的標題 (可能不是真正的表頭)
  * @param {Array<Array<any>>} rows Excel 的資料列（不含第一列）
  * @param {Array} salesMapping 銷售員對照表
- * @param {string} defaultStatus 預設狀態 (如 "排產中")
+ * @param {string} defaultStatus 預設狀態 (保留參數但不使用)
  * @param {Array} schema 系統欄位定義
  * @param {string} targetMonth 指定過濾的月份 (格式 YYYY-MM，若為空則不篩選)
- * @returns {Array<Object>} 標準化後的工單物件陣列
+ * @returns {Object} 包含 parsedOrders (解析後的工單陣列) 與 foundHeaders (所有出現的表頭)
  */
 export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排產中", schema = [], targetMonth = "") {
   const nowStr = new Date().toISOString();
   const parsedOrders = [];
+  let foundHeaders = [];
 
   const allData = [headers, ...rows];
 
@@ -1229,7 +1245,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   }
 
   if (headerIdx === -1) {
-    return [];
+    return { parsedOrders: [], foundHeaders: [] };
   }
 
   const actualHeaders = allData[headerIdx];
@@ -1238,6 +1254,9 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   // 2. 建立表頭索引映射：強制清洗表頭的空白、換行與全形空白
   const cleanStr = (s) => String(s || '').replace(/[\s\u3000]+/g, '').trim();
   const cleanHeaders = actualHeaders.map(cleanStr);
+
+  // 收集所有非空的表頭，供外層自動新增欄位使用
+  foundHeaders = Array.from(new Set(cleanHeaders.filter(h => h !== '')));
 
   const columnMap = {};
   schema.forEach(field => {
@@ -1248,12 +1267,10 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     }
   });
 
-  // 核心欄位別名映射表 (用於識別匯出的 Excel 或公司系統報表)
+  // 核心欄位別名映射表 
+  // 💡 重要修改：移除 status, route, area 的映射，讓這三個欄位完全由網頁控制
   const coreAliases = {
     id: ['工單號碼', '單號', '發票', 'id', '登錄'],
-    status: ['狀態', '生產進度', 'status'],
-    route: ['製程路線', '製程路線圖管理', 'route'],
-    area: ['區域', 'area'],
     dueDate: ['交貨日期', '交貨日', '預計日期', 'dueDate'],
     uploadDate: ['上傳日期', '開單日期', '日期', 'uploadDate'],
     salesReps: ['銷售員', 'salesRep', 'salesReps', '我方備考', 'SALES編號', 'SALES'],
@@ -1279,7 +1296,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
   }
 
   if (idIdx === undefined) {
-    return [];
+    return { parsedOrders: [], foundHeaders };
   }
 
   // 3. 逐列解析
@@ -1295,45 +1312,16 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
 
     // --- 解析核心欄位 ---
     
-    // 上傳/開單日期 (uploadDate) - 先解析出來，因為要用來比對月份
+    // 上傳/開單日期 (uploadDate)
     let uploadDate = nowStr.split('T')[0];
     if (coreIndices['uploadDate'] !== undefined && row[coreIndices['uploadDate']] !== undefined) {
       const formatted = formatExcelDate(row[coreIndices['uploadDate']]);
       if (formatted) uploadDate = formatted;
     }
 
-    // 月份過濾防呆：若有指定月份，且開單日期不符合，則跳過該筆
+    // 月份過濾防呆
     if (targetMonth && !uploadDate.startsWith(targetMonth)) {
       continue;
-    }
-
-    // 狀態 (status)
-    let status = defaultStatus;
-    if (coreIndices['status'] !== undefined && row[coreIndices['status']] !== undefined) {
-      const val = String(row[coreIndices['status']]).trim();
-      if (val) status = val;
-    }
-
-    // 製程路線 (route)
-    let route = [];
-    if (coreIndices['route'] !== undefined && row[coreIndices['route']] !== undefined) {
-      const val = String(row[coreIndices['route']]).trim();
-      if (val) {
-        if (val.includes(',')) {
-          route = val.split(',').map(s => s.trim()).filter(Boolean);
-        } else if (val.includes('→')) {
-          route = val.split('→').map(s => s.trim()).filter(Boolean);
-        } else {
-          route = [val];
-        }
-      }
-    }
-
-    // 區域 (area)
-    let area = "";
-    if (coreIndices['area'] !== undefined && row[coreIndices['area']] !== undefined) {
-      const val = String(row[coreIndices['area']]).trim();
-      if (val) area = val;
     }
 
     // 交貨日期 (dueDate)
@@ -1379,25 +1367,26 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
       data['category'] = categoryMatch ? categoryMatch[0].toUpperCase() : '其他';
     }
 
+    // 處理自訂欄位
     schema.forEach(field => {
-      const isCoreHandled = ['id', 'status', 'route', 'area'].includes(field.key);
+      // 確保不重複處理已由核心邏輯處理的欄位
+      const isCoreHandled = ['id'].includes(field.key);
       if (!field.isSystem && !isCoreHandled && columnMap[field.key] !== undefined) {
         let val = row[columnMap[field.key]];
         
-        // 💡 防呆：若該自訂欄位被定義為 date 類型，強制轉換為標準日期格式
         if (field.type === 'date' && val !== undefined && val !== null && val !== '') {
           val = formatExcelDate(val);
+        } else if (field.type === 'currency') {
+          val = parseCurrency(val);
         }
         
         data[field.key] = val !== undefined && val !== null ? val : "";
       }
     });
 
+    // 💡 重要修改：這裡不再包含 status, route, area。這三個屬性交由 sync-engine.js 根據設定與類別來決定。
     parsedOrders.push({
       id: orderId,
-      status: status,
-      route: route,
-      area: area,
       salesReps: normalizedReps,
       supplierName: supplierName,
       uploadDate: uploadDate,
@@ -1408,7 +1397,7 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
     });
   }
 
-  return parsedOrders;
+  return { parsedOrders, foundHeaders };
 }
 
 /**
@@ -1419,10 +1408,11 @@ export function parseExcelData(headers, rows, salesMapping, defaultStatus = "排
  * @param {string} defaultStatus 預設狀態
  * @param {Array} schema 系統欄位定義
  * @param {string} targetMonth 指定過濾的月份 (格式 YYYY-MM)
- * @returns {Array<Object>} 合併後的工單物件陣列
+ * @returns {Object} 包含 parsedOrders (合併後的工單) 與 allFoundHeaders (所有表頭)
  */
 export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, defaultStatus, schema, targetMonth = "") {
   const allParsedOrders = [];
+  const allFoundHeadersSet = new Set();
   const sheetsToParse = targetSheetNames.length > 0 ? targetSheetNames : workbook.SheetNames;
 
   for (const sheetName of sheetsToParse) {
@@ -1433,7 +1423,7 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
 
     if (jsonData.length === 0) continue;
 
-    const parsed = parseExcelData(
+    const { parsedOrders, foundHeaders } = parseExcelData(
       jsonData[0], 
       jsonData.slice(1), 
       salesMapping, 
@@ -1442,9 +1432,11 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
       targetMonth
     );
 
-    if (parsed.length > 0) {
-      allParsedOrders.push(...parsed);
+    if (parsedOrders.length > 0) {
+      allParsedOrders.push(...parsedOrders);
     }
+    
+    foundHeaders.forEach(h => allFoundHeadersSet.add(h));
   }
 
   // 去除重複單號
@@ -1459,12 +1451,15 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
     }
   }
 
-  return uniqueOrders;
+  return { 
+    parsedOrders: uniqueOrders, 
+    allFoundHeaders: Array.from(allFoundHeadersSet) 
+  };
 }
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/domain/parser.js
-V: 1794188400
+V: 1794189000
 W: UPGRADE-009
 ═══ */```
 
@@ -2201,7 +2196,6 @@ export function initSyncEngine() {
   }
 }
 
-// 新增：解除綁定功能
 export function clearBinding() {
   currentFile = null;
   targetFileName = '';
@@ -2228,7 +2222,6 @@ export function handleExcelUpload(file) {
       const buffer = evt.target.result;
       const workbook = XLSX.read(buffer, { type: 'array' });
       
-      // 只要檔案有選擇，一律跳出設定視窗，讓使用者重新確認分頁與月份
       showSetupModal(file.name, workbook.SheetNames, buffer);
     } catch (err) {
       console.error('[Sync Engine] 解析檔案失敗', err);
@@ -2325,6 +2318,7 @@ export async function syncFromBuffer(buffer = currentFile) {
     let salesMapping = [], statuses = AppState.getStatuses() || ['排產中'];
     let schema = [];
     let routeTemplates = [];
+    let viewConfig = {};
     
     try {
       const s = await getDocument('settings', 'main');
@@ -2333,12 +2327,80 @@ export async function syncFromBuffer(buffer = currentFile) {
         statuses = s.statuses || statuses; 
         schema = s.schema || []; 
         routeTemplates = s.route_templates || [];
+        viewConfig = s.view_configs || {};
       }
     } catch (err) {
       console.warn('[Sync Engine] 無法取得 settings', err);
     }
 
-    const parsed = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema, targetMonth);
+    // 第一次解析
+    let result = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema, targetMonth);
+    let parsed = result.parsedOrders;
+    let allFoundHeaders = result.allFoundHeaders;
+
+    // --- 自動新增缺失的欄位 ---
+    let newFieldsAdded = 0;
+    let updatedViewConfigs = { ...viewConfig };
+    
+    // 💡 強化黑名單：這些欄位由網頁控制，不允許從 Excel 自動新增
+    const coreAliases = [
+      '工單號碼', '單號', '發票', 'id', '登錄', 
+      '狀態', '生產進度', 'status', 
+      '製程路線', '製程路線圖管理', 'route', 
+      '區域', 'area', 
+      '交貨日期', '交貨日', '預計日期', 'dueDate', 
+      '上傳日期', '開單日期', '日期', 'uploadDate', 
+      '銷售員', 'salesRep', 'salesReps', '我方備考', 'SALES編號', 'SALES', 
+      '來源', 'source', 
+      '外發商', '工單類別/外發商', '供應商', '外發廠商', 
+      '類別', 'category', '工單類別'
+    ];
+    
+    const existingLabels = schema.map(f => f.label);
+    
+    allFoundHeaders.forEach(header => {
+      if (!existingLabels.includes(header) && !coreAliases.includes(header)) {
+        const key = 'field_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+        
+        let guessedType = 'string';
+        if (header.includes('金額') || header.includes('價格') || header.includes('單價') || header.includes('費用') || header.includes('COST')) {
+          guessedType = 'currency';
+        } else if (header.includes('日期') || header.includes('日')) {
+          guessedType = 'date';
+        } else if (header.includes('數量') || header.includes('數')) {
+          guessedType = 'number';
+        }
+
+        schema.push({
+          key: key,
+          label: header,
+          type: guessedType,
+          isSystem: false,
+          isEditable: true
+        });
+        
+        Object.keys(updatedViewConfigs).forEach(page => {
+          if (!updatedViewConfigs[page].includes(key)) {
+            updatedViewConfigs[page].push(key);
+          }
+        });
+        
+        newFieldsAdded++;
+      }
+    });
+
+    if (newFieldsAdded > 0) {
+      await updateDocument('settings', 'main', {
+        schema: schema,
+        view_configs: updatedViewConfigs
+      });
+      showToast(`已自動新增 ${newFieldsAdded} 個 Excel 欄位`, 'info');
+      
+      result = parseWorkbook(workbook, selectedSheets, salesMapping, statuses[0], schema, targetMonth);
+      parsed = result.parsedOrders;
+    }
+    // ---------------------------------
+
     let added = 0, updated = 0;
 
     for (const order of parsed) {
@@ -2346,16 +2408,14 @@ export async function syncFromBuffer(buffer = currentFile) {
       
       const existing = await getDocument('work_orders', order.id);
       if (existing) {
+        // 檢查資料是否有變更 (僅比對 data, salesReps, uploadDate)
         const hasChanged = JSON.stringify(existing.data) !== JSON.stringify(order.data) ||
-                           existing.status !== order.status ||
-                           JSON.stringify(existing.route) !== JSON.stringify(order.route) ||
-                           existing.area !== order.area;
+                           JSON.stringify(existing.salesReps) !== JSON.stringify(order.salesReps) ||
+                           existing.uploadDate !== order.uploadDate;
                            
         if (hasChanged) {
+          // 💡 核心防呆：只更新 Excel 負責的欄位，絕不覆蓋 status, route, area
           await updateDocument('work_orders', order.id, { 
-            status: order.status,
-            route: order.route,
-            area: order.area,
             salesReps: order.salesReps, 
             uploadDate: order.uploadDate,
             data: order.data 
@@ -2363,6 +2423,7 @@ export async function syncFromBuffer(buffer = currentFile) {
           updated++;
         }
       } else {
+        // 新工單：由網頁邏輯根據類別分配路線與狀態
         const orderCategory = String(order.data?.category || '其他').toUpperCase().trim();
         let matchedTemplate = routeTemplates.find(t => {
           if (t.categories && Array.isArray(t.categories) && t.categories.length > 0) {
@@ -2378,19 +2439,25 @@ export async function syncFromBuffer(buffer = currentFile) {
           matchedTemplate = routeTemplates.find(t => (!t.categories || t.categories.length === 0) && (!t.category || t.category.trim() === ''));
         }
 
-        if (!order.route || order.route.length === 0) {
-          if (matchedTemplate && matchedTemplate.steps && matchedTemplate.steps.length > 0) {
-            order.route = matchedTemplate.steps.slice();
-            order.status = matchedTemplate.steps[0];
-          } else {
-            order.route = statuses.slice();
-            order.status = statuses[0];
-          }
+        let initialRoute = [];
+        let initialStatus = statuses[0];
+
+        if (matchedTemplate && matchedTemplate.steps && matchedTemplate.steps.length > 0) {
+          initialRoute = matchedTemplate.steps.slice();
+          initialStatus = matchedTemplate.steps[0];
+        } else {
+          initialRoute = statuses.slice();
         }
 
         if (!order.source) order.source = 'excel';
 
-        await setDocument('work_orders', order.id, order);
+        // 寫入完整資料
+        await setDocument('work_orders', order.id, {
+          ...order,
+          route: initialRoute,
+          status: initialStatus,
+          area: '' // 預設無區域
+        });
         added++;
       }
     }
@@ -2432,7 +2499,7 @@ export async function downloadLatestExcel() {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/engine/sync-engine.js
-V: 1794188100
+V: 1794189100
 W: UPGRADE-009
 ═══ */```
 
@@ -7207,6 +7274,7 @@ export function renderSchema(container, currentSettings, saveSettings) {
         <select id="new-field-type" class="w-full sm:w-48 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none">
           <option value="string">文字輸入</option>
           <option value="number">數字輸入</option>
+          <option value="currency">💰 金額輸入</option>
           <option value="date">日期輸入</option>
           <option value="relation">🔗 關聯資料庫 (下拉)</option>
         </select>
@@ -7249,7 +7317,7 @@ export function renderSchema(container, currentSettings, saveSettings) {
         const relDb = isRel ? dbs.find(d => d.id === f.db_id) : null;
         const typeLabel = isRel 
           ? `🔗 關聯：${relDb ? relDb.name : '未知資料庫'}` 
-          : (f.type === 'date' ? '日期' : f.type === 'number' ? '數字' : '文字');
+          : (f.type === 'currency' ? '金額' : (f.type === 'date' ? '日期' : f.type === 'number' ? '數字' : '文字'));
 
         return `
         <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
@@ -7417,7 +7485,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
           ${visibleSchema.map(f => `
             <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-grab visible-item" draggable="true" data-key="${f.key}">
               <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-300"></i>
-              <span class="flex-1 font-medium text-slate-700">${f.label} ${f.type === 'relation' ? '🔗' : ''}</span>
+              <span class="flex-1 font-medium text-slate-700">${f.label} ${f.type === 'relation' ? '🔗' : (f.type === 'currency' ? '💰' : '')}</span>
               <button class="p-1 text-slate-400 hover:text-rose-500 btn-remove-field" data-key="${f.key}">
                 <i data-lucide="x" class="w-4 h-4"></i>
               </button>
@@ -7435,7 +7503,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
           ${hiddenSchema.length === 0 ? '<div class="text-slate-400 text-sm text-center py-8">所有欄位已顯示</div>' : ''}
           ${hiddenSchema.map(f => `
             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:border-brand transition-colors hidden-item" data-key="${f.key}">
-              <span class="flex-1 font-medium text-slate-600">${f.label} ${f.type === 'relation' ? '🔗' : ''}</span>
+              <span class="flex-1 font-medium text-slate-600">${f.label} ${f.type === 'relation' ? '🔗' : (f.type === 'currency' ? '💰' : '')}</span>
               <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i>
             </div>
           `).join('')}
@@ -7509,11 +7577,11 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
   }
 }
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/pages/settings-schema.js
-V: 1793082000
-W: UPGRADE-007
-*/```
+V: 1794188500
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/pages/settings-schema.js === -->
 
@@ -9404,7 +9472,7 @@ export function renderOrderEditor({
   formulas, 
   viewConfig, 
   routeTemplates = [],
-  customDatabases = [], // 💡 接收自訂資料庫
+  customDatabases = [],
   layoutMode = 'B', 
   initialData = null, 
   isViewMode = false,
@@ -9493,13 +9561,11 @@ export function renderOrderEditor({
               `;
             }
 
-            // 2. 💡 處理關聯資料庫 (relation)
+            // 2. 處理關聯資料庫 (relation)
             if (f.type === 'relation') {
               const targetDb = customDatabases.find(db => db.id === f.db_id);
               const items = targetDb ? targetDb.items : [];
               
-              // 處理舊資料可能是存 name 而不是 id 的情況
-              const isIdMatch = items.some(item => item.id === value);
               const selectedItem = items.find(item => item.id === value || item.name === value);
               const selectedValue = selectedItem ? selectedItem.id : value;
 
@@ -9515,7 +9581,22 @@ export function renderOrderEditor({
               `;
             }
 
-            // 3. 一般欄位渲染
+            // 3. 處理金額欄位 (currency)
+            if (f.type === 'currency') {
+              return `
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-medium text-slate-700">${f.label}</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-bold">
+                      $
+                    </div>
+                    <input type="number" step="0.01" data-key="${f.key}" value="${value}" class="${baseClass} pl-8" placeholder="0.00" ${disabledAttr}>
+                  </div>
+                </div>
+              `;
+            }
+
+            // 4. 一般欄位渲染 (包含 date, number, string)
             const inputType = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
             return `
               <div class="flex flex-col gap-1.5">
@@ -9606,10 +9687,6 @@ export function renderOrderEditor({
         
         let val = formData[f.key];
         
-        // 如果是關聯欄位，我們儲存 ID。但為了讓匯出顯示名稱，我們可以額外存一個 map 或是保留原本的字串？
-        // 為了架構單純，這裡依然存 ID。若要顯示名稱，由 UI 讀取 customDatabases 轉換。
-        // 但為了向下相容舊的 supplierName (存 name)，這裡不強制轉換，直接存 val。
-        
         if (f.isSystem) {
           finalData[f.key] = val;
         } else {
@@ -9622,11 +9699,11 @@ export function renderOrderEditor({
   });
 }
 
-/*
+/* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-editor.js
-V: 1793084000
-W: UPGRADE-007
-*/```
+V: 1794188800
+W: UPGRADE-009
+═══ */```
 
 <!-- === FILE END: ./src/ui/order-editor.js === -->
 
@@ -10135,6 +10212,16 @@ export function formatExcelDate(val) {
 }
 
 /**
+ * 將數字轉為帶有千分位與貨幣符號的字串
+ */
+export function formatCurrency(val) {
+  if (val === undefined || val === null || val === '') return "";
+  const num = Number(val);
+  if (isNaN(num)) return String(val);
+  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
  * 取得工單類別
  */
 function getOrderCategory(order) {
@@ -10262,12 +10349,18 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
 
   // 4. 處理排序與全域篩選
   if (state.sortKey) {
-    // 尋找排序欄位的定義，以判斷是否為日期
     const sortFieldDef = displayFields.find(f => f.key === state.sortKey) || { key: state.sortKey };
     
     cleanOrders.sort((a, b) => {
       let valA = getOrderValue(a, sortFieldDef);
       let valB = getOrderValue(b, sortFieldDef);
+      
+      // 移除貨幣符號與逗號進行數值排序
+      if (sortFieldDef.type === 'currency' || sortFieldDef.type === 'number') {
+        valA = Number(String(valA).replace(/[\$,]/g, '')) || 0;
+        valB = Number(String(valB).replace(/[\$,]/g, '')) || 0;
+      }
+      
       return (valA < valB ? -1 : 1) * (state.sortOrder === 'asc' ? 1 : -1);
     });
   }
@@ -10561,7 +10654,7 @@ export function renderOrderView({ containerId, orders, visibleFields = [], isAdm
 }
 
 /**
- * 取得欄位值 (處理巢狀 data 與日期格式防呆)
+ * 取得欄位值 (處理巢狀 data 與日期/金額格式防呆)
  * @param {Object} order 工單物件
  * @param {Object|string} field 欄位定義物件或欄位 key 字串
  * @returns {any} 欄位值
@@ -10588,9 +10681,14 @@ function getOrderValue(order, field) {
     val = order[key] !== undefined ? order[key] : '';
   }
 
-  // 日期格式化防呆：若為 date 類型，或已知的核心日期欄位，強制格式化
+  // 日期格式化防呆
   if (type === 'date' || key === 'uploadDate' || key === 'dueDate' || key === 'statusUpdateDate') {
     return formatExcelDate(val);
+  }
+  
+  // 金額格式化防呆
+  if (type === 'currency') {
+    return formatCurrency(val);
   }
 
   return val;
@@ -10598,7 +10696,7 @@ function getOrderValue(order, field) {
 
 /* ═══ EOF ═══
 F: AI-WA-UPWO/src/ui/order-view.js
-V: 1794188000
+V: 1794188900
 W: UPGRADE-009
 ═══ */```
 
