@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:41 (HKT)
+> 生成時間：2026-11-17 07:56:36 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -8,7 +8,7 @@
 
 ## 📄 index.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -1240,7 +1240,7 @@
 F: AI-infra/index.html
 V: 1794062000
 W: ai-system-010
-EOF -->```
+EOF -->~~~
 
 <!-- === FILE END: index.html === -->
 
@@ -1248,7 +1248,7 @@ EOF -->```
 
 ## 📄 manifest.json
 
-```json
+~~~json
 {
   "name": "AI 控制台",
   "short_name": "AI 控制台",
@@ -1271,7 +1271,7 @@ EOF -->```
       "purpose": "any maskable"
     }
   ]
-}```
+}~~~
 
 <!-- === FILE END: manifest.json === -->
 
@@ -1279,7 +1279,7 @@ EOF -->```
 
 ## 📄 sw.js
 
-```js
+~~~js
 // 將版號提升到 v11，強迫手機清空舊快取並載入最新的 index.html
 const CACHE_NAME = 'ai-console-v11'; 
 const ASSETS_TO_CACHE = [
@@ -1348,6 +1348,6 @@ self.addEventListener('fetch', (event) => {
 F: AI-infra/sw.js
 V: 1793949000
 W: ai-system-009
-EOF */```
+EOF */~~~
 
 <!-- === FILE END: sw.js === -->

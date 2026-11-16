@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:39 (HKT)
+> 生成時間：2026-11-17 07:56:34 (HKT)
 
 # 專案全程式碼包：AI-WA-FS
 
@@ -8,7 +8,7 @@
 
 ## 📄 ./functions/api/supabase/[[path]].js
 
-```js
+~~~js
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -77,7 +77,7 @@ export async function onRequest(context) {
 F: AI-WA-FS/functions/api/supabase/[[path]].js
 V: 1793806000
 W: ai-wa-fs-001
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./functions/api/supabase/[[path]].js === -->
 
@@ -85,7 +85,7 @@ W: ai-wa-fs-001
 
 ## 📄 ./index.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -118,7 +118,7 @@ W: ai-wa-fs-001
 F: AI-WA-FS/index.html
 V: 1793973300
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./index.html === -->
 
@@ -126,7 +126,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./meta.json
 
-```json
+~~~json
 {
   "domain": "W",
   "pkg_no": "93",
@@ -137,7 +137,7 @@ W: ai-wa-fs-002
     "V": 1793804067,
     "W": "ai-wa-fs-001"
   }
-}```
+}~~~
 
 <!-- === FILE END: ./meta.json === -->
 
@@ -145,7 +145,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./package.json
 
-```json
+~~~json
 {
   "name": "ai-wa-fs",
   "version": "1.0.0",
@@ -176,7 +176,7 @@ W: ai-wa-fs-002
     "V": 1793969000,
     "W": "ai-wa-fs-002"
   }
-}```
+}~~~
 
 <!-- === FILE END: ./package.json === -->
 
@@ -184,7 +184,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/App.vue
 
-```vue
+~~~vue
 <template>
   <router-view v-if="$route.path === '/login'" />
   
@@ -435,7 +435,7 @@ body { margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; backgroun
 F: AI-WA-FS/src/App.vue
 V: 1794001000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/App.vue === -->
 
@@ -443,7 +443,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/config/supabase.js
 
-```js
+~~~js
 import { createClient } from '@supabase/supabase-js'
 
 // 🚀 使用代理路徑，避開電信商封鎖
@@ -458,7 +458,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 F: AI-WA-FS/src/config/supabase.js
 V: 1793806000
 W: ai-wa-fs-001
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/config/supabase.js === -->
 
@@ -466,7 +466,7 @@ W: ai-wa-fs-001
 
 ## 📄 ./src/main.js
 
-```js
+~~~js
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -501,7 +501,7 @@ const updateSW = registerSW({
 F: AI-WA-FS/src/main.js
 V: 1793810900
 W: ai-wa-fs-001
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/main.js === -->
 
@@ -509,7 +509,7 @@ W: ai-wa-fs-001
 
 ## 📄 ./src/router/index.js
 
-```js
+~~~js
 import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/config/supabase'
 
@@ -597,7 +597,7 @@ export default router
 F: AI-WA-FS/src/router/index.js
 V: 1794000000
 W: ai-wa-fs-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/router/index.js === -->
 
@@ -605,7 +605,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/style.css
 
-```css
+~~~css
 :root {
   /* 覆寫 Element Plus 主色調為 92 專案的靛藍色 */
   --el-color-primary: #6366F1;
@@ -777,7 +777,7 @@ body {
 F: AI-WA-FS/src/style.css
 V: 1793971000
 W: ai-wa-fs-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/style.css === -->
 
@@ -785,7 +785,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/AnnualReportView.vue
 
-```vue
+~~~vue
 <template>
   <div class="annual-container">
     <div class="page-header">
@@ -1225,7 +1225,7 @@ onMounted(() => fetchData())
 F: AI-WA-FS/src/views/AnnualReportView.vue
 V: 1794006000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/AnnualReportView.vue === -->
 
@@ -1233,7 +1233,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/CashflowView.vue
 
-```vue
+~~~vue
 <template>
   <div class="cashflow-container">
     <div class="page-header">
@@ -1537,7 +1537,7 @@ onMounted(() => {
 F: AI-WA-FS/src/views/CashflowView.vue
 V: 1794009000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/CashflowView.vue === -->
 
@@ -1545,7 +1545,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/DashboardView.vue
 
-```vue
+~~~vue
 <template>
   <div class="dashboard-container" v-loading="loading">
     <div class="page-header">
@@ -1977,7 +1977,7 @@ onMounted(() => {
 F: AI-WA-FS/src/views/DashboardView.vue
 V: 1794010000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/DashboardView.vue === -->
 
@@ -1985,7 +1985,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/FundView.vue
 
-```vue
+~~~vue
 <template>
   <div class="fund-container">
     <div class="page-header">
@@ -2480,7 +2480,7 @@ onMounted(() => fetchData())
 F: AI-WA-FS/src/views/FundView.vue
 V: 1793991000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/FundView.vue === -->
 
@@ -2488,7 +2488,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/InsuranceView.vue
 
-```vue
+~~~vue
 <template>
   <div class="insurance-container">
     <div class="page-header">
@@ -2954,7 +2954,7 @@ onMounted(() => fetchData())
 F: AI-WA-FS/src/views/InsuranceView.vue
 V: 1794003000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/InsuranceView.vue === -->
 
@@ -2962,7 +2962,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/LoginView.vue
 
-```vue
+~~~vue
 <template>
   <div class="login-container">
     <!-- 背景裝飾 -->
@@ -3208,7 +3208,7 @@ const handleLogin = async () => {
 F: AI-WA-FS/src/views/LoginView.vue
 V: 1793999000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/LoginView.vue === -->
 
@@ -3216,7 +3216,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/MemberReportView.vue
 
-```vue
+~~~vue
 <template>
   <div class="member-report-container">
     <div class="page-header">
@@ -3562,7 +3562,7 @@ onMounted(() => {
 F: AI-WA-FS/src/views/MemberReportView.vue
 V: 1794008000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/MemberReportView.vue === -->
 
@@ -3570,7 +3570,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/SettingsView.vue
 
-```vue
+~~~vue
 <template>
   <div class="settings-container">
     <div class="page-header">
@@ -3921,7 +3921,7 @@ onMounted(() => {
 F: AI-WA-FS/src/views/SettingsView.vue
 V: 1794002000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/SettingsView.vue === -->
 
@@ -3929,7 +3929,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./src/views/SettlementView.vue
 
-```vue
+~~~vue
 <template>
   <div class="settlement-container">
     <div class="page-header">
@@ -4791,7 +4791,7 @@ onMounted(() => fetchData())
 F: AI-WA-FS/src/views/SettlementView.vue
 V: 1794005000
 W: ai-wa-fs-002
-═══ -->```
+═══ -->~~~
 
 <!-- === FILE END: ./src/views/SettlementView.vue === -->
 
@@ -4799,7 +4799,7 @@ W: ai-wa-fs-002
 
 ## 📄 ./vite.config.js
 
-```js
+~~~js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -4845,6 +4845,6 @@ export default defineConfig({
 F: AI-WA-FS/vite.config.js
 V: 1793973200
 W: ai-wa-fs-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./vite.config.js === -->

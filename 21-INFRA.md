@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:39 (HKT)
+> 生成時間：2026-11-17 07:56:34 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -12,7 +12,7 @@
 
 ## 📄 .github/scripts/apply_patch.py
 
-```py
+~~~py
 import sys
 import os
 import re
@@ -103,7 +103,7 @@ for rel_path, new_content in planned:
 
 with open(patch_file, "w", encoding="utf-8") as f:
     f.write("# 請在此貼上新的替換指令\n")
-print("[RESET] PATCH.md reset")```
+print("[RESET] PATCH.md reset")~~~
 
 <!-- === FILE END: .github/scripts/apply_patch.py === -->
 
@@ -113,7 +113,7 @@ print("[RESET] PATCH.md reset")```
 
 ## 📄 .github/scripts/validate_delivery.py
 
-```py
+~~~py
 #!/usr/bin/env python3
 """交付驗證腳本（增量、配置驅動、嚴格攔截、精準行號、繁簡自動轉換）"""
 
@@ -377,7 +377,7 @@ if __name__ == "__main__":
 # F: AI-infra/.github/scripts/validate_delivery.py
 # V: 1793010000
 # W: ai-system-009
-# EOF```
+# EOF~~~
 
 <!-- === FILE END: .github/scripts/validate_delivery.py === -->
 
@@ -387,7 +387,7 @@ if __name__ == "__main__":
 
 ## 📄 .github/workflows/setup-structure.yml
 
-```yml
+~~~yml
 # ============================================
 # setup-structure.yml — 動態共享包打包腳本 (統一大腦版)
 # 用途：手動觸發，所有生成物只寫入 AI-Packages，絕不回寫源檔
@@ -983,7 +983,7 @@ jobs:
 # F: AI-infra/.github/workflows/setup-structure.yml
 # V: 1794110000
 # W: ai-system-010
-# EOF```
+# EOF~~~
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
 
@@ -993,7 +993,7 @@ jobs:
 
 ## 📄 .github/workflows/migrate.yml
 
-```yml
+~~~yml
 # ============================================
 # migrate.yml — 一次性遷移腳本
 # 用途：將 AI-General 的 W 包搬到 ai-kernel，並清理舊檔案
@@ -1072,7 +1072,7 @@ jobs:
 # F: AI-infra/.github/workflows/migrate.yml
 # V: 1792359000
 # W: ai-system-20261019-010#095
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: .github/workflows/migrate.yml === -->
 
@@ -1082,7 +1082,7 @@ jobs:
 
 ## 📄 .github/workflows/append_file.sh
 
-```sh
+~~~sh
 #!/bin/bash
 # append_file.sh - 用於將源檔案合併到共享包中
 
@@ -1109,13 +1109,14 @@ echo "" >> "$TARGET"
 # 取得副檔名
 EXT="${SOURCE##*.}"
 
-# 寫入檔案內容（防呆：如果是 .md 檔且內部有三反引號，跳過包裹；其他副檔名一律強制包裹）
-if [ "$EXT" = "md" ] && grep -q '\`\`\`' "$SOURCE"; then
+# 寫入檔案內容（防呆：如果是 .md 檔且內部有三反引號或波浪號，跳過包裹；其他副檔名一律強制包裹）
+if [ "$EXT" = "md" ] && grep -qE '(\`\`\`|~~~)' "$SOURCE"; then
     cat "$SOURCE" >> "$TARGET"
 else
-    echo "\`\`\`$EXT" >> "$TARGET"
+    # 使用 ~~~ 作為外層包裹，避免與內部的三反引號衝突
+    echo "~~~$EXT" >> "$TARGET"
     cat "$SOURCE" >> "$TARGET"
-    echo "\`\`\`" >> "$TARGET"
+    echo "~~~" >> "$TARGET"
 fi
 
 # 寫入結束標記
@@ -1124,9 +1125,9 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 
 # ═══ EOF ═══
 # F: AI-infra/.github/workflows/append_file.sh
-# V: 1792383600
-# W: ai-system-20261019-011#004
-# ═══ EOF ═══```
+# V: 1794118000
+# W: ai-system-010
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: .github/workflows/append_file.sh === -->
 
@@ -1136,7 +1137,7 @@ echo "<!-- === FILE END: $SOURCE === -->" >> "$TARGET"
 
 ## 📄 .github/workflows/backup.yml
 
-```yml
+~~~yml
 # ============================================
 # backup.yml — 源檔自動備份腳本
 # 用途：每日定時為所有源檔倉庫打上 Git Tag，防止手動貼檔覆蓋導致資料遺失
@@ -1204,7 +1205,7 @@ jobs:
 # F: AI-infra/.github/workflows/backup.yml
 # V: 1792900050
 # W: ai-system-20261024-012#69
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: .github/workflows/backup.yml === -->
 
@@ -1214,7 +1215,7 @@ jobs:
 
 ## 📄 .github/workflows/copy-backup.yml
 
-```yml
+~~~yml
 # ============================================
 # copy-backup.yml — 接收網頁指令的全量快照備份
 # 用途：手動觸發或由控制台呼叫，將指定倉庫完整複製到備份倉庫的時間戳資料夾中
@@ -1312,7 +1313,7 @@ jobs:
 # F: AI-infra/.github/workflows/copy-backup.yml
 # V: 1792900065
 # W: ai-system-005
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: .github/workflows/copy-backup.yml === -->
 
@@ -1322,7 +1323,7 @@ jobs:
 
 ## 📄 .github/workflows/cleanup-legacy.yml
 
-```yml
+~~~yml
 # ============================================
 # cleanup-legacy.yml — 一次性清理腳本
 # 用途：手動觸發，清理各倉庫殘留的舊檔案與空目錄，為統一大腦鋪路
@@ -1401,7 +1402,7 @@ jobs:
 # F: AI-infra/.github/workflows/cleanup-legacy.yml
 # V: 1792900081
 # W: ai-system-20261024-012#132
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: .github/workflows/cleanup-legacy.yml === -->
 
@@ -1411,7 +1412,7 @@ jobs:
 
 ## 📄 config/repos.json
 
-```json
+~~~json
 {
   "kernel": "tlee20860-dotcom/AI-kernel",
   "general": "tlee20860-dotcom/AI-General",
@@ -1454,7 +1455,7 @@ jobs:
   }
 ]
 }
-```
+~~~
 
 <!-- === FILE END: config/repos.json === -->
 
@@ -1464,7 +1465,7 @@ jobs:
 
 ## 📄 AI-kernel/docs/r-rules/validate-config.json
 
-```json
+~~~json
 {
   "ignore_patterns": [
     "external/old-AI-WA-FAMILY/*",
@@ -1483,7 +1484,7 @@ jobs:
     "V": 1793954000,
     "W": "ai-system-009"
   }
-}```
+}~~~
 
 <!-- === FILE END: AI-kernel/docs/r-rules/validate-config.json === -->
 
@@ -1493,7 +1494,7 @@ jobs:
 
 ## 📄 AI-kernel/docs/r-rules/forbidden_words.txt
 
-```txt
+~~~txt
 略
 保留原樣
 同上
@@ -1515,7 +1516,7 @@ jobs:
 # F: AI-kernel/docs/r-rules/forbidden_words.txt
 # V: 1792913700
 # W: ai-system-005
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: AI-kernel/docs/r-rules/forbidden_words.txt === -->
 

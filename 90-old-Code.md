@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:38 (HKT)
+> 生成時間：2026-11-17 07:56:33 (HKT)
 
 # 專案全程式碼包：old-AI-WA-FAMILY
 
@@ -8,7 +8,7 @@
 
 ## 📄 ./.github/workflows/apply-patch.yml
 
-```yml
+~~~yml
 name: Apply Patch (Project)
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
 # F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
 # V: 1792358000
 # W: ai-system-20261019-010#088
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/apply-patch.yml === -->
 
@@ -59,7 +59,7 @@ jobs:
 
 ## 📄 ./.github/workflows/notify.yml
 
-```yml
+~~~yml
 # ============================================
 # notify.yml — 專案變更時通知 AI-infra
 # ============================================
@@ -90,7 +90,7 @@ jobs:
             -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
             https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
             -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"```
+          echo "已通知 AI-infra 重新建置"~~~
 
 <!-- === FILE END: ./.github/workflows/notify.yml === -->
 
@@ -98,7 +98,7 @@ jobs:
 
 ## 📄 ./admin.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -170,7 +170,7 @@ jobs:
      File: admin.html
      Version: v103.0.31
      Batch: B26-4
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./admin.html === -->
 
@@ -178,7 +178,7 @@ jobs:
 
 ## 📄 ./annual-report.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -239,7 +239,7 @@ jobs:
      File: annual-report.html
      Version: v103.0.29
      Batch: B26-3.2
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./annual-report.html === -->
 
@@ -247,7 +247,7 @@ jobs:
 
 ## 📄 ./code-list.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -311,7 +311,7 @@ jobs:
      Version: 1791900580
      Batch: B34-4
      Writer: A20261013-004#077
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./code-list.html === -->
 
@@ -319,7 +319,7 @@ jobs:
 
 ## 📄 ./css/components.css
 
-```css
+~~~css
 /* ============================================
    components.css — 卡片、按鈕、表格、Modal、表單
    -------------------------------------------------
@@ -1819,7 +1819,7 @@ jobs:
    File: css/components.css
    Version: v103.0.41
    Batch: B30-3d
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/components.css === -->
 
@@ -1827,7 +1827,7 @@ jobs:
 
 ## 📄 ./css/layout.css
 
-```css
+~~~css
 /* ============================================
    layout.css — App Shell 版型（v103.0.39）
    -------------------------------------------------
@@ -2155,7 +2155,7 @@ jobs:
    File: css/layout.css
    Version: v103.0.39
    Batch: B30-3-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/layout.css === -->
 
@@ -2163,7 +2163,7 @@ jobs:
 
 ## 📄 ./css/pages/annual-report.css
 
-```css
+~~~css
 /* ============================================
    annual-report.css — 年度報表專屬樣式（v103.0.39）
    ============================================
@@ -2414,7 +2414,7 @@ jobs:
    File: css/pages/annual-report.css
    Version: v103.0.39
    Batch: B30-3-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/pages/annual-report.css === -->
 
@@ -2422,7 +2422,7 @@ jobs:
 
 ## 📄 ./css/pages/insurance.css
 
-```css
+~~~css
 /* ============================================
    insurance.css — 保險頁面專屬樣式（v103.0.39）
    ============================================
@@ -2613,7 +2613,7 @@ jobs:
    File: css/pages/insurance.css
    Version: v103.0.39
    Batch: B30-3-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/pages/insurance.css === -->
 
@@ -2621,7 +2621,7 @@ jobs:
 
 ## 📄 ./css/theme.css
 
-```css
+~~~css
 /* ============================================
    theme.css — 家庭暖陽主題（Tailwind 色板 v103.0.41）
    ============================================
@@ -2844,7 +2844,7 @@ button { font-family: inherit; cursor: pointer; }
    File: css/theme.css
    Version: v103.0.41
    Batch: B30-3d
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/theme.css === -->
 
@@ -2852,7 +2852,7 @@ button { font-family: inherit; cursor: pointer; }
 
 ## 📄 ./css/utilities.css
 
-```css
+~~~css
 /* ============================================
    utilities.css — 全站工具類樣式（v103.0.39）
    -------------------------------------------------
@@ -3133,7 +3133,7 @@ button { font-family: inherit; cursor: pointer; }
    File: css/utilities.css
    Version: v103.0.39
    Batch: B30-3-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./css/utilities.css === -->
 
@@ -3141,7 +3141,7 @@ button { font-family: inherit; cursor: pointer; }
 
 ## 📄 ./finance-overview.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -3218,7 +3218,7 @@ button { font-family: inherit; cursor: pointer; }
      File: finance-overview.html
      Version: v103.0.29
      Batch: B26-3.2
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./finance-overview.html === -->
 
@@ -3226,7 +3226,7 @@ button { font-family: inherit; cursor: pointer; }
 
 ## 📄 ./functions/api/[[path]].js
 
-```js
+~~~js
 // ============================================
 // [[path]].js — API 路由總管 (舊版)
 // ============================================
@@ -3303,7 +3303,7 @@ export async function onRequestPost(context) {
 F: functions/api/[[path]].js
 V: 1792900000
 W: ai-system-20261023-010#1
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./functions/api/[[path]].js === -->
 
@@ -3311,7 +3311,7 @@ W: ai-system-20261023-010#1
 
 ## 📄 ./functions/api/_admin.js
 
-```js
+~~~js
 // ============================================
 // _admin.js — 平台管理 lib（v103.0.22）
 // 位置：functions/api/_admin.js
@@ -3772,7 +3772,7 @@ function _buildItemsWithCategoryId(items, baseTs) {
    File: functions/api/_admin.js
    Version: v103.0.22
    Batch: B25-6
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./functions/api/_admin.js === -->
 
@@ -3780,7 +3780,7 @@ function _buildItemsWithCategoryId(items, baseTs) {
 
 ## 📄 ./functions/api/_bank.js
 
-```js
+~~~js
 // ============================================
 // _bank.js — 銀行 lib（v103.0.2）
 // 位置：functions/api/_bank.js
@@ -4135,7 +4135,7 @@ async function _cleanupSourceRef({ familyId, bankId, txnId, txn, token }) {
   }
 
   return null;
-}```
+}~~~
 
 <!-- === FILE END: ./functions/api/_bank.js === -->
 
@@ -4143,7 +4143,7 @@ async function _cleanupSourceRef({ familyId, bankId, txnId, txn, token }) {
 
 ## 📄 ./functions/api/_config.js
 
-```js
+~~~js
 // ============================================
 // _config.js — Firebase REST 設定（v103.0.45）
 // 位置：functions/api/_config.js
@@ -4285,7 +4285,7 @@ export function jsonResponse(data, status = 200) {
    File: functions/api/_config.js
    Version: v103.0.45
    Batch: B30-5
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./functions/api/_config.js === -->
 
@@ -4293,7 +4293,7 @@ export function jsonResponse(data, status = 200) {
 
 ## 📄 ./functions/api/_entity.js
 
-```js
+~~~js
 // ============================================
 // _entity.js — 統一實體 CRUD 端點（v1.0.2）
 // 位置：functions/api/_entity.js
@@ -4531,7 +4531,7 @@ function _normalizeExtra(entityType, extra) {
    Version: 1791901060
    Batch: B34-4
    Writer: A20261013-004#087
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./functions/api/_entity.js === -->
 
@@ -4539,7 +4539,7 @@ function _normalizeExtra(entityType, extra) {
 
 ## 📄 ./functions/api/_family.js
 
-```js
+~~~js
 // ============================================
 // _family.js — 家庭相關 lib（v103.0.2）
 // 位置：functions/api/_family.js
@@ -4948,7 +4948,7 @@ async function _signInWithPassword(email, password) {
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
-}```
+}~~~
 
 <!-- === FILE END: ./functions/api/_family.js === -->
 
@@ -4956,7 +4956,7 @@ async function _signInWithPassword(email, password) {
 
 ## 📄 ./functions/api/_helpers.js
 
-```js
+~~~js
 // ============================================
 // _helpers.js — API 共用輔助（v103.0.44）
 // 位置：functions/api/_helpers.js
@@ -5215,7 +5215,7 @@ export function buildLinkedKey(policyId) {
    File: functions/api/_helpers.js
    Version: v103.0.44
    Batch: B30-5
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./functions/api/_helpers.js === -->
 
@@ -5223,7 +5223,7 @@ export function buildLinkedKey(policyId) {
 
 ## 📄 ./functions/api/_insurance.js
 
-```js
+~~~js
 // _insurance.js — 保險同步 lib（v103.0.21）
 import { dbGet, dbPut, dbDelete } from './_config.js';
 import { errorResponse, handleError, successResponse, requireFields, roundInt, buildLinkedKey, authenticate } from './_helpers.js';
@@ -5406,7 +5406,7 @@ function _findDoneStatus(statuses, category) {
    File: functions/api/_insurance.js
    Version: v103.0.21
    Batch: B23
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./functions/api/_insurance.js === -->
 
@@ -5414,7 +5414,7 @@ function _findDoneStatus(statuses, category) {
 
 ## 📄 ./functions/api/_personal.js
 
-```js
+~~~js
 // ============================================
 // _personal.js — 個人收入 / 代墊 lib（v103.0.2）
 // 位置：functions/api/_personal.js
@@ -5663,7 +5663,7 @@ async function _resolveOwnMemberId(familyId, uid, token) {
   } catch (e) { /* noop */ }
 
   return '';
-}```
+}~~~
 
 <!-- === FILE END: ./functions/api/_personal.js === -->
 
@@ -5671,7 +5671,7 @@ async function _resolveOwnMemberId(familyId, uid, token) {
 
 ## 📄 ./functions/api/_platform.js
 
-```js
+~~~js
 // ============================================
 // _platform.js — 平台設定 lib（v103.0.2）
 // 位置：functions/api/_platform.js
@@ -5861,7 +5861,7 @@ function _toInt(v, fallback) {
   const n = Number(v);
   if (isNaN(n) || n < 0) return fallback;
   return Math.floor(n);
-}```
+}~~~
 
 <!-- === FILE END: ./functions/api/_platform.js === -->
 
@@ -5869,7 +5869,7 @@ function _toInt(v, fallback) {
 
 ## 📄 ./functions/api/_summary.js
 
-```js
+~~~js
 // ============================================
 // _summary.js — 摘要 / 年度 / 結算 lib（v103.0.2）
 // 位置：functions/api/_summary.js
@@ -6355,7 +6355,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
   });
 
   return total;
-}```
+}~~~
 
 <!-- === FILE END: ./functions/api/_summary.js === -->
 
@@ -6363,7 +6363,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
 
 ## 📄 ./index.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -6422,7 +6422,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
      File: index.html
      Version: v103.0.32
      Batch: B26-6
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./index.html === -->
 
@@ -6430,7 +6430,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
 
 ## 📄 ./input-center.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -6505,7 +6505,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
      Version: 1792200000
      Batch: B35-0
      Writer: A20261016-001#002
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./input-center.html === -->
 
@@ -6513,7 +6513,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
 
 ## 📄 ./insurance.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -6603,7 +6603,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
      File: insurance.html
      Version: v103.0.29
      Batch: B26-3.2
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./insurance.html === -->
 
@@ -6611,7 +6611,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
 
 ## 📄 ./js/admin/admin.js
 
-```js
+~~~js
 // ============================================
 // admin.js — 平台管理頁面入口（前端）
 // 位置：js/admin/admin.js
@@ -7306,7 +7306,7 @@ function _formatTimestamp(ts) {
    Version: 1792620000
    Batch: B34-5
    Writer: ai-system-20261021-005#1
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/admin/admin.js === -->
 
@@ -7314,7 +7314,7 @@ function _formatTimestamp(ts) {
 
 ## 📄 ./js/admin/platform-defaults.js
 
-```js
+~~~js
 // ============================================
 // platform-defaults.js — 平台預設資料庫（v103.0.2）
 // 位置：js/admin/platform-defaults.js
@@ -8461,7 +8461,7 @@ function _destroy() {
   }
 
   document.getElementById(EDIT_MODAL_ID)?.remove();
-}```
+}~~~
 
 <!-- === FILE END: ./js/admin/platform-defaults.js === -->
 
@@ -8469,7 +8469,7 @@ function _destroy() {
 
 ## 📄 ./js/blocks/detail-block.js
 
-```js
+~~~js
 // ============================================
 // detail-block.js — 明細展開區 Block（v103.0.0）
 // 位置：js/blocks/detail-block.js
@@ -8612,7 +8612,7 @@ function _resolveTitle(block, ctx, row) {
   if (row.title) return String(row.title);
   return '';
 }
-```
+~~~
 
 <!-- === FILE END: ./js/blocks/detail-block.js === -->
 
@@ -8620,7 +8620,7 @@ function _resolveTitle(block, ctx, row) {
 
 ## 📄 ./js/blocks/filter-block.js
 
-```js
+~~~js
 // ============================================
 // filter-block.js — 篩選列區 Block（v103.0.0）
 // 位置：js/blocks/filter-block.js
@@ -8803,7 +8803,7 @@ function _setFilter(ctx, bindPath, key, value) {
     console.error('[filter-block] 寫入 state 失敗：', err);
   }
 }
-```
+~~~
 
 <!-- === FILE END: ./js/blocks/filter-block.js === -->
 
@@ -8811,7 +8811,7 @@ function _setFilter(ctx, bindPath, key, value) {
 
 ## 📄 ./js/blocks/form-block.js
 
-```js
+~~~js
 // ============================================
 // form-block.js — 表單 Modal 區 Block（v103.0.12）
 // 位置：js/blocks/form-block.js
@@ -8978,7 +8978,7 @@ function _resolveAllRows(block, ctx) {
   }
   if (Array.isArray(block.allRows)) return block.allRows;
   return [];
-}```
+}~~~
 
 <!-- === FILE END: ./js/blocks/form-block.js === -->
 
@@ -8986,7 +8986,7 @@ function _resolveAllRows(block, ctx) {
 
 ## 📄 ./js/blocks/list-block.js
 
-```js
+~~~js
 // list-block.js — 列表區（v103.0.18）
 import { esc } from '../lib/dom.js';
 import { formatCellValue } from '../lib/format.js';
@@ -9143,7 +9143,7 @@ function _resolveColumns(block, key) {
 function _resolveView(block, ctx) {
   if (block.view === 'table' || block.view === 'card') return block.view;
   return AppState.getCurrentView() === 'card' ? 'card' : 'table';
-}```
+}~~~
 
 <!-- === FILE END: ./js/blocks/list-block.js === -->
 
@@ -9151,7 +9151,7 @@ function _resolveView(block, ctx) {
 
 ## 📄 ./js/blocks/stats-block.js
 
-```js
+~~~js
 // stats-block.js — 統計卡區（v103.0.18）
 import { esc } from '../lib/dom.js';
 import { resolveExpr } from '../engines/render-engine.js';
@@ -9256,7 +9256,7 @@ function _resolveDisplayMode(mode) {
 function _debounce(fn, wait) {
   let t = null;
   return function (...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), wait); };
-}```
+}~~~
 
 <!-- === FILE END: ./js/blocks/stats-block.js === -->
 
@@ -9264,7 +9264,7 @@ function _debounce(fn, wait) {
 
 ## 📄 ./js/config/app-config.js
 
-```js
+~~~js
 // ============================================
 // app-config.js — 平台預設 + 家庭覆蓋設定（v103.0.22）
 // 位置：js/config/app-config.js
@@ -9579,7 +9579,7 @@ function _notifyAll() {
    File: js/config/app-config.js
    Version: v103.0.22
    Batch: B25-5
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/app-config.js === -->
 
@@ -9587,7 +9587,7 @@ function _notifyAll() {
 
 ## 📄 ./js/config/column-registry.js
 
-```js
+~~~js
 // column-registry.js — 表格欄位 SSOT（v103.0.35）
 // v103.0.35（B34-4）：
 //   ✅ 加 codeList 欄位定義
@@ -9956,7 +9956,7 @@ export function getColumnsWith(key, ex = []) {
    Version: 1791901480
    Batch: B34-4
    Writer: A20261013-004#094
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/column-registry.js === -->
 
@@ -9964,7 +9964,7 @@ export function getColumnsWith(key, ex = []) {
 
 ## 📄 ./js/config/constants.js
 
-```js
+~~~js
 // ============================================
 // constants.js — 全站常數集中管理（v103.0.39）
 // 位置：js/config/constants.js
@@ -10527,7 +10527,7 @@ export function getDbLabel() {
    Version: 1791901300
    Batch: B34-4
    Writer: A20261013-004#091
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/constants.js === -->
 
@@ -10535,7 +10535,7 @@ export function getDbLabel() {
 
 ## 📄 ./js/config/entity-registry.js
 
-```js
+~~~js
 // ============================================
 // entity-registry.js — 名稱解析 SSOT（v103.0.22）
 // 位置：js/config/entity-registry.js
@@ -10677,7 +10677,7 @@ export function resolveEntityName(entityKey, id, fallback = '') {
    File: js/config/entity-registry.js
    Version: v103.0.22
    Batch: B25-4
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/entity-registry.js === -->
 
@@ -10685,7 +10685,7 @@ export function resolveEntityName(entityKey, id, fallback = '') {
 
 ## 📄 ./js/config/firebase-config.js
 
-```js
+~~~js
 // ============================================
 // firebase-config.js — Firebase 初始化設定（v103.0.38）
 // 位置：js/config/firebase-config.js
@@ -10738,7 +10738,7 @@ export const db = getDatabase(app);
    File: js/config/firebase-config.js
    Version: v103.0.38
    Batch: B30-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/firebase-config.js === -->
 
@@ -10746,7 +10746,7 @@ export const db = getDatabase(app);
 
 ## 📄 ./js/config/label-registry.js
 
-```js
+~~~js
 // ============================================
 // label-registry.js — 顯示文字 SSOT（v103.0.0）
 // 位置：js/config/label-registry.js
@@ -10979,7 +10979,7 @@ export function getGroup(groupName) {
   if (!group || typeof group !== 'object') return {};
   return { ...group };
 }
-```
+~~~
 
 <!-- === FILE END: ./js/config/label-registry.js === -->
 
@@ -10987,7 +10987,7 @@ export function getGroup(groupName) {
 
 ## 📄 ./js/config/page-metadata-registry.js
 
-```js
+~~~js
 // ============================================
 // page-metadata-registry.js — 頁面 metadata 預設（v103.0.34）
 // 位置：js/config/page-metadata-registry.js
@@ -11090,7 +11090,7 @@ export function listPages() {
    File: js/config/page-metadata-registry.js
    Version: v103.0.34
    Batch: B29-5a
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/config/page-metadata-registry.js === -->
 
@@ -11098,7 +11098,7 @@ export function listPages() {
 
 ## 📄 ./js/config/status-registry.js
 
-```js
+~~~js
 // ============================================
 // status-registry.js — 狀態系統 SSOT（v103.0.0）
 // 位置：js/config/status-registry.js
@@ -11320,7 +11320,7 @@ export function isPending(raw) {
 export function isSkipped(raw) {
   return normalize(raw) === STATUS.SKIPPED;
 }
-```
+~~~
 
 <!-- === FILE END: ./js/config/status-registry.js === -->
 
@@ -11328,7 +11328,7 @@ export function isSkipped(raw) {
 
 ## 📄 ./js/core/api.js
 
-```js
+~~~js
 // ============================================
 // api.js — Cloudflare Functions 呼叫封裝（v103.0.23）
 // 位置：js/core/api.js
@@ -11716,7 +11716,7 @@ export const api = {
    Version: 1791900880
    Batch: B34-4
    Writer: A20261013-004#082
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/core/api.js === -->
 
@@ -11724,7 +11724,7 @@ export const api = {
 
 ## 📄 ./js/core/auth-guard.js
 
-```js
+~~~js
 // ============================================
 // auth-guard.js — 路由守衛（v103.0.12）
 // 位置：js/core/auth-guard.js
@@ -11971,7 +11971,7 @@ export function isFamilyOwner() {
    Version: v103.0.12
    Batch: B31-1
    ═══════════════════════════════════════════ */
-```
+~~~
 
 <!-- === FILE END: ./js/core/auth-guard.js === -->
 
@@ -11979,7 +11979,7 @@ export function isFamilyOwner() {
 
 ## 📄 ./js/core/auth.js
 
-```js
+~~~js
 // ============================================
 // auth.js — 自訂帳號登入 / 登出 封裝（v103.0.0）
 // 位置：js/core/auth.js
@@ -12093,7 +12093,7 @@ export function isSuperAdmin(user) {
    匯出常數（給其他模組使用）
    ============================================ */
 export { SUPERADMIN_DOMAIN, SUPERADMIN_EMAIL };
-```
+~~~
 
 <!-- === FILE END: ./js/core/auth.js === -->
 
@@ -12101,7 +12101,7 @@ export { SUPERADMIN_DOMAIN, SUPERADMIN_EMAIL };
 
 ## 📄 ./js/core/db.js
 
-```js
+~~~js
 // db.js — Firebase RTDB 讀寫封裝（v103.0.37）
 // v103.0.37（B35-1）：
 //   ✅ getFundSnapshotListOnce 每筆附 _rawPath（實際儲存路徑）
@@ -12980,7 +12980,7 @@ export async function saveSidebarOrder(order) {
    Version: 1792203600
    Batch: B35-1
    Writer: A20261016-001#003
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/core/db.js === -->
 
@@ -12988,7 +12988,7 @@ export async function saveSidebarOrder(order) {
 
 ## 📄 ./js/core/debug.js
 
-```js
+~~~js
 // ============================================
 // debug.js — 手機除錯工具（v103.0.14）
 // 位置：js/core/debug.js
@@ -13113,7 +13113,7 @@ function _loadScript() {
 }
 
 export const disableDebug = forceDisableDebug;
-export const enableDebug = forceEnableDebug;```
+export const enableDebug = forceEnableDebug;~~~
 
 <!-- === FILE END: ./js/core/debug.js === -->
 
@@ -13121,7 +13121,7 @@ export const enableDebug = forceEnableDebug;```
 
 ## 📄 ./js/core/pwa.js
 
-```js
+~~~js
 // ============================================
 // pwa.js — PWA 初始化（v103.0.0）
 // 位置：js/core/pwa.js
@@ -13283,7 +13283,7 @@ export async function checkForUpdate() {
 export function getSWRegistration() {
   return _swRegistration;
 }
-```
+~~~
 
 <!-- === FILE END: ./js/core/pwa.js === -->
 
@@ -13291,7 +13291,7 @@ export function getSWRegistration() {
 
 ## 📄 ./js/core/state.js
 
-```js
+~~~js
 // ============================================
 // state.js — 全域狀態中心（v103.0.42）
 // 位置：js/core/state.js
@@ -13561,7 +13561,7 @@ export const AppState = {
    File: js/core/state.js
    Version: v103.0.42
    Batch: B30-3b
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/core/state.js === -->
 
@@ -13569,7 +13569,7 @@ export const AppState = {
 
 ## 📄 ./js/core/utils.js
 
-```js
+~~~js
 // ============================================
 // utils.js — 通用工具（v103.0.22）
 // 位置：js/core/utils.js
@@ -13788,7 +13788,7 @@ export function makeSortFn(sortKey, order = 'asc') {
    File: js/core/utils.js
    Version: v103.0.22
    Batch: B25-4
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/core/utils.js === -->
 
@@ -13796,7 +13796,7 @@ export function makeSortFn(sortKey, order = 'asc') {
 
 ## 📄 ./js/engines/data-engine.js
 
-```js
+~~~js
 // ============================================
 // data-engine.js — 資料引擎（v103.0.11）
 // 位置：js/engines/data-engine.js
@@ -14097,7 +14097,7 @@ export function setNestedValue(obj, path, value) {
     return acc[key];
   }, obj);
   target[last] = value;
-}```
+}~~~
 
 <!-- === FILE END: ./js/engines/data-engine.js === -->
 
@@ -14105,7 +14105,7 @@ export function setNestedValue(obj, path, value) {
 
 ## 📄 ./js/engines/page-engine.js
 
-```js
+~~~js
 // ============================================
 // page-engine.js — 頁面引擎（v103.0.36）
 // 位置：js/engines/page-engine.js
@@ -14452,7 +14452,7 @@ function _destroy(ctx) {
    File: js/engines/page-engine.js
    Version: v103.0.36
    Batch: B29-8
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/engines/page-engine.js === -->
 
@@ -14460,7 +14460,7 @@ function _destroy(ctx) {
 
 ## 📄 ./js/engines/render-engine.js
 
-```js
+~~~js
 // ============================================
 // render-engine.js — 渲染引擎（v103.0.0）
 // 位置：js/engines/render-engine.js
@@ -14652,7 +14652,7 @@ export function collectBlockDeps(block) {
 
   return { derived, state };
 }
-```
+~~~
 
 <!-- === FILE END: ./js/engines/render-engine.js === -->
 
@@ -14660,7 +14660,7 @@ export function collectBlockDeps(block) {
 
 ## 📄 ./js/entity/entity-definitions.js
 
-```js
+~~~js
 // entity-definitions.js — 實體表單定義 SSOT（v103.0.27）
 // v103.0.27（B34-4）：
 //   ✅ 各 select 欄位加 plusEntity / plusValueKey（D-029 / Q164 B / Q165 A）
@@ -15020,7 +15020,7 @@ function _getPeriodRange(fy, fm, pi) {
    Version: 1791901900
    Batch: B34-4
    Writer: A20261013-004#102
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/entity/entity-definitions.js === -->
 
@@ -15028,7 +15028,7 @@ function _getPeriodRange(fy, fm, pi) {
 
 ## 📄 ./js/entity/entity-funds-allocation.js
 
-```js
+~~~js
 // entity-funds-allocation.js — 保單關聯基金編輯（v103.0.22）
 // v103.0.22（B25-2）：
 //   ✅ R1 修正：選擇基金 Modal 走 ui/modal（openModal + closeModal）
@@ -15200,7 +15200,7 @@ export function renderFundsAllocationField(root, initialAlloc, policyType, opts 
    File: js/entity/entity-funds-allocation.js
    Version: v103.0.22
    Batch: B25-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/entity/entity-funds-allocation.js === -->
 
@@ -15208,7 +15208,7 @@ export function renderFundsAllocationField(root, initialAlloc, policyType, opts 
 
 ## 📄 ./js/entity/entity-helpers.js
 
-```js
+~~~js
 // ============================================
 // entity-helpers.js — 通用實體 CRUD 輔助（v103.0.25）
 // 位置：js/entity/entity-helpers.js
@@ -15569,7 +15569,7 @@ export function isReservedId(id) {
    Version: 1791902740
    Batch: B34-4
    Writer: A20261013-004#131
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/entity/entity-helpers.js === -->
 
@@ -15577,7 +15577,7 @@ export function isReservedId(id) {
 
 ## 📄 ./js/entity/entity-modal.js
 
-```js
+~~~js
 // entity-modal.js — 通用實體編輯 Modal（v103.0.24）
 // v103.0.24（B34-4）：
 //   ✅ createEntity / updateEntity 回傳 { id, code }（D-080）
@@ -15748,7 +15748,7 @@ function _ensureModal() {
    Version: 1791901240
    Batch: B34-4
    Writer: A20261013-004#090
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/entity/entity-modal.js === -->
 
@@ -15756,7 +15756,7 @@ function _ensureModal() {
 
 ## 📄 ./js/entity/entity-resolvers.js
 
-```js
+~~~js
 // ============================================
 // entity-resolvers.js — Entity 欄位顯示 SSOT（v103.0.22）
 // 位置：js/entity/entity-resolvers.js
@@ -15856,7 +15856,7 @@ export function getEntityResolvers(entityKey) {
    File: js/entity/entity-resolvers.js
    Version: v103.0.22
    Batch: B25-4
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/entity/entity-resolvers.js === -->
 
@@ -15864,7 +15864,7 @@ export function getEntityResolvers(entityKey) {
 
 ## 📄 ./js/layout/app-shell.js
 
-```js
+~~~js
 // ============================================
 // app-shell.js — App Shell 初始化（v103.0.9）
 // 位置：js/layout/app-shell.js
@@ -16009,7 +16009,7 @@ export function destroyApp() {
 
   AppState.destroy();
   _initialized = false;
-}```
+}~~~
 
 <!-- === FILE END: ./js/layout/app-shell.js === -->
 
@@ -16017,7 +16017,7 @@ export function destroyApp() {
 
 ## 📄 ./js/layout/navbar.js
 
-```js
+~~~js
 // ============================================
 // navbar.js — 頂部導覽列（v103.0.42）
 // 位置：js/layout/navbar.js
@@ -16191,7 +16191,7 @@ export function destroyNavbar() {
    File: js/layout/navbar.js
    Version: v103.0.42
    Batch: B30-3b
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/layout/navbar.js === -->
 
@@ -16199,7 +16199,7 @@ export function destroyNavbar() {
 
 ## 📄 ./js/layout/sidebar.js
 
-```js
+~~~js
 // ============================================
 // sidebar.js — 左側導覽選單（v103.0.31）
 // 位置：js/layout/sidebar.js
@@ -16488,7 +16488,7 @@ function _ensureGroupOpenFor(set, activeHref) {
    File: js/layout/sidebar.js
    Version: v103.0.31
    Batch: B26-4
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/layout/sidebar.js === -->
 
@@ -16496,7 +16496,7 @@ function _ensureGroupOpenFor(set, activeHref) {
 
 ## 📄 ./js/lib/async.js
 
-```js
+~~~js
 // ============================================
 // async.js — 非同步輔助（v103.0.2）
 // 位置：js/lib/async.js
@@ -16578,7 +16578,7 @@ export async function safe(fn, fallback = null) {
     console.warn('[async.safe]', err);
     return fallback;
   }
-}```
+}~~~
 
 <!-- === FILE END: ./js/lib/async.js === -->
 
@@ -16586,7 +16586,7 @@ export async function safe(fn, fallback = null) {
 
 ## 📄 ./js/lib/bank.js
 
-```js
+~~~js
 // ============================================
 // bank.js — 銀行業務輔助（v103.0.22）
 // 位置：js/lib/bank.js
@@ -16895,7 +16895,7 @@ export function filterTransactionsByMonth(transactions, year, month) {
    File: js/lib/bank.js
    Version: v103.0.22
    Batch: B25-4
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/bank.js === -->
 
@@ -16903,7 +16903,7 @@ export function filterTransactionsByMonth(transactions, year, month) {
 
 ## 📄 ./js/lib/code-registry.js
 
-```js
+~~~js
 // ============================================
 // code-registry.js — 編號生成 SSOT（v1.0.0）
 // 位置：js/lib/code-registry.js
@@ -17094,7 +17094,7 @@ async function _fetchExistingList(entityType) {
    Version: 1791900400
    Batch: B34-4
    Writer: A20261013-004#076
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/code-registry.js === -->
 
@@ -17102,7 +17102,7 @@ async function _fetchExistingList(entityType) {
 
 ## 📄 ./js/lib/dom.js
 
-```js
+~~~js
 // ============================================
 // dom.js — DOM 操作 SSOT（v103.0.0）
 // 位置：js/lib/dom.js
@@ -17241,7 +17241,7 @@ export function el(tag, attrs = {}, children = []) {
 
   return node;
 }
-```
+~~~
 
 <!-- === FILE END: ./js/lib/dom.js === -->
 
@@ -17249,7 +17249,7 @@ export function el(tag, attrs = {}, children = []) {
 
 ## 📄 ./js/lib/expense-modal.js
 
-```js
+~~~js
 // ============================================
 // expense-modal.js — 支出編輯 Modal（v103.0.23）
 // v103.0.23（B34-4）：
@@ -17427,7 +17427,7 @@ export async function openExpenseModal(opts = {}) {
    Version: 1791902020
    Batch: B34-4
    Writer: A20261013-004#103
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/expense-modal.js === -->
 
@@ -17435,7 +17435,7 @@ export async function openExpenseModal(opts = {}) {
 
 ## 📄 ./js/lib/filter-sort.js
 
-```js
+~~~js
 // filter-sort.js — 通用篩選 / 排序（v103.0.18）
 
 /**
@@ -17483,7 +17483,7 @@ export function applySort(list, mode, modes = {}) {
   const fn = modes[mode] || builtin[mode];
   if (fn) arr.sort(fn);
   return arr;
-}```
+}~~~
 
 <!-- === FILE END: ./js/lib/filter-sort.js === -->
 
@@ -17491,7 +17491,7 @@ export function applySort(list, mode, modes = {}) {
 
 ## 📄 ./js/lib/format.js
 
-```js
+~~~js
 // ============================================
 // format.js — 格式化工具 SSOT（v103.0.0）
 // 位置：js/lib/format.js
@@ -17633,7 +17633,7 @@ export function formatTransactionCategory(category) {
 export function getCategoryBadgeClass(category) {
   return BANK_TXN_CATEGORY_BADGES[category] || 'badge-muted';
 }
-```
+~~~
 
 <!-- === FILE END: ./js/lib/format.js === -->
 
@@ -17641,7 +17641,7 @@ export function getCategoryBadgeClass(category) {
 
 ## 📄 ./js/lib/id-resolver.js
 
-```js
+~~~js
 // ============================================
 // id-resolver.js — 編號查詢 SSOT（v1.0.0）
 // 位置：js/lib/id-resolver.js
@@ -17784,7 +17784,7 @@ async function _getAllExpensesSafe() {
    Version: 1791900460
    Batch: B34-4
    Writer: A20261013-004#076
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/id-resolver.js === -->
 
@@ -17792,7 +17792,7 @@ async function _getAllExpensesSafe() {
 
 ## 📄 ./js/lib/income-modal.js
 
-```js
+~~~js
 // ============================================
 // income-modal.js — 收入 Modal（v103.0.19）
 // v103.0.19（B34-4）：
@@ -17909,7 +17909,7 @@ export async function openPersonalIncomeModal(opts = {}) {
    Version: 1791902080
    Batch: B34-4
    Writer: A20261013-004#103
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/income-modal.js === -->
 
@@ -17917,7 +17917,7 @@ export async function openPersonalIncomeModal(opts = {}) {
 
 ## 📄 ./js/lib/insurance.js
 
-```js
+~~~js
 // ============================================
 // insurance.js — 保險計算模組（v103.0.23）
 // 位置：js/lib/insurance.js
@@ -18236,7 +18236,7 @@ export function calcFundCostFromPayments(payments) {
    File: js/lib/insurance.js
    Version: v103.0.23
    Batch: B30-7
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/insurance.js === -->
 
@@ -18244,7 +18244,7 @@ export function calcFundCostFromPayments(payments) {
 
 ## 📄 ./js/lib/lifecycle.js
 
-```js
+~~~js
 // ============================================
 // lifecycle.js — 生命週期清理註冊器（v103.0.0）
 // 位置：js/lib/lifecycle.js
@@ -18350,7 +18350,7 @@ export function createCleanupRegistry() {
     },
   };
 }
-```
+~~~
 
 <!-- === FILE END: ./js/lib/lifecycle.js === -->
 
@@ -18358,7 +18358,7 @@ export function createCleanupRegistry() {
 
 ## 📄 ./js/lib/merge.js
 
-```js
+~~~js
 // ============================================
 // merge.js — 結算資料合併邏輯（v103.0.23）
 // 位置：js/lib/merge.js
@@ -18572,7 +18572,7 @@ function _isDoneStatus(statusName, category) {
    Version: v103.0.23
    Batch: B31-1
    ═══════════════════════════════════════════ */
-```
+~~~
 
 <!-- === FILE END: ./js/lib/merge.js === -->
 
@@ -18580,7 +18580,7 @@ function _isDoneStatus(statusName, category) {
 
 ## 📄 ./js/lib/page-controls.js
 
-```js
+~~~js
 // ============================================
 // page-controls.js — 統一控制列渲染（v103.0.34）
 // 位置：js/lib/page-controls.js
@@ -18940,7 +18940,7 @@ function _bindAll(container, items) {
    File: js/lib/page-controls.js
    Version: v103.0.34
    Batch: B29-1a
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/lib/page-controls.js === -->
 
@@ -18948,7 +18948,7 @@ function _bindAll(container, items) {
 
 ## 📄 ./js/lib/registry.js
 
-```js
+~~~js
 // ============================================
 // registry.js — Registry 統一初始化（v103.0.0）
 // 位置：js/lib/registry.js
@@ -19018,7 +19018,7 @@ export function destroyAllRegistries() {
 export function isAllRegistriesReady() {
   return _initialized && isEntityRegistryInitialized();
 }
-```
+~~~
 
 <!-- === FILE END: ./js/lib/registry.js === -->
 
@@ -19026,7 +19026,7 @@ export function isAllRegistriesReady() {
 
 ## 📄 ./js/pages/annual-report.js
 
-```js
+~~~js
 // annual-report.js — 年度報表（v103.0.29）
 // v103.0.29（B26-3.2）：
 //   ✅ export 移到 page-header 右側
@@ -19333,7 +19333,7 @@ function _exportCsv(ctx) {
    File: js/pages/annual-report.js
    Version: v103.0.29
    Batch: B26-3.2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/annual-report.js === -->
 
@@ -19341,7 +19341,7 @@ function _exportCsv(ctx) {
 
 ## 📄 ./js/pages/code-list.js
 
-```js
+~~~js
 // ============================================
 // code-list.js — 編號對照清單頁（v1.0.1）
 // 位置：js/pages/code-list.js
@@ -19603,7 +19603,7 @@ function _paint(ctx, allData) {
    Version: 1791902680
    Batch: B34-4
    Writer: A20261013-004#121
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/code-list.js === -->
 
@@ -19611,7 +19611,7 @@ function _paint(ctx, allData) {
 
 ## 📄 ./js/pages/dashboard.js
 
-```js
+~~~js
 // ============================================
 // dashboard.js — 總覽儀表板（v103.0.35 Page Schema）
 // 位置：js/pages/dashboard.js
@@ -19861,7 +19861,7 @@ function _computeAnnualOverview(allIncome, allExpenses, policies, currentYear) {
    File: js/pages/dashboard.js
    Version: v103.0.35
    Batch: B29-7b
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/dashboard.js === -->
 
@@ -19869,7 +19869,7 @@ function _computeAnnualOverview(allIncome, allExpenses, policies, currentYear) {
 
 ## 📄 ./js/pages/finance-overview.js
 
-```js
+~~~js
 // finance-overview.js — 銀行交易（v103.0.35）
 // v103.0.35（B29-7a）：
 //   ✅ 刪除 syncSubtitle（動態副標題）
@@ -20120,7 +20120,7 @@ function _filterTxns(txns, filters, year, month) {
    File: js/pages/finance-overview.js
    Version: v103.0.35
    Batch: B29-7a
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/finance-overview.js === -->
 
@@ -20128,7 +20128,7 @@ function _filterTxns(txns, filters, year, month) {
 
 ## 📄 ./js/pages/input-center.js
 
-```js
+~~~js
 // ============================================
 // input-center.js — 綜合輸入中心（v103.0.35）
 // ============================================
@@ -20316,7 +20316,7 @@ export default {
    Version: 1792200000
    Batch: B35-0
    Writer: A20261016-001#002
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/input-center.js === -->
 
@@ -20324,7 +20324,7 @@ export default {
 
 ## 📄 ./js/pages/insurance.js
 
-```js
+~~~js
 // insurance.js — 保險清單表（v103.0.37）
 // v103.0.37（B31-1）：
 //   ✅ 修正：payments 快取失效 — 改為訂閱 insurance_payments 節點
@@ -20613,7 +20613,7 @@ export default {
    Version: v103.0.37
    Batch: B31-1
    ═══════════════════════════════════════════ */
-```
+~~~
 
 <!-- === FILE END: ./js/pages/insurance.js === -->
 
@@ -20621,7 +20621,7 @@ export default {
 
 ## 📄 ./js/pages/member-report.js
 
-```js
+~~~js
 // member-report.js — 成員收支明細（v103.0.35）
 // v103.0.35（B29-7b）：
 //   ✅ 刪除 syncSubtitle（動態副標題）
@@ -20770,7 +20770,7 @@ function _buildStats(rows, year) {
    File: js/pages/member-report.js
    Version: v103.0.35
    Batch: B29-7b
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/member-report.js === -->
 
@@ -20778,7 +20778,7 @@ function _buildStats(rows, year) {
 
 ## 📄 ./js/pages/portfolio.js
 
-```js
+~~~js
 // ============================================
 // portfolio.js — 基金投資表（v103.0.34）
 // ============================================
@@ -21554,7 +21554,7 @@ function _buildStats(funds, policies) {
    Version: 1792207200
    Batch: B35-2
    Writer: A20261016-001#005
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/portfolio.js === -->
 
@@ -21562,7 +21562,7 @@ function _buildStats(funds, policies) {
 
 ## 📄 ./js/pages/settings.js
 
-```js
+~~~js
 // ============================================
 // settings.js — 系統設定（v103.0.36 Page Schema）
 // 位置：js/pages/settings.js
@@ -22155,7 +22155,7 @@ function _injectYearRangeCard(ctx) {
    Version: 1791901600
    Batch: B34-4
    Writer: A20261013-004#096
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/settings.js === -->
 
@@ -22163,7 +22163,7 @@ function _injectYearRangeCard(ctx) {
 
 ## 📄 ./js/pages/settlements.js
 
-```js
+~~~js
 // settlements.js — 結算清單（v103.0.35）
 // v103.0.35（B29-7a）：
 //   ✅ 刪除 syncSubtitle（動態副標題）
@@ -22603,7 +22603,7 @@ async function _openBankPickerModal(row) {
    File: js/pages/settlements.js
    Version: v103.0.35
    Batch: B29-7a
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/pages/settlements.js === -->
 
@@ -22611,7 +22611,7 @@ async function _openBankPickerModal(row) {
 
 ## 📄 ./js/shared/bank-account-manager.js
 
-```js
+~~~js
 // ============================================
 // bank-account-manager.js — 銀行帳號管理元件（v103.0.11）
 // 位置：js/shared/bank-account-manager.js
@@ -23096,7 +23096,7 @@ function _destroy() {
   _accounts = [];
   _listHandler = null;
   _containerId = '';
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/bank-account-manager.js === -->
 
@@ -23104,7 +23104,7 @@ function _destroy() {
 
 ## 📄 ./js/shared/column-settings.js
 
-```js
+~~~js
 // ============================================
 // column-settings.js — 表格欄位設定（v103.0.22）
 // 位置：js/shared/column-settings.js
@@ -23411,7 +23411,7 @@ export function initColumnSettings(options) {
    File: js/shared/column-settings.js
    Version: v103.0.22
    Batch: B25-2
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/shared/column-settings.js === -->
 
@@ -23419,7 +23419,7 @@ export function initColumnSettings(options) {
 
 ## 📄 ./js/shared/data-card.js
 
-```js
+~~~js
 // ============================================
 // data-card.js — 通用卡片渲染（v103.0.22）
 // v103.0.22（B25-3a）：
@@ -23571,7 +23571,7 @@ function _resolveEl(t) {
    File: js/shared/data-card.js
    Version: v103.0.22
    Batch: B25-3a
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/shared/data-card.js === -->
 
@@ -23579,7 +23579,7 @@ function _resolveEl(t) {
 
 ## 📄 ./js/shared/data-table.js
 
-```js
+~~~js
 // ============================================
 // data-table.js — 通用表格渲染（v103.0.34）
 // v103.0.34（B29-1c）：
@@ -23948,7 +23948,7 @@ function _resolveEl(t) {
    File: js/shared/data-table.js
    Version: v103.0.34
    Batch: B29-1c
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/shared/data-table.js === -->
 
@@ -23956,7 +23956,7 @@ function _resolveEl(t) {
 
 ## 📄 ./js/shared/date-helpers.js
 
-```js
+~~~js
 // ============================================
 // date-helpers.js — 全站共用年月下拉填充（v101）
 // 位置：js/shared/date-helpers.js
@@ -24116,7 +24116,7 @@ function _resolveElement(target) {
   if (typeof target === 'string') return document.getElementById(target);
   if (target instanceof HTMLElement) return target;
   return null;
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/date-helpers.js === -->
 
@@ -24124,7 +24124,7 @@ function _resolveElement(target) {
 
 ## 📄 ./js/shared/entity-list-page.js
 
-```js
+~~~js
 // ============================================
 // entity-list-page.js — 實體列表頁骨架（v103.0.16）
 // 位置：js/shared/entity-list-page.js
@@ -24277,7 +24277,7 @@ export function initEntityListPage(options) {
 
 export function initEntityListPages(configs = []) {
   return configs.map((cfg) => initEntityListPage(cfg));
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/entity-list-page.js === -->
 
@@ -24285,7 +24285,7 @@ export function initEntityListPages(configs = []) {
 
 ## 📄 ./js/shared/form-handler.js
 
-```js
+~~~js
 // ============================================
 // form-handler.js — 提交封裝（v103.0.11）
 // 位置：js/shared/form-handler.js
@@ -24368,7 +24368,7 @@ export function submitAndToast(action, message = '✅ 已儲存') {
  */
 export function submitSilent(action) {
   return handleSubmit({ action, silent: true });
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/form-handler.js === -->
 
@@ -24376,7 +24376,7 @@ export function submitSilent(action) {
 
 ## 📄 ./js/shared/listener-group.js
 
-```js
+~~~js
 // ============================================
 // listener-group.js — 訂閱管理（v103.0.11）
 // 位置：js/shared/listener-group.js
@@ -24478,7 +24478,7 @@ export function createPageListenerGroup(onDestroy) {
   };
 
   return group;
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/listener-group.js === -->
 
@@ -24486,7 +24486,7 @@ export function createPageListenerGroup(onDestroy) {
 
 ## 📄 ./js/shared/page-filter.js
 
-```js
+~~~js
 // ============================================
 // page-filter.js — 全站共用的頁面篩選欄（v103.0.11）
 // 位置：js/shared/page-filter.js
@@ -24668,7 +24668,7 @@ function collectFilters(root) {
 
 export function refreshPageFilter(instance) {
   if (instance && typeof instance.refresh === 'function') instance.refresh();
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/page-filter.js === -->
 
@@ -24676,7 +24676,7 @@ export function refreshPageFilter(instance) {
 
 ## 📄 ./js/shared/quick-summary.js
 
-```js
+~~~js
 // ============================================
 // quick-summary.js — 快速摘要卡（v103.0.12）
 // 位置：js/shared/quick-summary.js
@@ -25022,7 +25022,7 @@ export function buildRecentActivityData({ expenses = [], fixedExpenses = [], inc
     .sort((a, b) => b._ts - a._ts)
     .slice(0, limit)
     .map(({ _ts, ...rest }) => rest);
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/quick-summary.js === -->
 
@@ -25030,7 +25030,7 @@ export function buildRecentActivityData({ expenses = [], fixedExpenses = [], inc
 
 ## 📄 ./js/shared/select-helpers.js
 
-```js
+~~~js
 // ============================================
 // select-helpers.js — 全站共用下拉選項填充（v103.0.11）
 // 位置：js/shared/select-helpers.js
@@ -25189,7 +25189,7 @@ function _resolveElement(target) {
   if (typeof target === 'string') return document.getElementById(target);
   if (target instanceof HTMLElement) return target;
   return null;
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/select-helpers.js === -->
 
@@ -25197,7 +25197,7 @@ function _resolveElement(target) {
 
 ## 📄 ./js/shared/stats-cards.js
 
-```js
+~~~js
 // ============================================
 // stats-cards.js — 統計卡片渲染（v103.0.11）
 // 位置：js/shared/stats-cards.js
@@ -25423,7 +25423,7 @@ function _debounce(fn, wait) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), wait);
   };
-}```
+}~~~
 
 <!-- === FILE END: ./js/shared/stats-cards.js === -->
 
@@ -25431,7 +25431,7 @@ function _debounce(fn, wait) {
 
 ## 📄 ./js/shared/yearrange-card.js
 
-```js
+~~~js
 // ============================================
 // yearrange-card.js — 年份範圍卡（v103.0.1）
 // 位置：js/shared/yearrange-card.js
@@ -25664,7 +25664,7 @@ function _destroy() {
    Version: 1791902620
    Batch: B34-4
    Writer: A20261013-004#118
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/shared/yearrange-card.js === -->
 
@@ -25672,7 +25672,7 @@ function _destroy() {
 
 ## 📄 ./js/ui/collapsible.js
 
-```js
+~~~js
 // ============================================
 // collapsible.js — 可摺疊卡片（v103.0.0）
 // 位置：js/ui/collapsible.js
@@ -25794,7 +25794,7 @@ function _refreshIconsIn(container) {
     window.lucide.createIcons({ nameAttr: 'data-lucide' });
   } catch (e) { /* noop */ }
 }
-```
+~~~
 
 <!-- === FILE END: ./js/ui/collapsible.js === -->
 
@@ -25802,7 +25802,7 @@ function _refreshIconsIn(container) {
 
 ## 📄 ./js/ui/dropdown-plus.js
 
-```js
+~~~js
 // ============================================
 // dropdown-plus.js — 下拉旁「+ 號」按鈕（v1.0.0）
 // 位置：js/ui/dropdown-plus.js
@@ -25955,7 +25955,7 @@ export function attachPlusButton(selectEl, entityType, onCreated) {
    Version: 1791901780
    Batch: B34-4
    Writer: A20261013-004#100
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/ui/dropdown-plus.js === -->
 
@@ -25963,7 +25963,7 @@ export function attachPlusButton(selectEl, entityType, onCreated) {
 
 ## 📄 ./js/ui/form-builder.js
 
-```js
+~~~js
 // ============================================
 // form-builder.js — 通用動態表單建構器（v103.0.13）
 // 位置：js/ui/form-builder.js
@@ -26483,7 +26483,7 @@ function _validateRequired(fields, data, fieldIdMap) {
    Version: 1791901960
    Batch: B34-4
    Writer: A20261013-004#103
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/ui/form-builder.js === -->
 
@@ -26491,7 +26491,7 @@ function _validateRequired(fields, data, fieldIdMap) {
 
 ## 📄 ./js/ui/modal.js
 
-```js
+~~~js
 // ============================================
 // modal.js — Modal 開關 + 確認框 + 輕量輸入框（v103.0.24）
 // 位置：js/ui/modal.js
@@ -26827,7 +26827,7 @@ function _resolveElement(target) {
    Version: 1791901420
    Batch: B34-4
    Writer: A20261013-004#093
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/ui/modal.js === -->
 
@@ -26835,7 +26835,7 @@ function _resolveElement(target) {
 
 ## 📄 ./js/ui/tab-panel.js
 
-```js
+~~~js
 // ============================================
 // tab-panel.js — Tab 切換元件（v103.0.11）
 // 位置：js/ui/tab-panel.js
@@ -27003,7 +27003,7 @@ function _applyInitialState(tabs, activeKey) {
     panel.classList.toggle('active', isActive);
     panel.style.display = isActive ? 'block' : 'none';
   });
-}```
+}~~~
 
 <!-- === FILE END: ./js/ui/tab-panel.js === -->
 
@@ -27011,7 +27011,7 @@ function _applyInitialState(tabs, activeKey) {
 
 ## 📄 ./js/ui/toast.js
 
-```js
+~~~js
 // ============================================
 // toast.js — Toast 提示（v103.0.22）
 // 位置：js/ui/toast.js
@@ -27145,7 +27145,7 @@ function _getOrCreateContainer() {
    File: js/ui/toast.js
    Version: v103.0.22
    Batch: B25-5
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/ui/toast.js === -->
 
@@ -27153,7 +27153,7 @@ function _getOrCreateContainer() {
 
 ## 📄 ./js/ui/view-toggle.js
 
-```js
+~~~js
 // ============================================
 // view-toggle.js — 卡片 / 表格切換（v103.0.22）
 // 位置：js/ui/view-toggle.js
@@ -27318,7 +27318,7 @@ function _loadView(fullKey, defaultValue, validValues) {
    File: js/ui/view-toggle.js
    Version: v103.0.22
    Batch: B25-5
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./js/ui/view-toggle.js === -->
 
@@ -27326,7 +27326,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./login.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27412,7 +27412,7 @@ function _loadView(fullKey, defaultValue, validValues) {
     });
   </script>
 </body>
-</html>```
+</html>~~~
 
 <!-- === FILE END: ./login.html === -->
 
@@ -27420,7 +27420,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./manifest.json
 
-```json
+~~~json
 {
   "name": "家庭財務與固定供款管理",
   "short_name": "FAMILY.FIN",
@@ -27442,7 +27442,7 @@ function _loadView(fullKey, defaultValue, validValues) {
     }
   ]
 }
-```
+~~~
 
 <!-- === FILE END: ./manifest.json === -->
 
@@ -27450,7 +27450,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./member-report.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27519,7 +27519,7 @@ function _loadView(fullKey, defaultValue, validValues) {
      File: member-report.html
      Version: v103.0.29
      Batch: B26-3.2
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./member-report.html === -->
 
@@ -27527,14 +27527,14 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./meta.json
 
-```json
+~~~json
 {
   "domain": "W",
   "pkg_no": "90-old",
   "code": "old-webapp",
   "display": "家庭 webapp 舊版"
 }
-```
+~~~
 
 <!-- === FILE END: ./meta.json === -->
 
@@ -27542,7 +27542,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./portfolio.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27627,7 +27627,7 @@ function _loadView(fullKey, defaultValue, validValues) {
      File: portfolio.html
      Version: v103.0.29
      Batch: B26-3.2
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./portfolio.html === -->
 
@@ -27635,7 +27635,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./register.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27665,7 +27665,7 @@ function _loadView(fullKey, defaultValue, validValues) {
   </script>
 </body>
 </html>
-```
+~~~
 
 <!-- === FILE END: ./register.html === -->
 
@@ -27673,7 +27673,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./settings.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27791,7 +27791,7 @@ function _loadView(fullKey, defaultValue, validValues) {
      File: settings.html
      Version: v103.0.37
      Batch: B30-1
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./settings.html === -->
 
@@ -27799,7 +27799,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./settlements.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27862,7 +27862,7 @@ function _loadView(fullKey, defaultValue, validValues) {
      File: settlements.html
      Version: v103.0.34
      Batch: B29-4a
-     ═══════════════════════════════════════════ -->```
+     ═══════════════════════════════════════════ -->~~~
 
 <!-- === FILE END: ./settlements.html === -->
 
@@ -27870,7 +27870,7 @@ function _loadView(fullKey, defaultValue, validValues) {
 
 ## 📄 ./sw.js
 
-```js
+~~~js
 // ============================================
 // sw.js — Service Worker（v103.0.32）
 // 位置：sw.js
@@ -28072,6 +28072,6 @@ async function _networkFirst(request) {
    Version: 1792210800
    Batch: B35-3
    Writer: A20261016-001#006
-   ═══════════════════════════════════════════ */```
+   ═══════════════════════════════════════════ */~~~
 
 <!-- === FILE END: ./sw.js === -->

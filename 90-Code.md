@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:37 (HKT)
+> 生成時間：2026-11-17 07:56:32 (HKT)
 
 # 專案全程式碼包：AI-WEB-APP-Family
 
@@ -8,7 +8,7 @@
 
 ## 📄 ./.github/workflows/apply-patch.yml
 
-```yml
+~~~yml
 name: Apply Patch (Project)
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
 # F: AI-WEB-APP-Family/.github/workflows/apply-patch.yml
 # V: 1792358000
 # W: ai-system-20261019-010#088
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/apply-patch.yml === -->
 
@@ -59,7 +59,7 @@ jobs:
 
 ## 📄 ./.github/workflows/cleanup.yml
 
-```yml
+~~~yml
 # ============================================
 # cleanup.yml — 一鍵清空專案程式碼（保留骨架）
 # 用途：手動觸發，清空所有舊程式碼，為重構鋪路
@@ -127,7 +127,7 @@ jobs:
 # F: .github/workflows/cleanup.yml
 # V: 1792900100
 # W: ai-system-20261024-012#1
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/cleanup.yml === -->
 
@@ -135,7 +135,7 @@ jobs:
 
 ## 📄 ./.github/workflows/move-api.yml
 
-```yml
+~~~yml
 # ============================================
 # move-api.yml — 自動將 ./api 搬移至 ./functions/api
 # 用途：修正 Cloudflare Pages Functions 的目錄結構
@@ -187,7 +187,7 @@ jobs:
 # F: .github/workflows/move-api.yml
 # V: 1792900680
 # W: ai-system-20261024-012#59
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/move-api.yml === -->
 
@@ -195,7 +195,7 @@ jobs:
 
 ## 📄 ./.github/workflows/notify.yml
 
-```yml
+~~~yml
 # ============================================
 # notify.yml — 專案變更時通知 AI-infra
 # ============================================
@@ -226,7 +226,7 @@ jobs:
             -H "Authorization: token ${{ secrets.CROSS_REPO_PAT }}" \
             https://api.github.com/repos/tlee20860-dotcom/AI-infra/dispatches \
             -d '{"event_type":"project-updated"}'
-          echo "已通知 AI-infra 重新建置"```
+          echo "已通知 AI-infra 重新建置"~~~
 
 <!-- === FILE END: ./.github/workflows/notify.yml === -->
 
@@ -234,7 +234,7 @@ jobs:
 
 ## 📄 ./admin/admin.js
 
-```js
+~~~js
 // ============================================
 // admin.js — 平台管理（V2 重構版）
 // 位置：admin/admin.js
@@ -457,7 +457,7 @@ export default {
 F: admin/admin.js
 V: 1792901940
 W: webapp-20261025-001#42
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./admin/admin.js === -->
 
@@ -465,7 +465,7 @@ W: webapp-20261025-001#42
 
 ## 📄 ./config/app-config.js
 
-```js
+~~~js
 // ============================================
 // app-config.js — 平台與家庭設定合併（V2 重構版）
 // 位置：config/app-config.js
@@ -701,7 +701,7 @@ function _notifyAll() {
 F: config/app-config.js
 V: 1792900210
 W: ai-system-20261024-012#16
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./config/app-config.js === -->
 
@@ -709,7 +709,7 @@ W: ai-system-20261024-012#16
 
 ## 📄 ./config/columns.js
 
-```js
+~~~js
 // ============================================
 // columns.js — 表格欄位與解析器 SSOT（V2 重構版）
 // 位置：config/columns.js
@@ -975,7 +975,7 @@ export function getResolvers(key) {
 F: config/columns.js
 V: 1792901930
 W: webapp-20261025-001#41
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./config/columns.js === -->
 
@@ -983,7 +983,7 @@ W: webapp-20261025-001#41
 
 ## 📄 ./config/constants.js
 
-```js
+~~~js
 // ============================================
 // constants.js — 全站核心常數（V2 重構版）
 // 位置：config/constants.js
@@ -1134,7 +1134,7 @@ export function getSidebarGroupsByRole(role) {
 F: config/constants.js
 V: 1792900150
 W: ai-system-20261024-012#10
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./config/constants.js === -->
 
@@ -1142,7 +1142,7 @@ W: ai-system-20261024-012#10
 
 ## 📄 ./config/entity-registry.js
 
-```js
+~~~js
 // ============================================
 // entity-registry.js — 實體名稱解析 SSOT（V2 重構版）
 // 位置：config/entity-registry.js
@@ -1274,7 +1274,7 @@ export function getNameMap(type) {
 F: config/entity-registry.js
 V: 1792900190
 W: ai-system-20261024-012#14
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./config/entity-registry.js === -->
 
@@ -1282,7 +1282,7 @@ W: ai-system-20261024-012#14
 
 ## 📄 ./config/firebase.js
 
-```js
+~~~js
 // ============================================
 // firebase.js — Firebase 初始化與環境切換（V2 重構版）
 // 位置：config/firebase.js
@@ -1353,7 +1353,7 @@ export const db = getDatabase(app);
 F: config/firebase.js
 V: 1792900160
 W: ai-system-20261024-012#11
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./config/firebase.js === -->
 
@@ -1361,7 +1361,7 @@ W: ai-system-20261024-012#11
 
 ## 📄 ./config/state.js
 
-```js
+~~~js
 // ============================================
 // state.js — 全域狀態中心（V2 重構版）
 // 位置：config/state.js
@@ -1604,7 +1604,7 @@ export const AppState = {
 F: config/state.js
 V: 1792901760
 W: webapp-20261025-001#26
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./config/state.js === -->
 
@@ -1612,7 +1612,7 @@ W: webapp-20261025-001#26
 
 ## 📄 ./config/status.js
 
-```js
+~~~js
 // ============================================
 // status.js — 狀態系統 SSOT（V2 重構版）
 // 位置：config/status.js
@@ -1740,7 +1740,7 @@ export function badgeClass(raw) {
 F: config/status.js
 V: 1792900170
 W: ai-system-20261024-012#12
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./config/status.js === -->
 
@@ -1748,7 +1748,7 @@ W: ai-system-20261024-012#12
 
 ## 📄 ./css/app.css
 
-```css
+~~~css
 /* ============================================
    app.css — 全站排版與元件樣式（完全對齊舊版）
    ============================================ */
@@ -2057,7 +2057,7 @@ W: ai-system-20261024-012#12
 F: css/app.css
 V: 1792901300
 W: webapp-20261025-001#11
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./css/app.css === -->
 
@@ -2065,7 +2065,7 @@ W: webapp-20261025-001#11
 
 ## 📄 ./css/theme.css
 
-```css
+~~~css
 /* ============================================
    theme.css — 全局主題與變數（V2 重構版）
    位置：css/theme.css
@@ -2211,7 +2211,7 @@ button {
 F: css/theme.css
 V: 1792900140
 W: ai-system-20261024-012#9
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./css/theme.css === -->
 
@@ -2219,7 +2219,7 @@ W: ai-system-20261024-012#9
 
 ## 📄 ./db/index.js
 
-```js
+~~~js
 // ============================================
 // index.js — 資料層統一入口（V2 重構版）
 // 位置：db/index.js
@@ -2240,7 +2240,7 @@ export { getFamilyPath } from './read.js';
 F: db/index.js
 V: 1792900240
 W: ai-system-20261024-012#19
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./db/index.js === -->
 
@@ -2248,7 +2248,7 @@ W: ai-system-20261024-012#19
 
 ## 📄 ./db/read.js
 
-```js
+~~~js
 // ============================================
 // read.js — 資料讀取與監聽（V2 重構版）
 // 位置：db/read.js
@@ -2437,7 +2437,7 @@ export async function getFundSnapshotListOnce(fundId) {
 F: db/read.js
 V: 1792900220
 W: ai-system-20261024-012#17
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./db/read.js === -->
 
@@ -2445,7 +2445,7 @@ W: ai-system-20261024-012#17
 
 ## 📄 ./db/write.js
 
-```js
+~~~js
 // ============================================
 // write.js — 資料寫入與更新（V2 重構版）
 // 位置：db/write.js
@@ -2695,7 +2695,7 @@ export async function updateInsurancePolicy(id, p) {
 F: db/write.js
 V: 1792900270
 W: ai-system-20261024-012#22
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./db/write.js === -->
 
@@ -2703,7 +2703,7 @@ W: ai-system-20261024-012#22
 
 ## 📄 ./domain/api-client.js
 
-```js
+~~~js
 // ============================================
 // api-client.js — 統一 API 呼叫封裝（V2 重構版）
 // 位置：domain/api-client.js
@@ -2838,7 +2838,7 @@ export const api = {
 F: domain/api-client.js
 V: 1792900320
 W: ai-system-20261024-012#27
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/api-client.js === -->
 
@@ -2846,7 +2846,7 @@ W: ai-system-20261024-012#27
 
 ## 📄 ./domain/auth.js
 
-```js
+~~~js
 // ============================================
 // auth.js — 身分驗證與權限（V2 重構版）
 // 位置：domain/auth.js
@@ -3005,7 +3005,7 @@ export async function initAuthContext() {
 F: domain/auth.js
 V: 1792900310
 W: ai-system-20261024-012#26
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/auth.js === -->
 
@@ -3013,7 +3013,7 @@ W: ai-system-20261024-012#26
 
 ## 📄 ./domain/bank.js
 
-```js
+~~~js
 // ============================================
 // bank.js — 銀行業務輔助（V2 重構版）
 // 位置：domain/bank.js
@@ -3159,7 +3159,7 @@ export async function createTransactionForContribution({ bankId, memberId, amoun
 F: domain/bank.js
 V: 1792900260
 W: ai-system-20261024-012#21
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/bank.js === -->
 
@@ -3167,7 +3167,7 @@ W: ai-system-20261024-012#21
 
 ## 📄 ./domain/fund.js
 
-```js
+~~~js
 // ============================================
 // fund.js — 基金業務輔助（V2 重構版）
 // 位置：domain/fund.js
@@ -3255,7 +3255,7 @@ export function calcFundPnl(fund, estimatedCost) {
 F: domain/fund.js
 V: 1792900300
 W: ai-system-20261024-012#25
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/fund.js === -->
 
@@ -3263,7 +3263,7 @@ W: ai-system-20261024-012#25
 
 ## 📄 ./domain/insurance.js
 
-```js
+~~~js
 // ============================================
 // insurance.js — 保險計算核心（V2 重構版）
 // 位置：domain/insurance.js
@@ -3569,7 +3569,7 @@ export function calcFundCostEstimate(policy, year, month) {
 F: domain/insurance.js
 V: 1792900250
 W: ai-system-20261024-012#20
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/insurance.js === -->
 
@@ -3577,7 +3577,7 @@ W: ai-system-20261024-012#20
 
 ## 📄 ./domain/settlement.js
 
-```js
+~~~js
 // ============================================
 // settlement.js — 結算資料合併（V2 重構版）
 // 位置：domain/settlement.js
@@ -3753,7 +3753,7 @@ function _extractPolicyId(id) {
 F: domain/settlement.js
 V: 1792900290
 W: ai-system-20261024-012#24
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./domain/settlement.js === -->
 
@@ -3761,7 +3761,7 @@ W: ai-system-20261024-012#24
 
 ## 📄 ./engine/main.js
 
-```js
+~~~js
 // ============================================
 // main.js — 系統啟動入口（V2 重構版）
 // 位置：engine/main.js
@@ -3894,7 +3894,7 @@ bootstrap().catch(err => {
 F: engine/main.js
 V: 1792901800
 W: webapp-20261025-001#28
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./engine/main.js === -->
 
@@ -3902,7 +3902,7 @@ W: webapp-20261025-001#28
 
 ## 📄 ./engine/router.js
 
-```js
+~~~js
 // ============================================
 // router.js — SPA 前端路由（V2 重構版）
 // 位置：engine/router.js
@@ -4066,7 +4066,7 @@ function _render404(path) {
 F: engine/router.js
 V: 1792901810
 W: webapp-20261025-001#29
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./engine/router.js === -->
 
@@ -4074,7 +4074,7 @@ W: webapp-20261025-001#29
 
 ## 📄 ./functions/api/[[path]].js
 
-```js
+~~~js
 // ============================================
 // [[path]].js — API 路由總管（V2 重構版）
 // 位置：api/[[path]].js
@@ -4173,7 +4173,7 @@ export async function onRequestPost(context) {
 F: api/[[path]].js
 V: 1792900350
 W: ai-system-20261024-012#30
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/[[path]].js === -->
 
@@ -4181,7 +4181,7 @@ W: ai-system-20261024-012#30
 
 ## 📄 ./functions/api/config.js
 
-```js
+~~~js
 // ============================================
 // config.js — 後端 Firebase 設定與 REST 封裝（V2 重構版）
 // 位置：api/config.js
@@ -4292,7 +4292,7 @@ export function jsonResponse(data, status = 200) {
 F: api/config.js
 V: 1792900330
 W: ai-system-20261024-012#28
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/config.js === -->
 
@@ -4300,7 +4300,7 @@ W: ai-system-20261024-012#28
 
 ## 📄 ./functions/api/handlers-admin.js
 
-```js
+~~~js
 // ============================================
 // handlers-admin.js — 管理員與平台設定（V2 重構版）
 // 位置：api/handlers-admin.js
@@ -4514,7 +4514,7 @@ function _toInt(v, fallback) {
 F: api/handlers-admin.js
 V: 1792900390
 W: ai-system-20261024-012#34
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/handlers-admin.js === -->
 
@@ -4522,7 +4522,7 @@ W: ai-system-20261024-012#34
 
 ## 📄 ./functions/api/handlers-core.js
 
-```js
+~~~js
 // ============================================
 // handlers-core.js — 核心業務處理（V2 重構版）
 // 位置：api/handlers-core.js
@@ -4941,7 +4941,7 @@ function _findDoneStatus(statuses, category) {
 F: api/handlers-core.js
 V: 1792901200
 W: webapp-20261025-001#1
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./functions/api/handlers-core.js === -->
 
@@ -4949,7 +4949,7 @@ W: webapp-20261025-001#1
 
 ## 📄 ./functions/api/handlers-report.js
 
-```js
+~~~js
 // ============================================
 // handlers-report.js — 報表與統計處理（V2 重構版）
 // 位置：api/handlers-report.js
@@ -5289,7 +5289,7 @@ function _calcBankTotal(bankAccounts, transactions, targetYear, targetMonth) {
 F: api/handlers-report.js
 V: 1792900380
 W: ai-system-20261024-012#33
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/handlers-report.js === -->
 
@@ -5297,7 +5297,7 @@ W: ai-system-20261024-012#33
 
 ## 📄 ./functions/api/handlers.js
 
-```js
+~~~js
 // ============================================
 // handlers.js — 後端處理函式統一出口（V2 重構版）
 // 位置：api/handlers.js
@@ -5313,7 +5313,7 @@ export * from './handlers-admin.js';
 F: api/handlers.js
 V: 1792900360
 W: ai-system-20261024-012#31
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/handlers.js === -->
 
@@ -5321,7 +5321,7 @@ W: ai-system-20261024-012#31
 
 ## 📄 ./functions/api/helpers.js
 
-```js
+~~~js
 // ============================================
 // helpers.js — 後端共用輔助（V2 重構版）
 // 位置：api/helpers.js
@@ -5517,7 +5517,7 @@ export function roundInt(v) {
 F: api/helpers.js
 V: 1792900340
 W: ai-system-20261024-012#29
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./functions/api/helpers.js === -->
 
@@ -5525,7 +5525,7 @@ W: ai-system-20261024-012#29
 
 ## 📄 ./index.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -5565,7 +5565,7 @@ W: ai-system-20261024-012#29
 F: index.html
 V: 1792900620
 W: ai-system-20261024-012#57
-═══ EOF ═══ -->```
+═══ EOF ═══ -->~~~
 
 <!-- === FILE END: ./index.html === -->
 
@@ -5573,7 +5573,7 @@ W: ai-system-20261024-012#57
 
 ## 📄 ./lib/expense-modal.js
 
-```js
+~~~js
 // ============================================
 // expense-modal.js — 支出編輯 Modal
 // 位置：lib/expense-modal.js
@@ -5819,7 +5819,7 @@ function _reloadSelect(formEl, fieldId, listType, defaultLabel, result) {
 F: lib/expense-modal.js
 V: 1792901770
 W: webapp-20261025-001#27
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./lib/expense-modal.js === -->
 
@@ -5827,7 +5827,7 @@ W: webapp-20261025-001#27
 
 ## 📄 ./manifest.json
 
-```json
+~~~json
 {
   "name": "家庭財務與固定供款管理 V2",
   "short_name": "FAMILY V2",
@@ -5848,7 +5848,7 @@ W: webapp-20261025-001#27
       "purpose": "any maskable"
     }
   ]
-}```
+}~~~
 
 <!-- === FILE END: ./manifest.json === -->
 
@@ -5856,13 +5856,13 @@ W: webapp-20261025-001#27
 
 ## 📄 ./meta.json
 
-```json
+~~~json
 {
   "domain": "W",
   "pkg_no": "90",
   "code": "webapp",
   "display": "家庭 webapp"
-}```
+}~~~
 
 <!-- === FILE END: ./meta.json === -->
 
@@ -5870,7 +5870,7 @@ W: webapp-20261025-001#27
 
 ## 📄 ./pages/annual-report.js
 
-```js
+~~~js
 // ============================================
 // annual-report.js — 年度報表
 // 位置：pages/annual-report.js
@@ -6106,7 +6106,7 @@ export default {
 F: pages/annual-report.js
 V: 1792901950
 W: webapp-20261025-001#43
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/annual-report.js === -->
 
@@ -6114,7 +6114,7 @@ W: webapp-20261025-001#43
 
 ## 📄 ./pages/bank.js
 
-```js
+~~~js
 // ============================================
 // bank.js — 銀行交易頁面
 // 位置：pages/bank.js
@@ -6351,7 +6351,7 @@ export default {
 F: pages/bank.js
 V: 1792901920
 W: webapp-20261025-001#40
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/bank.js === -->
 
@@ -6359,7 +6359,7 @@ W: webapp-20261025-001#40
 
 ## 📄 ./pages/code-list.js
 
-```js
+~~~js
 // ============================================
 // code-list.js — 編號對照清單
 // 位置：pages/code-list.js
@@ -6512,7 +6512,7 @@ export default {
 F: pages/code-list.js
 V: 1792901050
 W: ai-system-20261024-012#7
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./pages/code-list.js === -->
 
@@ -6520,7 +6520,7 @@ W: ai-system-20261024-012#7
 
 ## 📄 ./pages/dashboard.js
 
-```js
+~~~js
 // ============================================
 // dashboard.js — 總覽儀表板
 // 位置：pages/dashboard.js
@@ -6676,7 +6676,7 @@ export default {
 F: pages/dashboard.js
 V: 1792901890
 W: webapp-20261025-001#37
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/dashboard.js === -->
 
@@ -6684,7 +6684,7 @@ W: webapp-20261025-001#37
 
 ## 📄 ./pages/input-center.js
 
-```js
+~~~js
 // ============================================
 // input-center.js — 綜合輸入中心
 // 位置：pages/input-center.js
@@ -7010,7 +7010,7 @@ export default {
 F: pages/input-center.js
 V: 1792901740
 W: webapp-20261025-001#24
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/input-center.js === -->
 
@@ -7018,7 +7018,7 @@ W: webapp-20261025-001#24
 
 ## 📄 ./pages/insurance.js
 
-```js
+~~~js
 // ============================================
 // insurance.js — 保險清單表
 // 位置：pages/insurance.js
@@ -7352,7 +7352,7 @@ export default {
 F: pages/insurance.js
 V: 1792901960
 W: webapp-20261025-001#44
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/insurance.js === -->
 
@@ -7360,7 +7360,7 @@ W: webapp-20261025-001#44
 
 ## 📄 ./pages/login.js
 
-```js
+~~~js
 // ============================================
 // login.js — 登入頁面（V2 重構版）
 // ============================================
@@ -7456,7 +7456,7 @@ export default {
 F: pages/login.js
 V: 1792900670
 W: ai-system-20261024-012#57
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./pages/login.js === -->
 
@@ -7464,7 +7464,7 @@ W: ai-system-20261024-012#57
 
 ## 📄 ./pages/member-report.js
 
-```js
+~~~js
 // ============================================
 // member-report.js — 成員收支明細
 // 位置：pages/member-report.js
@@ -7653,7 +7653,7 @@ export default {
 F: pages/member-report.js
 V: 1792901910
 W: webapp-20261025-001#39
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/member-report.js === -->
 
@@ -7661,7 +7661,7 @@ W: webapp-20261025-001#39
 
 ## 📄 ./pages/portfolio.js
 
-```js
+~~~js
 // ============================================
 // portfolio.js — 基金投資表（V2 引擎版）
 // 位置：pages/portfolio.js
@@ -8207,7 +8207,7 @@ function _getCostMapForPolicy(policy, allFunds, targetYear, targetMonth) {
 F: pages/portfolio.js
 V: 1792901980
 W: webapp-20261025-001#46
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/portfolio.js === -->
 
@@ -8215,7 +8215,7 @@ W: webapp-20261025-001#46
 
 ## 📄 ./pages/settings.js
 
-```js
+~~~js
 // ============================================
 // settings.js — 系統設定頁面（V2 引擎版）
 // 位置：pages/settings.js
@@ -8701,7 +8701,7 @@ function _applyPageMeta(formRoot, pageKey, allMeta, pages) {
 F: pages/settings.js
 V: 1792901970
 W: webapp-20261025-001#45
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/settings.js === -->
 
@@ -8709,7 +8709,7 @@ W: webapp-20261025-001#45
 
 ## 📄 ./pages/settlements.js
 
-```js
+~~~js
 // ============================================
 // settlements.js — 結算清單（V2 引擎版）
 // 位置：pages/settlements.js
@@ -9030,7 +9030,7 @@ export default {
 F: pages/settlements.js
 V: 1792901880
 W: webapp-20261025-001#36
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./pages/settlements.js === -->
 
@@ -9038,7 +9038,7 @@ W: webapp-20261025-001#36
 
 ## 📄 ./sw.js
 
-```js
+~~~js
 // ============================================
 // sw.js — Service Worker（V2 重構版）
 // 位置：sw.js
@@ -9134,7 +9134,7 @@ async function _networkFirst(request) {
 F: sw.js
 V: 1792901730
 W: webapp-20261025-001#23
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./sw.js === -->
 
@@ -9142,7 +9142,7 @@ W: webapp-20261025-001#23
 
 ## 📄 ./ui/controls.js
 
-```js
+~~~js
 // ============================================
 // controls.js — 共用控制列與篩選器（V2 重構版）
 // 位置：ui/controls.js
@@ -9316,7 +9316,7 @@ export function renderFilterBar(containerId, fields, onFilterChange) {
 F: ui/controls.js
 V: 1792900880
 W: ai-system-20261024-012#79
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./ui/controls.js === -->
 
@@ -9324,7 +9324,7 @@ W: ai-system-20261024-012#79
 
 ## 📄 ./ui/dropdown-plus.js
 
-```js
+~~~js
 // ============================================
 // dropdown-plus.js — 下拉旁「+ 號」按鈕邏輯
 // 位置：ui/dropdown-plus.js
@@ -9401,7 +9401,7 @@ export async function handlePlusClick(entityType) {
 F: ui/dropdown-plus.js
 V: 1792901510
 W: webapp-20261025-001#13
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./ui/dropdown-plus.js === -->
 
@@ -9409,7 +9409,7 @@ W: webapp-20261025-001#13
 
 ## 📄 ./ui/form.js
 
-```js
+~~~js
 // ============================================
 // form.js — 通用動態表單建構器（V2 引擎版）
 // 位置：ui/form.js
@@ -9715,7 +9715,7 @@ function _resolveEl(target) {
 F: ui/form.js
 V: 1792901830
 W: webapp-20261025-001#31
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./ui/form.js === -->
 
@@ -9723,7 +9723,7 @@ W: webapp-20261025-001#31
 
 ## 📄 ./ui/format.js
 
-```js
+~~~js
 // ============================================
 // format.js — 格式化與工具函式（V2 重構版）
 // 位置：ui/format.js
@@ -9840,7 +9840,7 @@ export function debounce(fn, wait = 300) {
 F: ui/format.js
 V: 1792900280
 W: ai-system-20261024-012#23
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./ui/format.js === -->
 
@@ -9848,7 +9848,7 @@ W: ai-system-20261024-012#23
 
 ## 📄 ./ui/layout.js
 
-```js
+~~~js
 // ============================================
 // layout.js — SPA 骨架與導覽（V2 重構版）
 // 位置：ui/layout.js
@@ -10136,7 +10136,7 @@ function _toggleSidebar(open) {
 F: ui/layout.js
 V: 1792901820
 W: webapp-20261025-001#30
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./ui/layout.js === -->
 
@@ -10144,7 +10144,7 @@ W: webapp-20261025-001#30
 
 ## 📄 ./ui/modal.js
 
-```js
+~~~js
 // ============================================
 // modal.js — 對話框與確認視窗（V2 重構版）
 // 位置：ui/modal.js
@@ -10409,7 +10409,7 @@ function _bindEscClose() {
 F: ui/modal.js
 V: 1792901700
 W: webapp-20261025-001#20
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./ui/modal.js === -->
 
@@ -10417,7 +10417,7 @@ W: webapp-20261025-001#20
 
 ## 📄 ./ui/table.js
 
-```js
+~~~js
 // ============================================
 // table.js — 通用資料表格引擎（V2 引擎版）
 // 位置：ui/table.js
@@ -10816,7 +10816,7 @@ function _bindRowClick(root, onRowClick, rows) {
 F: ui/table.js
 V: 1792901840
 W: webapp-20261025-001#32
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./ui/table.js === -->
 
@@ -10824,7 +10824,7 @@ W: webapp-20261025-001#32
 
 ## 📄 ./ui/toast.js
 
-```js
+~~~js
 // ============================================
 // toast.js — 全局提示元件（V2 重構版）
 // 位置：ui/toast.js
@@ -10940,6 +10940,6 @@ function _getOrCreateContainer() {
 F: ui/toast.js
 V: 1792900400
 W: ai-system-20261024-012#35
-═══ EOF ═══ */```
+═══ EOF ═══ */~~~
 
 <!-- === FILE END: ./ui/toast.js === -->

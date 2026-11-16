@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:38 (HKT)
+> 生成時間：2026-11-17 07:56:33 (HKT)
 
 # 專案全程式碼包：AI-WA-UPWO
 
@@ -8,7 +8,7 @@
 
 ## 📄 ./.github/workflows/deploy.yml
 
-```yml
+~~~yml
 name: Deploy to Cloudflare Pages
 
 on:
@@ -53,7 +53,7 @@ jobs:
 # F: AI-WA-UPWO/.github/workflows/deploy.yml
 # V: 1792922200
 # W: UPGRADE-004
-# ═══```
+# ═══~~~
 
 <!-- === FILE END: ./.github/workflows/deploy.yml === -->
 
@@ -61,7 +61,7 @@ jobs:
 
 ## 📄 ./.github/workflows/notify.yml
 
-```yml
+~~~yml
 name: Notify AI-Infra
 
 on:
@@ -85,7 +85,7 @@ jobs:
 # F: AI-WA-UPWO/.github/workflows/notify.yml
 # V: 1792922100
 # W: UPGRADE-004
-# ═══```
+# ═══~~~
 
 <!-- === FILE END: ./.github/workflows/notify.yml === -->
 
@@ -93,7 +93,7 @@ jobs:
 
 ## 📄 ./index.html
 
-```html
+~~~html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -140,7 +140,7 @@ jobs:
 F: AI-WA-UPWO/index.html
 V: 1792946000
 W: UPGRADE-005
--->```
+-->~~~
 
 <!-- === FILE END: ./index.html === -->
 
@@ -148,13 +148,13 @@ W: UPGRADE-005
 
 ## 📄 ./meta.json
 
-```json
+~~~json
 {
   "domain": "W",
   "pkg_no": "92",
   "code": "UPGRADE",
   "display": "UPGRADE-WO"
-}```
+}~~~
 
 <!-- === FILE END: ./meta.json === -->
 
@@ -162,7 +162,7 @@ W: UPGRADE-005
 
 ## 📄 ./package.json
 
-```json
+~~~json
 {
   "name": "upgrade-wo",
   "private": true,
@@ -185,7 +185,7 @@ W: UPGRADE-005
     "tailwindcss": "^3.4.4",
     "vite": "^5.3.1"
   }
-}```
+}~~~
 
 <!-- === FILE END: ./package.json === -->
 
@@ -193,7 +193,7 @@ W: UPGRADE-005
 
 ## 📄 ./postcss.config.js
 
-```js
+~~~js
 export default {
   plugins: {
     tailwindcss: {},
@@ -205,7 +205,7 @@ export default {
 F: postcss.config.js
 V: 1792903400
 W: webapp-20261026-001#10
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./postcss.config.js === -->
 
@@ -213,7 +213,7 @@ W: webapp-20261026-001#10
 
 ## 📄 ./public/manifest.json
 
-```json
+~~~json
 {
   "name": "UPGRADE-WO 生產進度控制台",
   "short_name": "UPGRADE",
@@ -235,7 +235,7 @@ W: webapp-20261026-001#10
     "V": "1792923000",
     "W": "UPGRADE-004"
   }
-}```
+}~~~
 
 <!-- === FILE END: ./public/manifest.json === -->
 
@@ -243,7 +243,7 @@ W: webapp-20261026-001#10
 
 ## 📄 ./public/sw.js
 
-```js
+~~~js
 const SW_VERSION = 'v1.0.0';
 const CACHE_NAME = `upgrade-wo-cache-${SW_VERSION}`;
 
@@ -301,7 +301,7 @@ self.addEventListener('fetch', (event) => {
 F: AI-WA-UPWO/public/sw.js
 V: 1792916300
 W: UPGRADE-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./public/sw.js === -->
 
@@ -309,7 +309,7 @@ W: UPGRADE-002
 
 ## 📄 ./src/config/constants.js
 
-```js
+~~~js
 // 系統常數
 export const SYSTEM_NAME = 'UPGRADE-WO';
 
@@ -331,7 +331,7 @@ export const ROUTES = {
 F: AI-WA-UPWO/src/config/constants.js
 V: 1792916600
 W: UPGRADE-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/config/constants.js === -->
 
@@ -339,7 +339,7 @@ W: UPGRADE-002
 
 ## 📄 ./src/config/firebase-keys.js
 
-```js
+~~~js
 export const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCOuxzJXxwmPEDYLxg_VHAwPLYikNq8e1c",
   authDomain: "up-wo-87f60.firebaseapp.com",
@@ -353,7 +353,7 @@ export const FIREBASE_CONFIG = {
 F: src/config/firebase-keys.js
 V: 1792903501
 W: webapp-20261026-001#13
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/config/firebase-keys.js === -->
 
@@ -361,7 +361,7 @@ W: webapp-20261026-001#13
 
 ## 📄 ./src/config/firebase.js
 
-```js
+~~~js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { FIREBASE_CONFIG } from "./firebase-keys.js";
@@ -376,7 +376,7 @@ export const db = getFirestore(app);
 F: src/config/firebase.js
 V: 1792903502
 W: webapp-20261026-001#14
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/config/firebase.js === -->
 
@@ -384,7 +384,7 @@ W: webapp-20261026-001#14
 
 ## 📄 ./src/config/state.js
 
-```js
+~~~js
 class State {
   constructor() {
     this.user = null;
@@ -452,7 +452,7 @@ export const AppState = new State();
 F: AI-WA-UPWO/src/config/state.js
 V: 1793020000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/config/state.js === -->
 
@@ -460,7 +460,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/db/read.js
 
-```js
+~~~js
 import { db } from "../config/firebase.js";
 import { 
   collection, 
@@ -560,7 +560,7 @@ export function listenDocument(collectionName, docId, callback) {
 F: src/db/read.js
 V: 1792903503
 W: webapp-20261026-001#15
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/db/read.js === -->
 
@@ -568,7 +568,7 @@ W: webapp-20261026-001#15
 
 ## 📄 ./src/db/write.js
 
-```js
+~~~js
 import { db } from "../config/firebase.js";
 import { 
   doc, 
@@ -656,7 +656,7 @@ export async function deleteDocument(collectionName, docId) {
 F: src/db/write.js
 V: 1792903504
 W: webapp-20261026-001#16
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/db/write.js === -->
 
@@ -664,7 +664,7 @@ W: webapp-20261026-001#16
 
 ## 📄 ./src/domain/data-diff.js
 
-```js
+~~~js
 /**
  * 資料差異核對引擎（純函數，不碰 DOM、不碰 Firebase）
  * 職責：比對資料庫現有資料與 Excel 匯入的新資料，找出差異。
@@ -755,7 +755,7 @@ export function checkDiff(dbOrder, excelData, diffFields = []) {
 F: AI-WA-UPWO/src/domain/data-diff.js
 V: 1792999000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/domain/data-diff.js === -->
 
@@ -763,7 +763,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/domain/excel-writer.js
 
-```js
+~~~js
 import * as XLSX from 'xlsx';
 
 /**
@@ -885,7 +885,7 @@ export function downloadWorkbook(workbook, fileName) {
 F: AI-WA-UPWO/src/domain/excel-writer.js
 V: 1794186800
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/domain/excel-writer.js === -->
 
@@ -893,7 +893,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/domain/formula-engine.js
 
-```js
+~~~js
 /**
  * 公式引擎（純函數，不碰 DOM、不碰 Firebase）
  * 職責：根據系統設定的公式與表單輸入值，計算出目標欄位的結果。
@@ -989,7 +989,7 @@ export function evaluate(formulas, formData) {
 F: AI-WA-UPWO/src/domain/formula-engine.js
 V: 1792991000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/domain/formula-engine.js === -->
 
@@ -997,7 +997,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/domain/global-search.js
 
-```js
+~~~js
 /**
  * 全域搜尋引擎（純函數，不碰 DOM、不碰 Firebase）
  * 職責：跨工單所有欄位進行關鍵字搜尋，並支援進階條件過濾。
@@ -1115,7 +1115,7 @@ export function searchOrders(orders, keyword = '', filters = {}) {
 F: AI-WA-UPWO/src/domain/global-search.js
 V: 1793082000
 W: UPGRADE-008
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/domain/global-search.js === -->
 
@@ -1123,7 +1123,7 @@ W: UPGRADE-008
 
 ## 📄 ./src/domain/parser.js
 
-```js
+~~~js
 import * as XLSX from 'xlsx';
 
 /**
@@ -1461,7 +1461,7 @@ export function parseWorkbook(workbook, targetSheetNames = [], salesMapping, def
 F: AI-WA-UPWO/src/domain/parser.js
 V: 1794189000
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/domain/parser.js === -->
 
@@ -1469,7 +1469,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/domain/stats.js
 
-```js
+~~~js
 /**
  * 將工單陣列依「狀態」分組
  * @param {Array<Object>} orders 工單陣列
@@ -1613,7 +1613,7 @@ export function generatePivotTable(orders, statuses = [], salesReps = []) {
 F: AI-WA-UPWO/src/domain/stats.js
 V: 1792911600
 W: UPGRADE-002
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/domain/stats.js === -->
 
@@ -1621,7 +1621,7 @@ W: UPGRADE-002
 
 ## 📄 ./src/engine/main.js
 
-```js
+~~~js
 import { initRouter } from './router.js';
 import { getCollection, listenDocument } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
@@ -1863,7 +1863,7 @@ function registerServiceWorker() {
 F: AI-WA-UPWO/src/engine/main.js
 V: 1794187100
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/engine/main.js === -->
 
@@ -1871,7 +1871,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/engine/router.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { renderAppShell, updateNavbar } from '../ui/layout.js';
 import { showToast } from '../ui/toast.js';
@@ -2144,7 +2144,7 @@ export function initRouter() {
 F: AI-WA-UPWO/src/engine/router.js
 V: 1793087000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/engine/router.js === -->
 
@@ -2152,7 +2152,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/engine/sync-engine.js
 
-```js
+~~~js
 import * as XLSX from 'xlsx';
 import { getDocument, getCollection } from '../db/read.js';
 import { updateDocument, setDocument } from '../db/write.js';
@@ -2501,7 +2501,7 @@ export async function downloadLatestExcel() {
 F: AI-WA-UPWO/src/engine/sync-engine.js
 V: 1794189100
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/engine/sync-engine.js === -->
 
@@ -2509,7 +2509,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/lib/io.js
 
-```js
+~~~js
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import { groupByStatus } from '../domain/stats.js';
@@ -2754,7 +2754,7 @@ export function exportToPDF(orders, statuses, filename = '工單清單', schema 
 F: AI-WA-UPWO/src/lib/io.js
 V: 1793086000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/lib/io.js === -->
 
@@ -2762,7 +2762,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/admin-data.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument, getCollection } from '../db/read.js';
 import { deleteDocument } from '../db/write.js';
@@ -2891,7 +2891,7 @@ export default {
 F: AI-WA-UPWO/src/pages/admin-data.js
 V: 1792917700
 W: UPGRADE-003
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/pages/admin-data.js === -->
 
@@ -2899,7 +2899,7 @@ W: UPGRADE-003
 
 ## 📄 ./src/pages/area.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { setDocument } from '../db/write.js';
@@ -3288,7 +3288,7 @@ export default {
 F: AI-WA-UPWO/src/pages/area.js
 V: 1792983000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/area.js === -->
 
@@ -3296,7 +3296,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/category.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { updateDocument, deleteDocument } from '../db/write.js';
@@ -3417,7 +3417,7 @@ export default {
 F: AI-WA-UPWO/src/pages/category.js
 V: 1792963000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/category.js === -->
 
@@ -3425,7 +3425,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/data-entry.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { getDocument, getCollection, listenCollection } from '../db/read.js';
 import { setDocument, updateDocument } from '../db/write.js';
@@ -3751,7 +3751,7 @@ export default {
 F: AI-WA-UPWO/src/pages/data-entry.js
 V: 1793026000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/data-entry.js === -->
 
@@ -3759,7 +3759,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/kanban.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { updateDocument, setDocument, deleteDocument } from '../db/write.js';
@@ -4026,7 +4026,7 @@ export default {
 F: AI-WA-UPWO/src/pages/kanban.js
 V: 1793071000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/kanban.js === -->
 
@@ -4034,7 +4034,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/login.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { getCollection } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
@@ -4180,7 +4180,7 @@ export default {
 F: AI-WA-UPWO/src/pages/login.js
 V: 1792986000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/login.js === -->
 
@@ -4188,7 +4188,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/overview.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { updateDocument, deleteDocument } from '../db/write.js';
@@ -4444,7 +4444,7 @@ export default {
 F: AI-WA-UPWO/src/pages/overview.js
 V: 1792975000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/overview.js === -->
 
@@ -4452,7 +4452,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/salesperson.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { renderPageLayout } from '../ui/layout.js';
@@ -4622,7 +4622,7 @@ export default {
 F: AI-WA-UPWO/src/pages/salesperson.js
 V: 1792988000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/salesperson.js === -->
 
@@ -4630,7 +4630,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/search.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { renderPageLayout } from '../ui/layout.js';
@@ -4815,7 +4815,7 @@ export default {
 F: AI-WA-UPWO/src/pages/search.js
 V: 1793005000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/search.js === -->
 
@@ -4823,7 +4823,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-area-status.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { createIcons, Plus, GripVertical, Trash2, Edit2 } from 'lucide';
@@ -4973,7 +4973,7 @@ export function renderAreaStatuses(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-area-status.js
 V: 1792977000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-area-status.js === -->
 
@@ -4981,7 +4981,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/settings-area.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { createIcons, Plus, Trash2, Edit2, X, MapPin, GripVertical } from 'lucide';
@@ -5305,7 +5305,7 @@ export function renderAreas(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-area.js
 V: 1792982000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-area.js === -->
 
@@ -5313,7 +5313,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/pages/settings-basic.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
@@ -5915,7 +5915,7 @@ export function renderMapping(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-basic.js
 V: 1793046000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-basic.js === -->
 
@@ -5923,7 +5923,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-category.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
@@ -6091,7 +6091,7 @@ export function renderCategories(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-category.js
 V: 1793070000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-category.js === -->
 
@@ -6099,7 +6099,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-database.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { createIcons, Plus, Trash2, Edit2, Settings2, Database, GripVertical, X, Check } from 'lucide';
@@ -6491,7 +6491,7 @@ export function renderDatabaseCenter(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-database.js
 V: 1793091000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-database.js === -->
 
@@ -6499,7 +6499,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-form.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenDocument } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
@@ -6905,7 +6905,7 @@ export default {
 F: AI-WA-UPWO/src/pages/settings-form.js
 V: 1793093000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-form.js === -->
 
@@ -6913,7 +6913,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-material.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { createIcons, Plus, Trash2, Edit2, GripVertical, X, Save } from 'lucide';
@@ -7233,7 +7233,7 @@ export function renderMaterials(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-material.js
 V: 1793054000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-material.js === -->
 
@@ -7241,7 +7241,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-schema.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm } from '../ui/modal.js';
 import { createIcons, Plus, Trash2, Edit2, LayoutDashboard, Table, PieChart, Layers, Users, GripVertical, X, Check, FileEdit, Download, Database } from 'lucide';
@@ -7581,7 +7581,7 @@ export function renderViewConfig(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-schema.js
 V: 1794188500
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/pages/settings-schema.js === -->
 
@@ -7589,7 +7589,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/pages/settings-supplier.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { createIcons, Plus, Trash2, Edit2, Settings2 } from 'lucide';
@@ -7871,7 +7871,7 @@ export function renderSuppliers(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-supplier.js
 V: 1793064000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings-supplier.js === -->
 
@@ -7879,7 +7879,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/settings-system.js
 
-```js
+~~~js
 import { showToast } from '../ui/toast.js';
 import { openConfirm, openModal } from '../ui/modal.js';
 import { getCollection } from '../db/read.js';
@@ -8275,7 +8275,7 @@ export function renderSystemData(container, currentSettings, saveSettings) {
 F: AI-WA-UPWO/src/pages/settings-system.js
 V: 1794187200
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/pages/settings-system.js === -->
 
@@ -8283,7 +8283,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/pages/settings.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenDocument, getDocument, getCollection } from '../db/read.js';
 import { updateDocument } from '../db/write.js';
@@ -8552,7 +8552,7 @@ export default {
 F: AI-WA-UPWO/src/pages/settings.js
 V: 1793088000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/pages/settings.js === -->
 
@@ -8560,7 +8560,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/pages/table.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { listenCollection, getDocument } from '../db/read.js';
 import { deleteDocument, updateDocument } from '../db/write.js';
@@ -8790,7 +8790,7 @@ export default {
 F: AI-WA-UPWO/src/pages/table.js
 V: 1794188200
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/pages/table.js === -->
 
@@ -8798,7 +8798,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/style.css
 
-```css
+~~~css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8865,7 +8865,7 @@ body {
 F: src/style.css
 V: 1792903520
 W: webapp-20261026-001#32
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/style.css === -->
 
@@ -8873,7 +8873,7 @@ W: webapp-20261026-001#32
 
 ## 📄 ./src/ui/layout.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { createIcons, Layers, Bell, LogOut, LayoutDashboard, Table, PieChart, Users, Settings, Activity, ClipboardList, Database, MapPin, Menu, FileEdit, Search, Sliders, Package, Shield } from 'lucide';
 
@@ -9168,7 +9168,7 @@ export function renderPageLayout({ title, subtitle = '', headerActions = '', sta
 F: AI-WA-UPWO/src/ui/layout.js
 V: 1793059000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/ui/layout.js === -->
 
@@ -9176,7 +9176,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/ui/modal.js
 
-```js
+~~~js
 import { createIcons, X } from 'lucide';
 
 /**
@@ -9316,7 +9316,7 @@ export function openConfirm({ title, message, confirmText = '確認', cancelText
 F: AI-WA-UPWO/src/ui/modal.js
 V: 1792957000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/ui/modal.js === -->
 
@@ -9324,7 +9324,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/ui/order-detail-modal.js
 
-```js
+~~~js
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
 import { getDocument } from '../db/read.js';
@@ -9440,7 +9440,7 @@ export async function openOrderModal({ orderId = null, currentSettings, onSaved 
 F: AI-WA-UPWO/src/ui/order-detail-modal.js
 V: 1793085000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/ui/order-detail-modal.js === -->
 
@@ -9448,7 +9448,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/ui/order-editor.js
 
-```js
+~~~js
 import { createIcons, Save, RotateCcw } from 'lucide';
 import { showToast } from './toast.js';
 import { evaluate } from '../domain/formula-engine.js';
@@ -9703,7 +9703,7 @@ export function renderOrderEditor({
 F: AI-WA-UPWO/src/ui/order-editor.js
 V: 1794188800
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/ui/order-editor.js === -->
 
@@ -9711,7 +9711,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/ui/order-view-editor.js
 
-```js
+~~~js
 import { updateDocument, setDocument } from '../db/write.js';
 import { getDocument, getCollection } from '../db/read.js';
 import { showToast } from '../ui/toast.js';
@@ -10158,7 +10158,7 @@ document.addEventListener('click', async (e) => {
 F: AI-WA-UPWO/src/ui/order-view-editor.js
 V: 1793036000
 W: UPGRADE-007
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/ui/order-view-editor.js === -->
 
@@ -10166,7 +10166,7 @@ W: UPGRADE-007
 
 ## 📄 ./src/ui/order-view.js
 
-```js
+~~~js
 import { AppState } from '../config/state.js';
 import { createIcons, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Inbox, Search, ChevronLeft, ChevronRight, Settings, Plus, AlertCircle } from 'lucide';
 
@@ -10698,7 +10698,7 @@ function getOrderValue(order, field) {
 F: AI-WA-UPWO/src/ui/order-view.js
 V: 1794188900
 W: UPGRADE-009
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/ui/order-view.js === -->
 
@@ -10706,7 +10706,7 @@ W: UPGRADE-009
 
 ## 📄 ./src/ui/route-builder.js
 
-```js
+~~~js
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
 import { createIcons, Plus, GripVertical, X } from 'lucide';
@@ -10888,7 +10888,7 @@ export function openRouteBuilder({ currentSettings, availableCategories = [], de
 F: AI-WA-UPWO/src/ui/route-builder.js
 V: 1792959000
 W: UPGRADE-005
-*/```
+*/~~~
 
 <!-- === FILE END: ./src/ui/route-builder.js === -->
 
@@ -10896,7 +10896,7 @@ W: UPGRADE-005
 
 ## 📄 ./src/ui/toast.js
 
-```js
+~~~js
 import { createIcons, CheckCircle2, Info, AlertCircle, X } from 'lucide';
 
 /**
@@ -10975,7 +10975,7 @@ export function showToast(message, type = 'success', duration = 3000) {
 F: src/ui/toast.js
 V: 1792903508
 W: webapp-20261026-001#20
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./src/ui/toast.js === -->
 
@@ -10983,7 +10983,7 @@ W: webapp-20261026-001#20
 
 ## 📄 ./tailwind.config.js
 
-```js
+~~~js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -11016,7 +11016,7 @@ export default {
 F: tailwind.config.js
 V: 1792903500
 W: webapp-20261026-001#11
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./tailwind.config.js === -->
 
@@ -11024,7 +11024,7 @@ W: webapp-20261026-001#11
 
 ## 📄 ./vite.config.js
 
-```js
+~~~js
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 
@@ -11046,6 +11046,6 @@ export default defineConfig({
 F: vite.config.js
 V: 1792902801
 W: webapp-20261026-001#4
-═══ */```
+═══ */~~~
 
 <!-- === FILE END: ./vite.config.js === -->

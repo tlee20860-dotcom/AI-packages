@@ -1,5 +1,5 @@
 > 體系版本：SV15
-> 生成時間：2026-11-17 02:51:38 (HKT)
+> 生成時間：2026-11-17 07:56:33 (HKT)
 
 # 專案全程式碼包：AI-OS
 
@@ -8,7 +8,7 @@
 
 ## 📄 ./.github/workflows/apply-patch.yml
 
-```yml
+~~~yml
 name: Apply Patch (Project)
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
 # F: AI-OS/.github/workflows/apply-patch.yml
 # V: 1792358000
 # W: ai-system-20261019-010#088
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/apply-patch.yml === -->
 
@@ -59,7 +59,7 @@ jobs:
 
 ## 📄 ./.github/workflows/notify.yml
 
-```yml
+~~~yml
 # ============================================
 # notify.yml — 專案變更時通知 AI-infra
 # ============================================
@@ -87,7 +87,7 @@ jobs:
 # F: AI-OS/.github/workflows/notify.yml
 # V: 1792357000
 # W: ai-system-20261019-010#085
-# ═══ EOF ═══```
+# ═══ EOF ═══~~~
 
 <!-- === FILE END: ./.github/workflows/notify.yml === -->
 
@@ -95,12 +95,12 @@ jobs:
 
 ## 📄 ./meta.json
 
-```json
+~~~json
 {
   "domain": "E",
   "pkg_no": "91",
   "code": "ai-os",
   "display": "AI-OS 系統"
-}```
+}~~~
 
 <!-- === FILE END: ./meta.json === -->
