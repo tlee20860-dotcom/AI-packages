@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-16 08:59:14 (HKT)
+> 生成時間：2026-11-16 09:04:04 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -395,7 +395,7 @@ if __name__ == "__main__":
 
 # === 關聯規則防呆矩陣 ===
 # | 本次修改項 | 命中關聯條文 | 具體防呆約束／隔離措施 | 檢核結果 |
-# | 新增 packages.json | R-025 | 動態掃描 build-repo 生成清單，避免前端寫死檔名 | PASS |
+# | 修正 packages.json 邏輯 | R-025 | 精準區分專案與體系檔案，避免 20-SP-Sys 被誤判 | PASS |
 # =========================
 
 name: Build Shared Packages
@@ -931,15 +931,16 @@ jobs:
       - name: "Step 9.6: 生成配置檔 (packages.json)"
         run: |
           python3 -c "
-          import os, json
+          import os, json, re
           md_files = [f for f in os.listdir('build-repo') if f.endswith('.md') and f != '25-INDEX.md']
           system_files = []
           projects = set()
           for f in md_files:
               name = f[:-3]
-              parts = name.split('-')
-              if len(parts) > 1 and parts[0].isdigit():
-                  projects.add(parts[0])
+              if name.endswith('-SP') and not name.endswith('-SP-Sys'):
+                  projects.add(name.split('-')[0])
+              elif name.endswith('-P') or name.endswith('-Code'):
+                  projects.add(name.split('-')[0])
               else:
                   system_files.append(name)
           
@@ -979,7 +980,7 @@ jobs:
 
 # EOF
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1794028800
+# V: 1794036000
 # W: ai-system-010
 # EOF```
 
