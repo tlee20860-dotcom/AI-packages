@@ -1,5 +1,5 @@
-> 體系版本：SV14
-> 生成時間：2026-11-16 12:51:16 (HKT)
+> 體系版本：SV15
+> 生成時間：2026-11-17 02:51:39 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -396,6 +396,7 @@ if __name__ == "__main__":
 # === 關聯規則防呆矩陣 ===
 # | 本次修改項 | 命中關聯條文 | 具體防呆約束／隔離措施 | 檢核結果 |
 # | 修正 packages.json 邏輯 | R-025 | 精準區分專案與體系檔案，避免 20-SP-Sys 被誤判 | PASS |
+# | 修正 append_file 重複外殼 | F-005 | 避免 01-AP.md 尾部重複生成 FILE END | PASS |
 # =========================
 
 name: Build Shared Packages
@@ -931,7 +932,7 @@ jobs:
       - name: "Step 9.6: 生成配置檔 (packages.json)"
         run: |
           python3 -c "
-          import os, json, re
+          import os, json
           md_files = [f for f in os.listdir('build-repo') if f.endswith('.md') and f != '25-INDEX.md']
           system_files = []
           projects = set()
@@ -980,7 +981,7 @@ jobs:
 
 # EOF
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1794036000
+# V: 1794110000
 # W: ai-system-010
 # EOF```
 

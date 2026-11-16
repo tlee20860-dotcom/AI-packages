@@ -1,5 +1,5 @@
-> 體系版本：SV14
-> 生成時間：2026-11-16 12:51:16 (HKT)
+> 體系版本：SV15
+> 生成時間：2026-11-17 02:51:39 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -33,18 +33,18 @@
 | AI-General | docs/p93/WF-PROGRESS.md | 1793812100 | ai-wa-fs-001 |
 | AI-General | docs/p93/WF-SQL.md | 1793968200 | ai-wa-fs-002 |
 | AI-General | docs/records/GENERAL-CONCLUSION.md | 1792900158 | ai-system-20261024-013#9 |
-| AI-General | docs/records/PROGRESS.md | 1793956000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1792942200 | ai-system-007 |
-| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1793957000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-DEBT.md | 1793959000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793960000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-HANDOFF.md | 1793955000 | ai-system-009 |
-| AI-General | docs/records/SYSTEM-REJECTED.md | 1793958000 | ai-system-009 |
+| AI-General | docs/records/PROGRESS.md | 1794112000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-ARCHIVE.md | 1794116000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-CONCLUSION.md | 1794113000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-DEBT.md | 1794115000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-EVOLUTION.md | 1794117000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-HANDOFF.md | 1794111000 | ai-system-010 |
+| AI-General | docs/records/SYSTEM-REJECTED.md | 1794114000 | ai-system-010 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1794053000 | ai-system-010 |
-| AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
+| AI-kernel | docs/a-guide/I-00-identity.md | 1794107000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-00-rules.md | 1794061000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1794054000 | ai-system-010 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1794108000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1794057000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-05-dsl-map.md | 1794052000 | ai-system-010 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
@@ -367,7 +367,7 @@
 | 20-SP-Sys.md | 40 |
 | 21-INFRA.md | 60 |
 | 23-CHK.md | 12 |
-| 24-HISTORY.md | 56 |
+| 24-HISTORY.md | 60 |
 | 90-Code.md | 388 |
 | 90-P.md | 32 |
 | 90-SP.md | 32 |
