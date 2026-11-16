@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-16 09:08:39 (HKT)
+> 生成時間：2026-11-16 11:02:02 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -40,13 +40,13 @@
 | AI-General | docs/records/SYSTEM-EVOLUTION.md | 1793960000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-HANDOFF.md | 1793955000 | ai-system-009 |
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1793958000 | ai-system-009 |
-| AI-kernel | docs/a-guide/A-00-guide.md | 1793945000 | ai-system-009 |
+| AI-kernel | docs/a-guide/A-00-guide.md | 1794053000 | ai-system-010 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1793010000 | ai-system-009 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1794051000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
-| AI-kernel | docs/r-rules/R-03-terms.md | 1793010000 | ai-system-009 |
-| AI-kernel | docs/r-rules/R-04-learning.md | 1792990400 | UPGRADE-006 |
-| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1793010000 | ai-system-009 |
+| AI-kernel | docs/r-rules/R-03-terms.md | 1794054000 | ai-system-010 |
+| AI-kernel | docs/r-rules/R-04-learning.md | 1794057000 | ai-system-010 |
+| AI-kernel | docs/r-rules/R-05-dsl-map.md | 1794052000 | ai-system-010 |
 | AI-kernel | docs/review/CHK-E.md | 1792902900 | ai-system-20261026-001#9 |
 | AI-kernel | docs/review/CHK-INDEX.md | 1792605003 | ai-system-20261022-007#70#3 |
 | AI-kernel | docs/review/REVIEW-FORMAT.md | 1792612001 | ai-system-20261022-007#90#1 |
@@ -60,7 +60,7 @@
 | AI-kernel | docs/skills/W/W-06-sop.md | 1793010000 | ai-system-009 |
 | AI-kernel | docs/skills/W/W-07-errors.md | 1793077000 | UPGRADE-007 |
 | AI-kernel | docs/skills/W/W-08-vue-supabase.md | 1793811800 | ai-wa-fs-001 |
-| AI-kernel | docs/u-profile/U-00-profile.md | 1793946000 | ai-system-009 |
+| AI-kernel | docs/u-profile/U-00-profile.md | 1794055000 | ai-system-010 |
 
 ## ⚙️ 基礎設施源檔 (AI-infra)
 | 目錄/路徑 | 檔案名稱 |
@@ -360,7 +360,7 @@
 |---|---|
 | 00-IP.md | 8 |
 | 01-AP.md | 28 |
-| 02-RP.md | 84 |
+| 02-RP.md | 88 |
 | 03-UP.md | 8 |
 | 04-GC.md | 4 |
 | 10-WP.md | 60 |
