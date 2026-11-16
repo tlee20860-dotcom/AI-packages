@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-16 07:30:49 (HKT)
+> 生成時間：2026-11-16 08:59:14 (HKT)
 > ⚠️ 給 AI 的指示：本包包含體系唯一腳本與各專案呼叫器。
 
 # 基礎設施總包 (INFRA)
@@ -392,6 +392,11 @@ if __name__ == "__main__":
 # setup-structure.yml — 動態共享包打包腳本 (統一大腦版)
 # 用途：手動觸發，所有生成物只寫入 AI-Packages，絕不回寫源檔
 # ============================================
+
+# === 關聯規則防呆矩陣 ===
+# | 本次修改項 | 命中關聯條文 | 具體防呆約束／隔離措施 | 檢核結果 |
+# | 新增 packages.json | R-025 | 動態掃描 build-repo 生成清單，避免前端寫死檔名 | PASS |
+# =========================
 
 name: Build Shared Packages
 
@@ -923,6 +928,32 @@ jobs:
             if [ -f "$f" ]; then bash .github/workflows/append_file.sh "$f" "$OUTPUT" || true; fi
           done
 
+      - name: "Step 9.6: 生成配置檔 (packages.json)"
+        run: |
+          python3 -c "
+          import os, json
+          md_files = [f for f in os.listdir('build-repo') if f.endswith('.md') and f != '25-INDEX.md']
+          system_files = []
+          projects = set()
+          for f in md_files:
+              name = f[:-3]
+              parts = name.split('-')
+              if len(parts) > 1 and parts[0].isdigit():
+                  projects.add(parts[0])
+              else:
+                  system_files.append(name)
+          
+          system_files.sort()
+          project_list = sorted(list(projects))
+          
+          result = {
+              'system': system_files,
+              'projects': project_list
+          }
+          with open('build-repo/packages.json', 'w', encoding='utf-8') as fh:
+              json.dump(result, fh, ensure_ascii=False, indent=2)
+          "
+
       - name: "Step 9.8: 交付驗證報告（report 模式，不擋）"
         run: |
           if [ ! -f ".github/scripts/validate_delivery.py" ]; then
@@ -948,8 +979,8 @@ jobs:
 
 # EOF
 # F: AI-infra/.github/workflows/setup-structure.yml
-# V: 1793951000
-# W: ai-system-009
+# V: 1794028800
+# W: ai-system-010
 # EOF```
 
 <!-- === FILE END: .github/workflows/setup-structure.yml === -->
