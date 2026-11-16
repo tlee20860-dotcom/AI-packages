@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-16 09:04:06 (HKT)
+> 生成時間：2026-11-16 09:08:40 (HKT)
 
 # 92 包：AI 控制台原始碼
 
@@ -254,6 +254,16 @@
             } else {
                 btn.textContent = `📋 複製完整包`;
             }
+        }
+
+        function copySystemFourFiles() {
+            const base = `https://raw.githubusercontent.com/${OWNER}/AI-packages/main/`;
+            const text = `請讀取以下體系四檔：\n\n` +
+                         `[00-IP.md] ${base}00-IP.md\n` +
+                         `[01-AP.md] ${base}01-AP.md\n` +
+                         `[02-RP.md] ${base}02-RP.md\n` +
+                         `[03-UP.md] ${base}03-UP.md`;
+            navigator.clipboard.writeText(text).then(() => alert('已複製體系四檔連結清單'));
         }
 
         function copySpecificSystemLink() {
@@ -1158,8 +1168,11 @@
             <div class="card-title">📚 快捷連結</div>
             <div class="subtitle">快速複製純文字連結，供 AI 讀取。</div>
             
-            <!-- 體系連結 -->
-            <div style="display:flex; gap:10px; margin-bottom: 10px;">
+            <!-- 體系四檔一鍵包 -->
+            <button class="btn-primary" onclick="copySystemFourFiles()" style="margin-bottom: 15px;">📋 複製體系四檔</button>
+
+            <!-- 其他體系連結 -->
+            <div style="display:flex; gap:10px; margin-bottom: 15px;">
                 <select id="quick-link-system-select" style="flex: 1; margin-bottom: 0;">
                     <option value="">載入體系清單中...</option>
                 </select>
@@ -1220,7 +1233,7 @@
 </html>
 <!-- EOF
 F: AI-infra/index.html
-V: 1794040000
+V: 1794045000
 W: ai-system-010
 EOF -->```
 
