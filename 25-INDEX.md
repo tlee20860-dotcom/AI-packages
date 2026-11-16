@@ -1,5 +1,5 @@
 > 體系版本：SV14
-> 生成時間：2026-11-16 11:44:23 (HKT)
+> 生成時間：2026-11-16 12:32:14 (HKT)
 
 # 全庫檔案總索引 (GLOBAL INDEX)
 
@@ -42,7 +42,7 @@
 | AI-General | docs/records/SYSTEM-REJECTED.md | 1793958000 | ai-system-009 |
 | AI-kernel | docs/a-guide/A-00-guide.md | 1794053000 | ai-system-010 |
 | AI-kernel | docs/a-guide/I-00-identity.md | 1792900118 | ai-system-20261024-013#3 |
-| AI-kernel | docs/r-rules/R-00-rules.md | 1794051000 | ai-system-010 |
+| AI-kernel | docs/r-rules/R-00-rules.md | 1794061000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-02-patterns.md | 1792900105 | ai-system-20261024-013#5 |
 | AI-kernel | docs/r-rules/R-03-terms.md | 1794054000 | ai-system-010 |
 | AI-kernel | docs/r-rules/R-04-learning.md | 1794057000 | ai-system-010 |
